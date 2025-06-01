@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -68,6 +69,12 @@ func resourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"connection_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ConnectionModeDirect,
+				ValidateDiagFunc: enum.Validate[awstypes.ConnectionMode](),
 			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
@@ -786,6 +793,62 @@ func resourceDistribution() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenant_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parameter_definition": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"definition": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"string_schema_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"required": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+															"comment": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"default_value": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 256),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain alphanumeric, underscores or dashes only"),
+											validation.StringLenBetween(1, 128),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"trusted_key_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -962,6 +1025,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
+	d.Set("connection_mode", distributionConfig.ConnectionMode)
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
@@ -1010,6 +1074,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
+	if err := d.Set("tenant_config", flattenTenantConfig(distributionConfig.TenantConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tenant_config: %s", err)
+	}
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
@@ -1327,6 +1394,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any)),
 		CallerReference:              aws.String(id.UniqueId()),
 		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
+		ConnectionMode:               awstypes.ConnectionMode(d.Get("connection_mode").(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
@@ -1337,6 +1405,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
 		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
 		Staging:                      aws.Bool(d.Get("staging").(bool)),
+		TenantConfig:                 expandTenantConfig(d.Get("tenant_config").([]any)[0].(map[string]any)),
 		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
 	}
 
@@ -1465,6 +1534,66 @@ func expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
 		Items:    items,
 		Quantity: aws.Int32(int32(len(items))),
 	}
+}
+
+func expandTenantConfig(tfMap map[string]any) *awstypes.TenantConfig {
+	tenantConfig := &awstypes.TenantConfig{}
+	if tfMap == nil {
+		return tenantConfig
+	}
+	if v, ok := tfMap["parameter_definition"]; ok && v != nil {
+		var defs []awstypes.ParameterDefinition
+		for _, defRaw := range v.([]any) {
+			defMap, ok := defRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			paramDef := awstypes.ParameterDefinition{}
+			if name, ok := defMap["name"].(string); ok {
+				paramDef.Name = aws.String(name)
+			}
+			if defList, ok := defMap["definition"].([]any); ok && len(defList) > 0 {
+				defSchemaMap, ok := defList[0].(map[string]any)
+				if ok {
+					if strSchemaList, ok := defSchemaMap["string_schema_config"].([]any); ok && len(strSchemaList) > 0 {
+						strSchemaMap, ok := strSchemaList[0].(map[string]any)
+						if ok {
+							paramDef.Definition = &awstypes.ParameterDefinitionSchema{
+								StringSchema: &awstypes.StringSchemaConfig{
+									Required:     aws.Bool(strSchemaMap["required"].(bool)),
+									Comment:      aws.String(strSchemaMap["comment"].(string)),
+									DefaultValue: aws.String(strSchemaMap["default_value"].(string)),
+								},
+							}
+						}
+					}
+				}
+			}
+			defs = append(defs, paramDef)
+		}
+		tenantConfig.ParameterDefinitions = defs
+	}
+
+	return tenantConfig
+}
+
+func flattenTenantConfig(apiObject *awstypes.TenantConfig) map[string]any {
+	tfMap := make(map[string]any)
+	if apiObject.ParameterDefinitions != nil {
+		for _, v := range apiObject.ParameterDefinitions {
+			tfMap["parameter_definition"] = append(tfMap["parameter_definition"].([]any), map[string]any{
+				"name": aws.ToString(v.Name),
+				"definition": []any{map[string]any{
+					"string_schema_config": []any{map[string]any{
+						"required":      aws.ToBool(v.Definition.StringSchema.Required),
+						"comment":       aws.ToString(v.Definition.StringSchema.Comment),
+						"default_value": aws.ToString(v.Definition.StringSchema.DefaultValue),
+					}},
+				}},
+			})
+		}
+	}
+	return tfMap
 }
 
 func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
