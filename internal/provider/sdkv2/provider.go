@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package sdkv2
 
 import (
 	"context"
@@ -44,9 +44,9 @@ type sdkProvider struct {
 	servicePackages iter.Seq2[int, conns.ServicePackage]
 }
 
-// New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
+// NewProvider returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
-func New(ctx context.Context) (*schema.Provider, error) {
+func NewProvider(ctx context.Context) (*schema.Provider, error) {
 	log.Printf("Creating Terraform AWS Provider (SDKv2-style)...")
 
 	sdkProvider := &sdkProvider{

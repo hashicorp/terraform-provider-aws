@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package sdkv2
 
 import (
 	"context"
@@ -169,7 +169,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 
 			rc := terraformsdk.NewResourceConfigRaw(config)
 
-			p, err := New(ctx)
+			p, err := NewProvider(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -265,7 +265,7 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 
 	rc := terraformsdk.NewResourceConfigRaw(config)
 
-	p, err := New(ctx)
+	p, err := NewProvider(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -598,7 +598,7 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 
 			rc := terraformsdk.NewResourceConfigRaw(config)
 
-			p, err := New(ctx)
+			p, err := NewProvider(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}

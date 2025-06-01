@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package sdkv2
 
 import (
 	"os"
@@ -21,7 +21,7 @@ import (
 func BenchmarkSDKProviderInitialization(b *testing.B) {
 	ctx := b.Context()
 	for b.Loop() {
-		_, err := New(ctx)
+		_, err := NewProvider(ctx)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -32,7 +32,7 @@ func TestProvider(t *testing.T) {
 	t.Parallel()
 
 	ctx := t.Context()
-	p, err := New(ctx)
+	p, err := NewProvider(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
