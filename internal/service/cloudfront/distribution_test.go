@@ -4740,12 +4740,12 @@ resource "aws_cloudfront_distribution" "test" {
       name = "test"
       definition {
         string_schema_config {
-          required = true
-          comment = "test"
+          required      = true
+          comment       = "test"
           default_value = "test"
         }
       }
-    } 
+    }
   }
 
   viewer_certificate {

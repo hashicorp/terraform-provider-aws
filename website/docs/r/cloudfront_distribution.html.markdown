@@ -305,12 +305,12 @@ resource "aws_cloudfront_distribution" "example" {
       name = "test"
       definition {
         string_schema_config {
-          required = true
-          comment = "test"
+          required      = true
+          comment       = "test"
           default_value = "test"
         }
       }
-    } 
+    }
   }
 
   # other config...
@@ -524,20 +524,21 @@ The arguments of `geo_restriction` are:
 * `restriction_type` (Required) - Method that you want to use to restrict distribution of your content by country: `none`, `whitelist`, or `blacklist`.
 
 #### Tenant Config Arguments
+
 The `tenant_config` block configures multi-tenant settings for the CloudFront distribution.
 
 * `parameter_definition` (Optional) - One or more parameter definition blocks for tenant configuration. Each block supports:
-  * `name` (Required) - Name of the parameter.
-  * `definition` (Required) - Definition block specifying the parameter schema.
+    * `name` (Required) - Name of the parameter.
+    * `definition` (Required) - Definition block specifying the parameter schema.
 
 ##### Definition Arguments
 
 Each `definition` block supports the following arguments:
 
 * `string_schema_config` (Optional) - Configuration block for string schema. Supports:
-  * `required` (Required) - Whether the defined parameter is required.
-  * `comment` (Optional) - A comment to describe the parameter.
-  * `default_value` (Optional) - The default value of the parameter.
+    * `required` (Required) - Whether the defined parameter is required.
+    * `comment` (Optional) - A comment to describe the parameter.
+    * `default_value` (Optional) - The default value of the parameter.
 
 #### Viewer Certificate Arguments
 

@@ -820,11 +820,11 @@ func resourceDistribution() *schema.Resource {
 																Type:     schema.TypeBool,
 																Required: true,
 															},
-															"comment": {
+															names.AttrComment: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"default_value": {
+															names.AttrDefaultValue: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(1, 256),
@@ -835,7 +835,7 @@ func resourceDistribution() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -1419,6 +1419,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.CallerReference = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		apiObject.IsIPV6Enabled = nil
+	}
+
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.Logging = expandLoggingConfig(v.([]any)[0].(map[string]any))
 	} else {
@@ -1549,7 +1553,7 @@ func expandTenantConfig(tfMap map[string]any) *awstypes.TenantConfig {
 				continue
 			}
 			paramDef := awstypes.ParameterDefinition{}
-			if name, ok := defMap["name"].(string); ok {
+			if name, ok := defMap[names.AttrName].(string); ok {
 				paramDef.Name = aws.String(name)
 			}
 			if defList, ok := defMap["definition"].([]any); ok && len(defList) > 0 {
@@ -1561,8 +1565,8 @@ func expandTenantConfig(tfMap map[string]any) *awstypes.TenantConfig {
 							paramDef.Definition = &awstypes.ParameterDefinitionSchema{
 								StringSchema: &awstypes.StringSchemaConfig{
 									Required:     aws.Bool(strSchemaMap["required"].(bool)),
-									Comment:      aws.String(strSchemaMap["comment"].(string)),
-									DefaultValue: aws.String(strSchemaMap["default_value"].(string)),
+									Comment:      aws.String(strSchemaMap[names.AttrComment].(string)),
+									DefaultValue: aws.String(strSchemaMap[names.AttrDefaultValue].(string)),
 								},
 							}
 						}
@@ -1582,12 +1586,12 @@ func flattenTenantConfig(apiObject *awstypes.TenantConfig) map[string]any {
 	if apiObject.ParameterDefinitions != nil {
 		for _, v := range apiObject.ParameterDefinitions {
 			tfMap["parameter_definition"] = append(tfMap["parameter_definition"].([]any), map[string]any{
-				"name": aws.ToString(v.Name),
+				names.AttrName: aws.ToString(v.Name),
 				"definition": []any{map[string]any{
 					"string_schema_config": []any{map[string]any{
-						"required":      aws.ToBool(v.Definition.StringSchema.Required),
-						"comment":       aws.ToString(v.Definition.StringSchema.Comment),
-						"default_value": aws.ToString(v.Definition.StringSchema.DefaultValue),
+						"required":             aws.ToBool(v.Definition.StringSchema.Required),
+						names.AttrComment:      aws.ToString(v.Definition.StringSchema.Comment),
+						names.AttrDefaultValue: aws.ToString(v.Definition.StringSchema.DefaultValue),
 					}},
 				}},
 			})
