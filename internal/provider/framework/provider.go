@@ -50,9 +50,9 @@ type frameworkProvider struct {
 	servicePackages    iter.Seq[conns.ServicePackage]
 }
 
-// New returns a new, initialized Terraform Plugin Framework-style provider instance.
+// NewProvider returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
+func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider.Provider, error) {
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &frameworkProvider{
