@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package rds_test
+package neptune_test
 
 import (
 	"context"
@@ -11,49 +11,37 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
-	engine := tfrds.InstanceEngineOracleEnterprise
-	version := "19.0.0.0.ru-2020-07.rur-2020-07.r1"
-	paramGroup := "oracle-ee-19"
+	dataSourceName := "data.aws_neptune_engine_version.test"
+	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
+				Config: testAccEngineVersionDataSourceConfig_basic(tfneptune.EngineNeptune),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
-					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
-					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfneptune.EngineNeptune),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, dataSourceNameLatest, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_character_sets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "supports_certificate_rotation_without_restart"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "supports_integrations"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "supports_limitless_database"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "supports_local_write_forwarding"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "supports_parallel_query"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_description"),
 				),
@@ -62,13 +50,13 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -83,114 +71,112 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
+	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, dataSourceNameLatest, "version_actual"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred2(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, dataSourceNameLatest, "version_actual"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.32", "8.0.33", "8.0.34"`, `"8.0.37"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.EngineNeptune, `"1.4.1.0", "1.4.2.0", "1.4.3.0"`, `"1.4.5.0"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.34"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1.4.3.0"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.EngineNeptune, `"1.3.2.0", "1.3.3.0", "1.4.0.0"`, `"1.4.4.0","1.4.5.0"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.44"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1.4.0.0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfrds.InstanceEngineMySQL, "5.7", `"8.0.44", "8.0.35", "8.0.34"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfneptune.EngineNeptune, "1.3", `"1.4.0.0", "1.4.1.0", "1.4.2.0"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^5\.7`)),
-					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^5\.7\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^1\.3`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^1\.3\.`)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
+
+	majorTarget := "1.4"
+	oneLess := `^1\.3\.`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfneptune.EngineNeptune, majorTarget),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0\.`)),
-				),
-			},
-			{
-				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(oneLess)),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -204,128 +190,67 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
+	updateDataSourceName := "data.aws_neptune_engine_version.latest"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnlyExplicit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
-					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", updateDataSourceName, "version_actual"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_includeAll(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_latest(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
+	dataSourceNameLatest := "data.aws_neptune_engine_version.latest"
+	dataSourceNameEarlier2 := "data.aws_neptune_engine_version.earlier2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_includeAll(),
+				Config: testAccEngineVersionDataSourceConfig_latest(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.20"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.20"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_latest(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameEarlier2, "version_actual"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
+func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "serverless"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
-				),
-			},
-			{
-				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "global"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "global"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEngineVersionDataSourceConfig_latest(true, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "15.4"),
-				),
-			},
-			{
-				Config: testAccEngineVersionDataSourceConfig_latest(false, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "13.9"),
-				),
-			},
-			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15`)),
-					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
-				),
-			},
-			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineMySQL, "8.0"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
-					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_rds_engine_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, false),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -342,7 +267,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, false, true),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -359,7 +284,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, true),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -392,10 +317,10 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
-	input := &rds.DescribeDBEngineVersionsInput{
-		Engine:      aws.String(tfrds.InstanceEngineMySQL),
+	input := &neptune.DescribeDBEngineVersionsInput{
+		Engine:      aws.String(tfneptune.EngineNeptune),
 		DefaultOnly: aws.Bool(true),
 	}
 
@@ -410,47 +335,67 @@ func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup string) string {
+func testAccEngineVersionDataSourceConfig_basic(engine string) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine                 = %[1]q
-  version                = %[2]q
-  parameter_group_family = %[3]q
+data "aws_neptune_engine_version" "test" {
+  engine  = %[1]q
+  version = data.aws_neptune_engine_version.latest.version_actual
 }
-`, engine, version, paramGroup)
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, engine)
 }
 
 func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine  = %[1]q
-  version = "8.0.32"
+data "aws_neptune_engine_version" "test" {
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_neptune_engine_version.latest.version_actual]
 }
-`, tfrds.InstanceEngineMySQL)
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, tfneptune.EngineNeptune)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred() string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "test" {
   engine             = %[1]q
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  preferred_versions = ["85.9.12", data.aws_neptune_engine_version.latest.version_actual]
 }
-`, tfrds.InstanceEngineMySQL)
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, tfneptune.EngineNeptune)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred2() string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "test" {
   engine             = %[1]q
-  version            = "8.0"
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  version            = join(".", slice(split(".", data.aws_neptune_engine_version.latest.version_actual), 0, 2))
+  preferred_versions = ["85.9.12", data.aws_neptune_engine_version.latest.version_actual]
 }
-`, tfrds.InstanceEngineMySQL)
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, tfneptune.EngineNeptune)
 }
 
 func testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(engine, preferredVersions, preferredUpgrades string) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "test" {
   engine                    = %[1]q
   latest                    = true
   preferred_versions        = [%[2]s]
@@ -461,7 +406,7 @@ data "aws_rds_engine_version" "test" {
 
 func testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(engine, version, preferredUpgrades string) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "test" {
   engine                    = %[1]q
   version                   = %[2]q
   preferred_upgrade_targets = [%[3]s]
@@ -469,87 +414,80 @@ data "aws_rds_engine_version" "test" {
 `, engine, version, preferredUpgrades)
 }
 
-func testAccEngineVersionDataSourceConfig_preferredMajorTarget(engine string) string {
+func testAccEngineVersionDataSourceConfig_preferredMajorTarget(engine, majorVersion string) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "latest" {
-  engine = %[1]q
-  latest = true
-}
-
-data "aws_rds_engine_version" "test" {
-  engine                  = %[1]q
-  latest                  = true
-  preferred_major_targets = [data.aws_rds_engine_version.latest.version]
-}
-`, engine)
-}
-
-func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine = %[1]q
-}
-`, tfrds.InstanceEngineMySQL)
-}
-
-func testAccEngineVersionDataSourceConfig_defaultOnlyExplicit() string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine       = %[1]q
-  version      = "8.0"
-  default_only = true
-}
-`, tfrds.InstanceEngineMySQL)
-}
-
-func testAccEngineVersionDataSourceConfig_includeAll() string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine      = %[1]q
-  version     = "8.0.20"
-  include_all = true
-}
-`, tfrds.InstanceEngineMySQL)
-}
-
-func testAccEngineVersionDataSourceConfig_filter(engine, engineMode string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine      = %[1]q
-  latest      = true
-  include_all = true
-
-  filter {
-    name   = "engine-mode"
-    values = [%[2]q]
-  }
-}
-`, engine, engineMode)
-}
-
-func testAccEngineVersionDataSourceConfig_latest(latest bool, preferredVersions string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine             = %[1]q
-  latest             = %[2]t
-  preferred_versions = [%[3]s]
-}
-`, tfrds.InstanceEngineAuroraPostgreSQL, latest, preferredVersions)
-}
-
-func testAccEngineVersionDataSourceConfig_latest2(engine, majorVersion string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "latest" {
   engine  = %[1]q
   version = %[2]q
   latest  = true
 }
+
+data "aws_neptune_engine_version" "test" {
+  engine                  = %[1]q
+  latest                  = true
+  preferred_major_targets = [data.aws_neptune_engine_version.latest.version]
+}
 `, engine, majorVersion)
+}
+
+func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
+	return fmt.Sprintf(`
+data "aws_neptune_engine_version" "test" {
+  engine = %[1]q
+}
+`, tfneptune.EngineNeptune)
+}
+
+func testAccEngineVersionDataSourceConfig_defaultOnlyExplicit() string {
+	return fmt.Sprintf(`
+data "aws_neptune_engine_version" "test" {
+  engine       = %[1]q
+  version      = join(".", slice(split(".", data.aws_neptune_engine_version.latest.version_actual), 0, 2))
+  default_only = true
+}
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, tfneptune.EngineNeptune)
+}
+
+func testAccEngineVersionDataSourceConfig_latest(latest bool) string {
+	return fmt.Sprintf(`
+data "aws_neptune_engine_version" "test" {
+  engine = %[1]q
+  latest = %[2]t
+
+  preferred_versions = [
+    data.aws_neptune_engine_version.earlier2.version_actual,
+    data.aws_neptune_engine_version.earlier1.version_actual,
+    data.aws_neptune_engine_version.latest.version_actual
+  ]
+}
+
+data "aws_neptune_engine_version" "earlier2" {
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_neptune_engine_version.earlier1.version_actual]
+}
+
+data "aws_neptune_engine_version" "earlier1" {
+  engine                    = %[1]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_neptune_engine_version.latest.version_actual]
+}
+
+data "aws_neptune_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+`, tfneptune.EngineNeptune, latest)
 }
 
 func testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(engine string, major, minor bool) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
+data "aws_neptune_engine_version" "test" {
   engine           = %[1]q
   has_major_target = %[2]t
   has_minor_target = %[3]t

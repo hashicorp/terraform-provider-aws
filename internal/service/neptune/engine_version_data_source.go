@@ -5,13 +5,16 @@ package neptune
 
 import (
 	"context"
+	"sort"
 
+	"github.com/YakDriver/go-version"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -33,8 +36,10 @@ func dataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      engineNeptune,
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_description": {
 				Type:     schema.TypeString,
@@ -50,6 +55,10 @@ func dataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 			"has_minor_target": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"latest": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -132,6 +141,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
+		Engine:                     aws.String(engineNeptune),
 		ListSupportedCharacterSets: aws.Bool(true),
 		ListSupportedTimezones:     aws.Bool(true),
 	}
@@ -156,6 +166,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
 		"has_major_target",
 		"has_minor_target",
+		"latest",
 		"preferred_major_targets",
 		"preferred_upgrade_targets",
 		"preferred_versions",
@@ -309,6 +320,11 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	var found *awstypes.DBEngineVersion
 
+	if v, ok := d.GetOk("latest"); ok && v.(bool) {
+		sortEngineVersions(engineVersions)
+		found = &engineVersions[len(engineVersions)-1]
+	}
+
 	if found == nil && len(engineVersions) == 1 {
 		found = &engineVersions[0]
 	}
@@ -365,6 +381,16 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("version_description", found.DBEngineVersionDescription)
 
 	return diags
+}
+
+func sortEngineVersions(engineVersions []awstypes.DBEngineVersion) {
+	if len(engineVersions) < 2 {
+		return
+	}
+
+	sort.Slice(engineVersions, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
+		return version.LessThan(aws.ToString(engineVersions[i].EngineVersion), aws.ToString(engineVersions[j].EngineVersion))
+	})
 }
 
 // criteriaSet returns true if any of the given criteria are set. "set" means that, in the config,
