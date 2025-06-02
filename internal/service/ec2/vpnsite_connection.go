@@ -851,7 +851,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if tunnelInfo != nil && regexache.MustCompile("REDACTED").MatchString(tunnelInfo.Tunnel1PreSharedKey) {
-		d.Set("preshared_key_storage", preSharedKeyStorageTypeSecretManager)
+		d.Set("preshared_key_storage", preSharedKeyStorageTypeSecretsManager)
 	} else {
 		d.Set("preshared_key_storage", preSharedKeyStorageTypeStandard)
 	}

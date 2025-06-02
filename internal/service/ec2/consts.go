@@ -310,13 +310,13 @@ const (
 )
 
 const (
-	preSharedKeyStorageTypeSecretManager = "SecretManager"
-	preSharedKeyStorageTypeStandard      = "Standard"
+	preSharedKeyStorageTypeSecretsManager = "SecretsManager"
+	preSharedKeyStorageTypeStandard       = "Standard"
 )
 
 func preSharedKeyStorageType_Values() []string {
 	return []string{
-		preSharedKeyStorageTypeSecretManager,
+		preSharedKeyStorageTypeSecretsManager,
 		preSharedKeyStorageTypeStandard,
 	}
 }
