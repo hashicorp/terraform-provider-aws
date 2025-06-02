@@ -42,6 +42,7 @@ import (
 // @ArnIdentity
 // @WrappedImport(false)
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
+// @Testing(plannableImportAction="Replace")
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
