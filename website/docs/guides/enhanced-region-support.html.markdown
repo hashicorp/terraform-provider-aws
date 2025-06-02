@@ -17,6 +17,7 @@ Version 6.0.0 of the Terraform AWS Provider adds `region` to most resources maki
 - [Can I use `region` in every resource?](#can-i-use-region-in-every-resource)
 - [Why make this change](#why-make-this-change)
 - [How `region` works](#how-region-works)
+- [Migrating from multiple provider configurations](#migrating-from-multiple-provider-configurations)
 - [Before and after examples using `region`](#before-and-after-examples-using-region)
 - [Non–region-aware resources](#nonregion-aware-resources)
 
@@ -60,6 +61,14 @@ To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in 
 ```sh
 terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1
 ```
+
+## Migrating from multiple provider configurations
+
+To migrate from a separate provider configuration for each Region to a single provider configuration block and per-resource `region` values you must ensure that Terraform state is refreshed before editing resource configuration:
+
+1. Upgrade to v6.0.0
+2. Run a Terraform plan in [refresh-only mode](https://developer.hashicorp.com/terraform/cli/commands/plan#planning-modes) -- `terraform plan -refresh-only`
+3. Modify the affected resource configurations, replacing the [`provider` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/resource-provider) with a `region` argument
 
 ## Before and after examples using `region`
 
