@@ -67,7 +67,7 @@ terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1
 To migrate from a separate provider configuration for each Region to a single provider configuration block and per-resource `region` values you must ensure that Terraform state is refreshed before editing resource configuration:
 
 1. Upgrade to v6.0.0
-2. Run a Terraform plan in [refresh-only mode](https://developer.hashicorp.com/terraform/cli/commands/plan#planning-modes) -- `terraform plan -refresh-only`
+2. Run a Terraform apply in [refresh-only mode](https://developer.hashicorp.com/terraform/cli/commands/plan#planning-modes) -- `terraform apply -refresh-only`
 3. Modify the affected resource configurations, replacing the [`provider` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/resource-provider) with a `region` argument
 
 ## Before and after examples using `region`
