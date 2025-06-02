@@ -31,7 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
-// @Testing(importIgnore="repository")
+// @Testing(importIgnore="repository", plannableImportAction="Replace")
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
