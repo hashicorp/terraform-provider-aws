@@ -87,8 +87,8 @@ This data source exports the following attributes in addition to the arguments a
         * `snapshot_id` - The ID of the snapshot.
         * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
-        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
         * `volume_type` - The volume type.
+        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - Virtual device name (for instance stores).
 * `creation_date` - Date and time the image was created.
@@ -146,4 +146,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-20e01b0a74f9ac0f7e51fa71d8bb9b456d55fab280e87e7630b32a84f2e95273 -->
+<!-- cache-key: cdktf-0.20.8 input-a62b396dede0b1f299cc13f1e83c22aa9abe5fd44d9d3f1c9ddaa82dd03096cd -->

@@ -1,7 +1,10 @@
 ## 5.100.0 (Unreleased)
+## 5.99.1 (May 30, 2025)
 
 BUG FIXES:
 
+* resource/aws_fms_admin_account: Fix `panic: runtime error: invalid memory address or nil pointer dereference` ([#42813](https://github.com/hashicorp/terraform-provider-aws/issues/42813))
+* resource/aws_lb: Ignore `InvalidAction` exceptions for `DescribeCapacityReservation` operations. This fixes a regression introduced in [v5.99.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5990-may-29-2025) ([#42812](https://github.com/hashicorp/terraform-provider-aws/issues/42812))
 * resource/aws_s3_bucket_lifecycle_configuration: Correctly handles switching child attributes of `rule.filter`. ([#42655](https://github.com/hashicorp/terraform-provider-aws/issues/42655))
 
 ## 5.99.0 (May 29, 2025)

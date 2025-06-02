@@ -597,7 +597,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		capacity, err := findCapacityReservationByARN(ctx, conn, d.Id())
 
 		switch {
-		case tfawserr.ErrCodeEquals(err, errCodeAccessDenied):
+		case tfawserr.ErrCodeEquals(err, errCodeAccessDenied, errCodeInvalidAction):
 			d.Set("minimum_load_balancer_capacity", nil)
 		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) capacity reservation: %s", d.Id(), err)
