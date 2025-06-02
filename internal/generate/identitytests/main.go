@@ -381,6 +381,10 @@ func (d ResourceDatum) HasInherentRegion() bool {
 	return d.IsARNIdentity() || d.IsRegionalSingleton()
 }
 
+func (d ResourceDatum) HasImportIgnore() bool {
+	return len(d.ImportIgnore) > 0
+}
+
 type goImport struct {
 	Path  string
 	Alias string
