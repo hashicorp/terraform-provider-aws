@@ -305,6 +305,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				},
 
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -342,6 +345,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ end -}}
 				},
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -469,6 +475,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					// Import block with Import ID
 				{{- end }}
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -505,6 +514,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				{{ if .HasInherentRegion }}
 				// Import block with Import ID and no appended "@<region>"
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -541,6 +553,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				{{ end }}
 				// Import block with Resource Identity
 				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
 					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
 					ConfigVariables: config.Variables{ {{ if .Generator }}
 						acctest.CtRName: config.StringVariable(rName),{{ end }}
