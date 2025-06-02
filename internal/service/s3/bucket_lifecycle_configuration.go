@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -202,13 +201,15 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										path.MatchRelative().AtName("tag"),
 									),
 								},
+								PlanModifiers: []planmodifier.Object{
+									emptyFilterPlanModifier(),
+								},
 								Attributes: map[string]schema.Attribute{
 									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
 											tfint64planmodifier.NullValue(),
-											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									"object_size_less_than": schema.Int64Attribute{
@@ -216,15 +217,11 @@ func (r *resourceBucketLifecycleConfiguration) Schema(ctx context.Context, reque
 										Computed: true, // Because of Legacy value handling
 										PlanModifiers: []planmodifier.Int64{
 											tfint64planmodifier.NullValue(),
-											int64planmodifier.UseStateForUnknown(),
 										},
 									},
 									names.AttrPrefix: schema.StringAttribute{
 										Optional: true,
 										Computed: true, // Because of Legacy value handling
-										PlanModifiers: []planmodifier.String{
-											ruleFilterPrefixForUnknown(),
-										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -1102,58 +1099,6 @@ func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx 
 	resp.PlanValue = v
 }
 
-// ruleFilterPrefixForUnknown handles the planned value for `rule.filter.prefix`
-// * If no value is set
-//   - If no other `filter` attributes are set, default to ""
-//   - Otherwise, default to `null`
-func ruleFilterPrefixForUnknown() planmodifier.String {
-	return ruleFilterPrefixUnknownModifier{}
-}
-
-type ruleFilterPrefixUnknownModifier struct{}
-
-func (m ruleFilterPrefixUnknownModifier) Description(_ context.Context) string {
-	return ""
-}
-
-func (m ruleFilterPrefixUnknownModifier) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
-}
-
-func (m ruleFilterPrefixUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	// Nothing to do if a value is configured
-	if !req.ConfigValue.IsNull() {
-		return
-	}
-
-	// Do nothing if there is a known planned value.
-	if !req.PlanValue.IsUnknown() {
-		return
-	}
-
-	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
-	if req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	var parentConfig lifecycleRuleFilterModel
-	andPrefixPath := req.Path.ParentPath()
-	diags := req.Config.GetAttribute(ctx, andPrefixPath, &parentConfig)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	if parentConfig.And.IsNull() &&
-		parentConfig.ObjectSizeGreaterThan.IsNull() &&
-		parentConfig.ObjectSizeLessThan.IsNull() &&
-		parentConfig.Tag.IsNull() {
-		resp.PlanValue = types.StringValue("")
-	} else {
-		resp.PlanValue = types.StringNull()
-	}
-}
-
 // ruleTransitionForUnknownDays handles the planned value for `rule.transition.days`
 // * If no value is set
 //   - If `date` isn't set, default to 0
@@ -1264,4 +1209,70 @@ func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, 
 			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", paths),
 		))
 	}
+}
+
+func emptyFilterPlanModifier() planmodifier.Object {
+	return emptyFilterPlanModifier_{}
+}
+
+type emptyFilterPlanModifier_ struct{}
+
+func (m emptyFilterPlanModifier_) Description(_ context.Context) string {
+	return ""
+}
+
+func (m emptyFilterPlanModifier_) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m emptyFilterPlanModifier_) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var config lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.And.IsUnknown() ||
+		config.ObjectSizeGreaterThan.IsUnknown() ||
+		config.ObjectSizeLessThan.IsUnknown() ||
+		config.Prefix.IsUnknown() ||
+		config.Tag.IsUnknown() {
+		return
+	}
+
+	var plan lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.And.IsNull() || !config.Tag.IsNull() {
+		plan.Prefix = types.StringNull()
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	// If none are set in config, set Prefix to ""
+	if config.And.IsNull() &&
+		config.ObjectSizeGreaterThan.IsNull() &&
+		config.ObjectSizeLessThan.IsNull() &&
+		config.Prefix.IsNull() &&
+		config.Tag.IsNull() {
+		plan.Prefix = types.StringValue("")
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	resp.PlanValue = req.ConfigValue
 }

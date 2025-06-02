@@ -32,7 +32,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional) AWS account ID. Defaults to the account of the caller identity if not configured.
-* `namespace` - (Required) Name of the namespace. Defaults to `default`.
+* `namespace` - (Optional) Name of the namespace. Defaults to `default`.
 
 ## Attribute Reference
 

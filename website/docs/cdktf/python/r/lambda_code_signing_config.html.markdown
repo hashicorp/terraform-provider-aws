@@ -44,6 +44,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.
@@ -93,4 +95,4 @@ Using `terraform import`, import Code Signing Configs using their ARN. For examp
 % terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e7811cec92131887c279c3e50300db98d1a6fda984b73feceb743321e3bcaaf0 -->
+<!-- cache-key: cdktf-0.20.8 input-5d2e35e0ad624b79f847f7224b11de93733ca84987f1f59e76879c35c58aae6a -->

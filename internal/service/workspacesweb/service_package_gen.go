@@ -19,7 +19,32 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory:  newBrowserSettingsResource,
+			TypeName: "aws_workspacesweb_browser_settings",
+			Name:     "Browser Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "browser_settings_arn",
+			},
+		},
+		{
+			Factory:  newNetworkSettingsResource,
+			TypeName: "aws_workspacesweb_network_settings",
+			Name:     "Network Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "network_settings_arn",
+			},
+		},
+		{
+			Factory:  newUserSettingsResource,
+			TypeName: "aws_workspacesweb_user_settings",
+			Name:     "User Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "user_settings_arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

@@ -67,7 +67,7 @@ resource "aws_msk_replicator" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `replicator_name` - (Required) The name of the replicator.
 * `kafka_cluster` - (Required) A list of Kafka clusters which are targets of the replicator.

@@ -116,10 +116,8 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `bucket_name` - (Required) S3 bucket name.
-* `cdc_path` - (Required for CDC; otherwise, Optional) Folder path of CDC files. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later.
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `external_table_definition` - (Required for `source` endpoints; otherwise, Optional) JSON document that describes how AWS DMS should interpret the data.
 * `service_access_role_arn` - (Required) ARN of the IAM role with permissions to the S3 Bucket.
 
 The following arguments are optional:
@@ -132,6 +130,7 @@ The following arguments are optional:
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)
 * `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. (AWS default is 32000 KB.)
+* `cdc_path` - (Optional) Folder path of CDC files. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later. Required for CDC.
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`. (Ignored for source endpoints.)
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
@@ -150,6 +149,7 @@ The following arguments are optional:
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
 * `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
+* `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data. Required for `source` endpoints.
 * `glue_catalog_generation` - (Optional) Whether to integrate AWS Glue Data Catalog with an Amazon S3 target. See [Using AWS Glue Data Catalog with an Amazon S3 target for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.GlueCatalog) for more information. Default is `false`.
 * `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
@@ -209,4 +209,4 @@ Using `terraform import`, import endpoints using the `endpoint_id`. For example:
 % terraform import aws_dms_s3_endpoint.example example-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5a916eee3e75e7c52d38f0617e6cc2027169298f0d0789be4639e960826d0ab3 -->
+<!-- cache-key: cdktf-0.20.8 input-ae1125ac8e3bb431717926e17f9c6b7623fe21a9bc5085d46d27ca0ec2fb7fd9 -->

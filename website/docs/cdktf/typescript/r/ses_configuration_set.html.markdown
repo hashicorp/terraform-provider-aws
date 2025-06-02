@@ -88,11 +88,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required) Name of the configuration set.
 
-The following argument is optional:
+The following arguments are optional:
 
 * `deliveryOptions` - (Optional) Whether messages that use the configuration set are required to use TLS. See below.
 * `reputationMetricsEnabled` - (Optional) Whether or not Amazon SES publishes reputation metrics for the configuration set, such as bounce and complaint rates, to Amazon CloudWatch. The default value is `false`.
@@ -147,4 +147,4 @@ Using `terraform import`, import SES Configuration Sets using their `name`. For 
 % terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2cb24f713fdc7ce659ef0894958fedb8c91bf25e49582e958d996a6a9d9ec63b -->
+<!-- cache-key: cdktf-0.20.8 input-ac5378fce948fe7d5fb5752e30c248fe9955a032693e1617b2e2d4c9158fbebc -->

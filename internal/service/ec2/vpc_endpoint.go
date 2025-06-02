@@ -480,6 +480,20 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
+
+			// when private_dns_enabled is set to true, always set dns_options
+			if privateDNSEnabled {
+				if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					tfMap := v.([]any)[0].(map[string]any)
+					// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+					// that support both gateway and interface endpoints, i.e. S3.
+					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+						input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
+					} else {
+						input.DnsOptions = expandDNSOptionsSpecification(tfMap)
+					}
+				}
+			}
 		}
 
 		input.AddRouteTableIds, input.RemoveRouteTableIds = flattenAddAndRemoveStringValueLists(d, "route_table_ids")
