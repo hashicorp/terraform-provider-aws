@@ -38,6 +38,7 @@ This resource supports the following arguments:
 * `self_managed_opt_outs_enabled` - (Optional) When set to `false` an end recipient sends a message that begins with HELP or STOP to one of your dedicated numbers, AWS End User Messaging SMS and Voice automatically replies with a customizable message and adds the end recipient to the opt-out list. When set to true you’re responsible for responding to HELP and STOP requests. You’re also responsible for tracking and honoring opt-out request.
 * `two_way_channel_arn` - (Optional) The Amazon Resource Name (ARN) of the two way channel.
 * `two_way_channel_enabled` - (Optional) By default this is set to `false`. When set to `true` you can receive incoming text messages from your end recipients.
+* `two_way_channel_role` - (Optional) IAM Role ARN for a service to assume, to be able to post inbound SMS messages.
 
 ## Attribute Reference
 
