@@ -313,12 +313,19 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{- template "ImportBlockWithIDBody" . -}}
 					ImportPlanChecks: resource.ImportPlanChecks{
 						PreApply: []plancheck.PlanCheck{
-							{{ if .HasImportIgnore -}}
+							{{ if eq .PlannableResourceAction "Update" -}}
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							{{ else if eq .PlannableResourceAction "Replace" -}}
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 							{{ end -}}
 							{{ if .ArnIdentity -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+								{{ else -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
 							{{ end -}}
 							{{ if .IsRegionalSingleton -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
@@ -330,7 +337,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							{{ end -}}
 						},
 					},
-					{{ if .HasImportIgnore -}}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
@@ -343,12 +350,19 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{- template "ImportBlockWithResourceIdentityBody" . -}}
 					ImportPlanChecks: resource.ImportPlanChecks{
 						PreApply: []plancheck.PlanCheck{
-							{{ if .HasImportIgnore -}}
+							{{ if eq .PlannableResourceAction "Update" -}}
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							{{ else if eq .PlannableResourceAction "Replace" -}}
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 							{{ end -}}
 							{{ if .ArnIdentity -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+								{{ else -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
 							{{ end -}}
 							{{ if .IsRegionalSingleton -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
@@ -360,7 +374,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							{{ end -}}
 						},
 					},
-					{{ if .HasImportIgnore -}}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
@@ -464,12 +478,19 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{- template "ImportBlockWithIDBodyCrossRegion" . -}}
 					ImportPlanChecks: resource.ImportPlanChecks{
 						PreApply: []plancheck.PlanCheck{
-							{{ if .HasImportIgnore -}}
+							{{ if eq .PlannableResourceAction "Update" -}}
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							{{ else if eq .PlannableResourceAction "Replace" -}}
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 							{{ end -}}
 							{{ if .ArnIdentity -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+								{{ else -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
 							{{ end -}}
 							{{ if .IsRegionalSingleton -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -477,7 +498,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 						},
 					},
-					{{ if .HasImportIgnore -}}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
@@ -493,12 +514,19 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{- template "ImportBlockWithIDBody" . -}}
 					ImportPlanChecks: resource.ImportPlanChecks{
 						PreApply: []plancheck.PlanCheck{
-							{{ if .HasImportIgnore -}}
+							{{ if eq .PlannableResourceAction "Update" -}}
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							{{ else if eq .PlannableResourceAction "Replace" -}}
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 							{{ end -}}
 							{{ if .ArnIdentity -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+								{{ else -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
 							{{ end -}}
 							{{ if .IsRegionalSingleton -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -506,7 +534,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 						},
 					},
-					{{ if .HasImportIgnore -}}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
@@ -522,12 +550,19 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{- template "ImportBlockWithResourceIdentityBody" . -}}
 					ImportPlanChecks: resource.ImportPlanChecks{
 						PreApply: []plancheck.PlanCheck{
-							{{ if .HasImportIgnore -}}
+							{{ if eq .PlannableResourceAction "Update" -}}
 								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+							{{ else if eq .PlannableResourceAction "Replace" -}}
+								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 							{{ end -}}
 							{{ if .ArnIdentity -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+								{{ else -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+								{{ end -}}
 							{{ end -}}
 							{{ if .IsRegionalSingleton -}}
 								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -535,7 +570,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 						},
 					},
-					{{ if .HasImportIgnore -}}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},

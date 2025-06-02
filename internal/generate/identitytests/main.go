@@ -283,6 +283,30 @@ const (
 	implementationSDK       implementation = "sdk"
 )
 
+type importAction int
+
+const (
+	importActionNoop importAction = iota
+	importActionUpdate
+	importActionReplace
+)
+
+func (i importAction) String() string {
+	switch i {
+	case importActionNoop:
+		return "NoOp"
+
+	case importActionUpdate:
+		return "Update"
+
+	case importActionReplace:
+		return "Replace"
+
+	default:
+		return ""
+	}
+}
+
 type ResourceDatum struct {
 	ProviderPackage             string
 	ResourceProviderNameUpper   string
@@ -325,6 +349,7 @@ type ResourceDatum struct {
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
 	IdentityAttributes          []string
+	plannableImportAction       importAction
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -383,6 +408,10 @@ func (d ResourceDatum) HasInherentRegion() bool {
 
 func (d ResourceDatum) HasImportIgnore() bool {
 	return len(d.ImportIgnore) > 0
+}
+
+func (d ResourceDatum) PlannableResourceAction() string {
+	return d.plannableImportAction.String()
 }
 
 type goImport struct {
@@ -478,6 +507,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IsGlobal:              false,
 		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
+		plannableImportAction: importActionNoop,
 	}
 	hasIdentity := false
 	skip := false
@@ -689,10 +719,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
-
 					for i, val := range d.ImportIgnore {
 						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
+					d.plannableImportAction = importActionUpdate
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
@@ -712,6 +742,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.NoImport = b
+					}
+				}
+				if attr, ok := args.Keyword["plannableImportAction"]; ok {
+					switch attr {
+					case importActionNoop.String():
+						d.plannableImportAction = importActionNoop
+
+					case importActionUpdate.String():
+						d.plannableImportAction = importActionUpdate
+
+					case importActionReplace.String():
+						d.plannableImportAction = importActionReplace
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid plannableImportAction value: %q at %s. Must be one of %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()}))
+						continue
 					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
