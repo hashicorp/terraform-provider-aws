@@ -71,6 +71,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ARN of a resource that represents your subscription to a supported standard.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `delete` - (Default `3m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using the standards subscription ARN. For example:
@@ -155,4 +162,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc0e821402cbe9c5d05c2a06a4c4a136423a27592e2e2dc7b6613093e3784e9 -->
+<!-- cache-key: cdktf-0.20.8 input-d75f9020a20e93a7c06f68b6aa05e5dbeb0101f68ceeb71f96d65ce8f744e44c -->
