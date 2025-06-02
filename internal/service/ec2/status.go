@@ -1637,3 +1637,19 @@ func statusRouteServer(ctx context.Context, conn *ec2.Client, id string) retry.S
 		return output, string(output.State), nil
 	}
 }
+
+func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}

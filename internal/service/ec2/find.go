@@ -6821,3 +6821,65 @@ func findRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*aws
 
 	return output, nil
 }
+
+func findRouteServerEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerEndpointsInput) (*awstypes.RouteServerEndpoint, error) {
+	output, err := findRouteServerEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServerEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerEndpointsInput) ([]awstypes.RouteServerEndpoint, error) {
+	var output []awstypes.RouteServerEndpoint
+
+	pages := ec2.NewDescribeRouteServerEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServerEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServerEndpoint, error) {
+	input := ec2.DescribeRouteServerEndpointsInput{
+		RouteServerEndpointIds: []string{id},
+	}
+
+	output, err := findRouteServerEndpoint(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerEndpointStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}

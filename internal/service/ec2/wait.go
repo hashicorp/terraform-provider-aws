@@ -3370,3 +3370,42 @@ func waitRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, ti
 
 	return nil, err
 }
+
+func waitRouteServerEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerEndpointStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerEndpointStateAvailable),
+		Refresh:                   statusRouteServerEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServerEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerEndpoint); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
