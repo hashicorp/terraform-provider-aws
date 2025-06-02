@@ -292,7 +292,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.20.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
-	github.com/hashicorp/terraform-plugin-testing v1.13.1
+	github.com/hashicorp/terraform-plugin-testing v1.13.2-0.20250602113327-7287626e5154
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38
 	github.com/mitchellh/copystructure v1.2.0
@@ -363,7 +363,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	github.com/zclconf/go-cty v1.16.2 // indirect
+	github.com/zclconf/go-cty v1.16.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.60.0 // indirect
 	go.opentelemetry.io/otel v1.35.0 // indirect
