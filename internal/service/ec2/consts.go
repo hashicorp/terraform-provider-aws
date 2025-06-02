@@ -308,3 +308,15 @@ const (
 const (
 	supportedRegionServiceStateAvailable = "Available"
 )
+
+const (
+	preSharedKeyStorageTypeSecretManager = "SecretManager"
+	preSharedKeyStorageTypeStandard      = "Standard"
+)
+
+func preSharedKeyStorageType_Values() []string {
+	return []string{
+		preSharedKeyStorageTypeSecretManager,
+		preSharedKeyStorageTypeStandard,
+	}
+}
