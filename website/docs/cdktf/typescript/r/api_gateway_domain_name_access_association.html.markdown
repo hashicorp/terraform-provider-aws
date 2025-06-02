@@ -29,9 +29,7 @@ class MyConvertedCode extends TerraformStack {
     new ApiGatewayDomainNameAccessAssociation(this, "example", {
       accessAssociationSource: Token.asString(awsVpcEndpointExample.id),
       accessAssociationSourceType: "VPCE",
-      domainNameArn: Token.asString(
-        awsApiGatewayDomainNameExample.domainNameArn
-      ),
+      domainNameArn: Token.asString(awsApiGatewayDomainNameExample.arn),
     });
   }
 }
@@ -87,4 +85,4 @@ Using `terraform import`, import API Gateway domain name acces associations as u
 % terraform import aws_api_gateway_domain_name_access_association.example arn:aws:apigateway:us-west-2:123456789012:/domainnameaccessassociations/domainname/12qmzgp2.9m7ilski.test+hykg7a12e7/vpcesource/vpce-05de3f8f82740a748
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fea7ddfd619aab0059f4600448771ebafb7f28b43853f645957f1c276042568d -->
+<!-- cache-key: cdktf-0.20.8 input-ac5fcb980ef755047bbbcac35ac93723049a96cffecd83228aa26089ab8a0a60 -->
