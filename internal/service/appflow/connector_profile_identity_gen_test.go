@@ -37,6 +37,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/basic/"),
 				ConfigVariables: config.Variables{
@@ -57,6 +58,8 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/basic/"),
 				ConfigVariables: config.Variables{
@@ -71,6 +74,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 				},
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/basic/"),
 				ConfigVariables: config.Variables{
@@ -87,6 +91,8 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 				},
 				ExpectNonEmptyPlan: true,
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/basic/"),
 				ConfigVariables: config.Variables{
@@ -122,6 +128,7 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
 				ConfigVariables: config.Variables{
@@ -141,7 +148,7 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
 				ConfigVariables: config.Variables{
@@ -158,7 +165,7 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import block with Import ID
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
 				ConfigVariables: config.Variables{
@@ -178,7 +185,7 @@ func TestAccAppFlowConnectorProfile_Identity_RegionOverride(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 
-			// Import block with Resource Identity
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ConnectorProfile/region_override/"),
 				ConfigVariables: config.Variables{

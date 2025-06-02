@@ -42,6 +42,7 @@ func testAccIoTLoggingOptions_Identity_Basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/LoggingOptions/basic/"),
 				ConfigVariables: config.Variables{
@@ -72,6 +73,7 @@ func testAccIoTLoggingOptions_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/LoggingOptions/region_override/"),
 				ConfigVariables: config.Variables{

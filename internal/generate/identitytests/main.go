@@ -117,7 +117,13 @@ func main() {
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
-		templates, err := template.New("identitytests").Parse(resourceTestGoTmpl)
+
+		templateFuncMap := template.FuncMap{
+			"inc": func(i int) int {
+				return i + 1
+			},
+		}
+		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
 		if err != nil {
 			g.Fatalf("parsing base Go test template: %w", err)
 		}

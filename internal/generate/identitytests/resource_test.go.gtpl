@@ -241,6 +241,8 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Setup
 			{
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -291,7 +293,8 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ end -}}
 				},
 			},
-			{{ if not .NoImport -}}
+			{{ if not .NoImport }}
+				// Step {{ ($step = inc $step) | print }}: Import command
 				{
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -304,6 +307,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{- template "ImportCommandWithIDBody" . -}}
 				},
 
+				// Step {{ ($step = inc $step) | print }}: Import block with Import ID
 				{
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -344,6 +348,8 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						ExpectNonEmptyPlan: true,
 					{{ end -}}
 				},
+
+				// Step {{ ($step = inc $step) | print  }}: Import block with Resource Identity
 				{
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -396,6 +402,8 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	{{ template "Test" . }}(t, resource.TestCase{
 		{{ template "TestCaseSetupRegionOverride" . }}
 		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Setup
 			{
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -438,9 +446,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			},
 			{{ if not .NoImport }}
 				{{ if .HasInherentRegion }}
-					// Import command with appended "@<region>"
+					// Step {{ ($step = inc $step) | print }}: Import command with appended "@<region>"
 				{{- else }}
-					// Import command
+					// Step {{ ($step = inc $step) | print }}: Import command
 				{{- end }}
 				{
 					{{ if .UseAlternateAccount -}}
@@ -455,7 +463,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{- template "ImportCommandWithIDBodyCrossRegion" . -}}
 				},
 				{{ if .HasInherentRegion }}
-					// Import command without appended "@<region>"
+					// Step {{ ($step = inc $step) | print }}: Import command without appended "@<region>"
 					{
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -470,9 +478,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					},
 				{{ end }}
 				{{ if .HasInherentRegion }}
-					// Import block with Import ID and appended "@<region>"
+					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and appended "@<region>"
 				{{- else }}
-					// Import block with Import ID
+					// Step {{ ($step = inc $step) | print }}: Import block with Import ID
 				{{- end }}
 				{
 					{{ if .UseAlternateAccount -}}
@@ -512,46 +520,46 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					{{ end -}}
 				},
 				{{ if .HasInherentRegion }}
-				// Import block with Import ID and no appended "@<region>"
-				{
-					{{ if .UseAlternateAccount -}}
-						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-					ConfigVariables: config.Variables{ {{ if .Generator }}
-						acctest.CtRName: config.StringVariable(rName),{{ end }}
-						{{ template "AdditionalTfVars" . -}}
-						"region": config.StringVariable(acctest.AlternateRegion()),
-					},
-					{{- template "ImportBlockWithIDBody" . -}}
-					ImportPlanChecks: resource.ImportPlanChecks{
-						PreApply: []plancheck.PlanCheck{
-							{{ if eq .PlannableResourceAction "Update" -}}
-								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-							{{ else if eq .PlannableResourceAction "Replace" -}}
-								plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-							{{ end -}}
-							{{ if .ArnIdentity -}}
-								{{ if eq .PlannableResourceAction "Replace" -}}
-									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-									plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
-								{{ else -}}
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
-									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-								{{ end -}}
-							{{ end -}}
-							{{ if .IsRegionalSingleton -}}
-								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
-							{{ end -}}
-							plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and no appended "@<region>"
+					{
+						{{ if .UseAlternateAccount -}}
+							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+						{{ end -}}
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . -}}
+							"region": config.StringVariable(acctest.AlternateRegion()),
 						},
+						{{- template "ImportBlockWithIDBody" . -}}
+						ImportPlanChecks: resource.ImportPlanChecks{
+							PreApply: []plancheck.PlanCheck{
+								{{ if eq .PlannableResourceAction "Update" -}}
+									plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+								{{ else if eq .PlannableResourceAction "Replace" -}}
+									plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+								{{ end -}}
+								{{ if .ArnIdentity -}}
+									{{ if eq .PlannableResourceAction "Replace" -}}
+										plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+										plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+									{{ else -}}
+										plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .ARNAttribute }}), knownvalue.NotNull()),
+										plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+									{{ end -}}
+								{{ end -}}
+								{{ if .IsRegionalSingleton -}}
+									plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
+								{{ end -}}
+								plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+							},
+						},
+						{{ if ne .PlannableResourceAction "NoOp" -}}
+							ExpectNonEmptyPlan: true,
+						{{ end -}}
 					},
-					{{ if ne .PlannableResourceAction "NoOp" -}}
-						ExpectNonEmptyPlan: true,
-					{{ end -}}
-				},
 				{{ end }}
-				// Import block with Resource Identity
+				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
 				{
 					{{ if .UseAlternateAccount -}}
 						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),

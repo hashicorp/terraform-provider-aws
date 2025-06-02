@@ -44,6 +44,7 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
 				ConfigVariables: config.Variables{
@@ -59,6 +60,8 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
 				ConfigVariables: config.Variables{
@@ -70,6 +73,7 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
 				ConfigVariables: config.Variables{
@@ -86,6 +90,8 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/basic/"),
 				ConfigVariables: config.Variables{
@@ -121,6 +127,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{
@@ -135,7 +142,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command with appended "@<region>"
+			// Step 2: Import command with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{
@@ -149,7 +156,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
-			// Import command without appended "@<region>"
+			// Step 3: Import command without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{
@@ -162,7 +169,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
-			// Import block with Import ID and appended "@<region>"
+			// Step 4: Import block with Import ID and appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{
@@ -182,7 +189,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import block with Import ID and no appended "@<region>"
+			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{
@@ -201,7 +208,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import block with Resource Identity
+			// Step 6: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Domain/region_override/"),
 				ConfigVariables: config.Variables{

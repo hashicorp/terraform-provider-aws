@@ -39,6 +39,7 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestGridProject/basic/"),
 				ConfigVariables: config.Variables{
@@ -53,6 +54,8 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestGridProject/basic/"),
 				ConfigVariables: config.Variables{
@@ -64,6 +67,7 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestGridProject/basic/"),
 				ConfigVariables: config.Variables{
@@ -80,6 +84,8 @@ func TestAccDeviceFarmTestGridProject_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TestGridProject/basic/"),
 				ConfigVariables: config.Variables{

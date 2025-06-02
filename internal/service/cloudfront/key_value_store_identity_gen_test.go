@@ -35,6 +35,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/KeyValueStore/basic/"),
 				ConfigVariables: config.Variables{
@@ -51,6 +52,8 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/KeyValueStore/basic/"),
 				ConfigVariables: config.Variables{
@@ -64,6 +67,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/KeyValueStore/basic/"),
 				ConfigVariables: config.Variables{
@@ -77,6 +81,8 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{},
 				},
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/KeyValueStore/basic/"),
 				ConfigVariables: config.Variables{

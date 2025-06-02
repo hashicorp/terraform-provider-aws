@@ -39,6 +39,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
 				ConfigVariables: config.Variables{},

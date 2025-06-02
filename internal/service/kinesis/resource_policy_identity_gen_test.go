@@ -36,6 +36,7 @@ func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, names.KinesisServiceID),
 		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
@@ -51,6 +52,8 @@ func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
@@ -66,6 +69,7 @@ func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 				},
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
@@ -85,6 +89,8 @@ func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 				},
 				ExpectNonEmptyPlan: true,
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/basic/"),
@@ -126,6 +132,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 		ErrorCheck:   acctest.ErrorCheck(t, names.KinesisServiceID),
 		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
@@ -140,7 +147,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command with appended "@<region>"
+			// Step 2: Import command with appended "@<region>"
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
@@ -158,7 +165,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command without appended "@<region>"
+			// Step 3: Import command without appended "@<region>"
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
@@ -175,7 +182,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import block with Import ID and appended "@<region>"
+			// Step 4: Import block with Import ID and appended "@<region>"
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
@@ -198,7 +205,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 
-			// Import block with Import ID and no appended "@<region>"
+			// Step 5: Import block with Import ID and no appended "@<region>"
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),
@@ -220,7 +227,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 
-			// Import block with Resource Identity
+			// Step 6: Import block with Resource Identity
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				ConfigDirectory:          config.StaticDirectory("testdata/ResourcePolicy/region_override/"),

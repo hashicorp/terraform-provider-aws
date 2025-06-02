@@ -39,6 +39,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_Basic(t *testing.T)
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationLayerAutomaticResponse/basic/"),
 				ConfigVariables: config.Variables{
@@ -52,6 +53,8 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_Basic(t *testing.T)
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationLayerAutomaticResponse/basic/"),
 				ConfigVariables: config.Variables{
@@ -63,6 +66,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_Basic(t *testing.T)
 				ImportStateVerify: true,
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationLayerAutomaticResponse/basic/"),
 				ConfigVariables: config.Variables{
@@ -78,6 +82,8 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_Basic(t *testing.T)
 					},
 				},
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ApplicationLayerAutomaticResponse/basic/"),
 				ConfigVariables: config.Variables{

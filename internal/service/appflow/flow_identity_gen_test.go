@@ -37,6 +37,7 @@ func TestAccAppFlowFlow_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/basic/"),
 				ConfigVariables: config.Variables{
@@ -57,6 +58,8 @@ func TestAccAppFlowFlow_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/basic/"),
 				ConfigVariables: config.Variables{
@@ -68,6 +71,7 @@ func TestAccAppFlowFlow_Identity_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/basic/"),
 				ConfigVariables: config.Variables{
@@ -82,6 +86,8 @@ func TestAccAppFlowFlow_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
+
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/basic/"),
 				ConfigVariables: config.Variables{
@@ -115,6 +121,7 @@ func TestAccAppFlowFlow_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/region_override/"),
 				ConfigVariables: config.Variables{
@@ -134,7 +141,7 @@ func TestAccAppFlowFlow_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/region_override/"),
 				ConfigVariables: config.Variables{
@@ -148,7 +155,7 @@ func TestAccAppFlowFlow_Identity_RegionOverride(t *testing.T) {
 				ImportStateVerify: true,
 			},
 
-			// Import block with Import ID
+			// Step 3: Import block with Import ID
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/region_override/"),
 				ConfigVariables: config.Variables{
@@ -166,7 +173,7 @@ func TestAccAppFlowFlow_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import block with Resource Identity
+			// Step 4: Import block with Resource Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Flow/region_override/"),
 				ConfigVariables: config.Variables{
