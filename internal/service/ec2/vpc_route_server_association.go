@@ -177,7 +177,7 @@ func (r *resourceVPCRouteServerAssociation) Delete(ctx context.Context, req reso
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServer, state.RouteServerId.String(), err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerAssociation, state.RouteServerId.String(), err),
 			err.Error(),
 		)
 		return

@@ -136,7 +136,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_vpc_route_server",
 			Name:     "VPC Route Server",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "route_server_id",
 			},
 		},
 		{

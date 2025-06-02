@@ -24,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// TODO VPC Route Servers etc.
+
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
 		Name: "aws_customer_gateway",
@@ -464,6 +466,8 @@ func RegisterSweepers() {
 			"aws_verifiedaccess_trust_provider",
 		},
 	})
+
+	awsv2.Register("aws_vpc_route_server", sweepRouteServers)
 }
 
 func sweepCapacityReservations(region string) error {
@@ -3078,4 +3082,33 @@ func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 	}
 
 	return nil
+}
+
+func sweepRouteServers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeRouteServersInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeRouteServersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RouteServers {
+			id := aws.ToString(v.RouteServerId)
+
+			if state := v.State; state == awstypes.RouteServerStateDeleted {
+				log.Printf("[INFO] Skipping VPC Route Server %s: State=%s", id, state)
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerResource, client,
+				framework.NewAttribute("route_server_id", id)))
+		}
+	}
+
+	return sweepResources, nil
 }

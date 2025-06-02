@@ -85,6 +85,7 @@ const (
 	errCodeInvalidPublicIpv4PoolIDNotFound                         = "InvalidPublicIpv4PoolID.NotFound" // nosemgrep:ci.caps5-in-const-name,ci.caps5-in-var-name
 	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
+	errCodeInvalidRouteServerIdNotFound                            = "InvalidRouteServerId.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                          = "InvalidSecurityGroupID.NotFound"

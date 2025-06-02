@@ -3318,3 +3318,55 @@ func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Cli
 
 	return nil, err
 }
+
+func waitRouteServerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerStateAvailable),
+		Refresh:                   statusRouteServer(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateModifying),
+		Target:  enum.Slice(awstypes.RouteServerStateAvailable),
+		Refresh: statusRouteServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
+		Target:  []string{},
+		Refresh: statusRouteServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}

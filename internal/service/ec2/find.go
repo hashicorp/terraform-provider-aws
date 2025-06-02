@@ -6759,3 +6759,65 @@ func findVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client
 
 	return output, nil
 }
+
+func findRouteServer(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServersInput) (*awstypes.RouteServer, error) {
+	output, err := findRouteServers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServers(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServersInput) ([]awstypes.RouteServer, error) {
+	var output []awstypes.RouteServer
+
+	pages := ec2.NewDescribeRouteServersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServers...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServer, error) {
+	input := ec2.DescribeRouteServersInput{
+		RouteServerIds: []string{id},
+	}
+
+	output, err := findRouteServer(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
