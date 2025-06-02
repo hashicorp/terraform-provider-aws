@@ -100,6 +100,25 @@ func resourceLustreFileSystem() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.DataCompressionType](),
 				Default:          awstypes.DataCompressionTypeNone,
 			},
+			"data_read_cache_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sizing_mode": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
+						},
+						names.AttrSize: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(32, 131072),
+						},
+					},
+				},
+			},
 			"deployment_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -430,6 +449,11 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(v.(string))
 	}
 
+	if v, ok := d.GetOk("data_read_cache_configuration"); ok {
+		inputC.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(v.([]any))
+		inputB.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(v.([]any))
+	}
+
 	if v, ok := d.GetOk("drive_cache_type"); ok {
 		inputC.LustreConfiguration.DriveCacheType = awstypes.DriveCacheType(v.(string))
 		inputB.LustreConfiguration.DriveCacheType = awstypes.DriveCacheType(v.(string))
@@ -552,6 +576,10 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
+	if err := d.Set("data_read_cache_configuration", flattenLustreReadCacheConfiguration(lustreConfig.DataReadCacheConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting data_read_cache_configuration: %s", err)
+	}
+
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
@@ -615,6 +643,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("data_compression_type") {
 			input.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(d.Get("data_compression_type").(string))
+		}
+
+		if d.HasChange("data_read_cache_configuration") {
+			input.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(d.Get("data_read_cache_configuration").([]any))
 		}
 
 		if d.HasChange("log_configuration") {
@@ -1046,6 +1078,39 @@ func flattenLustreMetadataConfiguration(adopts *awstypes.FileSystemLustreMetadat
 
 	if adopts.Iops != nil {
 		m[names.AttrIOPS] = aws.ToInt32(adopts.Iops)
+	}
+
+	return []map[string]any{m}
+}
+
+func expandLustreReadCacheConfiguration(l []any) *awstypes.LustreReadCacheConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]any)
+	req := &awstypes.LustreReadCacheConfiguration{
+		SizingMode: awstypes.LustreReadCacheSizingMode(data["sizing_mode"].(string)),
+	}
+
+	if v, ok := data[names.AttrSize].(int); ok && v != 0 {
+		req.SizeGiB = aws.Int32(int32(v))
+	}
+
+	return req
+}
+
+func flattenLustreReadCacheConfiguration(adopts *awstypes.LustreReadCacheConfiguration) []map[string]any {
+	if adopts == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"sizing_mode": string(adopts.SizingMode),
+	}
+
+	if adopts.SizeGiB != nil {
+		m[names.AttrSize] = aws.ToInt32(adopts.SizeGiB)
 	}
 
 	return []map[string]any{m}
