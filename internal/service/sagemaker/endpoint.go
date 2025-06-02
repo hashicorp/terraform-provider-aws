@@ -302,9 +302,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
+		o, n := d.GetChange("endpoint_config_name")
+		_, new := o.(string), n.(string)
+
 		input := &sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
-			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
+			EndpointConfigName: aws.String(new),
 		}
 
 		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
