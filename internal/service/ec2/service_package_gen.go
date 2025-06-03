@@ -152,7 +152,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_vpc_route_server_peer",
 			Name:     "VPC Route Server Peer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "route_server_peer_id",
 			},
 		},
 		{

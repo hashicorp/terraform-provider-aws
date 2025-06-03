@@ -24,8 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TODO VPC Route Servers etc.
-
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_customer_gateway", &resource.Sweeper{
 		Name: "aws_customer_gateway",
@@ -470,7 +468,8 @@ func RegisterSweepers() {
 
 	awsv2.Register("aws_vpc_route_server", sweepRouteServers, "aws_vpc_route_server_vpc_association")
 	awsv2.Register("aws_vpc_route_server_vpc_association", sweepRouteServerAssociations, "aws_vpc_route_server_endpoint", "aws_vpc_route_server_propagation")
-	awsv2.Register("aws_vpc_route_server_endpoint", sweepRouteServerEndpoints)
+	awsv2.Register("aws_vpc_route_server_endpoint", sweepRouteServerEndpoints, "aws_vpc_route_server_peer")
+	awsv2.Register("aws_vpc_route_server_peer", sweepRouteServerPeers)
 	awsv2.Register("aws_vpc_route_server_propagation", sweepRouteServerPropagations)
 }
 
@@ -3178,6 +3177,28 @@ func sweepRouteServerEndpoints(ctx context.Context, client *conns.AWSClient) ([]
 		for _, v := range page.RouteServerEndpoints {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerEndpointResource, client,
 				framework.NewAttribute("route_server_endpoint_id", aws.ToString(v.RouteServerEndpointId))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRouteServerPeers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeRouteServerPeersInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeRouteServerPeersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RouteServerPeers {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerPeerResource, client,
+				framework.NewAttribute("route_server_peer_id", aws.ToString(v.RouteServerPeerId))))
 		}
 	}
 

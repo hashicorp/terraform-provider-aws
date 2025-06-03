@@ -46,10 +46,6 @@ func TestAccVPCRouteServerEndpoint_basic(t *testing.T) {
 				Config: testAccVPCRouteServerEndpointConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "eni_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "eni_address"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

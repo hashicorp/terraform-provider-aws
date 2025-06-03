@@ -6916,6 +6916,68 @@ func findRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
+func findRouteServerPeer(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerPeersInput) (*awstypes.RouteServerPeer, error) {
+	output, err := findRouteServerPeers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServerPeers(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerPeersInput) ([]awstypes.RouteServerPeer, error) {
+	var output []awstypes.RouteServerPeer
+
+	pages := ec2.NewDescribeRouteServerPeersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerPeerIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServerPeers...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServerPeer, error) {
+	input := ec2.DescribeRouteServerPeersInput{
+		RouteServerPeerIds: []string{id},
+	}
+
+	output, err := findRouteServerPeer(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerPeerStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerPeerId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
 func findRouteServerPropagation(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerPropagationsInput) (*awstypes.RouteServerPropagation, error) {
 	output, err := findRouteServerPropagations(ctx, conn, input)
 

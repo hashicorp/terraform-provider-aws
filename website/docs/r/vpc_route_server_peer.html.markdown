@@ -15,7 +15,7 @@ description: |-
 
 ```terraform
 resource "aws_vpc_route_server_peer" "test" {
-  route_server_endpoint_id = aws_vpc_route_server_endpoint.example.id
+  route_server_endpoint_id = aws_vpc_route_server_endpoint.example.route_server_endpoint_id
   peer_address             = "10.0.1.250"
   bgp_options {
     peer_asn = 65200
@@ -39,12 +39,12 @@ resource "aws_vpc_route_server" "test" {
 }
 
 resource "aws_vpc_route_server_association" "test" {
-  route_server_id = aws_vpc_route_server.test.id
+  route_server_id = aws_vpc_route_server.test.route_server_id
   vpc_id          = aws_vpc.test.id
 }
 
 resource "aws_vpc_route_server_endpoint" "test" {
-  route_server_id = aws_vpc_route_server.test.id
+  route_server_id = aws_vpc_route_server.test.route_server_id
   subnet_id       = aws_subnet.test.id
 
   tags = {
@@ -55,14 +55,14 @@ resource "aws_vpc_route_server_endpoint" "test" {
 }
 
 resource "aws_vpc_route_server_propagation" "test" {
-  route_server_id = aws_vpc_route_server.test.id
+  route_server_id = aws_vpc_route_server.test.route_server_id
   route_table_id  = aws_route_table.test.id
 
   depends_on = [aws_vpc_route_server_association.test]
 }
 
 resource "aws_vpc_route_server_peer" "test" {
-  route_server_endpoint_id = aws_vpc_route_server_endpoint.test.id
+  route_server_endpoint_id = aws_vpc_route_server_endpoint.test.route_server_endpoint_id
   peer_address             = "10.0.1.250"
   bgp_options {
     peer_asn                = 65000
@@ -81,15 +81,12 @@ resource "aws_vpc_route_server_peer" "test" {
 The following arguments are required:
 
 * `route_server_endpoint_id` - (Required) The ID of the route server endpoint for which to create a peer.
-
 * `peer_address` - (Required) The IPv4 address of the peer device.
-
 * `bgp_options` - The BGP options for the peer, including ASN (Autonomous System Number) and BFD (Bidrectional Forwarding Detection) settings. Configuration block with BGP Options configuration Detailed below
 
 ### bgp_options
 
 * `peer_asn` - (Required) The Border Gateway Protocol (BGP) Autonomous System Number (ASN) for the appliance. Valid values are from 1 to 4294967295. We recommend using a private ASN in the 64512–65534 (16-bit ASN) or 4200000000–4294967294 (32-bit ASN) range.
-
 * `peer_liveness_detection` (Optional) The requested liveness detection protocol for the BGP peer. Valid values are `bgp-keepalive` and `bfd`. Default value is `bgp-keepalive`.
 
 The following arguments are optional:
@@ -100,7 +97,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier of the route server peer.
+* `arn` - The ARN of the route server peer.
+* `route_server_peer_id` - The unique identifier of the route server peer.
 * `route_server_id` - The ID of the route server associated with this peer.
 * `endpoint_eni_address` - The IP address of the Elastic network interface for the route server endpoint.
 * `endpoint_eni_id` - The ID of the Elastic network interface for the route server endpoint.
@@ -117,7 +115,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server using the `route_server_peer_id`. For example:
 
 ```terraform
 import {
@@ -126,7 +124,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC (Virtual Private Cloud) Route Server using the `id`. For example:
+Using `terraform import`, import VPC (Virtual Private Cloud) Route Server using the `route_server_peer_id`. For example:
 
 ```console
 % terraform import aws_vpc_route_server_peer.example rsp-12345678
