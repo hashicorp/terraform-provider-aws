@@ -6883,3 +6883,35 @@ func findRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id strin
 
 	return output, nil
 }
+
+func findRouteServerAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) (*awstypes.RouteServerAssociation, error) {
+	input := ec2.GetRouteServerAssociationsInput{
+		RouteServerId: aws.String(routeServerID),
+	}
+	output, err := findRouteServerAssociations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.RouteServerAssociation) bool {
+		return aws.ToString(v.VpcId) == vpcID
+	}))
+}
+
+func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerAssociationsInput) ([]awstypes.RouteServerAssociation, error) {
+	output, err := conn.GetRouteServerAssociations(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotAssociated, errCodeInvalidRouteServerIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RouteServerAssociations, nil
+}

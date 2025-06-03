@@ -86,6 +86,7 @@ const (
 	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
 	errCodeInvalidRouteServerEndpointIdNotFound                    = "InvalidRouteServerEndpointId.NotFound"
+	errCodeInvalidRouteServerIdNotAssociated                       = "InvalidRouteServerId.NotAssociated"
 	errCodeInvalidRouteServerIdNotFound                            = "InvalidRouteServerId.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"

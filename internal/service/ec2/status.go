@@ -1653,3 +1653,19 @@ func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string)
 		return output, string(output.State), nil
 	}
 }
+
+func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}

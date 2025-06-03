@@ -140,11 +140,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory:  newVPCRouteServerAssociationResource,
-			TypeName: "aws_vpc_route_server_association",
-			Name:     "VPC Route Server Association",
-		},
-		{
 			Factory:  newVPCRouteServerEndpointResource,
 			TypeName: "aws_vpc_route_server_endpoint",
 			Name:     "VPC Route Server Endpoint",
@@ -164,6 +159,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newVPCRouteServerPropagationResource,
 			TypeName: "aws_vpc_route_server_propagation",
 			Name:     "VPC Route Server Propagation",
+		},
+		{
+			Factory:  newVPCRouteServerVPCAssociationResource,
+			TypeName: "aws_vpc_route_server_vpc_association",
+			Name:     "VPC Route Server VPC Association",
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResource,

@@ -3409,3 +3409,38 @@ func waitRouteServerEndpointDeleted(ctx context.Context, conn *ec2.Client, id st
 
 	return nil, err
 }
+
+func waitVPCRouteServerAssociationCreated(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerAssociationStateAssociating),
+		Target:                    enum.Slice(awstypes.RouteServerAssociationStateAssociated),
+		Refresh:                   statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCRouteServerAssociationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerAssociationStateDisassociating),
+		Target:  []string{},
+		Refresh: statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}

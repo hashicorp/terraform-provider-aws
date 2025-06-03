@@ -1,11 +1,11 @@
 ---
 subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
-page_title: "AWS: aws_vpc_route_server_association"
+page_title: "AWS: aws_vpc_route_server_vpc_association"
 description: |-
   Terraform resource for managing a VPC (Virtual Private Cloud) Route Server Association.
 ---
-# Resource: aws_vpc_route_server_association
+# Resource: aws_vpc_route_server_vpc_association
 
   Provides a resource for managing association between VPC (Virtual Private Cloud) route server and a VPC.
 
@@ -14,9 +14,9 @@ description: |-
 ### Basic Usage
 
 ```terraform
-resource "aws_vpc_route_server_association" "example" {
-  route_server_id = aws_vpc_route_server.example.id
-  vpc_id          = aws_vpc.foo.id
+resource "aws_vpc_route_server_vpc_association" "example" {
+  route_server_id = aws_vpc_route_server.example.route_server_id
+  vpc_id          = aws_vpc.example.id
 }
 ```
 
@@ -25,7 +25,6 @@ resource "aws_vpc_route_server_association" "example" {
 The following arguments are required:
 
 * `route_server_id` - (Required) The unique identifier for the route server to be associated.
-
 * `vpc_id` - (Required) The ID of the VPC to associate with the route server.
 
 ## Attribute Reference
@@ -45,7 +44,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_vpc_route_server_association.example
+  to = aws_vpc_route_server_vpc_association.example
   id = "rs-12345678,vpc-0f001273ec18911b1"
 }
 ```
@@ -53,5 +52,5 @@ import {
 Using `terraform import`, to  to import VPC (Virtual Private Cloud) Route Server Association using the associated resource ID and VPC Id separated by a comma (,). For example:
 
 ```console
-% terraform import aws_vpc_route_server_association.example rs-12345678,vpc-0f001273ec18911b1
+% terraform import aws_vpc_route_server_vpc_association.example rs-12345678,vpc-0f001273ec18911b1
 ```

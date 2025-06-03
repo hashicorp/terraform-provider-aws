@@ -386,6 +386,7 @@ func RegisterSweepers() {
 			"aws_nat_gateway",
 			"aws_network_acl",
 			"aws_networkmanager_vpc_attachment",
+			"aws_vpc_route_server_vpc_attachment",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
@@ -467,7 +468,8 @@ func RegisterSweepers() {
 		},
 	})
 
-	awsv2.Register("aws_vpc_route_server", sweepRouteServers)
+	awsv2.Register("aws_vpc_route_server", sweepRouteServers, "aws_vpc_route_server_vpc_association")
+	awsv2.Register("aws_vpc_route_server_vpc_association", sweepRouteServerAssociations)
 }
 
 func sweepCapacityReservations(region string) error {
@@ -3107,6 +3109,51 @@ func sweepRouteServers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerResource, client,
 				framework.NewAttribute("route_server_id", id)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRouteServerAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeRouteServersInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeRouteServersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RouteServers {
+			routeServerID := aws.ToString(v.RouteServerId)
+
+			if state := v.State; state == awstypes.RouteServerStateDeleted {
+				log.Printf("[INFO] Skipping VPC Route Server %s: State=%s", routeServerID, state)
+				continue
+			}
+
+			input := ec2.GetRouteServerAssociationsInput{
+				RouteServerId: aws.String(routeServerID),
+			}
+			output, err := conn.GetRouteServerAssociations(ctx, &input)
+
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotAssociated) {
+				continue
+			}
+
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range output.RouteServerAssociations {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerVPCAssociationResource, client,
+					framework.NewAttribute("route_server_id", routeServerID),
+					framework.NewAttribute(names.AttrVPCID, aws.ToString(v.VpcId))))
+			}
 		}
 	}
 
