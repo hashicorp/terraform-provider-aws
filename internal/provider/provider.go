@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/internal/attribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -459,12 +460,8 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := &schema.Schema{
-						Type:        schema.TypeString,
-						Optional:    true,
-						Computed:    true,
-						Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-					}
+					regionSchema := attribute.Region()
+
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
 						r.UpdateWithoutTimeout = schema.NoopContext
