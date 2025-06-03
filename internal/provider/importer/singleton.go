@@ -12,6 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+type Client interface {
+	AccountID(ctx context.Context) string
+	Region(ctx context.Context) string
+}
+
+var _ Client = &conns.AWSClient{}
+
 func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) error {
 	if rd.Id() != "" {
 		if region, ok := rd.GetOk(names.AttrRegion); ok {
@@ -30,7 +37,7 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) e
 		return err
 	}
 
-	client := meta.(*conns.AWSClient)
+	client := meta.(Client)
 
 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 	var accountID string
@@ -72,7 +79,7 @@ func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) err
 		return err
 	}
 
-	client := meta.(*conns.AWSClient)
+	client := meta.(Client)
 
 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 	var accountID string
