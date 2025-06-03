@@ -2,153 +2,26 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/workspacesweb/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
-	"github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestDataProtectionSettingsExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfworkspacesweb.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dataprotectionsettings workspacesweb.DescribeDataProtectionSettingsResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,27 +35,19 @@ func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProtectionSettingsConfig_basic(rName),
+				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataprotectionsettings),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
-					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workspacesweb", regexache.MustCompile(`dataprotectionsettings:.+$`)),
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "test"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_protection_settings_arn", "workspaces-web", regexache.MustCompile(`dataProtectionSettings/.+$`)),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "data_protection_settings_arn"),
+				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
 			},
 		},
 	})
@@ -190,12 +55,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 
 func TestAccWorkSpacesWebDataProtectionSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dataprotectionsettings workspacesweb.DescribeDataProtectionSettingsResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -209,18 +69,248 @@ func TestAccWorkSpacesWebDataProtectionSettings_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProtectionSettingsConfig_basic(rName, testAccDataProtectionSettingsVersionNewer),
+				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataprotectionsettings),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceDataProtectionSettings = newResourceDataProtectionSettings
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceDataProtectionSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebDataProtectionSettings_complete(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataProtectionSettings awstypes.DataProtectionSettings
+	resourceName := "aws_workspacesweb_data_protection_settings.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionSettingsConfig_complete(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "test-complete"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_confidence_level", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.0", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.1", "https://test.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "emailAddress"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "3"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern1.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern1.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-SSN"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{2}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/SSN|Social Security/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "Custom SSN pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "data_protection_settings_arn"),
+				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebDataProtectionSettings_additionalEncryptionContextUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataProtectionSettings awstypes.DataProtectionSettings
+	resourceName := "aws_workspacesweb_data_protection_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionSettingsConfig_additionalEncryptionContextBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Test"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "data_protection_settings_arn"),
+				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
+			},
+			{
+				Config: testAccDataProtectionSettingsConfig_additionalEncryptionContextAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Live"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebDataProtectionSettings_customerManagedKeyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataProtectionSettings awstypes.DataProtectionSettings
+	resourceName := "aws_workspacesweb_data_protection_settings.test"
+	kmsKeyResourceName1 := "aws_kms_key.test1"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionSettingsConfig_customerManagedKeyBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName1, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "data_protection_settings_arn"),
+				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
+			},
+			{
+				Config: testAccDataProtectionSettingsConfig_customerManagedKeyAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataProtectionSettings awstypes.DataProtectionSettings
+	resourceName := "aws_workspacesweb_data_protection_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataProtectionSettingsConfig_updateBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "test-update"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description before"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_confidence_level", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.0", "https://before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt-before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "ssn"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern-before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern-before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CC"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPatternBefore"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{4}-\\d{4}-\\d{4}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/ssn/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "SSN pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-BEF"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "before"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "data_protection_settings_arn"),
+				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
+			},
+			{
+				Config: testAccDataProtectionSettingsConfig_updateAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "test-update-after"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description after"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_confidence_level", "3"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.0", "https://after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.1", "https://second-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.1", "https://second-exempt-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "phoneNum"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "3"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.1", "https://second-pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-PHONE"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPatternAfter"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{3}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/phone|number/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "Custom phone number pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-AFT"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "after"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "team"),
+				),
 			},
 		},
 	})
@@ -235,97 +325,521 @@ func testAccCheckDataProtectionSettingsDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
-			_, err := tfworkspacesweb.FindDataProtectionSettingsByID(ctx, conn, rs.Primary.ID)
+			_, err := tfworkspacesweb.FindDataProtectionSettingsByARN(ctx, conn, rs.Primary.Attributes["data_protection_settings_arn"])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-			        return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingDestroyed, tfworkspacesweb.ResNameDataProtectionSettings, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingDestroyed, tfworkspacesweb.ResNameDataProtectionSettings, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WorkSpaces Web Data Protection Settings %s still exists", rs.Primary.Attributes["data_protection_settings_arn"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDataProtectionSettingsExists(ctx context.Context, name string, dataprotectionsettings *workspacesweb.DescribeDataProtectionSettingsResponse) resource.TestCheckFunc {
+func testAccCheckDataProtectionSettingsExists(ctx context.Context, n string, v *awstypes.DataProtectionSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingExistence, tfworkspacesweb.ResNameDataProtectionSettings, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingExistence, tfworkspacesweb.ResNameDataProtectionSettings, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
 
-		resp, err := tfworkspacesweb.FindDataProtectionSettingsByID(ctx, conn, rs.Primary.ID)
+		output, err := tfworkspacesweb.FindDataProtectionSettingsByARN(ctx, conn, rs.Primary.Attributes["data_protection_settings_arn"])
+
 		if err != nil {
-			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingExistence, tfworkspacesweb.ResNameDataProtectionSettings, rs.Primary.ID, err)
+			return err
 		}
 
-		*dataprotectionsettings = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
-
-	input := &workspacesweb.ListDataProtectionSettingssInput{}
-
-	_, err := conn.ListDataProtectionSettingss(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+func testAccDataProtectionSettingsConfig_basic() string {
+	return `
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test"
+}
+`
 }
 
-func testAccCheckDataProtectionSettingsNotRecreated(before, after *workspacesweb.DescribeDataProtectionSettingsResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.DataProtectionSettingsId), aws.ToString(after.DataProtectionSettingsId); before != after {
-			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingNotRecreated, tfworkspacesweb.ResNameDataProtectionSettings, aws.ToString(before.DataProtectionSettingsId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccDataProtectionSettingsConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+func testAccDataProtectionSettingsConfig_complete() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  data_protection_settings_name             = %[1]q
-  engine_type             = "ActiveWorkSpacesWeb"
-  engine_version          = %[2]q
-  host_instance_type      = "workspacesweb.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  display_name = "test-complete"
+  description  = "test description"
+  customer_managed_key = aws_kms_key.test.arn
 
-  logs {
-    general = true
+  additional_encryption_context = {
+    Environment = "Production"
+    Project     = "Testing"
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  inline_redaction_configuration {
+    global_confidence_level = 2
+    global_enforced_urls    = ["https://example.com", "https://test.example.com"]
+    global_exempt_urls      = ["https://exempt.example.com"]
+
+    inline_redaction_patterns {
+      built_in_pattern_id = "emailAddress"
+      confidence_level    = 3
+      enforced_urls       = ["https://pattern1.example.com"]
+      exempt_urls         = ["https://exempt-pattern1.example.com"]
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-SSN"
+      }
+    }
+
+    inline_redaction_patterns {
+      custom_pattern {
+        pattern_name        = "CustomPattern"
+        pattern_regex       = "/\\d{3}-\\d{2}-\\d{4}/g"
+        keyword_regex       = "/SSN|Social Security/gi"
+        pattern_description = "Custom SSN pattern"
+      }
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-CUSTOM"
+      }
+    }
+  }
+
+  tags = {
+    Name        = "test"
+    Environment = "dev"
   }
 }
-`, rName, version)
+`
+}
+
+func testAccDataProtectionSettingsConfig_updateBefore() string {
+	return `
+resource "aws_kms_key" "test_update" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-update"
+  description  = "test description before"
+  customer_managed_key = aws_kms_key.test_update.arn
+
+  additional_encryption_context = {
+    Environment = "Development"
+    Project     = "Testing"
+  }
+
+  inline_redaction_configuration {
+    global_confidence_level = 2
+    global_enforced_urls    = ["https://before.example.com"]
+    global_exempt_urls      = ["https://exempt-before.example.com"]
+
+    inline_redaction_patterns {
+      built_in_pattern_id = "ssn"
+      confidence_level    = 2
+      enforced_urls       = ["https://pattern-before.example.com"]
+      exempt_urls         = ["https://exempt-pattern-before.example.com"]
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-CC"
+      }
+    }
+
+    inline_redaction_patterns {
+      custom_pattern {
+        pattern_name        = "CustomPatternBefore"
+        pattern_regex       = "/\\d{4}-\\d{4}-\\d{4}-\\d{4}/g"
+        keyword_regex       = "/ssn/gi"
+        pattern_description = "SSN pattern"
+      }
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-CUSTOM-BEF"
+      }
+    }
+  }
+
+  tags = {
+    Name        = "before"
+    Environment = "dev"
+  }
+}
+`
+}
+
+func testAccDataProtectionSettingsConfig_additionalEncryptionContextBefore() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-encryption-context"
+  customer_managed_key = aws_kms_key.test.arn
+  additional_encryption_context = {
+    Environment = "Development"
+    Project     = "Test"
+  }
+}
+`
+}
+
+func testAccDataProtectionSettingsConfig_additionalEncryptionContextAfter() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-encryption-context"
+  customer_managed_key = aws_kms_key.test.arn
+  additional_encryption_context = {
+    Environment = "Production"
+    Project     = "Live"
+  }
+}
+`
+}
+
+func testAccDataProtectionSettingsConfig_customerManagedKeyBefore() string {
+	return `
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-cmk"
+  customer_managed_key = aws_kms_key.test1.arn
+}
+`
+}
+
+func testAccDataProtectionSettingsConfig_customerManagedKeyAfter() string {
+	return `
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-cmk"
+  customer_managed_key = aws_kms_key.test2.arn
+}
+`
+}
+
+func testAccDataProtectionSettingsConfig_updateAfter() string {
+	return `
+resource "aws_kms_key" "test_update" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow WorkSpacesWeb to use the key"
+        Effect = "Allow"
+        Principal = {
+          Service = "workspaces-web.amazonaws.com"
+        }
+        Action = [
+          "kms:DescribeKey",
+          "kms:GenerateDataKey",
+          "kms:GenerateDataKeyWithoutPlaintext",
+          "kms:Decrypt",
+          "kms:ReEncryptTo",
+          "kms:ReEncryptFrom"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_workspacesweb_data_protection_settings" "test" {
+  display_name = "test-update-after"
+  description  = "test description after"
+  customer_managed_key = aws_kms_key.test_update.arn
+
+  additional_encryption_context = {
+    Environment = "Development"
+    Project     = "Testing"
+  }
+
+  inline_redaction_configuration {
+    global_confidence_level = 3
+    global_enforced_urls    = ["https://after.example.com", "https://second-after.example.com"]
+    global_exempt_urls      = ["https://exempt-after.example.com", "https://second-exempt-after.example.com"]
+
+    inline_redaction_patterns {
+      built_in_pattern_id = "phoneNum"
+      confidence_level    = 3
+      enforced_urls       = ["https://pattern-after.example.com", "https://second-pattern-after.example.com"]
+      exempt_urls         = ["https://exempt-pattern-after.example.com"]
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-PHONE"
+      }
+    }
+
+    inline_redaction_patterns {
+      custom_pattern {
+        pattern_name        = "CustomPatternAfter"
+        pattern_regex       = "/\\d{3}-\\d{3}-\\d{4}/g"
+        keyword_regex       = "/phone|number/gi"
+        pattern_description = "Custom phone number pattern"
+      }
+      
+      redaction_place_holder {
+        redaction_place_holder_type = "CustomText"
+        redaction_place_holder_text = "REDACTED-CUSTOM-AFT"
+      }
+    }
+  }
+
+  tags = {
+    Name        = "after"
+    Environment = "prod"
+    Owner       = "team"
+  }
+}
+`
 }
