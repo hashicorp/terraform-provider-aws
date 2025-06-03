@@ -78,8 +78,6 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 ## Argument Reference
 
-See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
-
 This resource supports the following arguments:
 
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
@@ -91,6 +89,8 @@ This resource supports the following arguments:
 * `video` - (Optional, Forces new resource) Video parameters object (documented below)
 * `video_watermarks` - (Optional, Forces new resource) Watermark parameters for the video parameters (documented below)
 * `video_codec_options` (Optional, Forces new resource) Codec options for the video parameters
+
+See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
 The `audio` object supports the following:
 

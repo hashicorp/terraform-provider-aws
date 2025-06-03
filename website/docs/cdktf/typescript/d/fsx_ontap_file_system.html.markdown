@@ -38,13 +38,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `automaticBackupRetentionDays` - The number of days to retain automatic backups.
@@ -87,4 +87,4 @@ In addition to all arguments above, the following attributes are exported:
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - IP addresses of the file system endpoint.
 
-<!-- cache-key: cdktf-0.20.8 input-b97463809c57c7b63b418b0676e4e2a48d4f96734b55866c6060f2c5662073a5 -->
+<!-- cache-key: cdktf-0.20.8 input-cfef0d89a32a7153ba86f9f7386d7c675ba99ef21468d38c06db31f5f03ad2f1 -->

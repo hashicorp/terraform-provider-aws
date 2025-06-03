@@ -20,6 +20,8 @@ data "aws_api_gateway_export" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `export_type` - (Required) Type of export. Acceptable values are `oas30` for OpenAPI 3.0.x and `swagger` for Swagger/OpenAPI 2.0.
 * `rest_api_id` - (Required) Identifier of the associated REST API.
 * `stage_name` - (Required) Name of the Stage that will be exported.

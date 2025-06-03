@@ -3,7 +3,7 @@ aws_vpc_route_server
 ```
 
 ```release-note:new-resource
-aws_vpc_route_server_association
+aws_vpc_route_server_vpc_association
 ```
 
 ```release-note:new-resource

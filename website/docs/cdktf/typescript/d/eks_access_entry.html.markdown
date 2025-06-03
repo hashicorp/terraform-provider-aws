@@ -40,6 +40,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `clusterName` – (Required) Name of the EKS Cluster.
 * `principalArn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
 
@@ -55,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Defaults to STANDARD which provides the standard workflow. EC2_LINUX, EC2_WINDOWS, FARGATE_LINUX types disallow users to input a username or groups, and prevent associations.
 * `tagsAll` - (Optional) Key-value map of resource tags, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-9bbb26118237e89b1ec4a4af4451e3c4f5378f139ebdd69cc542649692e1985d -->
+<!-- cache-key: cdktf-0.20.8 input-4fa212fde63055eb523af1a4546bb034582c5e2ed4553f8c08b8842ad4f16aa2 -->

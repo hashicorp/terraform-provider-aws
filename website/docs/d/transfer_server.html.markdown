@@ -21,6 +21,8 @@ data "aws_transfer_server" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `server_id` - (Required) ID for an SFTP server.
 
 ## Attribute Reference

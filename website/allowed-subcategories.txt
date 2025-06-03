@@ -243,6 +243,8 @@ Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice

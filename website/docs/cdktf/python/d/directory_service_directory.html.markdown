@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `directory_id` - (Required) ID of the directory.
 
 ## Attribute Reference
@@ -76,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `radius_timeout` - Amount of time, in seconds, to wait for the RADIUS server to respond.
 * `use_same_username` - Not currently used.
 
-<!-- cache-key: cdktf-0.20.8 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->
+<!-- cache-key: cdktf-0.20.8 input-77c56db7c6adf484c716285b72d920b827069a7908a716e6aa33cf444e4d0561 -->

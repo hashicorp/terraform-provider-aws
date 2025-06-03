@@ -61,15 +61,19 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `dhcp_options_id` - (Optional) EC2 DHCP Options ID.
 * `filter` - (Optional) List of custom filters as described below.
 
-### filter
+### `filter`
 
-For more information about filtering, see the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeDhcpOptions.html).
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter.
 * `values` - (Required) Set of values for filtering.
+
+For more information about filtering, see the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeDhcpOptions.html).
 
 ## Attribute Reference
 
@@ -93,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-5e07846ee257802e7847e95f52b4668824fd29e496f4146c97275d9ef810ad8f -->
+<!-- cache-key: cdktf-0.20.8 input-e7314c2cff15cb87983db9a1bb2f0d153cbe157521c531351e1fd08e0fdf9f55 -->

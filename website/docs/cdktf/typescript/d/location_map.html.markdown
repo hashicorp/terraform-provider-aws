@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `mapName` - (Required) Name of the map resource.
 
 ## Attribute Reference
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the map.
 * `updateTime` - Timestamp for when the map resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-0b7e671677f6b40d5b7e281bcc7a2f6d4c9948b32cc48282e4c534b54ca5d4c4 -->
+<!-- cache-key: cdktf-0.20.8 input-52e2b2c58810a7e04e0c8cbe30b604642927d6e8456af47f6c0dea825248e36a -->

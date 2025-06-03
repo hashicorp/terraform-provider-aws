@@ -15,7 +15,7 @@ description: |-
 
 ```terraform
 resource "aws_vpc_route_server_endpoint" "test" {
-  route_server_id = aws_vpc_route_server.example.id
+  route_server_id = aws_vpc_route_server.example.route_server_id
   subnet_id       = aws_subnet.main.id
 
   tags = {
@@ -29,7 +29,6 @@ resource "aws_vpc_route_server_endpoint" "test" {
 The following arguments are required:
 
 * `route_server_id` - (Required) The ID of the route server for which to create an endpoint.
-
 * `subnet_id` - (Required) The ID of the subnet in which to create the route server endpoint.
 
 The following arguments are optional:
@@ -40,7 +39,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier of the route server endpoint.
+* `arn` - The ARN of the route server endpoint.
+* `route_server_endpoint_id` - The unique identifier of the route server endpoint.
 * `eni_id` - The ID of the Elastic network interface for the endpoint.
 * `eni_address` - The IP address of the Elastic network interface for the endpoint.
 * `vpc_id` - The ID of the VPC containing the endpoint.
@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server Endpoint using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC (Virtual Private Cloud) Route Server Endpoint using the `route_server_endpoint_id`. For example:
 
 ```terraform
 import {
@@ -64,7 +64,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC (Virtual Private Cloud) Route Server Endpoint using the `id`. For example:
+Using `terraform import`, import VPC (Virtual Private Cloud) Route Server Endpoint using the `route_server_endpoint_id`. For example:
 
 ```console
 % terraform import aws_vpc_route_server_endpoint.example rse-12345678

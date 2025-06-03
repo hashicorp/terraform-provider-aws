@@ -145,8 +145,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
-
 The following arguments are required:
 
 * `integration_name` - (Required) Name of the integration.
@@ -163,6 +161,8 @@ You can only include this parameter if you specify the `kms_key_id` parameter.
 If you don't specify an encryption key, Redshift uses a default AWS owned key.
 You can only include this parameter if `source_arn` references a DynamoDB table.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
 
 ## Attribute Reference
 
@@ -204,4 +204,4 @@ Using `terraform import`, import Redshift Integration using the `arn`. For examp
 % terraform import aws_redshift_integration.example arn:aws:redshift:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23620b131b543b1b2a65e1e7448af54803dd1232ce5557352f0af751e8caf145 -->
+<!-- cache-key: cdktf-0.20.8 input-5a220be4e5e1b82a9911a62ad39cafe74cb1cb67c8462441650d8ed8ff83f207 -->

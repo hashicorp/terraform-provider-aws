@@ -58,9 +58,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
-
 This resource supports the following arguments:
 
 * `applyImmediately` - (Optional) Specifies whether any database modifications
@@ -120,6 +117,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
+
 [1]: /docs/providers/aws/r/docdb_cluster.html
 [2]: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-manage-performance.html#db-cluster-manage-scaling-instance
 [3]: https://www.terraform.io/docs/configuration/meta-arguments/count.html
@@ -167,4 +167,4 @@ Using `terraform import`, import DocumentDB Cluster Instances using the `identif
 % terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-63bf015ceca69751ce0c69520c5fbab34edfda79b9aefb2a15fbd2a786edef10 -->
+<!-- cache-key: cdktf-0.20.8 input-5bf63593ccb48a69c66ce8ec27eb0ad8a20e355ca426c6ff4839a39d0f77d742 -->

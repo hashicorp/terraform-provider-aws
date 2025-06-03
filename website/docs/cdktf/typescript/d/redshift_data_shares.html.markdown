@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `managedBy` - Identifier of a datashare to show its managing entity.
 * `producerArn` - ARN (Amazon Resource Name) of the producer.
 
-<!-- cache-key: cdktf-0.20.8 input-a6e02994b2fd3f90675bcbc9f0776c98f5364aa58fe770ac23f494179694a345 -->
+<!-- cache-key: cdktf-0.20.8 input-bc78fb63b8eb03db01d5bdd7240594da9ae7408306324a0be98e60537bef0bbe -->

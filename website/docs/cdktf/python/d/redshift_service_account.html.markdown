@@ -72,6 +72,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS Redshift account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
@@ -82,4 +84,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS Redshift service account in the selected region.
 * `arn` - ARN of the AWS Redshift service account in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-e94000569ef4938913b2e5c8ffc6e76ff71e3d14063c879ff153df1bb864e656 -->
+<!-- cache-key: cdktf-0.20.8 input-202bb48b28ea65000d81473334f290efea9017de866775f6b2bbb783496f0173 -->

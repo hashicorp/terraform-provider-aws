@@ -20,6 +20,8 @@ data "aws_glue_connection" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
@@ -29,6 +31,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.
+* `athena_properties` - A map of connection properties specific to the Athena compute environment.
+* `connection_properties` - A map of connection properties.
 * `connection_type` - Type of Glue Connection.
 * `description` – Description of the connection.
 * `match_criteria` – A list of criteria that can be used in selecting this connection.

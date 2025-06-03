@@ -61,7 +61,7 @@ var (
 	FindReservedDBInstanceByID                 = findReservedDBInstanceByID
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
-	ParameterGroupModifyChunk                  = parameterGroupModifyChunk
+	ParameterChunksForModify                   = parameterChunksForModify
 	ParseDBInstanceARN                         = parseDBInstanceARN
 	ProxyTargetParseResourceID                 = proxyTargetParseResourceID
 	WaitBlueGreenDeploymentDeleted             = waitBlueGreenDeploymentDeleted

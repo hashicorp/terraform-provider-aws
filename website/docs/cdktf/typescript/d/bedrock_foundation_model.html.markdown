@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
 * `modelId` – (Required) Model identifier.
 
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.8 input-62b828c977f074f9a7e3ab00ef3ef26d43210725821dc2b7eeecc7e84900c311 -->
+<!-- cache-key: cdktf-0.20.8 input-c75c9c15d61ec94a1981795aaaa8623eed5814b08359d63d8dd10d45a2ef9523 -->

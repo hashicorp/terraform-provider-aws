@@ -38,30 +38,29 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+This data source supports the following arguments:
 
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `executable_users` - (Optional) Limit search to users with *explicit* launch
 permission on  the image. Valid items are the numeric account ID or `self`.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. There
 are several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
-
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API.
 This filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
-
 * `sort_ascending` - (Optional) Used to sort AMIs by creation time.
 If no value is specified, the default value is `false`.
-
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response.
 If false, no deprecated AMIs are included in the response. If no value is specified, the default value is `false`.
 
 ## Attribute Reference
 
-`ids` is set to the list of AMI IDs, sorted by creation time according to `sort_ascending`.
+This data source exports the following attributes in addition to the arguments above:
+
+* `ids` is set to the list of AMI IDs, sorted by creation time according to `sort_ascending`.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
@@ -71,4 +70,4 @@ If false, no deprecated AMIs are included in the response. If no value is specif
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-df8435503c645904f83640627b35c5031003b38da5f178afcb6e456e7076b481 -->
+<!-- cache-key: cdktf-0.20.8 input-7ae0b380f1ace360bd86f478fdbba49d9f9aee92ead73db4ffc8c43f9486e5db -->

@@ -115,10 +115,10 @@ var (
 	ResourceVPCIPv6CIDRBlockAssociation                   = resourceVPCIPv6CIDRBlockAssociation
 	ResourceVPCPeeringConnection                          = resourceVPCPeeringConnection
 	ResourceVPCRouteServer                                = newVPCRouteServerResource
-	ResourceVPCRouteServerAssociation                     = newVPCRouteServerAssociationResource
-	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerEndpoint                        = newVPCRouteServerEndpointResource
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
+	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
+	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -147,6 +147,7 @@ var (
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
 	FindCreateSnapshotCreateVolumePermissionByTwoPartKey       = findCreateSnapshotCreateVolumePermissionByTwoPartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
+	FindDefaultCreditSpecificationByInstanceFamily             = findDefaultCreditSpecificationByInstanceFamily
 	FindDHCPOptionsByID                                        = findDHCPOptionsByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID
@@ -195,6 +196,11 @@ var (
 	FindRouteByIPv4Destination                                 = findRouteByIPv4Destination
 	FindRouteByIPv6Destination                                 = findRouteByIPv6Destination
 	FindRouteByPrefixListIDDestination                         = findRouteByPrefixListIDDestination
+	FindRouteServerByID                                        = findRouteServerByID
+	FindRouteServerAssociationByTwoPartKey                     = findRouteServerAssociationByTwoPartKey
+	FindRouteServerEndpointByID                                = findRouteServerEndpointByID
+	FindRouteServerPeerByID                                    = findRouteServerPeerByID
+	FindRouteServerPropagationByTwoPartKey                     = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                              = findRouteTableAssociationByID
 	FindRouteTableByID                                         = findRouteTableByID
 	FindSecurityGroupByID                                      = findSecurityGroupByID
@@ -241,11 +247,6 @@ var (
 	FindVPCEndpointSubnetAssociationExists                     = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                        = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                               = findVPCPeeringConnectionByID
-	FindVPCRouteServerByID                                     = findVPCRouteServerByID
-	FindVPCRouteServerAssociationByTwoPartKey                  = findVPCRouteServerAssociationByTwoPartKey
-	FindVPCRouteServerPropagationByTwoPartKey                  = findVPCRouteServerPropagationByTwoPartKey
-	FindVPCRouteServerEndpointByID                             = findVPCRouteServerEndpointByID
-	FindVPCRouteServerPeerByID                                 = findVPCRouteServerPeerByID
 	FindVPNConnectionByID                                      = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                         = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                         = findVPNGatewayByID

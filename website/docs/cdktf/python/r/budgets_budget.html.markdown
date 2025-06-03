@@ -254,9 +254,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
-
 The following arguments are required:
 
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
@@ -277,6 +274,9 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
 ## Attribute Reference
 
@@ -370,4 +370,4 @@ Using `terraform import`, import budgets using `AccountID:BudgetName`. For examp
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c38d7a9b8429f82c930c22d097e1873519e670d8a58dcc39daaab4ae36b008ed -->
+<!-- cache-key: cdktf-0.20.8 input-dd9b63f9a398499a48eeeb8ff1356cc5ea01c7583a6ad256695d6226fb2a2535 -->

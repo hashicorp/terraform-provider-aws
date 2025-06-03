@@ -86,6 +86,8 @@ resource "aws_network_interface_sg_attachment" "sg_attachment" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `security_group_id` - (Required) The ID of the security group.
 * `network_interface_id` - (Required) The ID of the network interface to attach to.
 

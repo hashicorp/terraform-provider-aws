@@ -5,39 +5,39 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_vpc_route_server_peer", name="VPC Route Server Peer")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="route_server_peer_id")
 // @Testing(tagsTest=false)
 func newVPCRouteServerPeerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceVPCRouteServerPeer{}
+	r := &vpcRouteServerPeerResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -45,26 +45,21 @@ func newVPCRouteServerPeerResource(_ context.Context) (resource.ResourceWithConf
 	return r, nil
 }
 
-const (
-	ResNameVPCRouteServerPeer = "VPC Route Server Peer"
-)
-
-type resourceVPCRouteServerPeer struct {
+type vpcRouteServerPeerResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithImportByID
-	framework.WithNoUpdate
+	framework.WithNoOpUpdate[vpcRouteServerPeerResourceModel]
 }
 
-func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *vpcRouteServerPeerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			"route_server_endpoint_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"endpoint_eni_address": schema.StringAttribute{
+				Computed: true,
+			},
+			"endpoint_eni_id": schema.StringAttribute{
+				Computed: true,
 			},
 			"peer_address": schema.StringAttribute{
 				Required: true,
@@ -72,29 +67,35 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"route_server_endpoint_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"route_server_peer_id": framework.IDAttribute(),
 			"route_server_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"endpoint_eni_address": schema.StringAttribute{
-				Computed: true,
-			},
-			"endpoint_eni_id": schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrSubnetID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"bgp_options": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceVPCRouteServerPeerBgpOptionsModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[routeServerBGPOptionsModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -103,13 +104,14 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 							Validators: []validator.Int64{
 								int64validator.Between(1, 4294967295),
 							},
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
 						},
 						"peer_liveness_detection": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.RouteServerPeerLivenessMode](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.RouteServerPeerLivenessMode](),
+							Optional:   true,
+							Computed:   true,
 						},
 					},
 				},
@@ -122,242 +124,148 @@ func (r *resourceVPCRouteServerPeer) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceVPCRouteServerPeer) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *vpcRouteServerPeerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data vpcRouteServerPeerResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceVPCRouteServerPeerModel
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var input ec2.CreateRouteServerPeerInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := ec2.CreateRouteServerPeerInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeRouteServerPeer),
-	}
+	// Additional fields.
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeRouteServerPeer)
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateRouteServerPeer(ctx, &input)
 
-	out, err := conn.CreateRouteServerPeer(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCRouteServerPeer, plan.RouteServerId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.RouteServerPeer == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCRouteServerPeer, plan.RouteServerId.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating VPC Route Server Peer", err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.RouteServerPeer, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitVPCRouteServerPeerCreated(ctx, conn, plan.RouteServerPeerId.ValueString(), createTimeout)
+	// Set values for unknowns.
+	rsp := output.RouteServerPeer
+	id := aws.ToString(rsp.RouteServerPeerId)
+	data.ARN = r.routeServerPeerARN(ctx, id)
+	data.RouteServerPeerID = fwflex.StringValueToFramework(ctx, id)
+
+	rsp, err = waitRouteServerPeerCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCRouteServerPeer, plan.RouteServerPeerId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Route Server Peer (%s) create", id), err.Error())
+
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, rsp, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceVPCRouteServerPeer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *vpcRouteServerPeerResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data vpcRouteServerPeerResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCRouteServerPeerModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	id := fwflex.StringValueFromFramework(ctx, data.RouteServerPeerID)
+	rsp, err := findRouteServerPeerByID(ctx, conn, id)
 
-	out, err := findVPCRouteServerPeerByID(ctx, conn, state.RouteServerPeerId.ValueString())
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Route Server Peer (%s)", id), err.Error())
+
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, rsp, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ARN = r.routeServerPeerARN(ctx, id)
+	setTagsOut(ctx, rsp.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceVPCRouteServerPeer) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *vpcRouteServerPeerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data vpcRouteServerPeerResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCRouteServerPeerModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	_, err := findVPCRouteServerPeerByID(ctx, conn, state.RouteServerPeerId.ValueString())
-
-	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	id := fwflex.StringValueFromFramework(ctx, data.RouteServerPeerID)
 	input := ec2.DeleteRouteServerPeerInput{
-		RouteServerPeerId: state.RouteServerPeerId.ValueStringPointer(),
+		RouteServerPeerId: aws.String(id),
 	}
+	_, err := conn.DeleteRouteServerPeer(ctx, &input)
 
-	_, err = conn.DeleteRouteServerPeer(ctx, &input)
-
-	if tfresource.NotFound(err) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerPeerIdNotFound, errCodeIncorrectState) {
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPC Route Server Peer (%s)", id), err.Error())
+
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVPCRouteServerPeerDeleted(ctx, conn, state.RouteServerPeerId.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCRouteServerPeer, state.RouteServerPeerId.String(), err),
-			err.Error(),
-		)
+	if _, err := waitRouteServerPeerDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Route Server Peer (%s) delete", id), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceVPCRouteServerPeer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *vpcRouteServerPeerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("route_server_peer_id"), request, response)
 }
 
-func waitVPCRouteServerPeerCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerPeer, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.RouteServerPeerStatePending),
-		Target:                    enum.Slice(awstypes.RouteServerPeerStateAvailable),
-		Refresh:                   statusVPCRouteServerPeer(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
-		return out, err
-	}
-
-	return nil, err
+func (r *vpcRouteServerPeerResource) routeServerPeerARN(ctx context.Context, id string) types.String {
+	return fwflex.StringValueToFramework(ctx, r.Meta().RegionalARN(ctx, names.EC2, "route-server-peer/"+id))
 }
 
-func waitVPCRouteServerPeerDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerPeer, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.RouteServerStateDeleting),
-		Target:  []string{},
-		Refresh: statusVPCRouteServerPeer(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.RouteServerPeer); ok {
-		return out, err
-	}
-
-	return nil, err
+type vpcRouteServerPeerResourceModel struct {
+	ARN                   types.String                                                `tfsdk:"arn"`
+	BGPOptions            fwtypes.ListNestedObjectValueOf[routeServerBGPOptionsModel] `tfsdk:"bgp_options"`
+	EndpointEniAddress    types.String                                                `tfsdk:"endpoint_eni_address"`
+	EndpointEniID         types.String                                                `tfsdk:"endpoint_eni_id"`
+	PeerAddress           types.String                                                `tfsdk:"peer_address"`
+	RouteServerEndpointID types.String                                                `tfsdk:"route_server_endpoint_id"`
+	RouteServerID         types.String                                                `tfsdk:"route_server_id"`
+	RouteServerPeerID     types.String                                                `tfsdk:"route_server_peer_id"`
+	SubnetID              types.String                                                `tfsdk:"subnet_id"`
+	Tags                  tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll               tftags.Map                                                  `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value                                              `tfsdk:"timeouts"`
+	VpcID                 types.String                                                `tfsdk:"vpc_id"`
 }
 
-func statusVPCRouteServerPeer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findVPCRouteServerPeerByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
-func findVPCRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServerPeer, error) {
-	input := ec2.DescribeRouteServerPeersInput{
-		RouteServerPeerIds: []string{id},
-	}
-	var routeServerPeers []awstypes.RouteServerPeer
-	paginator := ec2.NewDescribeRouteServerPeersPaginator(conn, &input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			if tfresource.NotFound(err) {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				}
-			}
-			return nil, err
-		}
-		if page != nil && len(page.RouteServerPeers) > 0 {
-			for _, routeServerPeer := range page.RouteServerPeers {
-				if routeServerPeer.State == awstypes.RouteServerPeerStateDeleted {
-					continue
-				}
-				routeServerPeers = append(routeServerPeers, routeServerPeer)
-			}
-		}
-	}
-	if len(routeServerPeers) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   errors.New("route server not found"),
-			LastRequest: &input,
-		}
-	} else {
-		return &routeServerPeers[0], nil
-	}
-}
-
-type resourceVPCRouteServerPeerModel struct {
-	BgpOptions            fwtypes.ListNestedObjectValueOf[resourceVPCRouteServerPeerBgpOptionsModel] `tfsdk:"bgp_options"`
-	EndpointEniAddress    types.String                                                               `tfsdk:"endpoint_eni_address"`
-	EndpointEniId         types.String                                                               `tfsdk:"endpoint_eni_id"`
-	PeerAddress           types.String                                                               `tfsdk:"peer_address"`
-	RouteServerEndpointId types.String                                                               `tfsdk:"route_server_endpoint_id"`
-	RouteServerId         types.String                                                               `tfsdk:"route_server_id"`
-	RouteServerPeerId     types.String                                                               `tfsdk:"id"`
-	SubnetId              types.String                                                               `tfsdk:"subnet_id"`
-	Tags                  tftags.Map                                                                 `tfsdk:"tags"`
-	TagsAll               tftags.Map                                                                 `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value                                                             `tfsdk:"timeouts"`
-	VpcId                 types.String                                                               `tfsdk:"vpc_id"`
-}
-
-type resourceVPCRouteServerPeerBgpOptionsModel struct {
-	PeerAsn               types.Int64                                              `tfsdk:"peer_asn"`
+type routeServerBGPOptionsModel struct {
+	PeerASN               types.Int64                                              `tfsdk:"peer_asn"`
 	PeerLivenessDetection fwtypes.StringEnum[awstypes.RouteServerPeerLivenessMode] `tfsdk:"peer_liveness_detection"`
 }

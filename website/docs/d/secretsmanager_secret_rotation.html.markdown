@@ -22,6 +22,8 @@ data "aws_secretsmanager_secret_rotation" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 
 ## Attribute Reference

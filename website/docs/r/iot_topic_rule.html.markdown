@@ -78,6 +78,8 @@ resource "aws_iam_role_policy" "mypolicy" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the rule.
 * `description` - (Optional) The description of the rule.
 * `enabled` - (Required) Specifies whether the rule is enabled.

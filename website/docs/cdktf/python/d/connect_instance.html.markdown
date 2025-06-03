@@ -54,13 +54,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
-
 This data source supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
-
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
 ## Attribute Reference
 
@@ -81,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 * `service_role` - Service role of the instance.
 * `tags` - A map of tags to assigned to the instance.
 
-<!-- cache-key: cdktf-0.20.8 input-291c4ad40849a230a01292738ffaea2b18d7af4337f42323b47b37a0faa76046 -->
+<!-- cache-key: cdktf-0.20.8 input-8810f745a5a2d6ae1485a4660b98c529dbdc0d3e4285a67d3f3f061f152139ad -->

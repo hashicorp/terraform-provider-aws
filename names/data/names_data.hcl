@@ -5651,6 +5651,68 @@ service "nimble" {
   not_implemented          = true
 }
 
+service "notifications" {
+  go_packages {
+    v2_package = "notifications"
+  }
+
+  sdk {
+    id             = "notifications"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "Notifications"
+    human_friendly      = "User Notifications"
+  }
+
+  endpoint_info {
+    endpoint_api_call         = "ListNotificationConfigurations"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notifications_"
+  }
+
+  provider_package_correct = "notifications"
+  doc_prefix               = ["notifications_"]
+  brand                    = "AWS"
+}
+
+service "notificationscontacts" {
+  go_packages {
+    v2_package = "notificationscontacts"
+  }
+
+  sdk {
+    id             = "notificationscontacts"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "NotificationsContacts"
+    human_friendly      = "User Notifications Contacts"
+  }
+
+  endpoint_info {
+    endpoint_api_call         = "ListEmailContacts"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notificationscontacts_"
+  }
+
+  provider_package_correct = "notificationscontacts"
+  doc_prefix               = ["notificationscontacts_"]
+  brand                    = "AWS"
+}
+
 service "oam" {
   sdk {
     id = "OAM"
@@ -8639,7 +8701,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -8949,6 +9011,6 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }

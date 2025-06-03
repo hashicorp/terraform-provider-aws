@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) that identifies the resource policy.
 
 ## Attribute Reference
@@ -44,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy
 
-<!-- cache-key: cdktf-0.20.8 input-107f955d750a5b8827c396d72211b79ae4ad8c3cde0654c3353f405a454c633b -->
+<!-- cache-key: cdktf-0.20.8 input-cad965364b4db51b38ffc3573574bc149b6d4eebfb940870cdcf0b5a94f652bc -->

@@ -38,7 +38,7 @@ resource "aws_controltower_control" "example" {
 
 ## Argument Reference
 
-This following arguments are required:
+The following arguments are required:
 
 * `control_identifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `target_identifier` - (Required) The ARN of the organizational unit.

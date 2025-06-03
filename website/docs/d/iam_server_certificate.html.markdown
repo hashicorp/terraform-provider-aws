@@ -33,6 +33,8 @@ resource "aws_elb" "elb" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name_prefix` - prefix of cert to filter by
 * `path_prefix` - prefix of path to filter by
 * `name` - exact name of the cert to lookup

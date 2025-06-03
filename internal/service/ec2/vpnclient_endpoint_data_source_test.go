@@ -80,6 +80,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T, semaphore tfsync.Sem
 					resource.TestCheckResourceAttrPair(datasource3Name, "client_cidr_block", resourceName, "client_cidr_block"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "client_connect_options.#", resourceName, "client_connect_options.#"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "client_login_banner_options.#", resourceName, "client_login_banner_options.#"),
+					resource.TestCheckResourceAttrPair(datasource3Name, "client_route_enforcement_options.#", resourceName, "client_route_enforcement_options.#"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "client_vpn_endpoint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasource3Name, "connection_log_options.#", resourceName, "connection_log_options.#"),
 					resource.TestCheckResourceAttrPair(datasource3Name, names.AttrDescription, resourceName, names.AttrDescription),

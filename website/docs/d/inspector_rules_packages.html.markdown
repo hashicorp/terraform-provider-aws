@@ -39,6 +39,10 @@ resource "aws_inspector_assessment_template" "assessment" {
 }
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

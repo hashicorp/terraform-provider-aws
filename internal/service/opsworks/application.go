@@ -238,13 +238,13 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 		return fmt.Errorf("Only one ssl_configuration is permitted.")
 	}
 
-	attrType := awstypes.AppType(d.Get(names.AttrType).(string))
-	if attrType == awstypes.AppTypeNodejs || attrType == awstypes.AppTypeJava {
+	switch attrType := awstypes.AppType(d.Get(names.AttrType).(string)); attrType {
+	case awstypes.AppTypeNodejs, awstypes.AppTypeJava:
 		// allowed attributes: none
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
 			return fmt.Errorf("No additional attributes are allowed for app type '%s'.", attrType)
 		}
-	} else if attrType == awstypes.AppTypeRails {
+	case awstypes.AppTypeRails:
 		// allowed attributes: document_root, rails_env, auto_bundle_on_deploy
 		if d.Get("aws_flow_ruby_settings").(string) != "" {
 			return fmt.Errorf("Only 'document_root, rails_env, auto_bundle_on_deploy' are allowed for app type '%s'.", awstypes.AppTypeRails)
@@ -253,14 +253,14 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 		if _, ok := d.GetOk("rails_env"); !ok {
 			return fmt.Errorf("Set rails_env must be set if type is set to rails.")
 		}
-	} else if attrType == awstypes.AppTypePhp || attrType == awstypes.AppTypeStatic || attrType == awstypes.AppTypeOther {
+	case awstypes.AppTypePhp, awstypes.AppTypeStatic, awstypes.AppTypeOther:
 		log.Printf("[DEBUG] the app type is : %s", attrType)
 		log.Printf("[DEBUG] the attributes are: document_root '%s', rails_env '%s', auto_bundle_on_deploy '%s', aws_flow_ruby_settings '%s'", d.Get("document_root").(string), d.Get("rails_env").(string), d.Get("auto_bundle_on_deploy").(string), d.Get("aws_flow_ruby_settings").(string))
 		// allowed attributes: document_root
 		if d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
 			return fmt.Errorf("Only 'document_root' is allowed for app type '%s'.", attrType)
 		}
-	} else if attrType == awstypes.AppTypeAwsFlowRuby {
+	case awstypes.AppTypeAwsFlowRuby:
 		// allowed attributes: aws_flow_ruby_settings
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" {
 			return fmt.Errorf("Only 'aws_flow_ruby_settings' is allowed for app type '%s'.", attrType)
@@ -601,9 +601,10 @@ func resourceApplicationAttributes(d *schema.ResourceData) map[string]string {
 		attributes[string(awstypes.AppAttributesKeysRailsEnv)] = val
 	}
 	if val := d.Get("auto_bundle_on_deploy").(string); len(val) > 0 {
-		if val == "1" {
+		switch val {
+		case "1":
 			val = "true"
-		} else if val == "0" {
+		case "0":
 			val = "false"
 		}
 		attributes[string(awstypes.AppAttributesKeysAutoBundleOnDeploy)] = val
@@ -618,10 +619,10 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]strin
 	d.Set("aws_flow_ruby_settings", nil)
 	d.Set("auto_bundle_on_deploy", nil)
 
-	attrType := d.Get(names.AttrType)
-	if attrType == awstypes.AppTypeNodejs || attrType == awstypes.AppTypeJava {
+	switch attrType := d.Get(names.AttrType); attrType {
+	case awstypes.AppTypeNodejs, awstypes.AppTypeJava:
 		return
-	} else if attrType == awstypes.AppTypeRails {
+	case awstypes.AppTypeRails:
 		if val, ok := v[string(awstypes.AppAttributesKeysDocumentRoot)]; ok {
 			d.Set("document_root", val)
 		}
@@ -632,12 +633,12 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]strin
 			d.Set("auto_bundle_on_deploy", val)
 		}
 		return
-	} else if attrType == awstypes.AppTypePhp || attrType == awstypes.AppTypeStatic || attrType == awstypes.AppTypeOther {
+	case awstypes.AppTypePhp, awstypes.AppTypeStatic, awstypes.AppTypeOther:
 		if val, ok := v[string(awstypes.AppAttributesKeysDocumentRoot)]; ok {
 			d.Set("document_root", val)
 		}
 		return
-	} else if attrType == awstypes.AppTypeAwsFlowRuby {
+	case awstypes.AppTypeAwsFlowRuby:
 		if val, ok := v[string(awstypes.AppAttributesKeysAwsFlowRubySettings)]; ok {
 			d.Set("aws_flow_ruby_settings", val)
 		}

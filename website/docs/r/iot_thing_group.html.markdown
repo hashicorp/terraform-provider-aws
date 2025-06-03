@@ -40,6 +40,8 @@ resource "aws_iot_thing_group" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Thing Group.
 * `parent_group_name` - (Optional) The name of the parent Thing Group.
 * `properties` - (Optional) The Thing Group properties. Defined below.

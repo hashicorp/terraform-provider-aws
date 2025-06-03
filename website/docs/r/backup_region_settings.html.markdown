@@ -16,25 +16,29 @@ Provides an AWS Backup Region Settings resource.
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
     "Aurora"                 = true
+    "CloudFormation"         = true
     "DocumentDB"             = true
+    "DSQL"                   = true
     "DynamoDB"               = true
     "EBS"                    = true
     "EC2"                    = true
     "EFS"                    = true
     "FSx"                    = true
     "Neptune"                = true
-    "RDS"                    = true
-    "Storage Gateway"        = true
-    "VirtualMachine"         = true
-    "CloudFormation"         = true
     "Redshift"               = true
-    "S3"                     = true
-    "SAP HANA on Amazon EC2" = true
+    "Redshift Serverless"    = false
+    "RDS"                    = false
+    "S3"                     = false
+    "SAP HANA on Amazon EC2" = false
+    "Storage Gateway"        = false
+    "VirtualMachine"         = false
   }
 
   resource_type_management_preference = {
-    "DynamoDB" = true
-    "EFS"      = true
+    "CloudFormation" = true
+    "DSQL"           = true
+    "DynamoDB"       = false
+    "EFS"            = false
   }
 }
 ```
@@ -43,8 +47,8 @@ resource "aws_backup_region_settings" "test" {
 
 This resource supports the following arguments:
 
-* `resource_type_opt_in_preference` - (Required) A map of services along with the opt-in preferences for the Region.
-* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_UpdateRegionSettings.html#API_UpdateRegionSettings_RequestSyntax).
+* `resource_type_opt_in_preference` - (Required) A map of service names to their opt-in preferences for the Region. See [AWS Documentation on which services support backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-feature-availability.html).
+* `resource_type_management_preference` - (Optional) A map of service names to their full management preferences for the Region. For more information, see the AWS Documentation on [what full management is](https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html#full-management) and [which services support full management](https://docs.aws.amazon.com/aws-backup/latest/devguide/backup-feature-availability.html#features-by-resource).
 
 ## Attribute Reference
 

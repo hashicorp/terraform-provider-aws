@@ -71,6 +71,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory:  newDefaultCreditSpecificationResource,
+			TypeName: "aws_ec2_default_credit_specification",
+			Name:     "Default Credit Specification",
+		},
+		{
 			Factory:  newInstanceConnectEndpointResource,
 			TypeName: "aws_ec2_instance_connect_endpoint",
 			Name:     "Instance Connect Endpoint",
@@ -131,20 +136,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_vpc_route_server",
 			Name:     "VPC Route Server",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "route_server_id",
 			},
-		},
-		{
-			Factory:  newVPCRouteServerAssociationResource,
-			TypeName: "aws_vpc_route_server_association",
-			Name:     "VPC Route Server Association",
 		},
 		{
 			Factory:  newVPCRouteServerEndpointResource,
 			TypeName: "aws_vpc_route_server_endpoint",
 			Name:     "VPC Route Server Endpoint",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "route_server_endpoint_id",
 			},
 		},
 		{
@@ -152,13 +152,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			TypeName: "aws_vpc_route_server_peer",
 			Name:     "VPC Route Server Peer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "route_server_peer_id",
 			},
 		},
 		{
 			Factory:  newVPCRouteServerPropagationResource,
 			TypeName: "aws_vpc_route_server_propagation",
 			Name:     "VPC Route Server Propagation",
+		},
+		{
+			Factory:  newVPCRouteServerVPCAssociationResource,
+			TypeName: "aws_vpc_route_server_vpc_association",
+			Name:     "VPC Route Server VPC Association",
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResource,
