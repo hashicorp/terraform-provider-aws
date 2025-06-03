@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -74,7 +75,7 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrPermissions: schema.ListAttribute{
-							CustomType: fwtypes.ListOfStringType,
+							CustomType: fwtypes.ListOfStringEnumType[awstypes.ScopePermission](),
 							Optional:   true,
 						},
 						"prefixes": schema.ListAttribute{
@@ -281,6 +282,6 @@ type directoryBucketAccessPointScopeModel struct {
 }
 
 type scopeModel struct {
-	Permissions fwtypes.ListOfString `tfsdk:"permissions"`
-	Prefixes    fwtypes.ListOfString `tfsdk:"prefixes"`
+	Permissions fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.ScopePermission]] `tfsdk:"permissions"`
+	Prefixes    fwtypes.ListOfString                                              `tfsdk:"prefixes"`
 }
