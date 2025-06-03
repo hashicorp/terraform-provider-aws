@@ -227,26 +227,34 @@ var globalSingletonIdentitySchema = map[string]*schema.Schema{
 }
 
 func TestGlobalSingleton_ImportID_Valid_AcceptsAnything(t *testing.T) {
+	accountID := "123456789012"
+	client := mockClient{
+		accountID: accountID,
+		region:    "a-region-1",
+	}
 	rd := schema.TestResourceDataRaw(t, globalSingletonSchema, map[string]any{})
 	rd.SetId("a value")
 
-	err := importer.GlobalSingleton(context.Background(), rd, nil)
+	err := importer.GlobalSingleton(context.Background(), rd, client)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
 
-	if rd.Id() == "" {
-		t.Error("expected `id`")
+	if e, a := accountID, rd.Id(); e != a {
+		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
 }
 
 func TestGlobalSingleton_ImportID_Valid_AccountID(t *testing.T) {
 	accountID := "123456789012"
-
+	client := mockClient{
+		accountID: accountID,
+		region:    "a-region-1",
+	}
 	rd := schema.TestResourceDataRaw(t, globalSingletonSchema, map[string]any{})
 	rd.SetId(accountID)
 
-	err := importer.GlobalSingleton(context.Background(), rd, nil)
+	err := importer.GlobalSingleton(context.Background(), rd, client)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}

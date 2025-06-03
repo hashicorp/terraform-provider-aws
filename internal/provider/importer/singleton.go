@@ -69,8 +69,12 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) e
 }
 
 func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) error {
+	client := meta.(Client)
+
 	if rd.Id() != "" {
 		// Historically, we have not validated the Import ID for Global Singletons
+		rd.SetId(client.AccountID(ctx))
+
 		return nil
 	}
 
@@ -78,8 +82,6 @@ func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) err
 	if err != nil {
 		return err
 	}
-
-	client := meta.(Client)
 
 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 	var accountID string
@@ -91,6 +93,8 @@ func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) err
 		if accountID != client.AccountID(ctx) {
 			return fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
 		}
+	} else {
+		accountID = client.AccountID(ctx)
 	}
 
 	rd.SetId(accountID)
