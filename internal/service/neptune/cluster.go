@@ -705,7 +705,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return true, err
 				}
 
-				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "db-instance-parameter-group-name can only be specified for a major") {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "specified for a major") && tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "parameter") {
 					input.DBInstanceParameterGroupName = nil
 					return true, err
 				}
