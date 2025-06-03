@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS CloudFront KeyValueStore Key.
 
+!> This resource manages individual key value pairs in a KeyValueStore. This can lead to high costs associated with accessing the CloudFront KeyValueStore API when performing terraform operations with many key value pairs defined. For large key value stores, consider the [`aws_cloudfrontkeyvaluestore_keys_exclusive`](./cloudfrontkeyvaluestore_keys_exclusive.html.markdown) resource to minimize the number of API calls made to the CloudFront KeyValueStore API.
+
 ## Example Usage
 
 ### Basic Usage
@@ -82,4 +84,4 @@ Using `terraform import`, import CloudFront KeyValueStore Key using the `id`. Fo
 % terraform import aws_cloudfrontkeyvaluestore_key.example arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c,someKey
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8be706fbd3f242284c279369e9109cd860f070c155ffa699042454a80549babc -->
+<!-- cache-key: cdktf-0.20.8 input-7e4f0d6cc9be1d50fa5d677d4ef2f092e580efd26d1f78071d378aca75f443c3 -->

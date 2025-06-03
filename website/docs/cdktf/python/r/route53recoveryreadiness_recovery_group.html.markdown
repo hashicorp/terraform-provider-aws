@@ -37,7 +37,7 @@ The following arguments are required:
 
 * `recovery_group_name` - (Required) A unique name describing the recovery group.
 
-The following argument are optional:
+The following arguments are optional:
 
 * `cells` - (Optional) List of cell arns to add as nested fault domains within this recovery group
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -80,4 +80,4 @@ Using `terraform import`, import Route53 Recovery Readiness recovery groups usin
 % terraform import aws_route53recoveryreadiness_recovery_group.my-high-availability-app my-high-availability-app
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8dde4cc1d205a94cf5f5ad34c54ed11d8cdcf8e43195fafdf486d08bbe56f97b -->
+<!-- cache-key: cdktf-0.20.8 input-41a053f971b283aa32ae08cadae146b0d6c400c2ca49e6744b4d83384c846354 -->

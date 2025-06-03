@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
 * `max_retention_days` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
@@ -84,4 +84,4 @@ Using `terraform import`, import Backup Logically Air Gapped Vault using the `id
 % terraform import aws_backup_logically_air_gapped_vault.example lag-example-vault
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da77f247c1e95863bf20b1db72a05ad717f04d5ae1e812521cc9b3a879256789 -->
+<!-- cache-key: cdktf-0.20.8 input-0fe79ba8ed89a179ed210a40e2a919db73fed9207337142f39152ce68b49f152 -->

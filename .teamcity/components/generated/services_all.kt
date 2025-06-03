@@ -68,7 +68,7 @@ val services = mapOf(
     "cur" to ServiceSpec("Cost and Usage Report", regionOverride = "us-east-1"),
     "customerprofiles" to ServiceSpec("Connect Customer Profiles"),
     "databrew" to ServiceSpec("Glue DataBrew"),
-    "dataexchange" to ServiceSpec("Data Exchange"),
+    "dataexchange" to ServiceSpec("Data Exchange", parallelismOverride = 10),
     "datapipeline" to ServiceSpec("Data Pipeline"),
     "datasync" to ServiceSpec("DataSync", vpcLock = true),
     "datazone" to ServiceSpec("DataZone"),

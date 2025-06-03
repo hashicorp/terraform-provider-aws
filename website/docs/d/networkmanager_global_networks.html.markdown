@@ -22,6 +22,8 @@ data "aws_networkmanager_global_networks" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Restricts the list to the global networks with these tags.
 
 ## Attribute Reference

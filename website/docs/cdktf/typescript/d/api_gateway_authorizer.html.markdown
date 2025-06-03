@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `authorizerId` - (Required) Authorizer identifier.
 * `restApiId` - (Required) ID of the associated REST API.
@@ -58,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerArns` - List of the Amazon Cognito user pool ARNs.
 * `type` - Type of the authorizer.
 
-<!-- cache-key: cdktf-0.20.8 input-7c505056a62ecddc8f4337cf059da361268167b1838c9f6ea4a6d78a7e84dfe3 -->
+<!-- cache-key: cdktf-0.20.8 input-159a2c20934f01979bff3e655f88ae9b2b39ddbcd289fa6af63d0a4f6cf88401 -->

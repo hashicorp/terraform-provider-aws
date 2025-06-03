@@ -32,8 +32,6 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 
 ## Argument Reference
 
-See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
-
 This resource supports the following arguments:
 
 * `aws_kms_key_arn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
@@ -46,6 +44,8 @@ This resource supports the following arguments:
 * `role` - (Required) The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to use to transcode jobs for this pipeline.
 * `thumbnail_config` - (Optional) The ThumbnailConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save thumbnail files. (documented below)
 * `thumbnail_config_permissions` - (Optional) The permissions for the `thumbnail_config` object. (documented below)
+
+See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
 The `content_config` object specifies information about the Amazon S3 bucket in
 which you want Elastic Transcoder to save transcoded files and playlists: which

@@ -24,13 +24,13 @@ data "aws_identitystore_users" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `users` - List of Identity Store Users
     * `addresses` - List of details about the user's address.

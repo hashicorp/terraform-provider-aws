@@ -24,7 +24,7 @@ data "aws_bedrock_inference_profile" "test" {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
 - `inference_profile_id` – (Required) Inference Profile identifier.
 

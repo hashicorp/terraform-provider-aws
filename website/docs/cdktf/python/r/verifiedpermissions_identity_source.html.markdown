@@ -119,6 +119,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `policy_store_id` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
 * `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
 * `principal_entity_type`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
@@ -196,4 +198,4 @@ Using `terraform import`, import Verified Permissions Identity Source using the 
 % terraform import aws_verifiedpermissions_identity_source.example policy-store-id-12345678:identity-source-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c51f466be9c9c75453250f283eaf4b9fef5041791e2b815c576a5f553eb2817a -->
+<!-- cache-key: cdktf-0.20.8 input-06fcccaee4d3cffc316dd9d753e463805700b4f54d2ff5b80ef93a0c97e536ea -->

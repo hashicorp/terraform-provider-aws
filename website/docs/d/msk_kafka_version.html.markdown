@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon MSK Kafka Version
 ---
 
-# Data Source: aws_msk_cluster
+# Data Source: aws_msk_kafka_version
 
 Get information on a Amazon MSK Kafka Version
 

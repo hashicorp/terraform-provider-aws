@@ -27,6 +27,8 @@ data "aws_api_gateway_sdk" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `rest_api_id` - (Required) Identifier of the associated REST API.
 * `stage_name` - (Required) Name of the Stage that will be exported.
 * `sdk_type` - (Required) Language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.

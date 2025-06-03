@@ -21,7 +21,7 @@ data "aws_cognito_user_pool_client" "client" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `client_id` - (Required) Client Id of the user pool.
 * `user_pool_id` - (Required) User pool the client belongs to.

@@ -22,15 +22,14 @@ data "aws_quicksight_analysis" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `analysis_id` - (Required) Identifier for the analysis.
-
-The following arguments are optional:
-
 * `aws_account_id` - (Optional) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [Analysis Resource](/docs/providers/aws/r/quicksight_analysis.html) for details on the
 returned attributes - they are identical.

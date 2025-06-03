@@ -170,7 +170,7 @@ resource "aws_ec2_transit_gateway_route" "default-region-to-eu-central-1" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `filter` - (Required) Custom filter block as described below.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
@@ -182,9 +182,9 @@ which take the following arguments:
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html).
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The transit gateway route table id suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.

@@ -253,7 +253,7 @@ resource "aws_sns_topic_subscription" "sns_topic" {
 
 This example demonstrates how to define a `delivery_policy` for an HTTPS subscription. Unlike the `aws_sns_topic` resource, the `delivery_policy` for `aws_sns_topic_subscription` should not be wrapped in an `"http"` object.
 
-```hcl
+```terraform
 resource "aws_sns_topic_subscription" "example_with_delivery_policy" {
   topic_arn            = "arn:aws:sns:us-west-2:123456789012:my-topic"
   protocol             = "https"

@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `routingProfileId` is required.
-
 This data source supports the following arguments:
 
 * `instanceId` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routingProfileId` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
+
+~> **NOTE:** `instanceId` and one of either `name` or `routingProfileId` is required.
 
 ## Attribute Reference
 
@@ -96,4 +96,4 @@ A `queueConfigs` block supports the following attributes:
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.20.8 input-4bef98269c30e5e318435de8076afc54af062a6b62cb6767304c69bb9d6f3ee9 -->
+<!-- cache-key: cdktf-0.20.8 input-7b52c62aa5fc96bc070fdc4f49b0c96f81b55f17f04cb169afa157226b518e87 -->

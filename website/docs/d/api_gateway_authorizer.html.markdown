@@ -21,7 +21,7 @@ data "aws_api_gateway_authorizer" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `authorizer_id` - (Required) Authorizer identifier.
 * `rest_api_id` - (Required) ID of the associated REST API.

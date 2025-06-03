@@ -12,13 +12,15 @@ Retrieve information about a Direct Connect Connection.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dx_connection" "example" {
   name = "tf-dx-connection"
 }
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the connection to retrieve.
 

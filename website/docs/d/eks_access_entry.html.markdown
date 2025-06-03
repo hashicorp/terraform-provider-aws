@@ -25,6 +25,8 @@ output "eks_access_entry_outputs" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `cluster_name` – (Required) Name of the EKS Cluster.
 * `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
 

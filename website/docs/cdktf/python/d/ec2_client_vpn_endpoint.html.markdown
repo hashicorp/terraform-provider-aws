@@ -82,6 +82,7 @@ This data source exports the following attributes in addition to the arguments a
 * `client_cidr_block` - IPv4 address range, in CIDR notation, from which client IP addresses are assigned.
 * `client_connect_options` - The options for managing connection authorization for new client connections.
 * `client_login_banner_options` - Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `client_route_enforcement_options` - Options for enforce administrator defined routes on devices connected through the VPN.
 * `connection_log_options` - Information about the client connection logging options for the Client VPN endpoint.
 * `description` - Brief description of the endpoint.
 * `dns_name` - DNS name to be used by clients when connecting to the Client VPN endpoint.
@@ -102,4 +103,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-bc05f6bb24f9086ff19f5d3ed7d1f4948088a83b4e318db8a86fe506a18104cf -->
+<!-- cache-key: cdktf-0.20.8 input-fe98030488c524e5fa54a4d997e8c5e95dadd19c7f52c5f14b685074a40e9c80 -->

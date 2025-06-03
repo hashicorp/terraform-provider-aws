@@ -22,6 +22,8 @@ data "aws_cloudwatch_event_connection" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - Name of the connection.
 
 ## Attribute Reference

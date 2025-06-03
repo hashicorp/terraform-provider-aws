@@ -12,7 +12,7 @@ Provides details about a specific Amazon Kendra block list used for query sugges
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kendra_query_suggestions_block_list" "example" {
   index_id                        = "12345678-1234-1234-1234-123456789123"
   query_suggestions_block_list_id = "87654321-1234-4321-4321-321987654321"

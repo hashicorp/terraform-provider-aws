@@ -25,6 +25,8 @@ output "eks_addon_outputs" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `cluster_name` – (Required) Name of the EKS Cluster.

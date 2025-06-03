@@ -48,9 +48,6 @@ resource "aws_redshift_cluster" "example" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
-
 This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
@@ -113,6 +110,9 @@ This resource supports the following arguments:
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `snapshot_copy` - (Optional, **Deprecated**) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
 ### Nested Blocks
 

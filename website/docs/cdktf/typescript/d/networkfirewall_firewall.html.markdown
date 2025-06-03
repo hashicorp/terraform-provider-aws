@@ -83,10 +83,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 
@@ -123,4 +125,4 @@ This data source exports the following attributes in addition to the arguments a
 * `updateToken` - String token used when updating a firewall.
 * `vpcId` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.20.8 input-ced26c2a2730ee97c9f042e83fccca3f30054d717c0bb794507acd3bcd6f82fd -->
+<!-- cache-key: cdktf-0.20.8 input-8e8a896fcb6be35f32016f2fe0c1ff61990a1dd11b6e9e37025aad261b65d234 -->

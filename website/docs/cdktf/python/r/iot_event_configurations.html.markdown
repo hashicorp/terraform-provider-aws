@@ -47,6 +47,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `event_configurations` - (Required) Map. The new event configuration values. You can use only these strings as keys: `THING_GROUP_HIERARCHY`, `THING_GROUP_MEMBERSHIP`, `THING_TYPE`, `THING_TYPE_ASSOCIATION`, `THING_GROUP`, `THING`, `POLICY`, `CA_CERTIFICATE`, `JOB_EXECUTION`, `CERTIFICATE`, `JOB`. Use boolean for values of mapping.
 
 ## Attribute Reference
@@ -78,4 +80,4 @@ Using `terraform import`, import IoT Event Configurations using the AWS Region. 
 % terraform import aws_iot_event_configurations.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c2534bc481fb2d9ea904879358653aa4b239080a23d4a63362116e2f5fa8a1c -->
+<!-- cache-key: cdktf-0.20.8 input-cd3f52c942d4a7c3802a6a7d44372cf012de6acd36faa8c7a3ec23b7d72504d4 -->

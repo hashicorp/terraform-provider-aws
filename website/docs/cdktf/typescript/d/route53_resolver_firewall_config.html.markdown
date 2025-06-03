@@ -40,12 +40,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resourceId` - (Required) The ID of the VPC from Amazon VPC that the configuration is for.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `firewallFailOpen` - Determines how DNS Firewall operates during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply.
 * `id` - The ID of the firewall configuration.
 * `ownerId` - The Amazon Web Services account ID of the owner of the VPC that this firewall configuration applies to.
 
-<!-- cache-key: cdktf-0.20.8 input-b0f09d7efd8e098bbc579593a822c42d9bc95461129ab91f2ff09be220ad7bf4 -->
+<!-- cache-key: cdktf-0.20.8 input-ee43340131bd910d22f46773285c66e520f0548748a1144292c74e000ffbf246 -->

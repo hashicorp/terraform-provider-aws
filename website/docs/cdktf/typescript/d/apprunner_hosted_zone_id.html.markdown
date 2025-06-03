@@ -46,6 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `region` - (Optional) Name of the region whose AWS App Runner service HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
@@ -55,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the AWS App Runner service HostedZoneId in the selected region.
 
-<!-- cache-key: cdktf-0.20.8 input-4733cac38efe0f9c496e6811289bffebba0378b3b737ce90cd79e01055e37459 -->
+<!-- cache-key: cdktf-0.20.8 input-968dc72abcf8c3e0484f2178758e14816631e70dafab4fb6da0714222a537ebd -->

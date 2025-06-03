@@ -24,6 +24,8 @@ data "aws_networkmanager_sites" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `global_network_id` - (Required) ID of the Global Network of the sites to retrieve.
 * `tags` - (Optional) Restricts the list to the sites with these tags.
 

@@ -171,8 +171,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
-
 This resource supports the following arguments:
 
 * `gateway_name` - (Required) Name of the gateway.
@@ -192,6 +190,8 @@ This resource supports the following arguments:
 * `smb_file_share_visibility` - (Optional) Specifies whether the shares on this gateway appear when listing shares.
 * `tape_drive_type` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `IBM-ULT3580-TD5`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
 
 ### maintenance_start_time
 
@@ -290,4 +290,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5866f6ee66ead8eb9860932eee948921b45d71ae074c57ea809c8f514ce41176 -->
+<!-- cache-key: cdktf-0.20.8 input-cb4c928c4fd1e30fad393d7f5e5b16672e561d0e4ad9c5fc7036fb9ac75b1c63 -->

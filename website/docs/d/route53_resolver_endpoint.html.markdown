@@ -31,12 +31,16 @@ data "aws_route53_resolver_endpoint" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `resolver_endpoint_id` - (Optional) ID of the Route53 Resolver Endpoint.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [Route53resolver Filter value in the AWS API reference][1].
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Computed ARN of the Route53 Resolver Endpoint.
 * `direction` - Direction of the queries to or from the Resolver Endpoint .

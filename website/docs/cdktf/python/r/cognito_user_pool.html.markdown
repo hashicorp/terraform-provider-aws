@@ -93,12 +93,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the user pool.
-
-The following arguments are optional:
-
 * `account_recovery_setting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
@@ -288,7 +285,12 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### user_pool_add_ons
 
+* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
+
+### advanced_security_additional_flows
+
+* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 
@@ -342,4 +344,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1de089d90b5bc7a6d3a592c8987de03ad29aa1c45f9f1fa7b61945e93c3552b1 -->
+<!-- cache-key: cdktf-0.20.8 input-bf613de4b3913f417616b1617d2c7cc8079f2f7426813c90fec07e3b902ae516 -->

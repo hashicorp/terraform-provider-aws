@@ -119,14 +119,15 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
   insufficient_data_actions = []
 
   metric_query {
-    id         = "e1"
-    expression = "ANOMALY_DETECTION_BAND(m1)"
-    label      = "CPUUtilization (Expected)"
+    id          = "e1"
+    return_data = true
+    expression  = "ANOMALY_DETECTION_BAND(m1)"
+    label       = "CPUUtilization (Expected)"
   }
 
   metric_query {
     id          = "m1"
-    return_data = "true"
+    return_data = true
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
@@ -170,9 +171,6 @@ You must choose one or the other
 
 ## Argument Reference
 
-See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
-for details about valid values.
-
 This resource supports the following arguments:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
@@ -204,6 +202,9 @@ This resource supports the following arguments:
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
+for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 

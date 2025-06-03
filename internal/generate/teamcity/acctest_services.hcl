@@ -68,6 +68,10 @@ service "cur" {
   region = "us-east-1"
 }
 
+service "dataexchange" {
+  parallelism = 10
+}
+
 service "datasync" {
   vpc_lock = true
 }
