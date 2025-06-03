@@ -3371,6 +3371,41 @@ func waitRouteServerDeleted(ctx context.Context, conn *ec2.Client, id string, ti
 	return nil, err
 }
 
+func waitRouteServerAssociationCreated(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.RouteServerAssociationStateAssociating),
+		Target:                    enum.Slice(awstypes.RouteServerAssociationStateAssociated),
+		Refresh:                   statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteServerAssociationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteServerAssociationStateDisassociating),
+		Target:  []string{},
+		Refresh: statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitRouteServerEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.RouteServerEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.RouteServerEndpointStatePending),
@@ -3410,35 +3445,35 @@ func waitRouteServerEndpointDeleted(ctx context.Context, conn *ec2.Client, id st
 	return nil, err
 }
 
-func waitVPCRouteServerAssociationCreated(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+func waitRouteServerPropagationCreated(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string, timeout time.Duration) (*awstypes.RouteServerPropagation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.RouteServerAssociationStateAssociating),
-		Target:                    enum.Slice(awstypes.RouteServerAssociationStateAssociated),
-		Refresh:                   statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Pending:                   enum.Slice(awstypes.RouteServerPropagationStatePending),
+		Target:                    enum.Slice(awstypes.RouteServerPropagationStateAvailable),
+		Refresh:                   statusRouteServerPropagation(ctx, conn, routeServerID, routeTableID),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+	if output, ok := outputRaw.(*awstypes.RouteServerPropagation); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitVPCRouteServerAssociationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string, timeout time.Duration) (*awstypes.RouteServerAssociation, error) {
+func waitRouteServerPropagationDeleted(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string, timeout time.Duration) (*awstypes.RouteServerPropagation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.RouteServerAssociationStateDisassociating),
+		Pending: enum.Slice(awstypes.RouteServerPropagationStateDeleting),
 		Target:  []string{},
-		Refresh: statusRouteServerAssociation(ctx, conn, routeServerID, vpcID),
+		Refresh: statusRouteServerPropagation(ctx, conn, routeServerID, routeTableID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.RouteServerAssociation); ok {
+	if output, ok := outputRaw.(*awstypes.RouteServerPropagation); ok {
 		return output, err
 	}
 

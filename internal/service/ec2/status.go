@@ -1638,6 +1638,22 @@ func statusRouteServer(ctx context.Context, conn *ec2.Client, id string) retry.S
 	}
 }
 
+func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findRouteServerEndpointByID(ctx, conn, id)
@@ -1654,9 +1670,9 @@ func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) retry.StateRefreshFunc {
+func statusRouteServerPropagation(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+		output, err := findRouteServerPropagationByTwoPartKey(ctx, conn, routeServerID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

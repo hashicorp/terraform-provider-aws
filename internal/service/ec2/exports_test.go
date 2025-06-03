@@ -115,9 +115,9 @@ var (
 	ResourceVPCIPv6CIDRBlockAssociation                   = resourceVPCIPv6CIDRBlockAssociation
 	ResourceVPCPeeringConnection                          = resourceVPCPeeringConnection
 	ResourceVPCRouteServer                                = newVPCRouteServerResource
-	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerEndpoint                        = newVPCRouteServerEndpointResource
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
+	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
@@ -199,6 +199,7 @@ var (
 	FindRouteServerByID                                        = findRouteServerByID
 	FindRouteServerAssociationByTwoPartKey                     = findRouteServerAssociationByTwoPartKey
 	FindRouteServerEndpointByID                                = findRouteServerEndpointByID
+	FindRouteServerPropagationByTwoPartKey                     = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                              = findRouteTableAssociationByID
 	FindRouteTableByID                                         = findRouteTableByID
 	FindSecurityGroupByID                                      = findSecurityGroupByID
@@ -245,7 +246,6 @@ var (
 	FindVPCEndpointSubnetAssociationExists                     = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                        = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                               = findVPCPeeringConnectionByID
-	FindVPCRouteServerPropagationByTwoPartKey                  = findVPCRouteServerPropagationByTwoPartKey
 	FindVPCRouteServerPeerByID                                 = findVPCRouteServerPeerByID
 	FindVPNConnectionByID                                      = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                         = findVPNConnectionRouteByTwoPartKey

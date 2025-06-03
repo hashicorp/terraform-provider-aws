@@ -128,11 +128,11 @@ func testAccCheckVPCRouteServerVPCAssociationExists(ctx context.Context, n strin
 	}
 }
 
-func testAccVPCRouteServerVPCAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccVPCRouteServerVPCAssociationImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
+			return "", fmt.Errorf("Not Found: %s", n)
 		}
 
 		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes[names.AttrVPCID]), nil

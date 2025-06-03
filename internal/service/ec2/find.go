@@ -6822,6 +6822,38 @@ func findRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*aws
 	return output, nil
 }
 
+func findRouteServerAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) (*awstypes.RouteServerAssociation, error) {
+	input := ec2.GetRouteServerAssociationsInput{
+		RouteServerId: aws.String(routeServerID),
+	}
+	output, err := findRouteServerAssociations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.RouteServerAssociation) bool {
+		return aws.ToString(v.VpcId) == vpcID
+	}))
+}
+
+func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerAssociationsInput) ([]awstypes.RouteServerAssociation, error) {
+	output, err := conn.GetRouteServerAssociations(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotAssociated, errCodeInvalidRouteServerIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RouteServerAssociations, nil
+}
+
 func findRouteServerEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerEndpointsInput) (*awstypes.RouteServerEndpoint, error) {
 	output, err := findRouteServerEndpoints(ctx, conn, input)
 
@@ -6884,25 +6916,20 @@ func findRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
-func findRouteServerAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) (*awstypes.RouteServerAssociation, error) {
-	input := ec2.GetRouteServerAssociationsInput{
-		RouteServerId: aws.String(routeServerID),
-	}
-	output, err := findRouteServerAssociations(ctx, conn, &input)
+func findRouteServerPropagation(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerPropagationsInput) (*awstypes.RouteServerPropagation, error) {
+	output, err := findRouteServerPropagations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.RouteServerAssociation) bool {
-		return aws.ToString(v.VpcId) == vpcID
-	}))
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerAssociationsInput) ([]awstypes.RouteServerAssociation, error) {
-	output, err := conn.GetRouteServerAssociations(ctx, input)
+func findRouteServerPropagations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerPropagationsInput) ([]awstypes.RouteServerPropagation, error) {
+	output, err := conn.GetRouteServerPropagations(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotAssociated, errCodeInvalidRouteServerIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotPropagated, errCodeInvalidRouteServerIdNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -6913,5 +6940,14 @@ func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *e
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.RouteServerAssociations, nil
+	return output.RouteServerPropagations, nil
+}
+
+func findRouteServerPropagationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) (*awstypes.RouteServerPropagation, error) {
+	input := ec2.GetRouteServerPropagationsInput{
+		RouteServerId: aws.String(routeServerID),
+		RouteTableId:  aws.String(routeTableID),
+	}
+
+	return findRouteServerPropagation(ctx, conn, &input)
 }

@@ -469,7 +469,9 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_vpc_route_server", sweepRouteServers, "aws_vpc_route_server_vpc_association")
-	awsv2.Register("aws_vpc_route_server_vpc_association", sweepRouteServerAssociations)
+	awsv2.Register("aws_vpc_route_server_vpc_association", sweepRouteServerAssociations, "aws_vpc_route_server_endpoint", "aws_vpc_route_server_propagation")
+	awsv2.Register("aws_vpc_route_server_endpoint", sweepRouteServerEndpoints)
+	awsv2.Register("aws_vpc_route_server_propagation", sweepRouteServerPropagations)
 }
 
 func sweepCapacityReservations(region string) error {
@@ -3153,6 +3155,73 @@ func sweepRouteServerAssociations(ctx context.Context, client *conns.AWSClient) 
 				sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerVPCAssociationResource, client,
 					framework.NewAttribute("route_server_id", routeServerID),
 					framework.NewAttribute(names.AttrVPCID, aws.ToString(v.VpcId))))
+			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRouteServerEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeRouteServerEndpointsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeRouteServerEndpointsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RouteServerEndpoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerEndpointResource, client,
+				framework.NewAttribute("route_server_endpoint_id", aws.ToString(v.RouteServerEndpointId))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepRouteServerPropagations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeRouteServersInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeRouteServersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.RouteServers {
+			routeServerID := aws.ToString(v.RouteServerId)
+
+			if state := v.State; state == awstypes.RouteServerStateDeleted {
+				log.Printf("[INFO] Skipping VPC Route Server %s: State=%s", routeServerID, state)
+				continue
+			}
+
+			input := ec2.GetRouteServerPropagationsInput{
+				RouteServerId: aws.String(routeServerID),
+			}
+			output, err := conn.GetRouteServerPropagations(ctx, &input)
+
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotPropagated) {
+				continue
+			}
+
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range output.RouteServerPropagations {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newVPCRouteServerPropagationResource, client,
+					framework.NewAttribute("route_server_id", routeServerID),
+					framework.NewAttribute("route_table_id", aws.ToString(v.RouteTableId))))
 			}
 		}
 	}

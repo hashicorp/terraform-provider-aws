@@ -15,7 +15,7 @@ description: |-
 
 ```terraform
 resource "aws_vpc_route_server_propagation" "example" {
-  route_server_id = aws_vpc_route_server.example.id
+  route_server_id = aws_vpc_route_server.example.route_server_id
   route_table_id  = aws_route_table.example.id
 }
 ```
@@ -25,7 +25,6 @@ resource "aws_vpc_route_server_propagation" "example" {
 The following arguments are required:
 
 * `route_server_id` - (Required) The unique identifier for the route server to be associated.
-
 * `route_table_id` - (Required) The ID of the route table to which route server will propagate routes.
 
 ## Attribute Reference

@@ -90,7 +90,7 @@ func (r *vpcRouteServerVPCAssociationResource) Create(ctx context.Context, reque
 		return
 	}
 
-	if _, err := waitVPCRouteServerAssociationCreated(ctx, conn, routeServerID, vpcID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitRouteServerAssociationCreated(ctx, conn, routeServerID, vpcID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Route Server (%s) VPC (%s) Association create", routeServerID, vpcID), err.Error())
 
 		return
@@ -153,7 +153,7 @@ func (r *vpcRouteServerVPCAssociationResource) Delete(ctx context.Context, reque
 		return
 	}
 
-	if _, err := waitVPCRouteServerAssociationDeleted(ctx, conn, routeServerID, vpcID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitRouteServerAssociationDeleted(ctx, conn, routeServerID, vpcID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Route Server (%s) VPC (%s) Association delete", routeServerID, vpcID), err.Error())
 
 		return

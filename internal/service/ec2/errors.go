@@ -88,6 +88,7 @@ const (
 	errCodeInvalidRouteServerEndpointIdNotFound                    = "InvalidRouteServerEndpointId.NotFound"
 	errCodeInvalidRouteServerIdNotAssociated                       = "InvalidRouteServerId.NotAssociated"
 	errCodeInvalidRouteServerIdNotFound                            = "InvalidRouteServerId.NotFound"
+	errCodeInvalidRouteServerIdNotPropagated                       = "InvalidRouteServerId.NotPropagated"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                          = "InvalidSecurityGroupID.NotFound"

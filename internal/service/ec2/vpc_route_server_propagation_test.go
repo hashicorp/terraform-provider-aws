@@ -5,7 +5,6 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,9 +21,9 @@ import (
 
 func TestAccVPCRouteServerPropagation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var VPCRouteServerPropagation awstypes.RouteServerPropagation
+	var v awstypes.RouteServerPropagation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpc_route_server_propagation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,11 +37,9 @@ func TestAccVPCRouteServerPropagation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCRouteServerPropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCRouteServerPropagationConfig_basic(rName),
+				Config: testAccVPCRouteServerPropagationConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPropagationExists(ctx, resourceName, &VPCRouteServerPropagation),
-					resource.TestCheckResourceAttrSet(resourceName, "route_server_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckVPCRouteServerPropagationExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -51,7 +47,7 @@ func TestAccVPCRouteServerPropagation_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "route_server_id",
-				ImportStateIdFunc:                    testAccVPCRouteServerPropagationImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccVPCRouteServerPropagationImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -59,9 +55,9 @@ func TestAccVPCRouteServerPropagation_basic(t *testing.T) {
 
 func TestAccVPCRouteServerPropagation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var VPCRouteServerPropagation awstypes.RouteServerPropagation
+	var v awstypes.RouteServerPropagation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpc_route_server_propagation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,9 +70,9 @@ func TestAccVPCRouteServerPropagation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCRouteServerPropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCRouteServerPropagationConfig_basic(rName),
+				Config: testAccVPCRouteServerPropagationConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCRouteServerPropagationExists(ctx, resourceName, &VPCRouteServerPropagation),
+					testAccCheckVPCRouteServerPropagationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCRouteServerPropagation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -94,83 +90,89 @@ func testAccCheckVPCRouteServerPropagationDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := tfec2.FindVPCRouteServerPropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"])
+			_, err := tfec2.FindRouteServerPropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCRouteServerPropagation, rs.Primary.Attributes["route_server_id"], err)
+				continue
 			}
 
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCRouteServerPropagation, rs.Primary.Attributes["route_server_id"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Route Server %s Propagation %s still exists", rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCRouteServerPropagationExists(ctx context.Context, name string, VPCRouteServerPropagation *awstypes.RouteServerPropagation) resource.TestCheckFunc {
+func testAccCheckVPCRouteServerPropagationExists(ctx context.Context, n string, v *awstypes.RouteServerPropagation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServerPropagation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["route_server_id"] == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServerPropagation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindVPCRouteServerPropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"])
+		output, err := tfec2.FindRouteServerPropagationByTwoPartKey(ctx, conn, rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"])
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCRouteServerPropagation, rs.Primary.Attributes["route_server_id"], err)
+			return err
 		}
 
-		*VPCRouteServerPropagation = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccVPCRouteServerPropagationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccVPCRouteServerPropagationImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not Found: %s", resourceName)
+			return "", fmt.Errorf("Not Found: %s", n)
 		}
 
 		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["route_server_id"], rs.Primary.Attributes["route_table_id"]), nil
 	}
 }
 
-func testAccVPCRouteServerPropagationConfig_basic(rName string) string {
+func testAccVPCRouteServerPropagationConfig_basic(rName string, rAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-}
 
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = 4294967293
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_vpc_route_server_association" "test" {
-  route_server_id = aws_vpc_route_server.test.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_route_server" "test" {
+  amazon_side_asn = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_route_server_vpc_association" "test" {
+  route_server_id = aws_vpc_route_server.test.route_server_id
   vpc_id          = aws_vpc.test.id
 }
 
 resource "aws_vpc_route_server_propagation" "test" {
-  route_server_id = aws_vpc_route_server.test.id
+  route_server_id = aws_vpc_route_server_vpc_association.test.route_server_id
   route_table_id  = aws_route_table.test.id
-
-  depends_on = [aws_vpc_route_server_association.test]
 }
-`, rName)
+`, rName, rAsn)
 }
