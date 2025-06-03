@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -75,8 +76,14 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrPermissions: schema.ListAttribute{
-							CustomType: fwtypes.ListOfStringEnumType[awstypes.ScopePermission](),
+							//CustomType: fwtypes.ListOfStringEnumType[awstypes.ScopePermission](),
+							CustomType: fwtypes.ListOfStringType,
 							Optional:   true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.ScopePermission](),
+								),
+							},
 						},
 						"prefixes": schema.ListAttribute{
 							CustomType: fwtypes.ListOfStringType,
@@ -282,6 +289,6 @@ type directoryBucketAccessPointScopeModel struct {
 }
 
 type scopeModel struct {
-	Permissions fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.ScopePermission]] `tfsdk:"permissions"`
-	Prefixes    fwtypes.ListOfString                                              `tfsdk:"prefixes"`
+	Permissions fwtypes.ListOfString `tfsdk:"permissions"`
+	Prefixes    fwtypes.ListOfString `tfsdk:"prefixes"`
 }
