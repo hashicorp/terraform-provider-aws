@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -319,6 +320,11 @@ func resourceLustreFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"throughput_capacity": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ValidateDiagFunc: throughPutValidator,
+			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -409,10 +415,9 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
 			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
 		},
-		StorageCapacity: aws.Int32(int32(d.Get("storage_capacity").(int))),
-		StorageType:     awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:       flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
-		Tags:            getTagsIn(ctx),
+		StorageType: awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
+		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -515,6 +520,15 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("storage_capacity"); ok {
+		inputC.StorageCapacity = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("throughput_capacity"); ok {
+		inputC.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(v.(int)))
+		inputB.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		inputC.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 		inputB.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
@@ -605,6 +619,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
+	d.Set("throughput_capacity", lustreConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 
@@ -667,6 +682,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("storage_capacity") {
 			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
+		}
+
+		if d.HasChange("throughput_capacity") {
+			input.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(d.Get("throughput_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -1129,4 +1148,19 @@ func logStateFunc(v any) string {
 		}
 	}
 	return value
+}
+
+func throughPutValidator(i interface{}, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+	v := i.(int)
+	if v%4000 != 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Throughput value incorrect",
+			Detail:        fmt.Sprintf("Valid values are 4000 MBps or multiples of 4000 MBps, invalid value: %d", v),
+			AttributePath: path,
+		})
+
+	}
+	return diags
 }
