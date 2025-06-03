@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -145,7 +146,7 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      engineNeptune,
+				Default:      defaultEngine,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			names.AttrEngineVersion: {
@@ -465,13 +466,35 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-		if restoreDBClusterFromSnapshot {
-			return conn.RestoreDBClusterFromSnapshot(ctx, inputR)
-		}
+	var err error
 
-		return conn.CreateDBCluster(ctx, inputC)
-	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+	if restoreDBClusterFromSnapshot {
+		for r := backoff.NewRetryLoop(propagationTimeout); r.Continue(ctx); {
+			_, err = conn.RestoreDBClusterFromSnapshot(ctx, inputR)
+
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid") {
+				continue
+			}
+
+			break
+		}
+	}
+
+	if !restoreDBClusterFromSnapshot {
+		for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutCreate)); r.Continue(ctx); {
+			_, err = conn.CreateDBCluster(ctx, inputC)
+
+			if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {
+				continue
+			}
+
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid") {
+				continue
+			}
+
+			break
+		}
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): %s", clusterID, err)
@@ -679,6 +702,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				}
 
 				if errs.IsA[*awstypes.InvalidDBClusterStateFault](err) {
+					return true, err
+				}
+
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "db-instance-parameter-group-name can only be specified for a major") {
+					input.DBInstanceParameterGroupName = nil
 					return true, err
 				}
 
