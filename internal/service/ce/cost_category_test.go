@@ -222,6 +222,37 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	})
 }
 
+func TestAccCECostCategory_splitChargeOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output awstypes.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_splitChargeOrdering(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.0", "20"),
+					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.1", "30"),
+					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.2", "50"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCECostCategory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
@@ -521,6 +552,46 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, method)
+}
+
+func testAccCostCategoryConfig_splitChargeOrdering(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+
+  rule {
+    value = "production"
+    rule {
+      dimension {
+        key           = "LINKED_ACCOUNT_NAME"
+        values        = ["-prod"]
+        match_options = ["ENDS_WITH"]
+      }
+    }
+
+    type = "REGULAR"
+  }
+
+  split_charge_rule {
+    source  = "ecs"
+    method  = "FIXED"
+    targets = [
+      "appA",
+      "appB",
+      "appC",
+    ]
+    parameter {
+      type   = "ALLOCATION_PERCENTAGES"
+      values = [
+        20,
+        30,
+        50,
+      ]
+    }
+  }
+}
+`, rName)
 }
 
 func testAccCostCategoryConfig_tags1(rName, tagKey1, tagValue1 string) string {
