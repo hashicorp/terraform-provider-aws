@@ -1160,7 +1160,6 @@ func throughPutValidator(i any, path cty.Path) diag.Diagnostics {
 			Detail:        fmt.Sprintf("Valid values are 4000 MBps or multiples of 4000 MBps, invalid value: %d", v),
 			AttributePath: path,
 		})
-
 	}
 	return diags
 }
