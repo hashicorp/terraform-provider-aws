@@ -228,7 +228,7 @@ func testAccCheckVPCRouteServerEndpointExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccVPCRouteServerEndpointConfig_basic(rName string, rAsn int) string {
+func testAccVPCRouteServerEndpointConfig_base(rName string, rAsn int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_vpc_route_server" "test" {
   amazon_side_asn = %[2]d
@@ -238,52 +238,45 @@ resource "aws_vpc_route_server" "test" {
   }
 }
 
-resource "aws_vpc_route_server_endpoint" "test" {
+resource "aws_vpc_route_server_vpc_association" "test" {
   route_server_id = aws_vpc_route_server.test.route_server_id
-  subnet_id       = aws_subnet.test[0].id
+  vpc_id          = aws_vpc.test.id
 }
 `, rName, rAsn))
 }
 
-func testAccVPCRouteServerEndpointConfig_tags1(rName string, rAsn int, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = %[2]d
-
-  tags = {
-    Name = %[1]q
-  }
+func testAccVPCRouteServerEndpointConfig_basic(rName string, rAsn int) string {
+	return acctest.ConfigCompose(testAccVPCRouteServerEndpointConfig_base(rName, rAsn), `
+resource "aws_vpc_route_server_endpoint" "test" {
+  route_server_id = aws_vpc_route_server_vpc_association.test.route_server_id
+  subnet_id       = aws_subnet.test[0].id
+}
+`)
 }
 
+func testAccVPCRouteServerEndpointConfig_tags1(rName string, rAsn int, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccVPCRouteServerEndpointConfig_base(rName, rAsn), fmt.Sprintf(`
 resource "aws_vpc_route_server_endpoint" "test" {
-  route_server_id = aws_vpc_route_server.test.route_server_id
+  route_server_id = aws_vpc_route_server_vpc_association.test.route_server_id
   subnet_id       = aws_subnet.test[0].id
 
   tags = {
-    %[3]q = %[4]q
+    %[1]q = %[2]q
   }
 }
-`, rName, rAsn, tag1Key, tag1Value))
+`, tag1Key, tag1Value))
 }
 
 func testAccVPCRouteServerEndpointConfig_tags2(rName string, rAsn int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_vpc_route_server" "test" {
-  amazon_side_asn = %[2]d
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccVPCRouteServerEndpointConfig_base(rName, rAsn), fmt.Sprintf(`
 resource "aws_vpc_route_server_endpoint" "test" {
-  route_server_id = aws_vpc_route_server.test.route_server_id
+  route_server_id = aws_vpc_route_server_vpc_association.test.route_server_id
   subnet_id       = aws_subnet.test[0].id
 
   tags = {
+    %[1]q = %[2]q
     %[3]q = %[4]q
-    %[5]q = %[6]q
   }
 }
-`, rName, rAsn, tag1Key, tag1Value, tag2Key, tag2Value))
+`, tag1Key, tag1Value, tag2Key, tag2Value))
 }

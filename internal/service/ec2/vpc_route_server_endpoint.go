@@ -52,9 +52,15 @@ func (r *vpcRouteServerEndpointResource) Schema(ctx context.Context, request res
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"eni_address": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"eni_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"route_server_endpoint_id": framework.IDAttribute(),
 			"route_server_id": schema.StringAttribute{
@@ -73,6 +79,9 @@ func (r *vpcRouteServerEndpointResource) Schema(ctx context.Context, request res
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
