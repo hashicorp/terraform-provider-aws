@@ -31,10 +31,10 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_basic(tfneptune.EngineNeptune),
+				Config: testAccEngineVersionDataSourceConfig_basic(tfneptune.DefaultEngine),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfneptune.EngineNeptune),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, dataSourceNameLatest, "version"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfneptune.DefaultEngine),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, dataSourceNameLatest, names.AttrVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
@@ -111,13 +111,13 @@ func TestAccNeptuneEngineVersionDataSource_preferredVersionsPreferredUpgradeTarg
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.EngineNeptune, `"1.4.1.0", "1.4.2.0", "1.4.3.0"`, `"1.4.5.0"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.DefaultEngine, `"1.4.1.0", "1.4.2.0", "1.4.3.0"`, `"1.4.5.0"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1.4.3.0"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.EngineNeptune, `"1.3.2.0", "1.3.3.0", "1.4.0.0"`, `"1.4.4.0","1.4.5.0"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfneptune.DefaultEngine, `"1.3.2.0", "1.3.3.0", "1.4.0.0"`, `"1.4.4.0","1.4.5.0"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1.4.0.0"),
 				),
@@ -137,7 +137,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredUpgradeTargetsVersion(t *tes
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfneptune.EngineNeptune, "1.3", `"1.4.0.0", "1.4.1.0", "1.4.2.0"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfneptune.DefaultEngine, "1.3", `"1.4.0.0", "1.4.1.0", "1.4.2.0"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^1\.3`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^1\.3\.`)),
@@ -161,7 +161,7 @@ func TestAccNeptuneEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfneptune.EngineNeptune, majorTarget),
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfneptune.DefaultEngine, majorTarget),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(oneLess)),
 				),
@@ -250,7 +250,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, true, false),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.DefaultEngine, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -267,7 +267,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, false, true),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.DefaultEngine, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -284,7 +284,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.EngineNeptune, true, true),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfneptune.DefaultEngine, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -320,7 +320,7 @@ func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
-		Engine:      aws.String(tfneptune.EngineNeptune),
+		Engine:      aws.String(tfneptune.DefaultEngine),
 		DefaultOnly: aws.Bool(true),
 	}
 
@@ -361,7 +361,7 @@ data "aws_neptune_engine_version" "latest" {
   engine = %[1]q
   latest = true
 }
-`, tfneptune.EngineNeptune)
+`, tfneptune.DefaultEngine)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred() string {
@@ -375,7 +375,7 @@ data "aws_neptune_engine_version" "latest" {
   engine = %[1]q
   latest = true
 }
-`, tfneptune.EngineNeptune)
+`, tfneptune.DefaultEngine)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred2() string {
@@ -390,7 +390,7 @@ data "aws_neptune_engine_version" "latest" {
   engine = %[1]q
   latest = true
 }
-`, tfneptune.EngineNeptune)
+`, tfneptune.DefaultEngine)
 }
 
 func testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(engine, preferredVersions, preferredUpgrades string) string {
@@ -435,7 +435,7 @@ func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
 data "aws_neptune_engine_version" "test" {
   engine = %[1]q
 }
-`, tfneptune.EngineNeptune)
+`, tfneptune.DefaultEngine)
 }
 
 func testAccEngineVersionDataSourceConfig_defaultOnlyExplicit() string {
@@ -450,7 +450,7 @@ data "aws_neptune_engine_version" "latest" {
   engine = %[1]q
   latest = true
 }
-`, tfneptune.EngineNeptune)
+`, tfneptune.DefaultEngine)
 }
 
 func testAccEngineVersionDataSourceConfig_latest(latest bool) string {
@@ -482,7 +482,7 @@ data "aws_neptune_engine_version" "latest" {
   engine = %[1]q
   latest = true
 }
-`, tfneptune.EngineNeptune, latest)
+`, tfneptune.DefaultEngine, latest)
 }
 
 func testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(engine string, major, minor bool) string {

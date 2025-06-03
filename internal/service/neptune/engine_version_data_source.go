@@ -38,7 +38,7 @@ func dataSourceEngineVersion() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      engineNeptune,
+				Default:      defaultEngine,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_description": {
@@ -141,7 +141,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
-		Engine:                     aws.String(engineNeptune),
+		Engine:                     aws.String(defaultEngine),
 		ListSupportedCharacterSets: aws.Bool(true),
 		ListSupportedTimezones:     aws.Bool(true),
 	}

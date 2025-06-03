@@ -12,12 +12,12 @@ const (
 )
 
 const (
-	engineNeptune = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
+	defaultEngine = "neptune"
 )
 
 func engine_Values() []string {
 	return []string{
-		engineNeptune,
+		defaultEngine,
 	}
 }
 

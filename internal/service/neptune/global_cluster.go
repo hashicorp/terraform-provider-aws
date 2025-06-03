@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -144,7 +146,17 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.StorageEncrypted = aws.Bool(v.(bool))
 	}
 
-	output, err := conn.CreateGlobalCluster(ctx, input)
+	var output *neptune.CreateGlobalClusterOutput
+	var err error
+	for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutCreate)); r.Continue(ctx); {
+		output, err = conn.CreateGlobalCluster(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {
+			continue
+		}
+
+		break
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Neptune Global Cluster (%s): %s", globalClusterID, err)

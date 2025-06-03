@@ -25,5 +25,5 @@ var (
 	FindGlobalClusterByID             = findGlobalClusterByID
 	FindSubnetGroupByName             = findSubnetGroupByName
 
-	EngineNeptune = engineNeptune
+	DefaultEngine = defaultEngine
 )
