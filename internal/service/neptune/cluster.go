@@ -705,7 +705,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return true, err
 				}
 
-				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "specified for a major") && tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "parameter") {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "specified for a major") && tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, names.AttrParameter) {
 					input.DBInstanceParameterGroupName = nil
 					return true, err
 				}
