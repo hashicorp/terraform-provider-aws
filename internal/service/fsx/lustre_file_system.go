@@ -1150,7 +1150,7 @@ func logStateFunc(v any) string {
 	return value
 }
 
-func throughPutValidator(i interface{}, path cty.Path) diag.Diagnostics {
+func throughPutValidator(i any, path cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 	v := i.(int)
 	if v%4000 != 0 {

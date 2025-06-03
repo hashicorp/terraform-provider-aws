@@ -2094,7 +2094,6 @@ resource "aws_fsx_lustre_file_system" "test" {
   deployment_type     = "PERSISTENT_2"
   storage_type        = "INTELLIGENT_TIERING"
   throughput_capacity = 4000
-  
 
   data_read_cache_configuration {
     sizing_mode = "USER_PROVISIONED"
