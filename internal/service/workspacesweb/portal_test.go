@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -40,14 +41,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
-	"github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
 	// TIP: You will often need to import the package that this test file lives
@@ -235,7 +235,6 @@ func testAccCheckPortalDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			
 			// TIP: ==== FINDERS ====
 			// The find function should be exported. Since it won't be used outside of the package, it can be exported
 			// in the `exports_test.go` file.
@@ -244,7 +243,7 @@ func testAccCheckPortalDestroy(ctx context.Context) resource.TestCheckFunc {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingDestroyed, tfworkspacesweb.ResNamePortal, rs.Primary.ID, err)
+				return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingDestroyed, tfworkspacesweb.ResNamePortal, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.WorkSpacesWeb, create.ErrActionCheckingDestroyed, tfworkspacesweb.ResNamePortal, rs.Primary.ID, errors.New("not destroyed"))
@@ -275,21 +274,6 @@ func testAccCheckPortalExists(ctx context.Context, name string, portal *workspac
 		*portal = *resp
 
 		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
-
-	input := &workspacesweb.ListPortalsInput{}
-
-	_, err := conn.ListPortals(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
