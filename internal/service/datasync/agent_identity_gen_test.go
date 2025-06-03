@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -37,6 +38,7 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agent/basic/"),
 				ConfigVariables: config.Variables{
@@ -51,6 +53,8 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agent/basic/"),
 				ConfigVariables: config.Variables{
@@ -65,7 +69,45 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 				},
 			},
 
-			// TODO: Plannable import cannot be tested due to import diffs
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Agent/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrARN)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Agent/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrARN)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
@@ -88,6 +130,7 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
 				ConfigVariables: config.Variables{
@@ -101,7 +144,7 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command with appended "@<region>"
+			// Step 2: Import command with appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
 				ConfigVariables: config.Variables{
@@ -118,7 +161,7 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// Import command without appended "@<region>"
+			// Step 3: Import command without appended "@<region>"
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
 				ConfigVariables: config.Variables{
@@ -134,7 +177,69 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 				},
 			},
 
-			// TODO: Plannable import cannot be tested due to import diffs
+			// Step 4: Import block with Import ID and appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrARN)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+
+			// Step 5: Import block with Import ID and no appended "@<region>"
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrARN)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+
+			// Step 6: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Agent/region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"region":        config.StringVariable(acctest.AlternateRegion()),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrARN)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrID)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }

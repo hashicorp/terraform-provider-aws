@@ -30,7 +30,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeAgentOutput")
-// @Testing(importIgnore="activation_key;ip_address")
+// @Testing(importIgnore="activation_key;ip_address", plannableImportAction="Replace")
 // @Testing(preCheck="testAccPreCheck")
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
