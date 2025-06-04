@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_app_image_config: Fixes non-starting SageMaker spaces by requiring exactly one kernel (can be empty)
+```

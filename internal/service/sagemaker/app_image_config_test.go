@@ -19,38 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSageMakerAppImageConfig_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_app_image_config.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppImageConfigConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "jupyter_lab_image_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccSageMakerAppImageConfig_KernelGatewayImage_kernelSpecs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config sagemaker.DescribeAppImageConfigOutput
@@ -288,30 +256,6 @@ func TestAccSageMakerAppImageConfig_tags(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerAppImageConfig_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var config sagemaker.DescribeAppImageConfigOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_app_image_config.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppImageConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppImageConfigConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppImageConfigExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceAppImageConfig(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckAppImageConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -361,14 +305,6 @@ func testAccCheckAppImageConfigExists(ctx context.Context, n string, config *sag
 
 		return nil
 	}
-}
-
-func testAccAppImageConfigConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_sagemaker_app_image_config" "test" {
-  app_image_config_name = %[1]q
-}
-`, rName)
 }
 
 func testAccAppImageConfigConfig_kernelGatewayKernalSpecs1(rName string) string {
@@ -441,6 +377,8 @@ func testAccAppImageConfigConfig_tags1(rName, tagKey1, tagValue1 string) string 
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
 
+  code_editor_app_image_config {}
+
   tags = {
     %[2]q = %[3]q
   }
@@ -452,6 +390,8 @@ func testAccAppImageConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagVa
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
+
+  code_editor_app_image_config {}
 
   tags = {
     %[2]q = %[3]q
