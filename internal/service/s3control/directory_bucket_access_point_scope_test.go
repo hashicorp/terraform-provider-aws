@@ -48,10 +48,11 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: directoryBucketAccessPointScopeStateImportFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    directoryBucketAccessPointScopeStateImportFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 		},
 	})
@@ -110,11 +111,11 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: directoryBucketAccessPointScopeStateImportFunc(resourceName),
-
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    directoryBucketAccessPointScopeStateImportFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerify:                    true,
 			},
 			{
 				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_updated(accessPointName),
@@ -141,7 +142,7 @@ func directoryBucketAccessPointScopeStateImportFunc(resourceName string) resourc
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrAccountID]), nil
 	}
 }
 
