@@ -111,21 +111,21 @@ func TestAccWorkSpacesWebDataProtectionSettings_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.1", "https://test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "emailAddress"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "3"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern1.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern1.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-SSN"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPattern"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{2}-\\d{4}/g"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/SSN|Social Security/gi"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "Custom SSN pattern"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.built_in_pattern_id", "emailAddress"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.confidence_level", "3"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.0", "https://pattern1.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.exempt_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.exempt_urls.0", "https://exempt-pattern1.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-SSN"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_name", "CustomPattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{2}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.keyword_regex", "/SSN|Social Security/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_description", "Custom SSN pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
 				),
@@ -254,18 +254,18 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_enforced_urls.0", "https://before.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt-before.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "ssn"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "2"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern-before.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern-before.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CC"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPatternBefore"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{4}-\\d{4}-\\d{4}-\\d{4}/g"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/ssn/gi"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "SSN pattern"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-BEF"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.built_in_pattern_id", "ssn"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.confidence_level", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.0", "https://pattern-before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.exempt_urls.0", "https://exempt-pattern-before.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CC"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_name", "CustomPatternBefore"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_regex", "/\\d{4}-\\d{4}-\\d{4}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.keyword_regex", "/ssn/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_description", "SSN pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-BEF"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "before"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
 				),
@@ -293,20 +293,20 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.0", "https://exempt-after.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.global_exempt_urls.1", "https://second-exempt-after.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.built_in_pattern_id", "phoneNum"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.confidence_level", "3"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.0", "https://pattern-after.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.enforced_urls.1", "https://second-pattern-after.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.exempt_urls.0", "https://exempt-pattern-after.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-PHONE"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_name", "CustomPatternAfter"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{3}-\\d{4}/g"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.keyword_regex", "/phone|number/gi"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.custom_pattern.0.pattern_description", "Custom phone number pattern"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
-					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_patterns.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-AFT"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.built_in_pattern_id", "phoneNum"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.confidence_level", "3"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.0", "https://pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.enforced_urls.1", "https://second-pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.exempt_urls.0", "https://exempt-pattern-after.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.0.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-PHONE"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_name", "CustomPatternAfter"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_regex", "/\\d{3}-\\d{3}-\\d{4}/g"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.keyword_regex", "/phone|number/gi"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.custom_pattern.0.pattern_description", "Custom phone number pattern"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_type", "CustomText"),
+					resource.TestCheckResourceAttr(resourceName, "inline_redaction_configuration.0.inline_redaction_pattern.1.redaction_place_holder.0.redaction_place_holder_text", "REDACTED-CUSTOM-AFT"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "after"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "prod"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Owner", "team"),
@@ -422,7 +422,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
     global_enforced_urls    = ["https://example.com", "https://test.example.com"]
     global_exempt_urls      = ["https://exempt.example.com"]
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       built_in_pattern_id = "emailAddress"
       confidence_level    = 3
       enforced_urls       = ["https://pattern1.example.com"]
@@ -433,7 +433,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       }
     }
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       custom_pattern {
         pattern_name        = "CustomPattern"
         pattern_regex       = "/\\d{3}-\\d{2}-\\d{4}/g"
@@ -506,7 +506,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
     global_enforced_urls    = ["https://before.example.com"]
     global_exempt_urls      = ["https://exempt-before.example.com"]
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       built_in_pattern_id = "ssn"
       confidence_level    = 2
       enforced_urls       = ["https://pattern-before.example.com"]
@@ -517,7 +517,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       }
     }
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       custom_pattern {
         pattern_name        = "CustomPatternBefore"
         pattern_regex       = "/\\d{4}-\\d{4}-\\d{4}-\\d{4}/g"
@@ -804,7 +804,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
     global_enforced_urls    = ["https://after.example.com", "https://second-after.example.com"]
     global_exempt_urls      = ["https://exempt-after.example.com", "https://second-exempt-after.example.com"]
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       built_in_pattern_id = "phoneNum"
       confidence_level    = 3
       enforced_urls       = ["https://pattern-after.example.com", "https://second-pattern-after.example.com"]
@@ -815,7 +815,7 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       }
     }
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       custom_pattern {
         pattern_name        = "CustomPatternAfter"
         pattern_regex       = "/\\d{3}-\\d{3}-\\d{4}/g"

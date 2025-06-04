@@ -121,7 +121,7 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"inline_redaction_patterns": schema.ListNestedBlock{
+						"inline_redaction_pattern": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[inlineRedactionPatternModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
@@ -386,7 +386,7 @@ type inlineRedactionConfigurationModel struct {
 	GlobalConfidenceLevel   types.Int64                                                  `tfsdk:"global_confidence_level"`
 	GlobalEnforcedURLs      fwtypes.ListOfString                                         `tfsdk:"global_enforced_urls"`
 	GlobalExemptURLs        fwtypes.ListOfString                                         `tfsdk:"global_exempt_urls"`
-	InlineRedactionPatterns fwtypes.ListNestedObjectValueOf[inlineRedactionPatternModel] `tfsdk:"inline_redaction_patterns"`
+	InlineRedactionPatterns fwtypes.ListNestedObjectValueOf[inlineRedactionPatternModel] `tfsdk:"inline_redaction_pattern"`
 }
 
 type inlineRedactionPatternModel struct {
