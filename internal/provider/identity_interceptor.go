@@ -211,7 +211,7 @@ func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImport
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute); err != nil {
+				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityAttributeDuplicates); err != nil {
 					return nil, err
 				}
 

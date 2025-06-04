@@ -49,7 +49,7 @@ func resourceJobDefinition() *schema.Resource {
 		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, names.AttrARN); err != nil {
+				if err := importer.RegionalARN(ctx, rd, names.AttrARN, []string{names.AttrID}); err != nil {
 					return nil, err
 				}
 

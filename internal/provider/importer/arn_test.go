@@ -38,7 +38,7 @@ func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	rd.SetId("not a valid ARN")
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), "could not parse import ID") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -60,7 +60,7 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String())
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), "the region passed for import") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -82,7 +82,7 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -95,6 +95,9 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}
 	if e, a := region, rd.Get("region"); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+	if e, a := "", rd.Get("attr"); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
 	}
 }
 
@@ -112,7 +115,7 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -126,12 +129,15 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 	if e, a := region, rd.Get("region"); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
 	}
+	if e, a := "", rd.Get("attr"); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
 }
 
 func TestRegionalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
 	rd := schema.TestResourceDataWithIdentityRaw(t, regionalARNSchema, regionalARNIdentitySchema, map[string]string{})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		if err.Error() != fmt.Sprintf("identity attribute %q is required", "arn") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -146,7 +152,7 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		"arn": "not a valid ARN",
 	})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), fmt.Sprintf("identity attribute %q: could not parse", "arn")) {
 			t.Fatalf("Unexpected error: %s", err)
@@ -169,7 +175,7 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 		"arn": arn,
 	})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn")
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -182,6 +188,72 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 	}
 	if e, a := region, rd.Get("region"); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+	if e, a := "", rd.Get("attr"); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+}
+
+func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
+	region := "a-region-1"
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    region,
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+	rd.SetId(arn)
+
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if e, a := arn, rd.Id(); e != a {
+		t.Errorf("expected `id` to be %q, got %q", e, a)
+	}
+	if e, a := arn, rd.Get("arn"); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := region, rd.Get("region"); e != a {
+		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+	if e, a := arn, rd.Get("attr"); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+}
+
+func TestRegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	region := "a-region-1"
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    region,
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+	rd := schema.TestResourceDataWithIdentityRaw(t, regionalARNSchema, regionalARNIdentitySchema, map[string]string{
+		"arn": arn,
+	})
+
+	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	if e, a := arn, rd.Id(); e != a {
+		t.Errorf("expected `id` to be %q, got %q", e, a)
+	}
+	if e, a := arn, rd.Get("arn"); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := region, rd.Get("region"); e != a {
+		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+	if e, a := arn, rd.Get("attr"); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
 	}
 }
 

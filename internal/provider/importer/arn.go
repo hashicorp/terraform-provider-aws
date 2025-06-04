@@ -12,13 +12,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalARN(_ context.Context, rd *schema.ResourceData, attrName string) error {
+func RegionalARN(_ context.Context, rd *schema.ResourceData, attrName string, duplicateAttrs []string) error {
 	if rd.Id() != "" {
 		arnARN, err := arn.Parse(rd.Id())
 		if err != nil {
 			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
 		}
 		rd.Set(attrName, rd.Id())
+		for _, attr := range duplicateAttrs {
+			setAttribute(rd, attr, rd.Id())
+		}
 
 		if region, ok := rd.GetOk(names.AttrRegion); ok {
 			if region != arnARN.Region {
@@ -54,7 +57,9 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, attrName string) er
 	rd.Set(names.AttrRegion, arnARN.Region)
 
 	rd.Set(attrName, arnVal)
-	rd.SetId(arnVal)
+	for _, attr := range duplicateAttrs {
+		setAttribute(rd, attr, arnVal)
+	}
 
 	return nil
 }
