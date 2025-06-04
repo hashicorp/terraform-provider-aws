@@ -24,8 +24,9 @@ jobs:
     name: Check Terraform Registry for Latest Version
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.registry-ingest.outputs.version }}
+      elapsed-time: ${{ steps.registry-ingest.outputs.elapsed-time }}
       ts: ${{ steps.message.outputs.ts }}
+      version: ${{ steps.registry-ingest.outputs.version }}
     steps:
       - name: Get Latest GitHub Release
         if: inputs.version == ''
@@ -124,44 +125,10 @@ jobs:
           while :
           do
 
-            if [[ $(($SECONDS/60)) -ge ${{ inputs.timeout }} ]]; then
-              echo "Timeout has been reached, exiting."
-              TIMED_OUT="true"
-
-              UPDATED_BLOCKS=$(jq -nc --arg version $VERSION '[
-                {
-                  "type": "rich_text",
-                  "elements": [
-                    {
-                      "type": "rich_text_section",
-                      "elements": [
-                        {
-                          "type": "emoji",
-                          "name": "failure"
-                        },
-                        {
-                          "type": "text",
-                          "text": (" Timed out while waiting for the Terraform Registry to ingest version " + $version)
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]')
-
-              break
-            fi
-
             REGISTRY_DATA=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions" | jq --arg version $VERSION '.data[] | select(.attributes.tag == $version)')
 
-            if [[ -z "$REGISTRY_DATA" ]]; then
-              echo "Terraform Registry has not yet ingested version $VERSION. Continuing to wait for ingest..."
-              sleep 300
-            else
-              echo "Registry has ingested version $VERSION"
-              echo "version=$(echo $REGISTRY_DATA | jq -r '.attributes.version')" >> "$GITHUB_OUTPUT"
-
-              UPDATED_BLOCKS=$(jq -nc --arg version $VERSION '[
+            if ! [[ -z $REGISTRY_DATA ]]; then
+              echo "slack-payload-blocks=$(echo ${{ steps.parent.outputs.base-message-blocks }} | jq --arg version $VERSION '. += [
                 {
                   "type": "rich_text",
                   "elements": [
@@ -180,17 +147,43 @@ jobs:
                     }
                   ]
                 }
-              ]')
+              ] | @json')" >> "$GITHUB_OUTPUT"
 
+              echo "Registry has ingested version $VERSION"
+              echo "elapsed-time=$SECONDS" >> "$GITHUB_OUTPUT"
+              echo "version=$(echo $REGISTRY_DATA | jq -r '.attributes.version')" >> "$GITHUB_OUTPUT"
               break
+
+            elif [[ $(($SECONDS/60)) -ge ${{ inputs.timeout }} ]]; then
+              echo "slack-payload-blocks=$(echo ${{ steps.parent.outputs.base-message-blocks }} | jq --arg version $VERSION '. += [
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "failure"
+                        },
+                        {
+                          "type": "text",
+                          "text": (" Timed out while waiting for the Terraform Registry to ingest version " + $version)
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              echo "Timed out while waiting for the Terraform Registry to ingest version $VERSION" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+
+            else
+              echo "Terraform Registry has not yet ingested version $VERSION. Continuing to wait for ingest..."
+              sleep 300
             fi
           done
-
-          echo "slack-payload-blocks=$(echo ${{ steps.parent.outputs.base-message-blocks }} | jq --argjson update "$UPDATED_BLOCKS" '. += $update | @json')" >> "$GITHUB_OUTPUT"
-
-          if [[ "$TIMED_OUT" == "true" ]]; then
-            exit 1
-          fi
 
       - name: Update Initial Slack Message
         if: ${{ success() || failure() }}
@@ -277,70 +270,92 @@ jobs:
         id: init
         run: |
           set +o pipefail
-          ERROR=$(terraform init -upgrade -json | jq --slurp '.[] | select(.diagnostic.severity == "error")')
 
-          if [[ "$ERROR" == "" ]]; then
-            echo "payload=$(jq -nc '[
-              {
-                "type": "rich_text",
-                "elements": [
-                  {
-                    "type": "rich_text_section",
-                    "elements": [
-                      {
-                        "type": "emoji",
-                        "name": "bufo-check"
-                      },
-                      {
-                        "type": "text",
-                        "text": " Initialization on ${{ matrix.os }} succeeded"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ] | @json')" >> "$GITHUB_OUTPUT"
-          else
-            echo "payload=$(echo $ERROR | jq -c '[
-              {
-                "type": "rich_text",
-                "elements": [
-                  {
-                    "type": "rich_text_section",
-                    "elements": [
-                      {
-                        "type": "emoji",
-                        "name": "failure"
-                      },
-                      {
-                        "type": "text",
-                        "text": " Initialization on ${{ matrix.os }} failed."
-                      }
-                    ]
-                  },
-                  {
-                    "type": "rich_text_section",
-                    "elements": [
-                      {
-                        "type": "text",
-                        "text": "\n\n The error produced during initialization was:"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "rich_text_preformatted",
-                    "elements": [
-                      {
-                        "type": "text",
-                        "text": (.["@message"] + "\n\n" + .diagnostic.detail)
-                      }
-                    ]
-                  }
-                ]
-              }
-            ] | @json')" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
+          SECONDS=${{ fromJSON(needs.registry-check.outputs.elapsed-time) }}
+
+          while :
+          do
+
+            ERROR=$(terraform init -upgrade -json | jq --slurp '.[] | select(.diagnostic.severity == "error")')
+
+            if [[ -z $ERROR ]]; then
+              echo "payload=$(jq -nc '[
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "bufo-check"
+                        },
+                        {
+                          "type": "text",
+                          "text": " Initialization on ${{ matrix.os }} succeeded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              break
+
+            elif [[ $(($SECONDS/60)) -ge ${{ inputs.timeout }} ]]; then
+              echo "payload=$(echo $ERROR | jq -c '[
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "failure"
+                        },
+                        {
+                          "type": "text",
+                          "text": " Initialization on ${{ matrix.os }} failed."
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "\n\n The error produced during initialization was:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_preformatted",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": (.["@message"] + "\n\n" + .diagnostic.detail)
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              echo "Timeout was reached before a successful initialization." >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo "Error received during initialization:" >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo '```console' >> "$GITHUB_STEP_SUMMARY"
+              echo $ERROR | jq --raw-output '.["@message"] + "\n\n" + .diagnostic.detail' >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+
+            else
+              echo "Provider initialization failed, but timeout has not yet been reached. Trying again..."
+              sleep 60
+            fi
+          done
 
       - name: Update Threaded Message with Results
         if: ${{ success() || failure() }}
