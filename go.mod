@@ -257,7 +257,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.2
