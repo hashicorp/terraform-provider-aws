@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -81,9 +82,15 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			names.AttrDisplayName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -98,6 +105,9 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 					Attributes: map[string]schema.Attribute{
 						"global_confidence_level": schema.Int64Attribute{
 							Optional: true,
+							Validators: []validator.Int64{
+								int64validator.Between(1, 3),
+							},
 						},
 						"global_enforced_urls": schema.ListAttribute{
 							CustomType:  fwtypes.ListOfStringType,
@@ -114,7 +124,9 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 						"inline_redaction_patterns": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[inlineRedactionPatternModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(150),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -123,6 +135,9 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 									},
 									"confidence_level": schema.Int64Attribute{
 										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1, 3),
+										},
 									},
 									"enforced_urls": schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringType,
@@ -148,9 +163,15 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 												},
 												"pattern_description": schema.StringAttribute{
 													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+													},
 												},
 												"pattern_name": schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 20),
+													},
 												},
 												"pattern_regex": schema.StringAttribute{
 													Required: true,
@@ -197,6 +218,7 @@ func (r *dataProtectionSettingsResource) Create(ctx context.Context, request res
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, data.DisplayName)
 	var input workspacesweb.CreateDataProtectionSettingsInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -210,7 +232,7 @@ func (r *dataProtectionSettingsResource) Create(ctx context.Context, request res
 	output, err := conn.CreateDataProtectionSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating WorkSpacesWeb Data Protection Settings", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb Data Protection Settings (%s)", name), err.Error())
 		return
 	}
 
@@ -362,17 +384,17 @@ type dataProtectionSettingsResourceModel struct {
 
 type inlineRedactionConfigurationModel struct {
 	GlobalConfidenceLevel   types.Int64                                                  `tfsdk:"global_confidence_level"`
-	GlobalEnforcedUrls      fwtypes.ListOfString                                         `tfsdk:"global_enforced_urls"`
-	GlobalExemptUrls        fwtypes.ListOfString                                         `tfsdk:"global_exempt_urls"`
+	GlobalEnforcedURLs      fwtypes.ListOfString                                         `tfsdk:"global_enforced_urls"`
+	GlobalExemptURLs        fwtypes.ListOfString                                         `tfsdk:"global_exempt_urls"`
 	InlineRedactionPatterns fwtypes.ListNestedObjectValueOf[inlineRedactionPatternModel] `tfsdk:"inline_redaction_patterns"`
 }
 
 type inlineRedactionPatternModel struct {
-	BuiltInPatternId     types.String                                               `tfsdk:"built_in_pattern_id"`
+	BuiltInPatternID     types.String                                               `tfsdk:"built_in_pattern_id"`
 	ConfidenceLevel      types.Int64                                                `tfsdk:"confidence_level"`
 	CustomPattern        fwtypes.ListNestedObjectValueOf[customPatternModel]        `tfsdk:"custom_pattern"`
-	EnforcedUrls         fwtypes.ListOfString                                       `tfsdk:"enforced_urls"`
-	ExemptUrls           fwtypes.ListOfString                                       `tfsdk:"exempt_urls"`
+	EnforcedURLs         fwtypes.ListOfString                                       `tfsdk:"enforced_urls"`
+	ExemptURLs           fwtypes.ListOfString                                       `tfsdk:"exempt_urls"`
 	RedactionPlaceHolder fwtypes.ListNestedObjectValueOf[redactionPlaceHolderModel] `tfsdk:"redaction_place_holder"`
 }
 
