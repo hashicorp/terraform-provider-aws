@@ -46,7 +46,6 @@ func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithC
 
 type instanceConnectEndpointResource struct {
 	framework.ResourceWithModel[instanceConnectEndpointResourceModel]
-	framework.WithNoOpUpdate[instanceConnectEndpointResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }

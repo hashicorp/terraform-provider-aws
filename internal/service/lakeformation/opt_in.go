@@ -54,7 +54,6 @@ const (
 type optInResource struct {
 	framework.ResourceWithModel[optInResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[optInResourceModel]
 }
 
 func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

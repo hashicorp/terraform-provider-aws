@@ -56,7 +56,6 @@ var (
 
 type associationResource struct {
 	framework.ResourceWithModel[associationResourceModel]
-	framework.WithNoOpUpdate[associationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }

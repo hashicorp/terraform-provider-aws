@@ -39,7 +39,6 @@ func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, err
 
 type optOutListResource struct {
 	framework.ResourceWithModel[optOutListResourceModel]
-	framework.WithNoOpUpdate[optOutListResourceModel]
 	framework.WithImportByID
 }
 

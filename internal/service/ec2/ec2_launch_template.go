@@ -2502,11 +2502,11 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.AcceleratorManufacturers; v != nil {
-		tfMap["accelerator_manufacturers"] = flex.FlattenStringyValueSet[awstypes.AcceleratorManufacturer](v)
+		tfMap["accelerator_manufacturers"] = v
 	}
 
 	if v := apiObject.AcceleratorNames; v != nil {
-		tfMap["accelerator_names"] = flex.FlattenStringyValueSet[awstypes.AcceleratorName](v)
+		tfMap["accelerator_names"] = v
 	}
 
 	if v := apiObject.AcceleratorTotalMemoryMiB; v != nil {
@@ -2514,7 +2514,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.AcceleratorTypes; v != nil {
-		tfMap["accelerator_types"] = flex.FlattenStringyValueSet[awstypes.AcceleratorType](v)
+		tfMap["accelerator_types"] = v
 	}
 
 	if v := apiObject.AllowedInstanceTypes; v != nil {
@@ -2534,7 +2534,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.CpuManufacturers; v != nil {
-		tfMap["cpu_manufacturers"] = flex.FlattenStringyValueSet[awstypes.CpuManufacturer](v)
+		tfMap["cpu_manufacturers"] = v
 	}
 
 	if v := apiObject.ExcludedInstanceTypes; v != nil {
@@ -2542,7 +2542,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.InstanceGenerations; v != nil {
-		tfMap["instance_generations"] = flex.FlattenStringyValueSet[awstypes.InstanceGeneration](v)
+		tfMap["instance_generations"] = v
 	}
 
 	if v := apiObject.LocalStorage; v != "" {
@@ -2550,7 +2550,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.LocalStorageTypes; v != nil {
-		tfMap["local_storage_types"] = flex.FlattenStringyValueSet[awstypes.LocalStorageType](v)
+		tfMap["local_storage_types"] = v
 	}
 
 	if v := apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice; v != nil {

@@ -48,7 +48,6 @@ func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWi
 
 type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
-	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
 	framework.WithTimeouts
 }
 
