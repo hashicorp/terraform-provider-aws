@@ -17,7 +17,7 @@ Terraform resource for managing an AWS WorkSpaces Web IP Access Settings resourc
 ```terraform
 resource "aws_workspacesweb_ip_access_settings" "example" {
   display_name = "example"
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 }
@@ -29,11 +29,11 @@ resource "aws_workspacesweb_ip_access_settings" "example" {
 resource "aws_workspacesweb_ip_access_settings" "example" {
   display_name = "example"
   description  = "Example IP access settings"
-  ip_rules {
+  ip_rule {
     ip_range    = "10.0.0.0/16"
     description = "Main office"
   }
-  ip_rules {
+  ip_rule {
     ip_range    = "192.168.0.0/24"
     description = "Branch office"
   }
@@ -55,11 +55,11 @@ resource "aws_workspacesweb_ip_access_settings" "example" {
   additional_encryption_context = {
     Environment = "Production"
   }
-  ip_rules {
+  ip_rule {
     ip_range    = "10.0.0.0/16"
     description = "Main office"
   }
-  ip_rules {
+  ip_rule {
     ip_range    = "192.168.0.0/24"
     description = "Branch office"
   }
@@ -74,7 +74,7 @@ resource "aws_workspacesweb_ip_access_settings" "example" {
 The following arguments are required:
 
 * `display_name` - (Required) The display name of the IP access settings.
-* `ip_rules` - (Required) The IP rules of the IP access settings. See [IP Rules](#ip-rules) below.
+* `ip_rule` - (Required) The IP rules of the IP access settings. See [IP Rule](#ip-rules) below.
 
 The following arguments are optional:
 

@@ -39,7 +39,7 @@ func TestAccWorkSpacesWebIPAccessSettings_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.ip_range", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.ip_range", "10.0.0.0/16"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "ip_access_settings_arn", "workspaces-web", regexache.MustCompile(`ipAccessSettings/.+$`)),
 				),
 			},
@@ -105,11 +105,11 @@ func TestAccWorkSpacesWebIPAccessSettings_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.ip_range", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.description", "Main office"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.1.ip_range", "192.168.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.1.description", "Branch office"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.ip_range", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.description", "Main office"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.1.ip_range", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.1.description", "Branch office"),
 				),
 			},
 			{
@@ -144,9 +144,9 @@ func TestAccWorkSpacesWebIPAccessSettings_update(t *testing.T) {
 					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description before"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.ip_range", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.description", "Main office"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.ip_range", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.description", "Main office"),
 				),
 			},
 			{
@@ -162,11 +162,11 @@ func TestAccWorkSpacesWebIPAccessSettings_update(t *testing.T) {
 					testAccCheckIPAccessSettingsExists(ctx, resourceName, &ipAccessSettings),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update-after"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description after"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.ip_range", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.0.description", "Main office updated"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.1.ip_range", "192.168.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "ip_rules.1.description", "Branch office"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.ip_range", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.0.description", "Main office updated"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.1.ip_range", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "ip_rule.1.description", "Branch office"),
 				),
 			},
 		},
@@ -309,7 +309,7 @@ func testAccIPAccessSettingsConfig_basic() string {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name = "test"
 
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 }
@@ -361,12 +361,12 @@ resource "aws_workspacesweb_ip_access_settings" "test" {
     Environment = "Production"
   }
 
-  ip_rules {
+  ip_rule {
     ip_range    = "10.0.0.0/16"
     description = "Main office"
   }
 
-  ip_rules {
+  ip_rule {
     ip_range    = "192.168.0.0/24"
     description = "Branch office"
   }
@@ -383,7 +383,7 @@ func testAccIPAccessSettingsConfig_updateBefore() string {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name = "test-update"
   description  = "test description before"
-  ip_rules {
+  ip_rule {
     ip_range    = "10.0.0.0/16"
     description = "Main office"
   }
@@ -397,12 +397,12 @@ resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name = "test-update-after"
   description  = "test description after"
 
-  ip_rules {
+  ip_rule {
     ip_range    = "10.0.0.0/16"
     description = "Main office updated"
   }
 
-  ip_rules {
+  ip_rule {
     ip_range    = "192.168.0.0/24"
     description = "Branch office"
   }
@@ -450,7 +450,7 @@ resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
 
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 
@@ -502,7 +502,7 @@ resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
 
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 
@@ -553,7 +553,7 @@ resource "aws_kms_key" "test1" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test1.arn
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 }
@@ -633,7 +633,7 @@ resource "aws_kms_key" "test2" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test2.arn
-  ip_rules {
+  ip_rule {
     ip_range = "10.0.0.0/16"
   }
 }
