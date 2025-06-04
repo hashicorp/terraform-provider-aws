@@ -23,6 +23,7 @@ const (
 	errCodeIPAMOrganizationAccountNotRegistered                    = "IpamOrganizationAccountNotRegistered"
 	errCodeIncorrectState                                          = "IncorrectState"
 	errCodeInsufficientInstanceCapacity                            = "InsufficientInstanceCapacity"
+	errCodeInsufficientVolumeCapacity                              = "InsufficientVolumeCapacity"
 	errCodeInvalidAMIIDNotFound                                    = "InvalidAMIID.NotFound"
 	errCodeInvalidAMIIDUnavailable                                 = "InvalidAMIID.Unavailable"
 	errCodeInvalidAddressNotFound                                  = "InvalidAddress.NotFound"
