@@ -53,6 +53,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory:  newUserAccessLoggingSettingsResource,
+			TypeName: "aws_workspacesweb_user_access_logging_settings",
+			Name:     "User Access Logging Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "user_access_logging_settings_arn",
+			},
+		},
+		{
 			Factory:  newUserSettingsResource,
 			TypeName: "aws_workspacesweb_user_settings",
 			Name:     "User Settings",
