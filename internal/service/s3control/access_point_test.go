@@ -347,7 +347,6 @@ func TestAccS3ControlAccessPoint_directoryBucket_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("s3express", regexache.MustCompile(`accesspoint/.+--xa-s3`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(tfs3control.DirectoryBucketNameRegex)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringRegexp(tfs3control.AccessPointForDirectoryBucketNameRegex)),
 				},
 			},

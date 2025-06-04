@@ -100,11 +100,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Bucket Policy",
 		},
 		{
-			Factory:  resourceAccessPointForDirectoryBucketPolicy,
-			TypeName: "aws_s3control_directory_access_point_policy",
-			Name:     "Directory Access Point Policy",
-		},
-		{
 			Factory:  resourceMultiRegionAccessPoint,
 			TypeName: "aws_s3control_multi_region_access_point",
 			Name:     "Multi-Region Access Point",

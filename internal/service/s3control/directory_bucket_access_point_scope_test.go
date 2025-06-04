@@ -22,7 +22,6 @@ import (
 func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,7 +31,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
+				Config: testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "2"),
@@ -61,7 +60,6 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_basic(t *testing.T) {
 func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,7 +69,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
+				Config: testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
@@ -85,7 +83,6 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_directory_bucket_access_point_scope.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +92,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_basic(accessPointName),
+				Config: testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "2"),
@@ -118,7 +115,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_update(t *testing.T) {
 				ImportStateVerify:                    true,
 			},
 			{
-				Config: testAccDirectoryBucketConfig_basic(bucketName) + testAccAccessPointScopeConfig_updated(accessPointName),
+				Config: testAccAccessPointScopeConfig_updated(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.permissions.#", "1"),
@@ -191,9 +188,9 @@ func testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx context.Context) res
 }
 
 func testAccAccessPointScopeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {
-  name       = aws_s3_directory_access_point.test_ap.name
+  name       = aws_s3_access_point.test.name
   account_id = data.aws_caller_identity.current.account_id
 
   scope {
@@ -205,9 +202,9 @@ resource "aws_s3control_directory_bucket_access_point_scope" "test" {
 }
 
 func testAccAccessPointScopeConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointForDirectoryBucketConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {
-  name       = aws_s3_directory_access_point.test_ap.name
+  name       = aws_s3_access_point.test.name
   account_id = data.aws_caller_identity.current.account_id
 
   scope {

@@ -6,6 +6,7 @@ package s3control
 import (
 	"context"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
@@ -45,6 +46,8 @@ type directoryBucketAccessPointScopeResource struct {
 const (
 	ResNameDirectoryBucketAccessPointScope = "Directory Bucket Access Point Scope"
 )
+
+var AccessPointForDirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--xa-s3$`)
 
 func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
