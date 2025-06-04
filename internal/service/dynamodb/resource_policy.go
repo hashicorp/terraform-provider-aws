@@ -275,8 +275,8 @@ func (r *resourcePolicyResource) ImportState(ctx context.Context, request resour
 
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)          // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 
 		return
 	}
