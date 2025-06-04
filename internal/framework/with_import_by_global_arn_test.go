@@ -5,6 +5,7 @@ package framework_test
 
 import (
 	"context"
+	"maps"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -166,7 +167,7 @@ func emtpyStateFromSchema(schema schema.Schema) tfsdk.State {
 
 func stateFromSchema(schema schema.Schema, values map[string]string) tfsdk.State {
 	val := make(map[string]tftypes.Value)
-	for name, _ := range schema.Attributes {
+	for name := range maps.Keys(schema.Attributes) {
 		if v, ok := values[name]; ok {
 			val[name] = tftypes.NewValue(tftypes.String, v)
 		} else {
@@ -188,7 +189,7 @@ func emtpyIdentityFromSchema(schema identityschema.Schema) *tfsdk.ResourceIdenti
 
 func identityFromSchema(schema identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
 	val := make(map[string]tftypes.Value)
-	for name, _ := range schema.Attributes {
+	for name := range maps.Keys(schema.Attributes) {
 		if v, ok := values[name]; ok {
 			val[name] = tftypes.NewValue(tftypes.String, v)
 		} else {
