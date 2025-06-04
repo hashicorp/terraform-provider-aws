@@ -9,9 +9,11 @@ var (
 	ResourceNetworkSettings        = newNetworkSettingsResource
 	ResourceUserSettings           = newUserSettingsResource
 	ResourceDataProtectionSettings = newDataProtectionSettingsResource
+	ResourceIPAccessSettings       = newIPAccessSettingsResource
 
 	FindBrowserSettingsByARN        = findBrowserSettingsByARN
 	FindNetworkSettingsByARN        = findNetworkSettingsByARN
 	FindUserSettingsByARN           = findUserSettingsByARN
 	FindDataProtectionSettingsByARN = findDataProtectionSettingsByARN
+	FindIPAccessSettingsByARN       = findIPAccessSettingsByARN
 )
