@@ -57,9 +57,15 @@ func (r *vpcRouteServerPeerResource) Schema(ctx context.Context, req resource.Sc
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"endpoint_eni_address": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"endpoint_eni_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"peer_address": schema.StringAttribute{
 				Required: true,
@@ -76,14 +82,23 @@ func (r *vpcRouteServerPeerResource) Schema(ctx context.Context, req resource.Sc
 			"route_server_peer_id": framework.IDAttribute(),
 			"route_server_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrSubnetID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -112,6 +127,10 @@ func (r *vpcRouteServerPeerResource) Schema(ctx context.Context, req resource.Sc
 							CustomType: fwtypes.StringEnumType[awstypes.RouteServerPeerLivenessMode](),
 							Optional:   true,
 							Computed:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplaceIfConfigured(),
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 				},
