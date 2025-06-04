@@ -701,7 +701,8 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-ignore-cdktf-missing-files \
 		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
 		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
-		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
