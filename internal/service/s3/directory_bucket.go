@@ -47,7 +47,6 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 
 type directoryBucketResource struct {
 	framework.ResourceWithModel[directoryBucketResourceModel]
-	framework.WithNoOpUpdate[directoryBucketResourceModel] // Only 'force_destroy' can be updated.
 	framework.WithImportByID
 }
 

@@ -39,7 +39,6 @@ func newEmailContactResource(_ context.Context) (resource.ResourceWithConfigure,
 
 type emailContactResource struct {
 	framework.ResourceWithModel[emailContactResourceModel]
-	framework.WithNoOpUpdate[emailContactResourceModel]
 }
 
 func (r *emailContactResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

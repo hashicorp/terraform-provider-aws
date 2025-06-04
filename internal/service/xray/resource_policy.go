@@ -39,7 +39,6 @@ const (
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithNoOpUpdate[resourcePolicyResourceModel]
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

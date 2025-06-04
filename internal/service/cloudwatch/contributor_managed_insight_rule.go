@@ -58,7 +58,6 @@ const (
 
 type contributorManagedInsightRuleResource struct {
 	framework.ResourceWithModel[contributorManagedInsightRuleResourceModel]
-	framework.WithNoOpUpdate[contributorManagedInsightRuleResourceModel]
 }
 
 func (r *contributorManagedInsightRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

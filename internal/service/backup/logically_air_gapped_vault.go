@@ -49,7 +49,6 @@ func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWit
 
 type logicallyAirGappedVaultResource struct {
 	framework.ResourceWithModel[logicallyAirGappedVaultResourceModel]
-	framework.WithNoOpUpdate[logicallyAirGappedVaultResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
