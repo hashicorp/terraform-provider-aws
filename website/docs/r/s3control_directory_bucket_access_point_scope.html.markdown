@@ -66,7 +66,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_s3control_directory_bucketaccess_point_scope.example
+  to = aws_s3control_directory_bucket_access_point_scope.example
   id = "example--zoneid--xa-s3,123456789012"
 }
 ```
