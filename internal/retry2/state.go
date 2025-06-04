@@ -1,0 +1,139 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package retry2
+
+import (
+	"context"
+	"slices"
+	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+)
+
+//
+// Based on https://github.com/hashicorp/terraform-plugin-sdk/helper/retry/state.go.
+//
+
+// StateRefreshFunc is a function type used for StateChangeConf that is
+// responsible for refreshing the item being watched for a state change.
+//
+// It returns three results.
+// The first is any object that will be returned as the final object after waiting for state change.
+// The second is the latest state of that object.
+// The third any error that may have happened while refreshing the state.
+type StateRefreshFunc[T any, S comparable] func() (T, S, error)
+
+// StateChangeConf is the configuration struct used for `WaitForState`.
+type StateChangeConf[T any, S comparable] struct {
+	Delay          time.Duration          // Wait this time before starting checks
+	Pending        []S                    // States that are "allowed" and will continue trying
+	Refresh        StateRefreshFunc[T, S] // Refreshes the current state
+	Target         []S                    // Target state
+	Timeout        time.Duration          // The amount of time to wait before timeout
+	MinTimeout     time.Duration          // Smallest time to wait before refreshes
+	PollInterval   time.Duration          // Override MinTimeout/backoff and only poll this often
+	NotFoundChecks int                    // Number of times to allow not found (nil result from Refresh)
+
+	// This is to work around inconsistent APIs
+	ContinuousTargetOccurence int // Number of times the Target state has to occur continuously
+}
+
+// WaitForState watches an object and waits for it to achieve the state
+// specified in the configuration using the specified Refresh() func,
+// waiting the number of seconds specified in the timeout configuration.
+//
+// If the Refresh function returns an error, exit immediately with that error.
+//
+// If the Refresh function returns a state other than the Target state or one
+// listed in Pending, return immediately with an error.
+//
+// If the Timeout is exceeded before reaching the Target state, return an
+// error.
+//
+// Otherwise, the result is the result of the first call to the Refresh function to
+// reach the target state.
+//
+// Cancellation of the passed in context will cancel the refresh loop.
+
+func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) {
+	// Set a default for times to check for not found.
+	if conf.NotFoundChecks == 0 {
+		conf.NotFoundChecks = 20
+	}
+	if conf.ContinuousTargetOccurence == 0 {
+		conf.ContinuousTargetOccurence = 1
+	}
+
+	var (
+		t            T
+		currentState S
+		err          error
+	)
+	notFoundTick := 0
+	targetOccurence := 0
+	var l *backoff.Loop
+	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
+		t, currentState, err = conf.Refresh()
+
+		if inttypes.IsZero(&t) {
+			// If we're waiting for the absence of a thing, then return.
+			if len(conf.Target) == 0 {
+				targetOccurence++
+				if conf.ContinuousTargetOccurence == targetOccurence {
+					return t, err
+				}
+
+				continue
+			}
+
+			// If we didn't find the resource, check if we have been
+			// not finding it for a while, and if so, report an error.
+			notFoundTick++
+			if notFoundTick > conf.NotFoundChecks {
+				return t, &NotFoundError{
+					LastError: err,
+					Retries:   notFoundTick,
+				}
+			}
+		} else {
+			// Reset the counter for when a resource isn't found.
+			notFoundTick = 0
+			found := false
+
+			if slices.Contains(conf.Target, currentState) {
+				found = true
+				targetOccurence++
+				if conf.ContinuousTargetOccurence == targetOccurence {
+					return t, err
+				}
+			}
+
+			if slices.Contains(conf.Pending, currentState) {
+				found = true
+				targetOccurence = 0
+			}
+
+			if !found && len(conf.Pending) > 0 {
+				return t, &UnexpectedStateError[S]{
+					LastError:     err,
+					State:         currentState,
+					ExpectedState: conf.Target,
+				}
+			}
+		}
+	}
+
+	// Timed out or Context canceled.
+	if l.TimedOut() {
+		return t, &TimeoutError[S]{
+			LastError:     err,
+			LastState:     currentState,
+			Timeout:       conf.Timeout,
+			ExpectedState: conf.Target,
+		}
+	}
+
+	return t, ctx.Err()
+}
