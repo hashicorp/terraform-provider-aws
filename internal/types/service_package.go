@@ -95,12 +95,13 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
-	Global            bool   // All
-	Singleton         bool   // Singleton
-	ARN               bool   // ARN
-	IdentityAttribute string // ARN, Singleton
-	IDAttrShadowsAttr string
-	Attributes        []IdentityAttribute
+	Global                      bool   // All
+	Singleton                   bool   // Singleton
+	ARN                         bool   // ARN
+	IdentityAttribute           string // ARN, Singleton
+	IDAttrShadowsAttr           string
+	Attributes                  []IdentityAttribute
+	IdentityAttributeDuplicates []string
 }
 
 func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
@@ -162,6 +163,9 @@ func arnIdentity(isGlobal bool, name string) Identity {
 				Name:     name,
 				Required: true,
 			},
+		},
+		IdentityAttributeDuplicates: []string{
+			"id", // TODO: This should be optional
 		},
 	}
 }

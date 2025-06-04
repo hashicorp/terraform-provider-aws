@@ -79,13 +79,16 @@ func RegionalARNValue(_ context.Context, rd *schema.ResourceData, attrName strin
 	return nil
 }
 
-func GlobalARN(_ context.Context, rd *schema.ResourceData, attrName string) error {
+func GlobalARN(_ context.Context, rd *schema.ResourceData, attrName string, duplicateAttrs []string) error {
 	if rd.Id() != "" {
 		_, err := arn.Parse(rd.Id())
 		if err != nil {
 			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
 		}
 		rd.Set(attrName, rd.Id())
+		for _, attr := range duplicateAttrs {
+			setAttribute(rd, attr, rd.Id())
+		}
 
 		return nil
 	}
@@ -111,7 +114,17 @@ func GlobalARN(_ context.Context, rd *schema.ResourceData, attrName string) erro
 	}
 
 	rd.Set(attrName, arnVal)
-	rd.SetId(arnVal)
+	for _, attr := range duplicateAttrs {
+		setAttribute(rd, attr, arnVal)
+	}
 
 	return nil
+}
+
+func setAttribute(rd *schema.ResourceData, name string, value string) {
+	if name == "id" {
+		rd.SetId(value)
+		return
+	}
+	rd.Set(name, value)
 }

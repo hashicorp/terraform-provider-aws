@@ -536,7 +536,7 @@ func initialize(ctx context.Context, provider *schema.Provider) (map[string]conn
 				}
 
 				if resource.Identity.ARN {
-					r.Importer = arnIdentityResourceImporter(resource.Identity.IdentityAttribute, resource.Identity.Global)
+					r.Importer = arnIdentityResourceImporter(resource.Identity)
 				} else if resource.Identity.Singleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity.Global)
 				} else {

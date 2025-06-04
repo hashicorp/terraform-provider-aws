@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -196,11 +197,11 @@ func setAttribute(d *schema.ResourceData, name, value string) {
 	}
 }
 
-func arnIdentityResourceImporter(attrName string, isGlobal bool) *schema.ResourceImporter {
-	if isGlobal {
+func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImporter {
+	if identity.Global {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalARN(ctx, rd, attrName); err != nil {
+				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityAttributeDuplicates); err != nil {
 					return nil, err
 				}
 
@@ -210,7 +211,7 @@ func arnIdentityResourceImporter(attrName string, isGlobal bool) *schema.Resourc
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, attrName); err != nil {
+				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute); err != nil {
 					return nil, err
 				}
 
