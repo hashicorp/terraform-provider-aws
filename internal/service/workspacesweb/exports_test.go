@@ -15,5 +15,5 @@ var (
 	FindNetworkSettingsByARN        = findNetworkSettingsByARN
 	FindUserSettingsByARN           = findUserSettingsByARN
 	FindDataProtectionSettingsByARN = findDataProtectionSettingsByARN
-	FindIpAccessSettingsByARN       = findIpAccessSettingsByARN
+	FindIPAccessSettingsByARN       = findIPAccessSettingsByARN
 )

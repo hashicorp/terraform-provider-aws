@@ -266,7 +266,7 @@ func testAccCheckIPAccessSettingsDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfworkspacesweb.FindIpAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
+			_, err := tfworkspacesweb.FindIPAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -292,7 +292,7 @@ func testAccCheckIPAccessSettingsExists(ctx context.Context, n string, v *awstyp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
 
-		output, err := tfworkspacesweb.FindIpAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
+		output, err := tfworkspacesweb.FindIPAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
 
 		if err != nil {
 			return err
@@ -308,7 +308,7 @@ func testAccIPAccessSettingsConfig_basic() string {
 	return `
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name = "test"
-  
+
   ip_rules {
     ip_range = "10.0.0.0/16"
   }
@@ -320,7 +320,7 @@ func testAccIPAccessSettingsConfig_complete() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -383,7 +383,6 @@ func testAccIPAccessSettingsConfig_updateBefore() string {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name = "test-update"
   description  = "test description before"
-
   ip_rules {
     ip_range    = "10.0.0.0/16"
     description = "Main office"
@@ -415,7 +414,7 @@ func testAccIPAccessSettingsConfig_additionalEncryptionContextBefore() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -450,11 +449,11 @@ resource "aws_kms_key" "test" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
-  
+
   ip_rules {
-    ip_range    = "10.0.0.0/16"
+    ip_range = "10.0.0.0/16"
   }
-  
+
   additional_encryption_context = {
     Environment = "Development"
     Project     = "Test"
@@ -467,7 +466,7 @@ func testAccIPAccessSettingsConfig_additionalEncryptionContextAfter() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -502,11 +501,11 @@ resource "aws_kms_key" "test" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
-  
+
   ip_rules {
     ip_range = "10.0.0.0/16"
   }
-  
+
   additional_encryption_context = {
     Environment = "Production"
     Project     = "Live"
@@ -519,7 +518,7 @@ func testAccIPAccessSettingsConfig_customerManagedKeyBefore() string {
 	return `
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -554,7 +553,6 @@ resource "aws_kms_key" "test1" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test1.arn
-  
   ip_rules {
     ip_range = "10.0.0.0/16"
   }
@@ -566,7 +564,7 @@ func testAccIPAccessSettingsConfig_customerManagedKeyAfter() string {
 	return `
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -600,7 +598,7 @@ resource "aws_kms_key" "test1" {
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
-  policy                  = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -635,7 +633,6 @@ resource "aws_kms_key" "test2" {
 resource "aws_workspacesweb_ip_access_settings" "test" {
   display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test2.arn
-  
   ip_rules {
     ip_range = "10.0.0.0/16"
   }

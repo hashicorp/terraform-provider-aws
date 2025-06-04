@@ -132,7 +132,7 @@ func (r *ipAccessSettingsResource) Create(ctx context.Context, request resource.
 	data.IPAccessSettingsARN = fwflex.StringToFramework(ctx, output.IpAccessSettingsArn)
 
 	// Get the IP access settings details to populate other fields
-	ipAccessSettings, err := findIpAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
+	ipAccessSettings, err := findIPAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb IP Access Settings (%s)", data.IPAccessSettingsARN.ValueString()), err.Error())
 		return
@@ -155,7 +155,7 @@ func (r *ipAccessSettingsResource) Read(ctx context.Context, request resource.Re
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
-	output, err := findIpAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
+	output, err := findIPAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -191,7 +191,6 @@ func (r *ipAccessSettingsResource) Update(ctx context.Context, request resource.
 	if !new.Description.Equal(old.Description) ||
 		!new.DisplayName.Equal(old.DisplayName) ||
 		!new.IPRules.Equal(old.IPRules) {
-
 		var input workspacesweb.UpdateIpAccessSettingsInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -240,7 +239,7 @@ func (r *ipAccessSettingsResource) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root("ip_access_settings_arn"), request, response)
 }
 
-func findIpAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.IpAccessSettings, error) {
+func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.IpAccessSettings, error) {
 	input := workspacesweb.GetIpAccessSettingsInput{
 		IpAccessSettingsArn: &arn,
 	}
