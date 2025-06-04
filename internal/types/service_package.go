@@ -95,10 +95,10 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
-	Global            bool
-	Singleton         bool
-	ARN               bool
-	ARNAttribute      string
+	Global            bool   // All
+	Singleton         bool   // Singleton
+	ARN               bool   // ARN
+	IdentityAttribute string // ARN, Singleton
 	IDAttrShadowsAttr string
 	Attributes        []IdentityAttribute
 }
@@ -154,9 +154,9 @@ func RegionalARNIdentityNamed(name string) Identity {
 
 func arnIdentity(isGlobal bool, name string) Identity {
 	return Identity{
-		Global:       isGlobal,
-		ARN:          true,
-		ARNAttribute: name,
+		Global:            isGlobal,
+		ARN:               true,
+		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     name,

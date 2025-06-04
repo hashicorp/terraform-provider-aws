@@ -566,7 +566,7 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
 						continue
 					}
-					identity.SetARNAttributeName(res.Identity.ARNAttribute)
+					identity.SetARNAttributeName(res.Identity.IdentityAttribute)
 				} else if !res.Identity.Singleton {
 					type parameterizedIdentity interface {
 						SetIdentitySpec(identity inttypes.Identity)
