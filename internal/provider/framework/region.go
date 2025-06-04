@@ -1,11 +1,10 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package fwprovider
+package framework
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -21,24 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func validateRegionInPartition(ctx context.Context, c *conns.AWSClient, region string) error {
-	if got, want := names.PartitionForRegion(region).ID(), c.Partition(ctx); got != want {
-		return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, region, want)
-	}
-
-	return nil
-}
-
 func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	// Verify that the value of the top-level `region` attribute is in the configured AWS partition.
-	if inContext, ok := conns.FromContext(ctx); ok {
-		if v := inContext.OverrideRegion(); v != "" {
-			if err := validateRegionInPartition(ctx, c, v); err != nil {
-				diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
-			}
-		}
+	if err := c.ValidateInContextRegionInPartition(ctx); err != nil {
+		diags.AddAttributeError(path.Root(names.AttrRegion), "Invalid Region Value", err.Error())
 	}
 
 	return diags
@@ -56,7 +42,7 @@ func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, 
 			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -135,7 +121,7 @@ func (r ephemeralResourceInjectRegionAttributeInterceptor) schema(ctx context.Co
 			response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -210,7 +196,7 @@ func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, op
 			response.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
+				Description: names.TopLevelRegionAttributeDescription,
 			}
 		}
 	}

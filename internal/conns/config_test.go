@@ -17,7 +17,7 @@ import (
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
 type proxyCase struct {
@@ -455,7 +455,7 @@ func TestProxyConfig(t *testing.T) {
 
 			maps.Copy(config, tc.config)
 
-			p, err := provider.New(ctx)
+			p, err := sdkv2.NewProvider(ctx)
 			if err != nil {
 				t.Fatal(err)
 			}

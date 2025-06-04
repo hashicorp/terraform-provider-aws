@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package sdkv2
 
 import (
 	"context"
@@ -61,7 +61,7 @@ func (t *mockService) UpdateTags(context.Context, any, string, any, any) error {
 func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	var interceptors interceptorInvocations
 	sp := unique.Make(inttypes.ServicePackageResourceTags{
 		IdentifierAttribute: "id",

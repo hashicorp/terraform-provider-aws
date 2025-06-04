@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"iter"
 	"maps"
 	"net/http"
 	"os"
@@ -48,16 +49,20 @@ func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[st
 	c.servicePackages = maps.Clone(servicePackages)
 }
 
-func (c *AWSClient) TerraformVersion(_ context.Context) string {
-	return c.terraformVersion
-}
-
 func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
 	sp, ok := c.servicePackages[name]
 	if !ok {
 		return nil
 	}
 	return sp
+}
+
+func (c *AWSClient) ServicePackages(_ context.Context) iter.Seq[ServicePackage] {
+	return maps.Values(c.servicePackages)
+}
+
+func (c *AWSClient) TerraformVersion(_ context.Context) string {
+	return c.terraformVersion
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
@@ -301,6 +306,19 @@ func (c *AWSClient) EC2PrivateDNSNameForIP(ctx context.Context, ip string) strin
 // EC2PublicDNSNameForIP returns a EC2 public DNS name in the configured AWS Region.
 func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string {
 	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
+}
+
+// ValidateInContextRegionInPartition verifies that the value of the top-level `region` attribute is in the configured AWS partition.
+func (c *AWSClient) ValidateInContextRegionInPartition(ctx context.Context) error {
+	if inContext, ok := FromContext(ctx); ok {
+		if v := inContext.OverrideRegion(); v != "" {
+			if got, want := names.PartitionForRegion(v).ID(), c.Partition(ctx); got != want {
+				return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, v, want)
+			}
+		}
+	}
+
+	return nil
 }
 
 func convertIPToDashIP(ip string) string {

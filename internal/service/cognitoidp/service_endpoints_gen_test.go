@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -384,7 +384,7 @@ func withAliasName0EndpointInConfig(setup *caseSetup) {
 }
 
 func conflictsWith(e caseExpectations) caseExpectations {
-	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+	e.diags = append(e.diags, sdkv2.ConflictingEndpointsWarningDiag(
 		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
 		packageName,
 		aliasName0,
@@ -522,7 +522,7 @@ func testEndpointCase(ctx context.Context, t *testing.T, region string, testcase
 		t.Setenv(k, v)
 	}
 
-	p, err := provider.New(ctx)
+	p, err := sdkv2.NewProvider(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}

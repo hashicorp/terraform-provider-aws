@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package provider
+package sdkv2
 
 import (
 	"context"
@@ -20,16 +20,12 @@ import (
 
 // tagsResourceCRUDInterceptor implements transparent tagging on CRUD operations for resources.
 type tagsResourceCRUDInterceptor struct {
-	tagsInterceptor
+	interceptors.HTags
 }
 
 func resourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsResourceCRUDInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
+		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
 }
 
@@ -37,7 +33,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -65,7 +61,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 				if d.HasChange(names.AttrTagsAll) {
 					// Some old resources may not have the required attribute set after Read:
 					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-					if identifier := r.getIdentifier(d); identifier != "" {
+					if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" {
 						o, n := d.GetChange(names.AttrTagsAll)
 
 						if err := r.UpdateTags(ctx, sp, c, identifier, o, n); err != nil {
@@ -92,7 +88,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 			if tagsInContext.TagsOut.IsNone() {
 				// Some old resources may not have the required attribute set after Read:
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-				if identifier := r.getIdentifier(d); identifier != "" {
+				if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" {
 					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 						return sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
@@ -117,7 +113,7 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 		case Update:
 			// Some old resources may not have the required attribute set after Read:
 			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-			if identifier := r.getIdentifier(d); identifier != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
+			if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" && !d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				configTags := make(map[string]string)
 				if config := d.GetRawConfig(); !config.IsNull() && config.IsKnown() {
 					c := config.GetAttr(names.AttrTags)
@@ -178,16 +174,12 @@ func (r tagsResourceCRUDInterceptor) run(ctx context.Context, opts crudIntercept
 
 // tagsDataSourceCRUDInterceptor implements transparent tagging on CRUD operations for data sources.
 type tagsDataSourceCRUDInterceptor struct {
-	tagsInterceptor
+	interceptors.HTags
 }
 
 func dataSourceTransparentTagging(servicePackageResourceTags unique.Handle[inttypes.ServicePackageResourceTags]) crudInterceptor {
 	return &tagsDataSourceCRUDInterceptor{
-		tagsInterceptor: tagsInterceptor{
-			WithTaggingMethods: interceptors.WithTaggingMethods{
-				ServicePackageResourceTags: servicePackageResourceTags,
-			},
-		},
+		HTags: interceptors.HTags(servicePackageResourceTags),
 	}
 }
 
@@ -195,7 +187,7 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 	c := opts.c
 	var diags diag.Diagnostics
 
-	if !r.HasServicePackageResourceTags() {
+	if !r.Enabled() {
 		return diags
 	}
 
@@ -226,7 +218,7 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 				// TODO: can this occur for a data source?
 				// Some old resources may not have the required attribute set after Read:
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-				if identifier := r.getIdentifier(d); identifier != "" {
+				if identifier := r.GetIdentifierSDKv2(ctx, d); identifier != "" {
 					if err := r.ListTags(ctx, sp, c, identifier); err != nil {
 						return sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
 					}
@@ -242,25 +234,6 @@ func (r tagsDataSourceCRUDInterceptor) run(ctx context.Context, opts crudInterce
 	}
 
 	return diags
-}
-
-type tagsInterceptor struct {
-	interceptors.WithTaggingMethods
-}
-
-// getIdentifier returns the value of the identifier attribute used in AWS APIs.
-func (r tagsInterceptor) getIdentifier(d schemaResourceData) string {
-	var identifier string
-
-	if identifierAttribute := r.ServicePackageResourceTags.Value().IdentifierAttribute; identifierAttribute != "" {
-		if identifierAttribute == "id" {
-			identifier = d.Id()
-		} else {
-			identifier = d.Get(identifierAttribute).(string)
-		}
-	}
-
-	return identifier
 }
 
 func setTagsAll() customizeDiffInterceptor {
