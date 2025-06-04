@@ -242,15 +242,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			{{- else if $value.ARNIdentity }}
 				{{- if $.IsGlobal }}
 					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}),
+						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 					{{- else }}
-						Identity: inttypes.GlobalARNIdentity(),		
+						Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 					{{- end }}
 				{{- else }}
 					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 					{{- else }}
-						Identity: inttypes.RegionalARNIdentity(),
+						Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 					{{- end }}
 				{{- end }}
 			{{- else if $value.SingletonIdentity }}

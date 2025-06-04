@@ -95,13 +95,13 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
-	Global                      bool   // All
-	Singleton                   bool   // Singleton
-	ARN                         bool   // ARN
-	IdentityAttribute           string // ARN, Singleton
-	IDAttrShadowsAttr           string
-	Attributes                  []IdentityAttribute
-	IdentityAttributeDuplicates []string
+	Global                 bool   // All
+	Singleton              bool   // Singleton
+	ARN                    bool   // ARN
+	IdentityAttribute      string // ARN
+	IDAttrShadowsAttr      string
+	Attributes             []IdentityAttribute
+	IdentityDuplicateAttrs []string
 }
 
 func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
@@ -137,24 +137,24 @@ func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	}
 }
 
-func GlobalARNIdentity() Identity {
-	return GlobalARNIdentityNamed(names.AttrARN)
+func GlobalARNIdentity(opts ...IdentityOptsFunc) Identity {
+	return GlobalARNIdentityNamed(names.AttrARN, opts...)
 }
 
-func GlobalARNIdentityNamed(name string) Identity {
-	return arnIdentity(true, name)
+func GlobalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
+	return arnIdentity(true, name, opts)
 }
 
-func RegionalARNIdentity() Identity {
-	return RegionalARNIdentityNamed(names.AttrARN)
+func RegionalARNIdentity(opts ...IdentityOptsFunc) Identity {
+	return RegionalARNIdentityNamed(names.AttrARN, opts...)
 }
 
-func RegionalARNIdentityNamed(name string) Identity {
-	return arnIdentity(false, name)
+func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
+	return arnIdentity(false, name, opts)
 }
 
-func arnIdentity(isGlobal bool, name string) Identity {
-	return Identity{
+func arnIdentity(isGlobal bool, name string, opts []IdentityOptsFunc) Identity {
+	identity := Identity{
 		Global:            isGlobal,
 		ARN:               true,
 		IdentityAttribute: name,
@@ -164,10 +164,13 @@ func arnIdentity(isGlobal bool, name string) Identity {
 				Required: true,
 			},
 		},
-		IdentityAttributeDuplicates: []string{
-			"id", // TODO: This should be optional
-		},
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
 func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
@@ -214,6 +217,14 @@ func RegionalSingletonIdentity() Identity {
 				Required: false,
 			},
 		},
+	}
+}
+
+type IdentityOptsFunc func(opts *Identity)
+
+func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IdentityDuplicateAttrs = attrs
 	}
 }
 

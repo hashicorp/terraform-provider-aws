@@ -201,7 +201,7 @@ func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImport
 	if identity.Global {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityAttributeDuplicates); err != nil {
+				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
 					return nil, err
 				}
 
@@ -211,7 +211,7 @@ func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImport
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityAttributeDuplicates); err != nil {
+				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
 					return nil, err
 				}
 
