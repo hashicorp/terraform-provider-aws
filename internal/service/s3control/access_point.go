@@ -271,17 +271,39 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set(names.AttrARN, name)
 		d.Set(names.AttrBucket, bucketARN.String())
 	} else {
-		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
-		accessPointARN := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition(ctx),
-			Service:   "s3",
-			Region:    meta.(*conns.AWSClient).Region(ctx),
-			AccountID: accountID,
-			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
+		apARN, err := arn.Parse(aws.ToString(output.AccessPointArn))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing S3 Access Point (%s): %s", d.Id(), err)
 		}
 
-		d.Set(names.AttrARN, accessPointARN.String())
-		d.Set(names.AttrBucket, output.Bucket)
+		switch service := apARN.Service; service {
+		case "s3":
+			// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
+			accessPointARN := arn.ARN{
+				Partition: meta.(*conns.AWSClient).Partition(ctx),
+				Service:   "s3",
+				Region:    meta.(*conns.AWSClient).Region(ctx),
+				AccountID: accountID,
+				Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
+			}
+
+			d.Set(names.AttrARN, accessPointARN.String())
+			d.Set(names.AttrBucket, output.Bucket)
+		case "s3express":
+			// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
+			accessPointARN := arn.ARN{
+				Partition: meta.(*conns.AWSClient).Partition(ctx),
+				Service:   "s3express",
+				Region:    meta.(*conns.AWSClient).Region(ctx),
+				AccountID: accountID,
+				Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
+			}
+
+			d.Set(names.AttrARN, accessPointARN.String())
+			d.Set(names.AttrBucket, output.Bucket)
+		default:
+			return sdkdiag.AppendErrorf(diags, "unknown S3 Access Point service %s", service)
+		}
 	}
 
 	d.Set(names.AttrAccountID, accountID)
@@ -437,7 +459,7 @@ func AccessPointCreateResourceID(accessPointARN string) (string, error) {
 	}
 
 	switch service := v.Service; service {
-	case "s3":
+	case "s3", "s3express":
 		resource := v.Resource
 		if !strings.HasPrefix(resource, "accesspoint/") {
 			return "", fmt.Errorf("unexpected resource: %s", resource)
