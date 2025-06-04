@@ -79,26 +79,6 @@ CheckDestroy: acctest.CheckDestroyNoop,
 {{- end -}}
 {{- end }}
 
-{{ define "TagsKnownValueForNull" -}}
-{{ if eq .Implementation "framework" -}}
-knownvalue.Null()
-{{- else -}}
-	{{ if .TagsUpdateForceNew -}}
-	knownvalue.Null()
-	{{- else -}}
-	knownvalue.MapExact(map[string]knownvalue.Check{})
-	{{- end }}
-{{- end }}
-{{- end }}
-
-{{ define "TagsAllPlanCheckForNull" -}}
-{{ if .TagsUpdateForceNew -}}
-plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
-{{- else -}}
-plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
-{{- end }}
-{{- end }}
-
 {{ define "CommonImportBody" -}}
 	ResourceName: resourceName,
 	ImportState:  true,
