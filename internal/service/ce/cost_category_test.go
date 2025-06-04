@@ -6,6 +6,7 @@ package ce_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -239,9 +240,7 @@ func TestAccCECostCategory_splitChargeOrdering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.0", "20"),
-					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.1", "30"),
-					resource.TestCheckResourceAttr(resourceName, "split_charge_rule.0.parameter.0.values.2", "50"),
+					testAccCheckCostCategorySplitChargeRuleOrder(ctx, resourceName),
 				),
 			},
 			{
@@ -358,6 +357,39 @@ func testAccCheckCostCategoryDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			return fmt.Errorf("CE Cost Category %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckCostCategorySplitChargeRuleOrder(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		splitChargeRuleTargetOrder := []string{"appA", "appB", "appC"}
+		splitChargeRuleValueOrder := []string{"20", "30", "50"}
+
+		splitChargeRuleTargets := output.SplitChargeRules[0].Targets
+		splitChargeRuleValues := output.SplitChargeRules[0].Parameters[0].Values
+
+		if !slices.Equal(splitChargeRuleTargets, splitChargeRuleTargetOrder) {
+			return fmt.Errorf("Split charge rule target order mismatch, expected: %s, got %s", splitChargeRuleTargetOrder, splitChargeRuleTargets)
+		}
+
+		if !slices.Equal(splitChargeRuleValues, splitChargeRuleValueOrder) {
+			return fmt.Errorf("Split charge rule value order mismatch, expected: %s, got %s", splitChargeRuleValueOrder, splitChargeRuleValues)
 		}
 
 		return nil
