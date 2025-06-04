@@ -37,6 +37,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory:  newIPAccessSettingsResource,
+			TypeName: "aws_workspacesweb_ip_access_settings",
+			Name:     "IP Access Settings",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "ip_access_settings_arn",
+			},
+		},
+		{
 			Factory:  newNetworkSettingsResource,
 			TypeName: "aws_workspacesweb_network_settings",
 			Name:     "Network Settings",
