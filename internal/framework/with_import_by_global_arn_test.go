@@ -102,8 +102,8 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	importer.SetARNAttributeName("arn")
 
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(globalARNIdentitySchema, map[string]tftypes.Value{
-			"arn": tftypes.NewValue(tftypes.String, "not a valid ARN"),
+		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
+			"arn": "not a valid ARN",
 		}),
 	}
 	response := resource.ImportStateResponse{
@@ -135,8 +135,8 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 	importer.SetARNAttributeName("arn")
 
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(globalARNIdentitySchema, map[string]tftypes.Value{
-			"arn": tftypes.NewValue(tftypes.String, arn),
+		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
+			"arn": arn,
 		}),
 	}
 	response := resource.ImportStateResponse{
@@ -164,9 +164,17 @@ func emtpyStateFromSchema(schema schema.Schema) tfsdk.State {
 	}
 }
 
-func stateFromSchema(schema schema.Schema, values map[string]tftypes.Value) tfsdk.State {
+func stateFromSchema(schema schema.Schema, values map[string]string) tfsdk.State {
+	val := make(map[string]tftypes.Value)
+	for name, _ := range schema.Attributes {
+		if v, ok := values[name]; ok {
+			val[name] = tftypes.NewValue(tftypes.String, v)
+		} else {
+			val[name] = tftypes.NewValue(tftypes.String, nil)
+		}
+	}
 	return tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), values),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), val),
 		Schema: schema,
 	}
 }
@@ -178,9 +186,17 @@ func emtpyIdentityFromSchema(schema identityschema.Schema) *tfsdk.ResourceIdenti
 	}
 }
 
-func identityFromSchema(schema identityschema.Schema, values map[string]tftypes.Value) *tfsdk.ResourceIdentity {
+func identityFromSchema(schema identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
+	val := make(map[string]tftypes.Value)
+	for name, _ := range schema.Attributes {
+		if v, ok := values[name]; ok {
+			val[name] = tftypes.NewValue(tftypes.String, v)
+		} else {
+			val[name] = tftypes.NewValue(tftypes.String, nil)
+		}
+	}
 	return &tfsdk.ResourceIdentity{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), values),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), val),
 		Schema: schema,
 	}
 }

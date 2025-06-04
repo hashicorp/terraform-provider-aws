@@ -5,7 +5,6 @@ package framework_test
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/resourceattribute"
@@ -81,11 +79,8 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]tftypes.Value{
-			"arn":    tftypes.NewValue(tftypes.String, nil),
-			"region": tftypes.NewValue(tftypes.String, "another-region-1"),
-			"attr":   tftypes.NewValue(tftypes.String, nil),
-			"id":     tftypes.NewValue(tftypes.String, nil),
+		State: stateFromSchema(regionalARNSchema, map[string]string{
+			"region": "another-region-1",
 		}),
 		Identity: nil,
 	}
@@ -158,11 +153,8 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]tftypes.Value{
-			"arn":    tftypes.NewValue(tftypes.String, nil),
-			"region": tftypes.NewValue(tftypes.String, region),
-			"attr":   tftypes.NewValue(tftypes.String, nil),
-			"id":     tftypes.NewValue(tftypes.String, nil),
+		State: stateFromSchema(regionalARNSchema, map[string]string{
+			"region": region,
 		}),
 		Identity: nil,
 	}
@@ -191,8 +183,8 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	importer.SetARNAttributeName("arn")
 
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]tftypes.Value{
-			"arn": tftypes.NewValue(tftypes.String, "not a valid ARN"),
+		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
+			"arn": "not a valid ARN",
 		}),
 	}
 	response := resource.ImportStateResponse{
@@ -225,8 +217,8 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 	importer.SetARNAttributeName("arn")
 
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]tftypes.Value{
-			"arn": tftypes.NewValue(tftypes.String, arn),
+		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
+			"arn": arn,
 		}),
 	}
 	response := resource.ImportStateResponse{
