@@ -15,9 +15,9 @@ import (
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/resourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -207,11 +207,7 @@ func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, op
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: `The AWS Region to use for API operations. Overrides the Region set in the provider configuration.`,
-			}
+			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
 		}
 	}
 
