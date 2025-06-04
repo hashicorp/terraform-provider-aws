@@ -690,8 +690,8 @@ github.com/OpenPeeDeeP/depguard/v2 v2.2.1 h1:vckeWVESWp6Qog7UZSARNqfu/cZqvki8zsu
 github.com/OpenPeeDeeP/depguard/v2 v2.2.1/go.mod h1:q4DKzC4UcVaAvcfd41CZh0PWpGgzrVxUYBlgKNGquUo=
 github.com/ProtonMail/go-crypto v1.1.6 h1:ZcV+Ropw6Qn0AX9brlQLAUXfqLBc7Bl+f/DmNxpLfdw=
 github.com/ProtonMail/go-crypto v1.1.6/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
-github.com/YakDriver/tfproviderdocs v0.20.0 h1:P6Buinn3rxXlEmIW8enFnAlmHAfdsY4f1YDtgC8nchI=
-github.com/YakDriver/tfproviderdocs v0.20.0/go.mod h1:M4DS8iRhrRuyWixpFA6QdpAwHHeom9ORcGVTctjROLw=
+github.com/YakDriver/tfproviderdocs v0.21.0 h1:zV1NYvpuR5YbPG6WBpa5L1G7JZ+EDhvPnshxcJfi86w=
+github.com/YakDriver/tfproviderdocs v0.21.0/go.mod h1:M4DS8iRhrRuyWixpFA6QdpAwHHeom9ORcGVTctjROLw=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/ajstarks/deck v0.0.0-20200831202436-30c9fc6549a9/go.mod h1:JynElWSGnm/4RlzPXRlREEwqTHAN3T56Bv2ITsFT3gY=
