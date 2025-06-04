@@ -38,7 +38,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_basic(t *testing.T) {
 				Config: testAccDataProtectionSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_protection_settings_arn", "workspaces-web", regexache.MustCompile(`dataProtectionSettings/.+$`)),
 				),
 			},
@@ -100,8 +100,8 @@ func TestAccWorkSpacesWebDataProtectionSettings_complete(t *testing.T) {
 				Config: testAccDataProtectionSettingsConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-complete"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-complete"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
@@ -244,8 +244,8 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 				Config: testAccDataProtectionSettingsConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-update"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description before"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description before"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
@@ -281,8 +281,8 @@ func TestAccWorkSpacesWebDataProtectionSettings_update(t *testing.T) {
 				Config: testAccDataProtectionSettingsConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsExists(ctx, resourceName, &dataProtectionSettings),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-update-after"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description after"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-update-after"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description after"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test_update", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Testing"),
@@ -408,8 +408,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-complete"
-  description  = "test description"
+  display_name         = "test-complete"
+  description          = "test description"
   customer_managed_key = aws_kms_key.test.arn
 
   additional_encryption_context = {
@@ -427,7 +427,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       confidence_level    = 3
       enforced_urls       = ["https://pattern1.example.com"]
       exempt_urls         = ["https://exempt-pattern1.example.com"]
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-SSN"
@@ -441,7 +440,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
         keyword_regex       = "/SSN|Social Security/gi"
         pattern_description = "Custom SSN pattern"
       }
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-CUSTOM"
@@ -494,8 +492,8 @@ resource "aws_kms_key" "test_update" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-update"
-  description  = "test description before"
+  display_name         = "test-update"
+  description          = "test description before"
   customer_managed_key = aws_kms_key.test_update.arn
 
   additional_encryption_context = {
@@ -513,7 +511,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       confidence_level    = 2
       enforced_urls       = ["https://pattern-before.example.com"]
       exempt_urls         = ["https://exempt-pattern-before.example.com"]
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-CC"
@@ -527,7 +524,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
         keyword_regex       = "/ssn/gi"
         pattern_description = "SSN pattern"
       }
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-CUSTOM-BEF"
@@ -580,7 +576,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-encryption-context"
+  display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
   additional_encryption_context = {
     Environment = "Development"
@@ -627,7 +623,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-encryption-context"
+  display_name         = "test-encryption-context"
   customer_managed_key = aws_kms_key.test.arn
   additional_encryption_context = {
     Environment = "Production"
@@ -674,7 +670,7 @@ resource "aws_kms_key" "test1" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-cmk"
+  display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test1.arn
 }
 `
@@ -751,7 +747,7 @@ resource "aws_kms_key" "test2" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-cmk"
+  display_name         = "test-cmk"
   customer_managed_key = aws_kms_key.test2.arn
 }
 `
@@ -794,8 +790,8 @@ resource "aws_kms_key" "test_update" {
 }
 
 resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test-update-after"
-  description  = "test description after"
+  display_name         = "test-update-after"
+  description          = "test description after"
   customer_managed_key = aws_kms_key.test_update.arn
 
   additional_encryption_context = {
@@ -813,7 +809,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
       confidence_level    = 3
       enforced_urls       = ["https://pattern-after.example.com", "https://second-pattern-after.example.com"]
       exempt_urls         = ["https://exempt-pattern-after.example.com"]
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-PHONE"
@@ -827,7 +822,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
         keyword_regex       = "/phone|number/gi"
         pattern_description = "Custom phone number pattern"
       }
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-CUSTOM-AFT"

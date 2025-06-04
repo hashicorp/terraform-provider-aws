@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -77,10 +79,10 @@ func (r *dataProtectionSettingsResource) Schema(ctx context.Context, request res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -201,6 +203,8 @@ func (r *dataProtectionSettingsResource) Create(ctx context.Context, request res
 		return
 	}
 
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateDataProtectionSettings(ctx, &input)
@@ -272,12 +276,14 @@ func (r *dataProtectionSettingsResource) Update(ctx context.Context, request res
 	if !new.Description.Equal(old.Description) ||
 		!new.DisplayName.Equal(old.DisplayName) ||
 		!new.InlineRedactionConfiguration.Equal(old.InlineRedactionConfiguration) {
-
 		var input workspacesweb.UpdateDataProtectionSettingsInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
 
 		_, err := conn.UpdateDataProtectionSettings(ctx, &input)
 

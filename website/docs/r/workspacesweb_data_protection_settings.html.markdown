@@ -30,11 +30,9 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
   inline_redaction_configuration {
     global_confidence_level = 2
     global_enforced_urls    = ["https://example.com"]
-    
     inline_redaction_patterns {
       built_in_pattern_id = "ssn"
       confidence_level    = 3
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED"
@@ -71,7 +69,6 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
       confidence_level    = 3
       enforced_urls       = ["https://pattern1.example.com"]
       exempt_urls         = ["https://exempt-pattern1.example.com"]
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-SSN"
@@ -85,7 +82,6 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
         keyword_regex       = "/SSN|Social Security/gi"
         pattern_description = "Custom SSN pattern"
       }
-      
       redaction_place_holder {
         redaction_place_holder_type = "CustomText"
         redaction_place_holder_text = "REDACTED-CUSTOM"
