@@ -50,6 +50,10 @@ func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
 				return diags
 			}
 
+			if enumVal.IsNull() || enumVal.IsUnknown() {
+				continue
+			}
+
 			if !slices.Contains(val.ValueEnum().Values(), val.ValueEnum()) {
 				parentPath := fmt.Sprintf("%v[%d]", path, index)
 				diags.AddAttributeError(
