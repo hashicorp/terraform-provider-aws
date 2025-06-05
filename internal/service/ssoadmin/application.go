@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -33,7 +32,7 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
-// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnIdentity(identityDuplicateAttributes="id;application_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeApplicationOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -42,7 +41,7 @@ func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
-	framework.WithImportByGlobalARN
+	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -364,45 +363,4 @@ type portalOptionsModel struct {
 type signInOptionsModel struct {
 	ApplicationURL types.String                              `tfsdk:"application_url"`
 	Origin         fwtypes.StringEnum[awstypes.SignInOrigin] `tfsdk:"origin"`
-}
-
-// TODO: Equivalent to `WithImportByGlobalARN` with additional attribute to set
-func (r *applicationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	if request.ID != "" {
-		_, err := arn.Parse(request.ID)
-		if err != nil {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				"The import ID could not be parsed as an ARN.\n\n"+
-					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-			)
-			return
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...)     // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)      // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-
-		return
-	}
-
-	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(names.AttrARN)
-		var arnVal string
-		identity.GetAttribute(ctx, arnPath, &arnVal)
-
-		_, err := arn.Parse(arnVal)
-		if err != nil {
-			response.Diagnostics.AddAttributeError(
-				arnPath,
-				"Invalid Import Attribute Value",
-				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
-			)
-			return
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_arn"), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
-	}
 }
