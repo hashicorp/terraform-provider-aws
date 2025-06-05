@@ -44,7 +44,7 @@ import (
 
 // @FrameworkResource("aws_bedrock_custom_model", name="Custom Model")
 // @Tags(identifierAttribute="job_arn")
-// @ArnIdentity("job_arn")
+// @ArnIdentity("job_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetModelCustomizationJobOutput")
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier")

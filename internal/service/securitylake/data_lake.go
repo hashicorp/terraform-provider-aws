@@ -42,7 +42,7 @@ const dataLakeMutexKey = "aws_securitylake_data_lake"
 
 // @FrameworkResource("aws_securitylake_data_lake", name="Data Lake")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securitylake/types;awstypes;awstypes.DataLakeResource")
 // @Testing(serialize=true)

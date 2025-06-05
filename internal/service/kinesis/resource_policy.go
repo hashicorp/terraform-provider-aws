@@ -26,7 +26,7 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
-// @ArnIdentity("resource_arn")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
 // @Testing(useAlternateAccount=true)
 // We need to ignore `policy` because the JSON body is not normalized
 // @Testing(importIgnore="policy")

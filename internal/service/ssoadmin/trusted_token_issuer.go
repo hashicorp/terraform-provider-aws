@@ -34,7 +34,7 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_trusted_token_issuer", name="Trusted Token Issuer")
 // @Tags
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeTrustedTokenIssuerOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(serialize=true)

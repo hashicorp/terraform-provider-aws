@@ -43,7 +43,7 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 }
 
 // @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
-// @ArnIdentity("resource_arn")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/shield/types;awstypes;awstypes.ApplicationLayerAutomaticResponseConfiguration")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
 // @Testing(preCheck="testAccPreCheck")

@@ -35,7 +35,7 @@ import (
 
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/paymentcryptography;paymentcryptography.GetKeyOutput")
 // @Testing(generator=false)
 // @Testing(importIgnore="deletion_window_in_days")

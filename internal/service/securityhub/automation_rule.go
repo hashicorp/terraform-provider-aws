@@ -34,7 +34,7 @@ import (
 
 // @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
 // @Testing(serialize=true)
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {

@@ -136,17 +136,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			{{- else if $value.ARNIdentity }}
 				{{- if $.IsGlobal }}
 					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}),
+						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
 					{{- else }}
-						Identity: inttypes.GlobalARNIdentity(),		
+						Identity: inttypes.GlobalARNIdentity(
 					{{- end }}
 				{{- else }}
 					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}),
+						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
 					{{- else }}
-						Identity: inttypes.RegionalARNIdentity(),
+						Identity: inttypes.RegionalARNIdentity(
 					{{- end }}
 				{{- end }}
+				{{- if .HasIdentityDuplicateAttrs -}}
+					inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+				{{- end -}}
+				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
 					Identity: inttypes.GlobalSingletonIdentity(),

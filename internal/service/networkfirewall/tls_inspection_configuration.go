@@ -42,7 +42,7 @@ import (
 
 // @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("tls-configuration/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
 // @Testing(subdomainTfVar="common_name;certificate_domain")

@@ -29,7 +29,7 @@ import (
 )
 
 // @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
-// @ArnIdentity("resource_arn")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
 // @Testing(importIgnore="policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {

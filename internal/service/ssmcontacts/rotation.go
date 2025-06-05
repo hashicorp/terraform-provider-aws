@@ -37,7 +37,7 @@ const (
 
 // @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(serialize=true)
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override

@@ -37,7 +37,7 @@ import (
 
 // @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {

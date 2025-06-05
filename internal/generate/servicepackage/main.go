@@ -22,6 +22,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -160,6 +161,7 @@ type ResourceDatum struct {
 	MutableIdentity                   bool
 	WrappedImport                     bool
 	goImports                         []goImport
+	IdentityDuplicateAttrs            []string
 }
 
 type identityAttribute struct {
@@ -186,6 +188,10 @@ func (r ResourceDatum) ARNAttribute() string {
 
 func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
+}
+
+func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
+	return len(r.IdentityDuplicateAttrs) > 0
 }
 
 type ServiceDatum struct {
@@ -338,8 +344,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "IdentityAttribute":
-				args := common.ParseArgs(m[3])
-
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -381,6 +385,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.arnAttribute = "arn"
 				} else {
 					d.arnAttribute = args.Positional[0]
+				}
+
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs := strings.Split(attr, ";")
+					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+						return namesgen.ConstOrQuote(s)
+					})
 				}
 
 			case "MutableIdentity":

@@ -28,8 +28,8 @@ import (
 )
 
 // @FrameworkResource("aws_appfabric_app_bundle", name="App Bundle")
-// @ArnIdentity
 // @Tags(identifierAttribute="id")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")

@@ -35,7 +35,7 @@ import (
 
 // @FrameworkResource("aws_bcmdataexports_export",name="Export")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(preCheckRegion="us-east-1")
 // @Testing(skipEmptyTags=true, skipNullTags=true)

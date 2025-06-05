@@ -39,7 +39,7 @@ import (
 
 // @FrameworkResource("aws_docdbelastic_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/docdbelastic/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="admin_user_password")
 func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {

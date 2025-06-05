@@ -35,7 +35,7 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(tagsTest=false)
 // @Testing(identityTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
