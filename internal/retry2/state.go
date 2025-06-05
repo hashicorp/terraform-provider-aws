@@ -23,10 +23,10 @@ import (
 // The first is any object that will be returned as the final object after waiting for state change.
 // The second is the latest state of that object.
 // The third any error that may have happened while refreshing the state.
-type StateRefreshFunc[T any, S comparable] func() (T, S, error)
+type StateRefreshFunc[T any, S ~string] func(context.Context) (T, S, error)
 
 // StateChangeConf is the configuration struct used for `WaitForState`.
-type StateChangeConf[T any, S comparable] struct {
+type StateChangeConf[T any, S ~string] struct {
 	Delay          time.Duration          // Wait this time before starting checks
 	Pending        []S                    // States that are "allowed" and will continue trying
 	Refresh        StateRefreshFunc[T, S] // Refreshes the current state
@@ -67,15 +67,14 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 	}
 
 	var (
-		t            T
-		currentState S
-		err          error
+		t                             T
+		currentState                  S
+		err                           error
+		notFoundTick, targetOccurence int
+		l                             *backoff.Loop
 	)
-	notFoundTick := 0
-	targetOccurence := 0
-	var l *backoff.Loop
 	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
-		t, currentState, err = conf.Refresh()
+		t, currentState, err = conf.Refresh(ctx)
 
 		if inttypes.IsZero(&t) {
 			// If we're waiting for the absence of a thing, then return.
@@ -116,7 +115,7 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 			}
 
 			if !found && len(conf.Pending) > 0 {
-				return t, &UnexpectedStateError[S]{
+				return t, &UnexpectedStateError{
 					LastError:     err,
 					State:         currentState,
 					ExpectedState: conf.Target,
@@ -127,7 +126,7 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 
 	// Timed out or Context canceled.
 	if l.TimedOut() {
-		return t, &TimeoutError[S]{
+		return t, &TimeoutError{
 			LastError:     err,
 			LastState:     currentState,
 			Timeout:       conf.Timeout,

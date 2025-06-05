@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 //
@@ -16,11 +14,9 @@ import (
 //
 
 type NotFoundError struct {
-	LastError    error
-	LastRequest  any
-	LastResponse any
-	Message      string
-	Retries      int
+	LastError error
+	Message   string
+	Retries   int
 }
 
 func (e *NotFoundError) Error() string {
@@ -39,41 +35,42 @@ func (e *NotFoundError) Unwrap() error {
 	return e.LastError
 }
 
-type UnexpectedStateError[S comparable] struct {
+// UnexpectedStateError is returned when Refresh returns a state that's neither in Target nor Pending.
+type UnexpectedStateError struct {
 	LastError     error
-	State         S
-	ExpectedState []S
+	State         string
+	ExpectedState []string
 }
 
-func (e *UnexpectedStateError[S]) Error() string {
+func (e *UnexpectedStateError) Error() string {
 	return fmt.Sprintf(
 		"unexpected state '%s', wanted target '%s'. last error: %s",
 		e.State,
-		strings.Join(toStrings(e.ExpectedState), ", "),
+		strings.Join(e.ExpectedState, ", "),
 		e.LastError,
 	)
 }
 
-func (e *UnexpectedStateError[S]) Unwrap() error {
+func (e *UnexpectedStateError) Unwrap() error {
 	return e.LastError
 }
 
-type TimeoutError[S comparable] struct {
+// TimeoutError is returned when WaitForState times out.
+type TimeoutError struct {
 	LastError     error
-	LastState     S
+	LastState     string
 	Timeout       time.Duration
-	ExpectedState []S
+	ExpectedState []string
 }
 
-func (e *TimeoutError[S]) Error() string {
+func (e *TimeoutError) Error() string {
 	expectedState := "resource to be gone"
 	if len(e.ExpectedState) > 0 {
-		expectedState = fmt.Sprintf("state to become '%s'", strings.Join(toStrings(e.ExpectedState), ", "))
+		expectedState = fmt.Sprintf("state to become '%s'", strings.Join(e.ExpectedState, ", "))
 	}
 
-	var zero S
 	extraInfo := make([]string, 0)
-	if e.LastState != zero {
+	if e.LastState != "" {
 		extraInfo = append(extraInfo, fmt.Sprintf("last state: '%s'", e.LastState))
 	}
 	if e.Timeout > 0 {
@@ -94,12 +91,6 @@ func (e *TimeoutError[S]) Error() string {
 		expectedState, suffix)
 }
 
-func (e *TimeoutError[S]) Unwrap() error {
+func (e *TimeoutError) Unwrap() error {
 	return e.LastError
-}
-
-func toStrings[S comparable](a []S) []string {
-	return tfslices.ApplyToAll(a, func(s S) string {
-		return fmt.Sprintf("%v", s)
-	})
 }
