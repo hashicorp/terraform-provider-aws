@@ -325,7 +325,7 @@ type ResourceDatum struct {
 	ExistsTakesT                bool
 	FileName                    string
 	Generator                   string
-	idAttrDuplicates            string
+	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
 	NoImport                    bool
 	ImportStateID               string
 	importStateIDAttribute      string
@@ -356,6 +356,8 @@ type ResourceDatum struct {
 	UseAlternateAccount         bool
 	IdentityAttributes          []string
 	plannableImportAction       importAction
+	identityAttribute           string
+	IdentityDuplicateAttrs      []string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -418,6 +420,14 @@ func (d ResourceDatum) HasImportIgnore() bool {
 
 func (d ResourceDatum) PlannableResourceAction() string {
 	return d.plannableImportAction.String()
+}
+
+func (d ResourceDatum) IdentityAttribute() string {
+	return namesgen.ConstOrQuote(d.identityAttribute)
+}
+
+func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
+	return len(r.IdentityDuplicateAttrs) > 0
 }
 
 type goImport struct {
@@ -566,10 +576,24 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					d.arnAttribute = "arn"
+					d.identityAttribute = "arn"
 				} else {
 					d.arnAttribute = args.Positional[0]
+					d.identityAttribute = args.Positional[0]
 				}
-				d.idAttrDuplicates = d.arnAttribute
+
+				var attrs []string
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs = strings.Split(attr, ";")
+				}
+				if d.Implementation == implementationSDK {
+					attrs = append(attrs, "id")
+				}
+				slices.Sort(attrs)
+				attrs = slices.Compact(attrs)
+				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+					return namesgen.ConstOrQuote(s)
+				})
 
 			case "IdentityAttribute":
 				hasIdentity = true
