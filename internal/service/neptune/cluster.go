@@ -548,7 +548,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
 	}
 
-	// Fix: Only loop while err is not nil
+	// When upgrading, the Neptune Cluster may not be available immediately after creation.
 	for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutRead)); err != nil && r.Continue(ctx); {
 		dbc, err = findDBClusterByID(ctx, conn, d.Id())
 
