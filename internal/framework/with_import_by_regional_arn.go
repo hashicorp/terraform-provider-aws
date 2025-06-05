@@ -17,11 +17,13 @@ import (
 // WithImportByRegionalARN is intended to be embedded in resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByRegionalARN struct {
-	arnAttributeName string
+	attributeName  string
+	duplicateAttrs []string
 }
 
-func (w *WithImportByRegionalARN) SetARNAttributeName(attr string) {
-	w.arnAttributeName = attr
+func (w *WithImportByRegionalARN) SetARNAttributeName(attr string, duplicateAttrs []string) {
+	w.attributeName = attr
+	w.duplicateAttrs = duplicateAttrs
 }
 
 func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -57,14 +59,16 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			}
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.attributeName), request.ID)...)
+		for _, attr := range w.duplicateAttrs {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), request.ID)...)
+		}
 
 		return
 	}
 
 	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(w.arnAttributeName)
+		arnPath := path.Root(w.attributeName)
 		var arnVal string
 		identity.GetAttribute(ctx, arnPath, &arnVal)
 
@@ -82,7 +86,9 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.attributeName), arnVal)...)
+		for _, attr := range w.duplicateAttrs {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), arnVal)...)
+		}
 	}
 }

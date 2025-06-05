@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-var globalARNSchema = schema.Schema{
+var globalARNWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"arn": framework.ARNAttributeComputedOnly(),
 		"attr": schema.StringAttribute{
@@ -42,13 +42,13 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: "not a valid ARN",
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNSchema),
+		State:    emtpyStateFromSchema(globalARNWithIDSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -73,13 +73,13 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNSchema),
+		State:    emtpyStateFromSchema(globalARNWithIDSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -100,7 +100,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
@@ -108,7 +108,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		}),
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNSchema),
+		State:    emtpyStateFromSchema(globalARNWithIDSchema),
 		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
 	}
 	importer.ImportState(ctx, request, &response)
@@ -133,7 +133,7 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
@@ -141,7 +141,7 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 		}),
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNSchema),
+		State:    emtpyStateFromSchema(globalARNWithIDSchema),
 		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
 	}
 	importer.ImportState(ctx, request, &response)

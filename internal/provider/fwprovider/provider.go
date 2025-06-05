@@ -559,14 +559,14 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 			if res.Import.WrappedImport {
 				if res.Identity.ARN {
 					type arnIdentity interface {
-						SetARNAttributeName(attr string)
+						SetARNAttributeName(attr string, duplicateAttrs []string)
 					}
 					identity, ok := inner.(arnIdentity)
 					if !ok {
 						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
 						continue
 					}
-					identity.SetARNAttributeName(res.Identity.IdentityAttribute)
+					identity.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
 				} else if !res.Identity.Singleton {
 					type parameterizedIdentity interface {
 						SetIdentitySpec(identity inttypes.Identity)

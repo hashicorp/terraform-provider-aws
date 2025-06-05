@@ -10,17 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // WithImportByGlobalARN is intended to be embedded in global resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByGlobalARN struct {
-	arnAttributeName string
+	attributeName  string
+	duplicateAttrs []string
 }
 
-func (w *WithImportByGlobalARN) SetARNAttributeName(attr string) {
-	w.arnAttributeName = attr
+func (w *WithImportByGlobalARN) SetARNAttributeName(attr string, duplicateAttrs []string) {
+	w.attributeName = attr
+	w.duplicateAttrs = duplicateAttrs
 }
 
 func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -35,14 +36,16 @@ func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resourc
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), request.ID)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.attributeName), request.ID)...)
+		for _, attr := range w.duplicateAttrs {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), request.ID)...)
+		}
 
 		return
 	}
 
 	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(w.arnAttributeName)
+		arnPath := path.Root(w.attributeName)
 		var arnVal string
 		identity.GetAttribute(ctx, arnPath, &arnVal)
 
@@ -56,7 +59,9 @@ func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resourc
 			return
 		}
 
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.arnAttributeName), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.attributeName), arnVal)...)
+		for _, attr := range w.duplicateAttrs {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), arnVal)...)
+		}
 	}
 }

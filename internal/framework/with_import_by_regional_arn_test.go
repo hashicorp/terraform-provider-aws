@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/resourceattribute"
 )
 
-var regionalARNSchema = schema.Schema{
+var regionalARNWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"arn": framework.ARNAttributeComputedOnly(),
 		"attr": schema.StringAttribute{
@@ -41,13 +41,13 @@ func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: "not a valid ARN",
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
+		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -73,13 +73,13 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]string{
+		State: stateFromSchema(regionalARNWithIDSchema, map[string]string{
 			"region": "another-region-1",
 		}),
 		Identity: nil,
@@ -107,13 +107,13 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
+		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -147,13 +147,13 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]string{
+		State: stateFromSchema(regionalARNWithIDSchema, map[string]string{
 			"region": region,
 		}),
 		Identity: nil,
@@ -180,7 +180,7 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
@@ -188,7 +188,7 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		}),
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
+		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
 		Identity: emtpyIdentityFromSchema(regionalARNIdentitySchema),
 	}
 	importer.ImportState(ctx, request, &response)
@@ -214,7 +214,7 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn")
+	importer.SetARNAttributeName("arn", []string{"id"})
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
@@ -222,7 +222,7 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 		}),
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
+		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
 		Identity: emtpyIdentityFromSchema(regionalARNIdentitySchema),
 	}
 	importer.ImportState(ctx, request, &response)
