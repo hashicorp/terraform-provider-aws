@@ -1,4 +1,5 @@
-## 5.100.0 (Unreleased)
+## 6.1.0 (Unreleased)
+## 5.100.0 (June  5, 2025)
 
 FEATURES:
 
