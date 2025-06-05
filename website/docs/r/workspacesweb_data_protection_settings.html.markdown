@@ -30,7 +30,7 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
   inline_redaction_configuration {
     global_confidence_level = 2
     global_enforced_urls    = ["https://example.com"]
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       built_in_pattern_id = "ssn"
       confidence_level    = 3
       redaction_place_holder {
@@ -64,7 +64,7 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
     global_enforced_urls    = ["https://example.com", "https://test.example.com"]
     global_exempt_urls      = ["https://exempt.example.com"]
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       built_in_pattern_id = "ssn"
       confidence_level    = 3
       enforced_urls       = ["https://pattern1.example.com"]
@@ -75,7 +75,7 @@ resource "aws_workspacesweb_data_protection_settings" "example" {
       }
     }
 
-    inline_redaction_patterns {
+    inline_redaction_pattern {
       custom_pattern {
         pattern_name        = "CustomPattern"
         pattern_regex       = "/\\d{3}-\\d{2}-\\d{4}/g"
@@ -114,9 +114,9 @@ The following arguments are optional:
 * `global_confidence_level` - (Optional) The global confidence level for the inline redaction configuration. This indicates the certainty of data type matches in the redaction process. Values range from 1 (low confidence) to 3 (high confidence).
 * `global_enforced_urls` - (Optional) The global enforced URL configuration for the inline redaction configuration.
 * `global_exempt_urls` - (Optional) The global exempt URL configuration for the inline redaction configuration.
-* `inline_redaction_patterns` - (Optional) The inline redaction patterns to be enabled for the inline redaction configuration. Detailed below.
+* `inline_redaction_pattern` - (Optional) The inline redaction patterns to be enabled for the inline redaction configuration. Detailed below.
 
-### inline_redaction_patterns
+### inline_redaction_pattern
 
 * `built_in_pattern_id` - (Optional) The built-in pattern from the list of preconfigured patterns. Either a `custom_pattern` or `built_in_pattern_id` is required.
 * `confidence_level` - (Optional) The confidence level for inline redaction pattern. This indicates the certainty of data type matches in the redaction process. Values range from 1 (low confidence) to 3 (high confidence).

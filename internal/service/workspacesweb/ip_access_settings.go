@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -72,9 +75,15 @@ func (r *ipAccessSettingsResource) Schema(ctx context.Context, request resource.
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 256),
+				},
 			},
 			names.AttrDisplayName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+				},
 			},
 			"ip_access_settings_arn": schema.StringAttribute{
 				Computed: true,
@@ -86,12 +95,20 @@ func (r *ipAccessSettingsResource) Schema(ctx context.Context, request resource.
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"ip_rules": schema.ListNestedBlock{
+			"ip_rule": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ipRuleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(100),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 256),
+							},
 						},
 						"ip_range": schema.StringAttribute{
 							Required: true,
@@ -112,6 +129,7 @@ func (r *ipAccessSettingsResource) Create(ctx context.Context, request resource.
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, data.DisplayName)
 	var input workspacesweb.CreateIpAccessSettingsInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -125,7 +143,7 @@ func (r *ipAccessSettingsResource) Create(ctx context.Context, request resource.
 	output, err := conn.CreateIpAccessSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating WorkSpacesWeb IP Access Settings", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb IP Access Settings (%s)", name), err.Error())
 		return
 	}
 
@@ -270,7 +288,7 @@ type ipAccessSettingsResourceModel struct {
 	Description                 types.String                                 `tfsdk:"description"`
 	DisplayName                 types.String                                 `tfsdk:"display_name"`
 	IPAccessSettingsARN         types.String                                 `tfsdk:"ip_access_settings_arn"`
-	IPRules                     fwtypes.ListNestedObjectValueOf[ipRuleModel] `tfsdk:"ip_rules"`
+	IPRules                     fwtypes.ListNestedObjectValueOf[ipRuleModel] `tfsdk:"ip_rule"`
 	Tags                        tftags.Map                                   `tfsdk:"tags"`
 	TagsAll                     tftags.Map                                   `tfsdk:"tags_all"`
 }
