@@ -153,7 +153,7 @@ func resourceParameter() *schema.Resource {
 				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
 			}),
 			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange("insecure_value") || !diff.NewValueKnown("insecure_value")
+				return diff.HasChange("insecure_value")
 			}),
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
