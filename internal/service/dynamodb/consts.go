@@ -7,4 +7,8 @@ import "time"
 
 const (
 	propagationTimeout = 2 * time.Minute
+	
+	// Global Table consistency modes
+	consistencyModeEventuallyConsistent = "EVENTUALLY_CONSISTENT"
+	consistencyModeStronglyConsistent   = "STRONGLY_CONSISTENT"
 )

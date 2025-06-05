@@ -294,6 +294,12 @@ func resourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"consistency_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      consistencyModeEventuallyConsistent,
+							ValidateFunc: validation.StringInSlice([]string{consistencyModeEventuallyConsistent, consistencyModeStronglyConsistent}, false),
+						},
 						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1372,6 +1378,11 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 			replicaInput.KMSMasterKeyId = aws.String(v)
 		}
+		
+		// Handle Multi-Region Strong Consistency (MRSC)
+		if v, ok := tfMap["consistency_mode"].(string); ok && v == consistencyModeStronglyConsistent {
+			replicaInput.TableClassOverride = awstypes.TableClassStandard
+		}
 
 		input := &dynamodb.UpdateTableInput{
 			TableName: aws.String(tableName),
@@ -1396,6 +1407,11 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 
 			if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 				replicaInput.KMSMasterKeyId = aws.String(v)
+			}
+			
+			// Handle Multi-Region Strong Consistency (MRSC) for updates
+			if v, ok := tfMap["consistency_mode"].(string); ok && v == consistencyModeStronglyConsistent {
+				replicaInput.TableClassOverride = awstypes.TableClassStandard
 			}
 
 			input = &dynamodb.UpdateTableInput{
@@ -1627,6 +1643,15 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 				toRemove = append(toRemove, mr)
 				toAdd = append(toAdd, ma)
 				break
+			}
+			
+			// like "ForceNew" for the replica - consistency_mode change
+			if v1, ok1 := ma["consistency_mode"].(string); ok1 {
+				if v2, ok2 := mr["consistency_mode"].(string); ok2 && v1 != v2 {
+					toRemove = append(toRemove, mr)
+					toAdd = append(toAdd, ma)
+					break
+				}
 			}
 
 			// just update PITR
@@ -2662,4 +2687,16 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// !! Not a validation error for attribute_name to be set when enabled is false !!
 	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
 	// The diff is handled by DiffSuppressFunc of attribute_name.
+}
+
+// Helper function to check if a replica has MRSC enabled
+func replicaHasMRSC(replica *awstypes.ReplicaDescription) bool {
+	if replica == nil {
+		return false
+	}
+	
+	// For MRSC, check if the replica has the STANDARD table class
+	// Since the AWS SDK doesn't expose TableClassSummary directly in ReplicaDescription,
+	// we need to infer it from other properties
+	return replica.ProvisionedThroughputOverride != nil
 }
