@@ -54,7 +54,8 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	importer.SetARNAttributeName("arn", nil)
 
 	request := resource.ImportStateRequest{
-		ID: "not a valid ARN",
+		ID:       "not a valid ARN",
+		Identity: nil,
 	}
 	response := resource.ImportStateResponse{
 		State:    emtpyStateFromSchema(globalARNSchema),
@@ -67,6 +68,45 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 		}
 	} else {
 		t.Fatal("Expected error, got none")
+	}
+}
+
+func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	ctx := context.Background()
+
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    "",
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+
+	importer := framework.WithImportByGlobalARN{}
+	importer.SetARNAttributeName("arn", nil)
+
+	request := resource.ImportStateRequest{
+		ID:       arn,
+		Identity: nil,
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(globalARNSchema),
+		Identity: nil,
+	}
+	importer.ImportState(ctx, request, &response)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+	}
+
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+
+	if response.Identity != nil {
+		t.Error("Identity should not be set")
 	}
 }
 
@@ -84,12 +124,15 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	importer := framework.WithImportByGlobalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
+	identity := emtpyIdentityFromSchema(globalARNIdentitySchema)
+
 	request := resource.ImportStateRequest{
-		ID: arn,
+		ID:       arn,
+		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
 		State:    emtpyStateFromSchema(globalARNSchema),
-		Identity: nil,
+		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
 	if response.Diagnostics.HasError() {
@@ -100,7 +143,17 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
 	}
 }
 
@@ -143,14 +196,16 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 	importer := framework.WithImportByGlobalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
+	identity := identityFromSchema(globalARNIdentitySchema, map[string]string{
+		"arn": arn,
+	})
+
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
-			"arn": arn,
-		}),
+		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
 		State:    emtpyStateFromSchema(globalARNSchema),
-		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
+		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
 	if response.Diagnostics.HasError() {
@@ -161,7 +216,17 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
 	}
 }
 
@@ -198,7 +263,7 @@ func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
 	}
 }
 
@@ -216,14 +281,16 @@ func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	importer := framework.WithImportByGlobalARN{}
 	importer.SetARNAttributeName("arn", []string{"id", "attr"})
 
+	identity := identityFromSchema(globalARNIdentitySchema, map[string]string{
+		"arn": arn,
+	})
+
 	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
-			"arn": arn,
-		}),
+		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
 		State:    emtpyStateFromSchema(globalARNWithIDSchema),
-		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
+		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
 	if response.Diagnostics.HasError() {
@@ -237,7 +304,17 @@ func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
 	}
 }
 
