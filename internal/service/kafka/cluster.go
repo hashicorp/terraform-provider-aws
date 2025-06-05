@@ -268,9 +268,10 @@ func resourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sasl": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"iam": {
@@ -285,9 +286,10 @@ func resourceCluster() *schema.Resource {
 							},
 						},
 						"tls": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"certificate_authority_arns": {
@@ -943,6 +945,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if d.HasChange("client_authentication") {
 			if v, ok := d.GetOk("client_authentication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.ClientAuthentication = expandClientAuthentication(v.([]any)[0].(map[string]any))
+			}
+
+			if o, n := d.GetChange("client_authentication.0.sasl"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+				// Disable when a previously configured sasl block is removed
+				input.ClientAuthentication.Sasl = &types.Sasl{
+					Iam:   &types.Iam{Enabled: aws.Bool(false)},
+					Scram: &types.Scram{Enabled: aws.Bool(false)},
+				}
+			}
+
+			if o, n := d.GetChange("client_authentication.0.tls"); len(o.([]interface{})) > 0 && len(n.([]interface{})) == 0 {
+				// Disable when a previously configured tls block is removed
+				input.ClientAuthentication.Tls = &types.Tls{Enabled: aws.Bool(false)}
 			}
 		}
 
