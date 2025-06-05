@@ -118,6 +118,16 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
 	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
+	}
 }
 
 func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
@@ -150,6 +160,51 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 	}
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
+	}
+}
+
+func TestRegionalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	ctx := context.Background()
+
+	region := "a-region-1"
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    region,
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+
+	importer := framework.WithImportByRegionalARN{}
+	importer.SetARNAttributeName("arn", nil)
+
+	response := importByIDNoIdentity(ctx, &importer, regionalARNSchema, arn)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+	}
+
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
+		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+
+	if response.Identity != nil {
+		t.Error("Identity should not be set")
 	}
 }
 
@@ -202,6 +257,16 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
 	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
+	}
 }
 
 func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
@@ -235,6 +300,16 @@ func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	}
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
 	}
 }
 
@@ -271,5 +346,15 @@ func TestRegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	}
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 		t.Errorf("expected `region` to be %q, got %q", e, a)
+	}
+
+	if identity := response.Identity; identity == nil {
+		t.Error("Identity should be set")
+	} else {
+		var arnVal string
+		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+		if e, a := arn, arnVal; e != a {
+			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+		}
 	}
 }

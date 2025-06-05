@@ -62,37 +62,6 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	}
 }
 
-func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
-	ctx := context.Background()
-
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    "",
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
-
-	response := importByIDNoIdentity(ctx, &importer, globalARNSchema, arn)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
-
-	if response.Identity != nil {
-		t.Error("Identity should not be set")
-	}
-}
-
 func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	ctx := context.Background()
 
@@ -127,6 +96,37 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 		if e, a := arn, arnVal; e != a {
 			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
 		}
+	}
+}
+
+func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	ctx := context.Background()
+
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    "",
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+
+	importer := framework.WithImportByGlobalARN{}
+	importer.SetARNAttributeName("arn", nil)
+
+	response := importByIDNoIdentity(ctx, &importer, globalARNSchema, arn)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+	}
+
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+		t.Errorf("expected `attr` to be %q, got %q", e, a)
+	}
+
+	if response.Identity != nil {
+		t.Error("Identity should not be set")
 	}
 }
 

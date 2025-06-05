@@ -64,6 +64,10 @@ func (w *WithImportByRegionalARN) ImportState(ctx context.Context, request resou
 			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), request.ID)...)
 		}
 
+		if identity := response.Identity; identity != nil {
+			response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(w.attributeName), request.ID)...)
+		}
+
 		return
 	}
 
