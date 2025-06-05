@@ -506,23 +506,28 @@ func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
 	return dbi, parsedARN.Region, nil
 }
 
-func waitGlobalClusterMemberUpdated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration, optFns ...func(*neptune.Options)) (*awstypes.DBCluster, error) {
+func waitGlobalClusterMemberUpdated(ctx context.Context, conn *neptune.Client, id string, timeout time.Duration, optFns ...func(*neptune.Options)) (*awstypes.DBCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			"backing-up",
-			"modifying",
-			"upgrading",
+			clusterStatusBackingUp,
+			clusterStatusConfiguringIAMDatabaseAuth,
+			clusterStatusModifying,
+			clusterStatusRenaming,
+			clusterStatusResettingMasterCredentials,
+			clusterStatusUpgrading,
 		},
-		Target:     []string{"available"},
+		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id, false, optFns...),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*awstypes.DBCluster); ok {
 		return output, err
 	}
+
 	return nil, err
 }
 
