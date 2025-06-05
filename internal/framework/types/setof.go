@@ -6,12 +6,10 @@ package types
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -27,7 +25,7 @@ var (
 // setTypeOf is the attribute type of a SetValueOf.
 type setTypeOf[T attr.Value] struct {
 	basetypes.SetType
-	validateAttributeFunc validateAttributeFunc
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 var (
@@ -40,38 +38,7 @@ var (
 
 // TODO Replace with Go 1.24 generic type alias when available.
 func SetOfStringEnumType[T enum.Valueser[T]]() setTypeOf[StringEnum[T]] {
-	validateFunc := func(ctx context.Context, path path.Path, values []attr.Value) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for index, enumVal := range values {
-			val, ok := enumVal.(StringEnum[T])
-			if !ok {
-				diags.AddAttributeError(
-					path,
-					"Invalid String Enum Type",
-					fmt.Sprintf("Expected type: %v, got: %v", StringEnum[T]{}.Type(ctx), enumVal.Type(ctx)),
-				)
-
-				return diags
-			}
-
-			if val.IsNull() || val.IsUnknown() {
-				continue
-			}
-
-			if !slices.Contains(val.ValueEnum().Values(), val.ValueEnum()) {
-				parentPath := fmt.Sprintf("%v[%d]", path, index)
-				diags.AddAttributeError(
-					path,
-					"Invalid String Enum Value",
-					fmt.Sprintf("Value [%s] at attribute %v is not a valid enum value. Valid values are: %s",
-						val.ValueString(), parentPath, val.ValueEnum().Values()),
-				)
-			}
-		}
-		return diags
-	}
-
-	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}, validateFunc}
+	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
@@ -141,7 +108,7 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 // SetValueOf represents a Terraform Plugin Framework Set value whose elements are of type `T`.
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
-	validateAttributeFunc validateAttributeFunc
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 type (
