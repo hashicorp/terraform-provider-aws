@@ -50,7 +50,7 @@ func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
 				return diags
 			}
 
-			if enumVal.IsNull() || enumVal.IsUnknown() {
+			if val.IsNull() || val.IsUnknown() {
 				continue
 			}
 
