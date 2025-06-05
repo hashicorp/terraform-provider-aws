@@ -29,16 +29,23 @@ data "aws_neptune_engine_version" "upgrade" {
 }
 
 locals {
-  parameter_group_family = var.upgrade ? data.aws_neptune_engine_version.upgrade.parameter_group_family : data.aws_neptune_engine_version.test.parameter_group_family
   engine_version         = var.upgrade ? data.aws_neptune_engine_version.upgrade.version_actual : data.aws_neptune_engine_version.test.version_actual
+  parameter_group_family = var.upgrade ? data.aws_neptune_engine_version.upgrade.parameter_group_family : data.aws_neptune_engine_version.test.parameter_group_family
+}
+
+resource "aws_neptune_global_cluster" "test" {
+  global_cluster_identifier = var.rname
+  engine                    = var.engine
+  engine_version            = local.engine_version
 }
 
 resource "aws_neptune_cluster" "test" {
+  apply_immediately                    = true
   cluster_identifier                   = var.rname
   engine                               = aws_neptune_global_cluster.test.engine
   engine_version                       = aws_neptune_global_cluster.test.engine_version
-  neptune_cluster_parameter_group_name = "default.${local.parameter_group_family}"
   global_cluster_identifier            = aws_neptune_global_cluster.test.global_cluster_identifier
+  neptune_cluster_parameter_group_name = "default.${local.parameter_group_family}"
   skip_final_snapshot                  = true
 }
 
@@ -53,10 +60,4 @@ resource "aws_neptune_cluster_instance" "test" {
   lifecycle {
     ignore_changes = [engine_version]
   }
-}
-
-resource "aws_neptune_global_cluster" "test" {
-  global_cluster_identifier = var.rname
-  engine                    = var.engine
-  engine_version            = local.engine_version
 }
