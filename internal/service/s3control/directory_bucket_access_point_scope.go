@@ -201,7 +201,7 @@ func (r *directoryBucketAccessPointScopeResource) Delete(ctx context.Context, re
 		return
 	}
 
-	tflog.Debug(ctx, "deleting S3Control Directory Access Point Scope", map[string]any{
+	tflog.Debug(ctx, "deleting S3Control Directory Bucket Access Point Scope", map[string]any{
 		names.AttrName:      data.Name.ValueString(),
 		names.AttrAccountID: data.AccountID.ValueString(),
 	})
