@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -39,16 +38,9 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 
 	importer := framework.WithImportRegionalSingleton{}
 
-	request := resource.ImportStateRequest{
-		ID: region,
-	}
-	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalSingletonSchema, map[string]string{
-			"region": "another-region-1",
-		}),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIDWithState(ctx, &importer, regionalSingletonSchema, region, map[string]string{
+		"region": "another-region-1",
+	}, regionalSingletonIdentitySchema)
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The region passed for import,") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -65,14 +57,7 @@ func TestRegionalSingleton_ImportID_Valid_NoRegionSet(t *testing.T) {
 
 	importer := framework.WithImportRegionalSingleton{}
 
-	request := resource.ImportStateRequest{
-		ID: region,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalSingletonSchema),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByID(ctx, &importer, regionalSingletonSchema, region, regionalSingletonIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -93,16 +78,9 @@ func TestRegionalSingleton_ImportID_Valid_RegionSet(t *testing.T) {
 
 	importer := framework.WithImportRegionalSingleton{}
 
-	request := resource.ImportStateRequest{
-		ID: region,
-	}
-	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalSingletonSchema, map[string]string{
-			"region": region,
-		}),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIDWithState(ctx, &importer, regionalSingletonSchema, region, map[string]string{
+		"region": region,
+	}, regionalSingletonIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -123,16 +101,9 @@ func TestRegionalSingleton_Identity_Valid(t *testing.T) {
 
 	importer := framework.WithImportRegionalSingleton{}
 
-	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalSingletonIdentitySchema, map[string]string{
-			"region": region,
-		}),
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalSingletonSchema),
-		Identity: emtpyIdentityFromSchema(regionalSingletonIdentitySchema),
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIdentity(ctx, &importer, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
+		"region": region,
+	})
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
