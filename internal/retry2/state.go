@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -117,8 +118,8 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 			if !found && len(conf.Pending) > 0 {
 				return t, &UnexpectedStateError{
 					LastError:     err,
-					State:         currentState,
-					ExpectedState: conf.Target,
+					State:         string(currentState),
+					ExpectedState: tfslices.Strings(conf.Target),
 				}
 			}
 		}
@@ -128,9 +129,9 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 	if l.TimedOut() {
 		return t, &TimeoutError{
 			LastError:     err,
-			LastState:     currentState,
+			LastState:     string(currentState),
 			Timeout:       conf.Timeout,
-			ExpectedState: conf.Target,
+			ExpectedState: tfslices.Strings(conf.Target),
 		}
 	}
 
