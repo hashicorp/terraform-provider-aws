@@ -10,7 +10,7 @@ description: |-
 
 Information about a Neptune engine version.
 
-~> **Note:** If AWS returns multiple matching engine versions, this data source will produce a `multiple RDS engine versions` error. To avoid this, provide additional criteria to narrow the results or use the `latest` argument to select a single version. See the [Argument Reference](#argument-reference) for details.
+~> **Note:** If AWS returns multiple matching engine versions, this data source will produce a `multiple Neptune engine versions` error. To avoid this, provide additional criteria to narrow the results or use the `latest` argument to select a single version. See the [Argument Reference](#argument-reference) for details.
 
 ## Example Usage
 

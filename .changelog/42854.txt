@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them
+```
+
+```release-note:bug
+resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them
+```
