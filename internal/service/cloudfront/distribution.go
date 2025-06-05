@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -956,9 +957,100 @@ func resourceDistribution() *schema.Resource {
 	}
 }
 
+func validateMultiTenantDistributionConfig(d *schema.ResourceData) error {
+	if v, ok := d.GetOk("continuous_deployment_policy_id"); ok && v.(string) != "" {
+		return fmt.Errorf("continuous_deployment_policy_id is not supported for multi-tenant distributions")
+	}
+
+	if origins, ok := d.GetOk("origin"); ok {
+		for _, o := range origins.(*schema.Set).List() {
+			if om, ok := o.(map[string]interface{}); ok {
+				if s3cfg, ok := om["s3_origin_config"]; ok && len(s3cfg.([]interface{})) > 0 {
+					return fmt.Errorf("origin_access_identity (OAI) is not supported for multi-tenant distributions; use origin access control (OAC) instead")
+				}
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("web_acl_id"); ok && v.(string) != "" {
+		if len(v.(string)) > 0 && !strings.HasPrefix(v.(string), "arn:aws:wafv2:") {
+			return fmt.Errorf("only AWS WAF V2 web ACLs are supported for multi-tenant distributions")
+		}
+	}
+
+	if logging, ok := d.GetOk("logging_config"); ok && len(logging.([]interface{})) > 0 {
+		return fmt.Errorf("standard logging (legacy) is not supported for multi-tenant distributions")
+	}
+
+	checkCacheBehavior := func(tfMap map[string]any) error {
+		if _, ok := tfMap["min_ttl"]; ok {
+			return fmt.Errorf("min_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["default_ttl"]; ok {
+			return fmt.Errorf("default_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["max_ttl"]; ok {
+			return fmt.Errorf("max_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["forwarded_values"]; ok {
+			return fmt.Errorf("forwarded_values is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["trusted_signers"]; ok {
+			return fmt.Errorf("trusted_signers is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["smooth_streaming"]; ok {
+			return fmt.Errorf("smooth_streaming is not supported for multi-tenant distributions")
+		}
+		return nil
+	}
+
+	if dcb, ok := d.GetOk("default_cache_behavior"); ok {
+		if err := checkCacheBehavior(dcb.(map[string]any)); err != nil {
+			return err
+		}
+	}
+
+	if ocb, ok := d.GetOk("ordered_cache_behavior"); ok {
+		for _, cb := range ocb.([]map[string]any) {
+			if err := checkCacheBehavior(cb); err != nil {
+				return err
+			}
+		}
+	}
+
+	if _, ok := d.GetOk("price_class"); ok {
+		return fmt.Errorf("price_class is not supported for multi-tenant distributions")
+	}
+
+	if _, ok := d.GetOk("is_ipv6_enabled"); ok {
+		return fmt.Errorf("is_ipv6_enabled is not supported for multi-tenant distributions")
+	}
+
+	if viewerCerts, ok := d.GetOk("viewer_certificate"); ok && len(viewerCerts.([]any)) > 0 {
+		vc := viewerCerts.([]any)[0].(map[string]any)
+		if _, ok := vc["iam_certificate_id"]; ok {
+			return fmt.Errorf("IAM server certificates are not supported for multi-tenant distributions")
+		}
+		if v, ok := vc["minimum_protocol_version"]; ok && v.(string) == string(awstypes.MinimumProtocolVersionSSLv3) {
+			return fmt.Errorf("minimum_protocol_version SSLv3 is not supported for multi-tenant distributions")
+		}
+		if v, ok := vc["ssl_support_method"]; ok && v.(string) != string(awstypes.SSLSupportMethodSniOnly) {
+			return fmt.Errorf("only sni-only ssl_support_method is supported for multi-tenant distributions")
+		}
+	}
+
+	return nil
+}
+
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		if err := validateMultiTenantDistributionConfig(d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating multi-tenant distribution config: %s", err)
+		}
+	}
 
 	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
@@ -1094,6 +1186,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		if err := validateMultiTenantDistributionConfig(d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating multi-tenant distribution config: %s", err)
+		}
+	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudfront.UpdateDistributionInput{
@@ -1400,13 +1498,16 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
 		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
 		Enabled:                      aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
 		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
-		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
 		Staging:                      aws.Bool(d.Get("staging").(bool)),
 		TenantConfig:                 expandTenantConfig(d.Get("tenant_config").([]any)[0].(map[string]any)),
 		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
+	}
+
+	if apiObject.ConnectionMode != awstypes.ConnectionModeTenantOnly {
+		apiObject.IsIPV6Enabled = aws.Bool(d.Get("is_ipv6_enabled").(bool))
+		apiObject.PriceClass = awstypes.PriceClass(d.Get("price_class").(string))
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
