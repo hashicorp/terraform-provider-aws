@@ -1,0 +1,143 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+rules:
+  - id: use-acctest-test
+    languages: [go]
+    message: "Use acctest.Test instead of resource.Test for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.Test($T, $TC)
+    fix: |
+      acctest.Test(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-paralleltest
+    languages: [go]
+    message: "Use acctest.ParallelTest instead of resource.ParallelTest for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.ParallelTest($T, $TC)
+    fix: |
+      acctest.ParallelTest(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randomwithprefix
+    languages: [go]
+    message: "Use acctest.RandomWithPrefix instead of sdkacctest.RandomWithPrefix for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandomWithPrefix($P)
+    fix: |
+      acctest.RandomWithPrefix(t, $P)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-randint
+    languages: [go]
+    message: "Use acctest.RandInt instead of sdkacctest.RandInt for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandInt()
+    fix: |
+      acctest.RandInt(t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: use-acctest-providermeta
+    languages: [go]
+    message: "Use acctest.ProviderMeta instead of acctest.Provider.Meta for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      acctest.Provider.Meta().(*conns.AWSClient).$C(ctx)
+    fix: |
+      acctest.ProviderMeta(ctx, t).$C(ctx)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: add-testing-t-to-destroy-testcheckfunc
+    languages: [go]
+    message: "Add a testing.T argument into destroy TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern: |
+          func $F(ctx context.Context) resource.TestCheckFunc
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Destroy.*)
+    fix: |
+      func $F(ctx context.Context, t *testing.T) resource.TestCheckFunc
+    paths:
+      include:
+        - "**/*_test.go"
+
+  - id: add-testing-t-to-exists-testcheckfunc
+    languages: [go]
+    message: "Add a testing.T argument into exists TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern: |
+          func $F(ctx context.Context, $...ARGS) resource.TestCheckFunc
+      - pattern-not: |
+          func $F(ctx context.Context) resource.TestCheckFunc
+      - pattern-not: |
+          func $F(..., t *testing.T, ...) resource.TestCheckFunc
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Exists$)
+    fix: |
+      func $F(ctx context.Context, t *testing.T, $...ARGS) resource.TestCheckFunc
+    paths:
+      include:
+        - "**/*_test.go"
+
+  # NOTE: because this matched pattern is inside another section which is replaced by a previous rule,
+  # autofix may need to be run twice in order to apply this change.
+  - id: pass-testing-t-to-destroy-testcheckfunc
+    languages: [go]
+    message: "Pass testing.T argument into destroy TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern-inside: "resource.TestCase{ ... }"
+      - pattern: |
+          $F(ctx)
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Destroy.*)
+    fix: |
+      $F(ctx, t)
+    paths:
+      include:
+        - "**/*_test.go"
+
+  # NOTE: because this matched pattern is inside another section which is replaced by a previous rule,
+  # autofix may need to be run twice in order to apply this change.
+  - id: pass-testing-t-to-exists-testcheckfunc
+    languages: [go]
+    message: "Pass testing.T argument into exists TestCheckFunc helpers for VCR-compatible acceptance testing"
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern-inside: "Check: resource.ComposeTestCheckFunc( ... )"
+          - pattern-inside: "Check: resource.ComposeAggregateTestCheckFunc( ... )"
+      - pattern: |
+          $F(ctx, $...ARGS)
+      - pattern-not: |
+          $F(ctx)
+      - pattern-not: |
+          $F(..., t, ...)
+      - metavariable-regex:
+          metavariable: $F
+          regex: (testAccCheck.*Exists$)
+    fix: |
+      $F(ctx, t, $...ARGS)
+    paths:
+      include:
+        - "**/*_test.go"

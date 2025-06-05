@@ -13,3 +13,10 @@ aws_s3_account_public_access_block
 aws_servicecatalog_organizations_access
 aws_servicequotas_template
 aws_ssmincidents_replication_set
+aws_default_subnet
+aws_default_vpc
+aws_default_vpc_dhcp_options
+aws_quicksight_account_settings
+aws_lb_target_group
+aws_spot_fleet_request
+aws_transfer_server
