@@ -20,6 +20,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
+var globalARNSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"arn": framework.ARNAttributeComputedOnly(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+	},
+}
+
 var globalARNWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"arn": framework.ARNAttributeComputedOnly(),
@@ -42,13 +51,13 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
 
 	request := resource.ImportStateRequest{
 		ID: "not a valid ARN",
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNWithIDSchema),
+		State:    emtpyStateFromSchema(globalARNSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -73,13 +82,13 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
 
 	request := resource.ImportStateRequest{
 		ID: arn,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNWithIDSchema),
+		State:    emtpyStateFromSchema(globalARNSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -87,11 +96,10 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
 
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-
 	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 }
@@ -100,7 +108,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
@@ -108,7 +116,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		}),
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(globalARNWithIDSchema),
+		State:    emtpyStateFromSchema(globalARNSchema),
 		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
 	}
 	importer.ImportState(ctx, request, &response)
@@ -133,7 +141,80 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
+
+	request := resource.ImportStateRequest{
+		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
+			"arn": arn,
+		}),
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(globalARNSchema),
+		Identity: emtpyIdentityFromSchema(globalARNIdentitySchema),
+	}
+	importer.ImportState(ctx, request, &response)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+	}
+
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+}
+
+func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	ctx := context.Background()
+
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    "",
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+
+	importer := framework.WithImportByGlobalARN{}
+	importer.SetARNAttributeName("arn", []string{"id", "attr"})
+
+	request := resource.ImportStateRequest{
+		ID: arn,
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(globalARNWithIDSchema),
+		Identity: nil,
+	}
+	importer.ImportState(ctx, request, &response)
+	if response.Diagnostics.HasError() {
+		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+	}
+
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+		t.Errorf("expected `id` to be %q, got %q", e, a)
+	}
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+}
+
+func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	ctx := context.Background()
+
+	arn := arn.ARN{
+		Partition: "aws",
+		Service:   "a-service",
+		Region:    "",
+		AccountID: "123456789012",
+		Resource:  "res-abc123",
+	}.String()
+
+	importer := framework.WithImportByGlobalARN{}
+	importer.SetARNAttributeName("arn", []string{"id", "attr"})
 
 	request := resource.ImportStateRequest{
 		Identity: identityFromSchema(globalARNIdentitySchema, map[string]string{
@@ -152,8 +233,10 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
 		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
-
 	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+		t.Errorf("expected `arn` to be %q, got %q", e, a)
+	}
+	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 		t.Errorf("expected `arn` to be %q, got %q", e, a)
 	}
 }
@@ -203,6 +286,8 @@ func identityFromSchema(schema identityschema.Schema, values map[string]string) 
 }
 
 func getAttributeValue(ctx context.Context, t *testing.T, state tfsdk.State, path path.Path) string {
+	t.Helper()
+
 	var attrVal types.String
 	if diags := state.GetAttribute(ctx, path, &attrVal); diags.HasError() {
 		t.Fatalf("Unexpected error getting attribute %q: %s", path, fwdiag.DiagnosticsError(diags))
