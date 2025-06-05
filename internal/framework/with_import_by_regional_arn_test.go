@@ -53,14 +53,7 @@ func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		ID: "not a valid ARN",
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByID(ctx, &importer, regionalARNSchema, "not a valid ARN", regionalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The import ID could not be parsed as an ARN.") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -83,7 +76,7 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 	}.String()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
 
 	request := resource.ImportStateRequest{
 		ID: arn,
@@ -119,14 +112,7 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		ID: arn,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByID(ctx, &importer, regionalARNSchema, arn, regionalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -186,18 +172,11 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
 	importer := framework.WithImportByRegionalARN{}
-	importer.SetARNAttributeName("arn", []string{"id"})
+	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
-			"arn": "not a valid ARN",
-		}),
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
-		Identity: emtpyIdentityFromSchema(regionalARNIdentitySchema),
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIdentity(ctx, &importer, regionalARNSchema, regionalARNIdentitySchema, map[string]string{
+		"arn": "not a valid ARN",
+	})
 	if response.Diagnostics.HasError() {
 		if response.Diagnostics[0].Summary() != "Invalid Import Attribute Value" {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -222,16 +201,9 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
-			"arn": arn,
-		}),
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNSchema),
-		Identity: emtpyIdentityFromSchema(regionalARNIdentitySchema),
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIdentity(ctx, &importer, regionalARNSchema, regionalARNIdentitySchema, map[string]string{
+		"arn": arn,
+	})
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -262,14 +234,7 @@ func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", []string{"id", "attr"})
 
-	request := resource.ImportStateRequest{
-		ID: arn,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByID(ctx, &importer, regionalARNWithIDSchema, arn, regionalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -303,16 +268,9 @@ func TestRegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", []string{"id", "attr"})
 
-	request := resource.ImportStateRequest{
-		Identity: identityFromSchema(regionalARNIdentitySchema, map[string]string{
-			"arn": arn,
-		}),
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(regionalARNWithIDSchema),
-		Identity: emtpyIdentityFromSchema(regionalARNIdentitySchema),
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIdentity(ctx, &importer, regionalARNWithIDSchema, regionalARNIdentitySchema, map[string]string{
+		"arn": arn,
+	})
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
