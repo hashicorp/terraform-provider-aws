@@ -57,14 +57,14 @@ func (r *userAccessLoggingSettingsResource) Schema(ctx context.Context, request 
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"user_access_logging_settings_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -228,9 +228,9 @@ func findUserAccessLoggingSettingsByARN(ctx context.Context, conn *workspacesweb
 }
 
 type userAccessLoggingSettingsResourceModel struct {
-	KinesisStreamARN             fwtypes.ARN          `tfsdk:"kinesis_stream_arn"`
-	UserAccessLoggingSettingsARN types.String         `tfsdk:"user_access_logging_settings_arn"`
 	AssociatedPortalARNs         fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
+	KinesisStreamARN             fwtypes.ARN          `tfsdk:"kinesis_stream_arn"`
 	Tags                         tftags.Map           `tfsdk:"tags"`
 	TagsAll                      tftags.Map           `tfsdk:"tags_all"`
+	UserAccessLoggingSettingsARN types.String         `tfsdk:"user_access_logging_settings_arn"`
 }
