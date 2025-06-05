@@ -6,9 +6,12 @@ package types
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -16,30 +19,63 @@ import (
 )
 
 var (
-	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
-	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
+	_ basetypes.SetTypable        = (*setTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.SetValuable       = (*SetValueOf[basetypes.StringValue])(nil)
+	_ xattr.ValidateableAttribute = (*SetValueOf[basetypes.StringValue])(nil)
 )
 
 // setTypeOf is the attribute type of a SetValueOf.
 type setTypeOf[T attr.Value] struct {
 	basetypes.SetType
+	validateAttributeFunc validateAttributeFunc
 }
 
 var (
 	// SetOfStringType is a custom type used for defining a Set of strings.
-	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}, nil}
 
 	// SetOfARNType is a custom type used for defining a Set of ARNs.
-	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
+	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}, nil}
 )
 
 // TODO Replace with Go 1.24 generic type alias when available.
 func SetOfStringEnumType[T enum.Valueser[T]]() setTypeOf[StringEnum[T]] {
-	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}}
+	validateFunc := func(ctx context.Context, path path.Path, values []attr.Value) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for index, enumVal := range values {
+			val, ok := enumVal.(StringEnum[T])
+			if !ok {
+				diags.AddAttributeError(
+					path,
+					"Invalid String Enum Type",
+					fmt.Sprintf("Expected type: %v, got: %v", StringEnum[T]{}.Type(ctx), enumVal.Type(ctx)),
+				)
+
+				return diags
+			}
+
+			if val.IsNull() || val.IsUnknown() {
+				continue
+			}
+
+			if !slices.Contains(val.ValueEnum().Values(), val.ValueEnum()) {
+				parentPath := fmt.Sprintf("%v[%d]", path, index)
+				diags.AddAttributeError(
+					path,
+					"Invalid String Enum Value",
+					fmt.Sprintf("Value [%s] at attribute %v is not a valid enum value. Valid values are: %s",
+						val.ValueString(), parentPath, val.ValueEnum().Values()),
+				)
+			}
+		}
+		return diags
+	}
+
+	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}, validateFunc}
 }
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
-	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}}
+	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}, nil}
 }
 
 func (t setTypeOf[T]) Equal(o attr.Type) bool {
@@ -73,7 +109,7 @@ func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	return SetValueOf[T]{SetValue: v}, diags
+	return SetValueOf[T]{SetValue: v, validateAttributeFunc: t.validateAttributeFunc}, diags
 }
 
 func (t setTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -105,6 +141,7 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 // SetValueOf represents a Terraform Plugin Framework Set value whose elements are of type `T`.
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
+	validateAttributeFunc validateAttributeFunc
 }
 
 type (
@@ -124,6 +161,14 @@ func (v SetValueOf[T]) Equal(o attr.Value) bool {
 
 func (v SetValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewSetTypeOf[T](ctx)
+}
+
+func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() || v.validateAttributeFunc == nil {
+		return
+	}
+
+	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {
