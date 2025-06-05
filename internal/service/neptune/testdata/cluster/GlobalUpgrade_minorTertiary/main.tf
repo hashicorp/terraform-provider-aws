@@ -45,8 +45,7 @@ variable "third_region" {
 }
 
 locals {
-  engine_version         = var.upgrade ? data.aws_neptune_engine_version.upgrade.version_actual : data.aws_neptune_engine_version.test.version_actual
-  parameter_group_family = var.upgrade ? data.aws_neptune_engine_version.upgrade.parameter_group_family : data.aws_neptune_engine_version.test.parameter_group_family
+  engine_version = var.upgrade ? data.aws_neptune_engine_version.upgrade.version_actual : data.aws_neptune_engine_version.test.version_actual
 }
 
 data "aws_neptune_engine_version" "test" {
