@@ -12,12 +12,12 @@ const (
 )
 
 const (
-	engineNeptune = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
+	defaultEngine = "neptune"
 )
 
 func engine_Values() []string {
 	return []string{
-		engineNeptune,
+		defaultEngine,
 	}
 }
 
@@ -46,15 +46,22 @@ const (
 )
 
 const (
-	clusterStatusAvailable                  = "available"
-	clusterStatusBackingUp                  = "backing-up"
-	clusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	clusterStatusCreating                   = "creating"
-	clusterStatusDeleting                   = "deleting"
-	clusterStatusMigrating                  = "migrating"
-	clusterStatusModifying                  = "modifying"
-	clusterStatusPreparingDataMigration     = "preparing-data-migration"
-	clusterStatusUpgrading                  = "upgrading"
+	clusterStatusAvailable                     = "available"
+	clusterStatusBackingUp                     = "backing-up"
+	clusterStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	clusterStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
+	clusterStatusCreating                      = "creating"
+	clusterStatusDeleting                      = "deleting"
+	clusterStatusMigrating                     = "migrating"
+	clusterStatusModifying                     = "modifying"
+	clusterStatusPreparingDataMigration        = "preparing-data-migration"
+	clusterStatusPromoting                     = "promoting"
+	clusterStatusRebooting                     = "rebooting"
+	clusterStatusRenaming                      = "renaming"
+	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
+	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusScalingStorage                = "scaling-storage"
+	clusterStatusUpgrading                     = "upgrading"
 
 	// Non-standard status values.
 	clusterStatusAvailableWithPendingModifiedValues = "tf-available-with-pending-modified-values"
