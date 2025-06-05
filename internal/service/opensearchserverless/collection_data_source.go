@@ -41,26 +41,33 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 			},
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was created.",
+				Computed:    true,
 			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the collection.",
+				Computed:    true,
 			},
 			"failure_message": schema.StringAttribute{
-				Computed: true,
+				Description: "A failure reason associated with the collection.",
+				Computed:    true,
 			},
 			"failure_code": schema.StringAttribute{
-				Computed: true,
+				Description: "A failure code associated with the collection.",
+				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "ID of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrName),
@@ -71,14 +78,17 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Computed: true,
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was last modified.",
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Name of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrID),
@@ -86,11 +96,13 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			"standby_replicas": schema.StringAttribute{
-				Computed: true,
+				Description: "Indicates whether standby replicas should be used for a collection.",
+				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
+				Description: "Type of collection.",
+				Computed:    true,
 			},
 		},
 	}
