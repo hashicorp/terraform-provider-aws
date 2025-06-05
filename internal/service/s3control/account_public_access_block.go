@@ -27,7 +27,6 @@ import (
 // @SDKResource("aws_s3_account_public_access_block", name="Account Public Access Block")
 // @Region(global=true)
 // @SingletonIdentity
-// @WrappedImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;awstypes;awstypes.PublicAccessBlockConfiguration")
 // @Testing(generator=false)
 func resourceAccountPublicAccessBlock() *schema.Resource {
