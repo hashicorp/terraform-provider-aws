@@ -107,15 +107,15 @@ func resourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"sizing_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
-						},
 						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(32, 131072),
+						},
+						"sizing_mode": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
 						},
 					},
 				},
@@ -323,7 +323,7 @@ func resourceLustreFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:             schema.TypeInt,
 				Optional:         true,
-				ValidateDiagFunc: throughPutValidator,
+				ValidateDiagFunc: validateLustreFileSystemThroughputCapacity,
 			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
@@ -1150,16 +1150,17 @@ func logStateFunc(v any) string {
 	return value
 }
 
-func throughPutValidator(i any, path cty.Path) diag.Diagnostics {
+func validateLustreFileSystemThroughputCapacity(i any, path cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
-	v := i.(int)
-	if v%4000 != 0 {
+
+	if v := i.(int); v%4000 != 0 {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Throughput value incorrect",
+			Summary:       "Throughput capacity value incorrect",
 			Detail:        fmt.Sprintf("Valid values are 4000 MBps or multiples of 4000 MBps, invalid value: %d", v),
 			AttributePath: path,
 		})
 	}
+
 	return diags
 }
