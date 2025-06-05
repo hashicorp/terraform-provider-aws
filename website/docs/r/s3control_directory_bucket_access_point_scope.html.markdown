@@ -21,16 +21,24 @@ With access points for directory buckets, you can use the access point scope to 
 ### S3 Access Point Scope for a directory bucket in an AWS Local Zone
 
 ```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_s3_directory_bucket" "example" {
-  bucket = "example--zoneid--x-s3"
+  bucket = "example--zoneId--x-s3"
+  location {
+    name = data.aws_availability_zones.available.zone_ids[0]
+  }
 }
-resource "aws_s3_directory_access_point" "example" {
+
+resource "aws_s3_access_point" "example" {
   bucket     = aws_s3_directory_bucket.example.id
-  name       = "example--zoneid--xa-s3"
-  account_id = "123456789012"
+  name       = "example--zoneId--xa-s3"
 }
+
 resource "aws_s3control_directory_bucket_access_point_scope" "example" {
-  name       = "example--zoneid--xa-s3"
+  name       = "example--zoneId--xa-s3"
   account_id = "123456789012"
   scope {
     permissions = ["GetObject", "ListBucket"]
@@ -47,7 +55,7 @@ This resource supports the following arguments:
 * `account_id` - (Required) The AWS account ID that owns the specified access point.
 * `scope` - (Optional). Scope is used to restrict access to specific prefixes, API operations, or a combination of both. To remove the `scope`, set it to `{permissions=[] prefixes=[]}`. The default scope is `{permissions=[] prefixes=[]}`.
 
-### scope Configuration block
+### Scope Configuration block
 
 The following arguments are optional:
 
