@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -46,7 +47,7 @@ func testAccWorkSpacesPool_basic(t *testing.T) {
 				Config: testAccPoolConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workspaces", regexache.MustCompile(`workspacespool/wspool-[0-9a-z]+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", resourceBundleName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "capacity.0.desired_user_sessions", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
