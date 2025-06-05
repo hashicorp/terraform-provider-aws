@@ -33,8 +33,8 @@ resource "aws_s3_directory_bucket" "example" {
 }
 
 resource "aws_s3_access_point" "example" {
-  bucket     = aws_s3_directory_bucket.example.id
-  name       = "example--zoneId--xa-s3"
+  bucket = aws_s3_directory_bucket.example.id
+  name   = "example--zoneId--xa-s3"
 }
 
 resource "aws_s3control_directory_bucket_access_point_scope" "example" {
