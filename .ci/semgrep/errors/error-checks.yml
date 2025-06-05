@@ -83,7 +83,7 @@ rules:
           for ... = backoff.NewRetryLoop(...); ...; {
             ...
           }
-          if $ERR != nil { ... }          
+          if $ERR != nil { ... }
       # e.g. internal/service/quicksight/analysis.go
       - pattern-not-inside: |
           if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
