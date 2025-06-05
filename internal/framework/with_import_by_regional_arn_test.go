@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -78,16 +77,9 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		ID: arn,
-	}
-	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]string{
-			"region": "another-region-1",
-		}),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIDWithState(ctx, &importer, regionalARNSchema, arn, map[string]string{
+		"region": "another-region-1",
+	}, regionalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The region passed for import,") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -143,16 +135,9 @@ func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
 	importer := framework.WithImportByRegionalARN{}
 	importer.SetARNAttributeName("arn", nil)
 
-	request := resource.ImportStateRequest{
-		ID: arn,
-	}
-	response := resource.ImportStateResponse{
-		State: stateFromSchema(regionalARNSchema, map[string]string{
-			"region": region,
-		}),
-		Identity: nil,
-	}
-	importer.ImportState(ctx, request, &response)
+	response := importByIDWithState(ctx, &importer, regionalARNSchema, arn, map[string]string{
+		"region": region,
+	}, regionalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
