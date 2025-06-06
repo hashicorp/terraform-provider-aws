@@ -59,7 +59,7 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 
 type tlsInspectionConfigurationResource struct {
 	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
