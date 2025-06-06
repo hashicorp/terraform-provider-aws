@@ -161,7 +161,7 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := globalARNImporter()
+	importer := globalARNImporterWithDuplicateAttrs("id", "attr")
 
 	response := importByID(ctx, &importer, globalARNWithIDSchema, arn, globalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
@@ -200,7 +200,7 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := globalARNImporter()
+	importer := globalARNImporterWithDuplicateAttrs("id", "attr")
 
 	response := importByIdentity(ctx, &importer, globalARNWithIDSchema, globalARNIdentitySchema, map[string]string{
 		"arn": arn,
@@ -231,6 +231,17 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 }
 
 func globalARNImporter() (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(inttypes.GlobalARNIdentity())
+	importer.SetIdentitySpec(
+		inttypes.GlobalARNIdentity(),
+	)
+	return
+}
+
+func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
+	importer.SetIdentitySpec(
+		inttypes.GlobalARNIdentity(
+			inttypes.WithIdentityDuplicateAttrs(attrs...),
+		),
+	)
 	return
 }
