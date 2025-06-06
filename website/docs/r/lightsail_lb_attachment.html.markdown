@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_lb_attachment"
 description: |-
-  Attaches a Lightsail Instance to a Lightsail Load Balancer
+  Manages a Lightsail Load Balancer Attachment.
 ---
 
 # Resource: aws_lightsail_lb_attachment
 
-Attaches a Lightsail Instance to a Lightsail Load Balancer.
+Manages a Lightsail Load Balancer Attachment. Use this resource to attach Lightsail instances to a load balancer for distributing traffic across multiple instances.
 
 ## Example Usage
 
@@ -22,8 +22,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_lightsail_lb" "test" {
-  name              = "test-load-balancer"
+resource "aws_lightsail_lb" "example" {
+  name              = "example-load-balancer"
   health_check_path = "/"
   instance_port     = "80"
   tags = {
@@ -31,31 +31,31 @@ resource "aws_lightsail_lb" "test" {
   }
 }
 
-resource "aws_lightsail_instance" "test" {
-  name              = "test-instance"
+resource "aws_lightsail_instance" "example" {
+  name              = "example-instance"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
 }
 
-resource "aws_lightsail_lb_attachment" "test" {
-  lb_name       = aws_lightsail_lb.test.name
-  instance_name = aws_lightsail_instance.test.name
+resource "aws_lightsail_lb_attachment" "example" {
+  lb_name       = aws_lightsail_lb.example.name
+  instance_name = aws_lightsail_instance.example.name
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `lb_name` - (Required) The name of the Lightsail load balancer.
-* `instance_name` - (Required) The name of the instance to attach to the load balancer.
+* `instance_name` - (Required) Name of the instance to attach to the load balancer.
+* `lb_name` - (Required) Name of the Lightsail load balancer.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `lb_name`,`instance_name`
+* `id` - Combination of attributes to create a unique ID: `lb_name`,`instance_name`.
 
 ## Import
 
@@ -63,7 +63,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lightsail_lb_attachment.test
+  to = aws_lightsail_lb_attachment.example
   id = "example-load-balancer,example-instance"
 }
 ```
@@ -71,5 +71,5 @@ import {
 Using `terraform import`, import `aws_lightsail_lb_attachment` using the name attribute. For example:
 
 ```console
-% terraform import aws_lightsail_lb_attachment.test example-load-balancer,example-instance
+% terraform import aws_lightsail_lb_attachment.example example-load-balancer,example-instance
 ```
