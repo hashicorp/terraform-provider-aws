@@ -2,9 +2,10 @@
 
 FEATURES:
 
+* **New Resource:** `aws_s3control_directory_bucket_access_point_scope` ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
 * **New Resource:** `aws_workspacesweb_data_protection_settings` ([#42852](https://github.com/hashicorp/terraform-provider-aws/issues/42852))
 * **New Resource:** `aws_workspacesweb_ip_access_settings` ([#42863](https://github.com/hashicorp/terraform-provider-aws/issues/42863))
-* **New Resource:** `s3control_directory_bucket_access_point_scope` ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
+* **New Resource:** `aws_workspacesweb_user_access_logging_settings` ([#42868](https://github.com/hashicorp/terraform-provider-aws/issues/42868))
 
 ENHANCEMENTS:
 
