@@ -32,47 +32,16 @@ var (
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}, nil}
 )
 
-type validateAttributeFunc func(context.Context, path.Path, []attr.Value) diag.Diagnostics
+type validateAttributeFunc[T attr.Value] func(context.Context, path.Path, []attr.Value) diag.Diagnostics
 
 // TODO Replace with Go 1.24 generic type alias when available.
 func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
-	validateFunc := func(ctx context.Context, path path.Path, values []attr.Value) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for index, enumVal := range values {
-			val, ok := enumVal.(StringEnum[T])
-			if !ok {
-				diags.AddAttributeError(
-					path,
-					"Invalid String Enum Type",
-					fmt.Sprintf("Expected type: %v, got: %v", StringEnum[T]{}.Type(ctx), enumVal.Type(ctx)),
-				)
-
-				return diags
-			}
-
-			if enumVal.IsNull() || enumVal.IsUnknown() {
-				continue
-			}
-
-			if !slices.Contains(val.ValueEnum().Values(), val.ValueEnum()) {
-				parentPath := fmt.Sprintf("%v[%d]", path, index)
-				diags.AddAttributeError(
-					path,
-					"Invalid String Enum Value",
-					fmt.Sprintf("Value [%s] at attribute %v is not a valid enum value. Valid values are: %s",
-						val.ValueString(), parentPath, val.ValueEnum().Values()),
-				)
-			}
-		}
-		return diags
-	}
-
-	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}, validateFunc}
+	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
 
 type listTypeOf[T attr.Value] struct {
 	basetypes.ListType
-	validateAttributeFunc validateAttributeFunc
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 func newListTypeOf[T attr.Value](ctx context.Context) listTypeOf[T] {
@@ -142,7 +111,7 @@ func (t listTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 
 type ListValueOf[T attr.Value] struct {
 	basetypes.ListValue
-	validateAttributeFunc validateAttributeFunc
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 type (
@@ -194,4 +163,35 @@ func NewListValueOf[T attr.Value](ctx context.Context, elements []attr.Value) (L
 
 func NewListValueOfMust[T attr.Value](ctx context.Context, elements []attr.Value) ListValueOf[T] {
 	return fwdiag.Must(NewListValueOf[T](ctx, elements))
+}
+
+func validateStringEnumSlice[T enum.Valueser[T]](ctx context.Context, path path.Path, values []attr.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+	for index, enumVal := range values {
+		val, ok := enumVal.(StringEnum[T])
+		if !ok {
+			diags.AddAttributeError(
+				path,
+				"Invalid String Enum Type",
+				fmt.Sprintf("Expected type: %v, got: %v", StringEnum[T]{}.Type(ctx), enumVal.Type(ctx)),
+			)
+
+			return diags
+		}
+
+		if val.IsNull() || val.IsUnknown() {
+			continue
+		}
+
+		if !slices.Contains(val.ValueEnum().Values(), val.ValueEnum()) {
+			parentPath := fmt.Sprintf("%v[%d]", path, index)
+			diags.AddAttributeError(
+				path,
+				"Invalid String Enum Value",
+				fmt.Sprintf("Value [%s] at attribute %v is not a valid enum value. Valid values are: %s",
+					val.ValueString(), parentPath, val.ValueEnum().Values()),
+			)
+		}
+	}
+	return diags
 }
