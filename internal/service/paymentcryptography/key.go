@@ -56,7 +56,7 @@ const (
 
 type keyResource struct {
 	framework.ResourceWithModel[keyResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
