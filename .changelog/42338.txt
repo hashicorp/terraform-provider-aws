@@ -1,5 +1,5 @@
 ```release-note:new-resource
-s3control_directory_bucket_access_point_scope
+aws_s3control_directory_bucket_access_point_scope
 ```
 
 ```release-note:enhancement
