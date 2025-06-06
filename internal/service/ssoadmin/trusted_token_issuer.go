@@ -44,7 +44,7 @@ func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConf
 
 type trustedTokenIssuerResource struct {
 	framework.ResourceWithModel[trustedTokenIssuerResourceModel]
-	framework.WithImportByGlobalARN
+	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
 }
 
 func (r *trustedTokenIssuerResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
