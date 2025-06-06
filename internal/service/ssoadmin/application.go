@@ -53,13 +53,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"application_arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				DeprecationMessage: "Use 'arn' instead. This attribute will be removed in a future version of the provider.",
-			},
+			"application_arn": framework.ARNAttributeComputedOnlyDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"application_provider_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
