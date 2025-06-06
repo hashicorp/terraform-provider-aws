@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_disk"
 description: |-
-  Provides a Lightsail Disk resource
+  Manages a Lightsail block storage disk.
 ---
 
 # Resource: aws_lightsail_disk
 
-Provides a Lightsail Disk resource.
+Manages a Lightsail disk. Use this resource to create additional block storage that can be attached to Lightsail instances for extra storage capacity.
 
 ## Example Usage
 
@@ -22,8 +22,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_lightsail_disk" "test" {
-  name              = "test"
+resource "aws_lightsail_disk" "example" {
+  name              = "example-disk"
   size_in_gb        = 8
   availability_zone = data.aws_availability_zones.available.names[0]
 }
@@ -31,22 +31,25 @@ resource "aws_lightsail_disk" "test" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `name` - (Required) The name of the disk.
-* `size_in_gb` - (Required) The size of the disk in GB.
-* `availability_zone` - (Required) The Availability Zone in which to create your disk.
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
+* `availability_zone` - (Required) Availability Zone in which to create the disk.
+* `name` - (Required) Name of the disk. Must begin with an alphabetic character and contain only alphanumeric characters, underscores, hyphens, and dots.
+* `size_in_gb` - (Required) Size of the disk in GB.
+
+The following arguments are optional:
+
+* `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the disk (matches `name`).
-* `arn` - The ARN of the Lightsail disk.
-* `created_at` - The timestamp when the disk was created.
-* `support_code` - The support code for the disk. Include this code in your email to support when you have questions about a disk in Lightsail. This code enables our support team to look up your Lightsail information more easily.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the disk.
+* `created_at` - Date and time when the disk was created.
+* `id` - Name of the disk (matches `name`).
+* `support_code` - Support code for the disk. Include this code in your email to support when you have questions about a disk in Lightsail.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 
 ## Import
 
@@ -54,13 +57,13 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lightsail_disk.test
-  id = "test"
+  to = aws_lightsail_disk.example
+  id = "example-disk"
 }
 ```
 
 Using `terraform import`, import `aws_lightsail_disk` using the name attribute. For example:
 
 ```console
-% terraform import aws_lightsail_disk.test test
+% terraform import aws_lightsail_disk.example example-disk
 ```

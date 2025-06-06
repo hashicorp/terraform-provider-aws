@@ -3,58 +3,56 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_database"
 description: |-
-  Provides a Lightsail Database
+  Manages a Lightsail managed database instance.
 ---
 
 # Resource: aws_lightsail_database
 
-Provides a Lightsail Database. Amazon Lightsail is a service to provide easy virtual private servers
-with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)
-for more information.
+Manages a Lightsail database. Use this resource to create and manage fully managed database instances with automated backups, monitoring, and maintenance in Lightsail.
 
 ~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones"](https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/) for more details
 
 ## Example Usage
 
-### Basic mysql blueprint
+### Basic MySQL Blueprint
 
 ```terraform
-resource "aws_lightsail_database" "test" {
-  relational_database_name = "test"
+resource "aws_lightsail_database" "example" {
+  relational_database_name = "example-database"
   availability_zone        = "us-east-1a"
-  master_database_name     = "testdatabasename"
-  master_password          = "testdatabasepassword"
-  master_username          = "test"
+  master_database_name     = "exampledb"
+  master_password          = "examplepassword123"
+  master_username          = "exampleuser"
   blueprint_id             = "mysql_8_0"
   bundle_id                = "micro_1_0"
 }
 ```
 
-### Basic postrgres blueprint
+### Basic PostgreSQL Blueprint
 
 ```terraform
-resource "aws_lightsail_database" "test" {
-  relational_database_name = "test"
+resource "aws_lightsail_database" "example" {
+  relational_database_name = "example-database"
   availability_zone        = "us-east-1a"
-  master_database_name     = "testdatabasename"
-  master_password          = "testdatabasepassword"
-  master_username          = "test"
+  master_database_name     = "exampledb"
+  master_password          = "examplepassword123"
+  master_username          = "exampleuser"
   blueprint_id             = "postgres_12"
   bundle_id                = "micro_1_0"
 }
 ```
 
-### Custom backup and maintenance windows
+### Custom Backup and Maintenance Windows
 
-Below is an example that sets a custom backup and maintenance window. Times are specified in UTC. This example will allow daily backups to take place between 16:00 and 16:30 each day. This example also requires any maintiance tasks (anything that would cause an outage, including changing some attributes) to take place on Tuesdays between 17:00 and 17:30. An action taken against this database that would cause an outage will wait until this time window to make the requested changes.
+Below is an example that sets a custom backup and maintenance window. Times are specified in UTC. This example will allow daily backups to take place between 16:00 and 16:30 each day. This example also requires any maintenance tasks (anything that would cause an outage, including changing some attributes) to take place on Tuesdays between 17:00 and 17:30. An action taken against this database that would cause an outage will wait until this time window to make the requested changes.
 
 ```terraform
-resource "aws_lightsail_database" "test" {
-  relational_database_name     = "test"
+resource "aws_lightsail_database" "example" {
+  relational_database_name     = "example-database"
   availability_zone            = "us-east-1a"
-  master_database_name         = "testdatabasename"
-  master_password              = "testdatabasepassword"
-  master_username              = "test"
+  master_database_name         = "exampledb"
+  master_password              = "examplepassword123"
+  master_username              = "exampleuser"
   blueprint_id                 = "postgres_12"
   bundle_id                    = "micro_1_0"
   preferred_backup_window      = "16:00-16:30"
@@ -67,31 +65,31 @@ resource "aws_lightsail_database" "test" {
 To enable creating a final snapshot of your database on deletion, use the `final_snapshot_name` argument to provide a name to be used for the snapshot.
 
 ```terraform
-resource "aws_lightsail_database" "test" {
-  relational_database_name     = "test"
+resource "aws_lightsail_database" "example" {
+  relational_database_name     = "example-database"
   availability_zone            = "us-east-1a"
-  master_database_name         = "testdatabasename"
-  master_password              = "testdatabasepassword"
-  master_username              = "test"
+  master_database_name         = "exampledb"
+  master_password              = "examplepassword123"
+  master_username              = "exampleuser"
   blueprint_id                 = "postgres_12"
   bundle_id                    = "micro_1_0"
   preferred_backup_window      = "16:00-16:30"
   preferred_maintenance_window = "Tue:17:00-Tue:17:30"
-  final_snapshot_name          = "MyFinalSnapshot"
+  final_snapshot_name          = "example-final-snapshot"
 }
 ```
 
 ### Apply Immediately
 
-To enable applying changes immediately instead of waiting for a maintiance window, use the `apply_immediately` argument.
+To enable applying changes immediately instead of waiting for a maintenance window, use the `apply_immediately` argument.
 
 ```terraform
-resource "aws_lightsail_database" "test" {
-  relational_database_name = "test"
+resource "aws_lightsail_database" "example" {
+  relational_database_name = "example-database"
   availability_zone        = "us-east-1a"
-  master_database_name     = "testdatabasename"
-  master_password          = "testdatabasepassword"
-  master_username          = "test"
+  master_database_name     = "exampledb"
+  master_password          = "examplepassword123"
+  master_username          = "exampleuser"
   blueprint_id             = "postgres_12"
   bundle_id                = "micro_1_0"
   apply_immediately        = true
@@ -100,25 +98,28 @@ resource "aws_lightsail_database" "test" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `relational_database_name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
-* `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.
-* `master_password` - (Sensitive) The password for the master user of your new database. The password can include any printable ASCII character except "/", """, or "@".
-* `master_username` - The master user name for your new database.
-* `blueprint_id` - (Required) The blueprint ID for your new database. A blueprint describes the major engine version of a database. You can get a list of database blueprints IDs by using the AWS CLI command: `aws lightsail get-relational-database-blueprints`
-* `bundle_id` - (Required)  The bundle ID for your new database. A bundle describes the performance specifications for your database (see list below). You can get a list of database bundle IDs by using the AWS CLI command: `aws lightsail get-relational-database-bundles`.
-* `preferred_backup_window` - The daily time range during which automated backups are created for your new database if automated backups are enabled. Must be in the hh24:mi-hh24:mi format. Example: `16:00-16:30`. Specified in Coordinated Universal Time (UTC).
-* `preferred_maintenance_window` - The weekly time range during which system maintenance can occur on your new database. Must be in the ddd:hh24:mi-ddd:hh24:mi format. Specified in Coordinated Universal Time (UTC). Example: `Tue:17:00-Tue:17:30`
-* `publicly_accessible` - Specifies the accessibility options for your new database. A value of true specifies a database that is available to resources outside of your Lightsail account. A value of false specifies a database that is available only to your Lightsail resources in the same region as your database.
-* `apply_immediately` - When true , applies changes immediately. When false , applies changes during the preferred maintenance window. Some changes may cause an outage.
-* `backup_retention_enabled` - When true, enables automated backup retention for your database. When false, disables automated backup retention for your database. Disabling backup retention deletes all automated database backups. Before disabling this, you may want to create a snapshot of your database.
-* `skip_final_snapshot` - Determines whether a final database snapshot is created before your database is deleted. If true is specified, no database snapshot is created. If false is specified, a database snapshot is created before your database is deleted. You must specify the final relational database snapshot name parameter if the skip final snapshot parameter is false.
-* `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
+* `blueprint_id` - (Required) Blueprint ID for your database. A blueprint describes the major engine version of a database. You can get a list of database blueprints IDs by using the AWS CLI command: `aws lightsail get-relational-database-blueprints`
+* `bundle_id` - (Required) Bundle ID for your database. A bundle describes the performance specifications for your database (see list below). You can get a list of database bundle IDs by using the AWS CLI command: `aws lightsail get-relational-database-bundles`.
+* `master_database_name` - (Required) Name of the master database created when the Lightsail database resource is created.
+* `master_password` - (Required, Sensitive) Password for the master user of your database. The password can include any printable ASCII character except "/", """, or "@".
+* `master_username` - (Required) Master user name for your database.
+* `relational_database_name` - (Required) Name to use for your Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
 
-## Blueprint Ids
+The following arguments are optional:
+
+* `apply_immediately` - (Optional) Whether to apply changes immediately. When false, applies changes during the preferred maintenance window. Some changes may cause an outage.
+* `availability_zone` - (Optional) Availability Zone in which to create your database. Use the us-east-2a case-sensitive format.
+* `backup_retention_enabled` - (Optional) Whether to enable automated backup retention for your database. When false, disables automated backup retention for your database. Disabling backup retention deletes all automated database backups. Before disabling this, you may want to create a snapshot of your database.
+* `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) Name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
+* `preferred_backup_window` - (Optional) Daily time range during which automated backups are created for your database if automated backups are enabled. Must be in the hh24:mi-hh24:mi format. Example: `16:00-16:30`. Specified in Coordinated Universal Time (UTC).
+* `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur on your database. Must be in the ddd:hh24:mi-ddd:hh24:mi format. Specified in Coordinated Universal Time (UTC). Example: `Tue:17:00-Tue:17:30`
+* `publicly_accessible` - (Optional) Whether the database is accessible to resources outside of your Lightsail account. A value of true specifies a database that is available to resources outside of your Lightsail account. A value of false specifies a database that is available only to your Lightsail resources in the same region as your database.
+* `skip_final_snapshot` - (Optional) Whether a final database snapshot is created before your database is deleted. If true is specified, no database snapshot is created. If false is specified, a database snapshot is created before your database is deleted. You must specify the final relational database snapshot name parameter if the skip final snapshot parameter is false.
+* `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
+
+## Blueprint IDs
 
 A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
 
@@ -133,7 +134,7 @@ A Blueprint ID starts with a prefix of the engine type.
 
 ### Suffix
 
-A Blueprint ID has a sufix of the engine version.
+A Blueprint ID has a suffix of the engine version.
 
 ## Bundles
 
@@ -157,7 +158,7 @@ A Bundle ID starts with one of the below size prefixes:
 
 ### Infixes (Optional for HA Database)
 
-A Bundle Id can have the following infix added in order to use the HA option of the selected bundle.
+A Bundle ID can have the following infix added in order to use the HA option of the selected bundle.
 
 - `ha_`
 
@@ -169,20 +170,20 @@ A Bundle ID ends with one of the following suffix: `1_0`
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of the Lightsail instance (matches `arn`).
-* `arn` - The ARN of the Lightsail instance (matches `id`).
-* `ca_certificate_identifier` - The certificate associated with the database.
-* `created_at` - The timestamp when the instance was created.
-* `engine` - The database software (for example, MySQL).
-* `engine_version` - The database engine version (for example, 5.7.23).
-* `cpu_count` - The number of vCPUs for the database.
-* `ram_size` - The amount of RAM in GB for the database.
-* `disk_size` - The size of the disk for the database.
-* `master_endpoint_port` - The master endpoint network port for the database.
-* `master_endpoint_address` - The master endpoint fqdn for the database.
-* `secondary_availability_zone` - Describes the secondary Availability Zone of a high availability database. The secondary database is used for failover support of a high availability database.
-* `support_code` - The support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the database (matches `id`).
+* `ca_certificate_identifier` - Certificate associated with the database.
+* `cpu_count` - Number of vCPUs for the database.
+* `created_at` - Date and time when the database was created.
+* `disk_size` - Size of the disk for the database.
+* `engine` - Database software (for example, MySQL).
+* `engine_version` - Database engine version (for example, 5.7.23).
+* `id` - ARN of the database (matches `arn`).
+* `master_endpoint_address` - Master endpoint FQDN for the database.
+* `master_endpoint_port` - Master endpoint network port for the database.
+* `ram_size` - Amount of RAM in GB for the database.
+* `secondary_availability_zone` - Secondary Availability Zone of a high availability database. The secondary database is used for failover support of a high availability database.
+* `support_code` - Support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 
 ## Import
 
@@ -190,13 +191,13 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lightsail_database.foo
-  id = "bar"
+  to = aws_lightsail_database.example
+  id = "example-database"
 }
 ```
 
 Using `terraform import`, import Lightsail Databases using their name. For example:
 
 ```console
-% terraform import aws_lightsail_database.foo 'bar'
+% terraform import aws_lightsail_database.example example-database
 ```
