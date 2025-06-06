@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
@@ -561,12 +562,17 @@ func (p *fwprovider) initialize(ctx context.Context) error {
 					type arnIdentity interface {
 						SetARNAttributeName(attr string, duplicateAttrs []string)
 					}
-					identity, ok := inner.(arnIdentity)
-					if !ok {
-						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot set ARN attribute", typeName))
+					switch v := inner.(type) {
+					case arnIdentity:
+						v.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
+
+					case framework.ImportByIdentityer:
+						v.SetIdentitySpec(res.Identity)
+
+					default:
+						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot configure importer", typeName))
 						continue
 					}
-					identity.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
 				} else if !res.Identity.Singleton {
 					type parameterizedIdentity interface {
 						SetIdentitySpec(identity inttypes.Identity)
