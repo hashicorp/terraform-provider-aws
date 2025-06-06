@@ -47,7 +47,7 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type indexResource struct {
 	framework.ResourceWithModel[indexResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
