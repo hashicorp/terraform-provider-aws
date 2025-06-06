@@ -27,5 +27,9 @@ func (w *WithImportByARN) SetIdentitySpec(identity inttypes.Identity) {
 }
 
 func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	importer.GlobalARN(ctx, request, &w.identity, response)
+	if w.identity.IsGlobalResource {
+		importer.GlobalARN(ctx, request, &w.identity, response)
+	} else {
+		importer.RegionalARN(ctx, request, &w.identity, response)
+	}
 }

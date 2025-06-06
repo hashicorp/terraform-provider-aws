@@ -49,7 +49,6 @@ func RegionalARN(ctx context.Context, request resource.ImportStateRequest, ident
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 func importByARN(ctx context.Context, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) arn.ARN {
@@ -94,5 +93,4 @@ func importByARN(ctx context.Context, request resource.ImportStateRequest, ident
 	}
 
 	return arnARN
-
 }
