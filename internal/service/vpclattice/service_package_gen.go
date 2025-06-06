@@ -79,6 +79,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Service Network",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory:  DataSourceServiceNetworkServiceAssociations,
+			TypeName: "aws_vpclattice_service_network_service_associations",
+			Name:     "Service Network Service Associations",
+		},
 	}
 }
 
