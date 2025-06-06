@@ -44,7 +44,7 @@ func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigu
 
 type lifecyclePolicyResource struct {
 	framework.ResourceWithModel[lifecyclePolicyResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
