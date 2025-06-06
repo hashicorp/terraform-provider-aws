@@ -145,7 +145,6 @@ type Loop struct {
 	config      LoopConfig
 	deadline    inttypes.Deadline
 	gracePeriod time.Duration
-	timedOut    bool
 }
 
 // NewLoopWithOptions returns a new loop configured with the provided options.
@@ -171,9 +170,7 @@ func NewLoop(timeout time.Duration) *Loop {
 // It returns false if the timeout has been exceeded.
 // The deadline is not checked on the first call to Continue.
 func (r *Loop) Continue(ctx context.Context) bool {
-	if r.attempt != 0 && r.deadline.Remaining() == 0 {
-		r.timedOut = true
-
+	if r.attempt != 0 && r.TimedOut() {
 		// Any non-zero grace period allows one more attempt.
 		if r.gracePeriod == 0 {
 			return false
@@ -195,7 +192,7 @@ func (r *Loop) Reset() {
 
 // TimedOut return whether the loop timed out.
 func (r *Loop) TimedOut() bool {
-	return r.timedOut
+	return r.deadline.Remaining() == 0
 }
 
 // sleep sleeps for the specified duration or until the context is canceled, whichever occurs first.
