@@ -31,11 +31,14 @@ resource "aws_lightsail_disk" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `availability_zone` - (Required) Availability Zone in which to create the disk.
 * `name` - (Required) Name of the disk. Must begin with an alphabetic character and contain only alphanumeric characters, underscores, hyphens, and dots.
 * `size_in_gb` - (Required) Size of the disk in GB.
+
+The following arguments are optional:
+
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

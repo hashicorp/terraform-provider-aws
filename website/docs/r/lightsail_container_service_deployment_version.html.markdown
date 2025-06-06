@@ -55,11 +55,14 @@ resource "aws_lightsail_container_service_deployment_version" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `container` - (Required) Set of configuration blocks that describe the settings of the containers that will be launched on the container service. Maximum of 53. [See below](#container).
-* `public_endpoint` - (Optional) Configuration block that describes the settings of the public endpoint for the container service. [See below](#public_endpoint).
 * `service_name` - (Required) Name of the container service.
+
+The following arguments are optional:
+
+* `public_endpoint` - (Optional) Configuration block that describes the settings of the public endpoint for the container service. [See below](#public_endpoint).
 
 ### `container`
 

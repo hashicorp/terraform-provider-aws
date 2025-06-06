@@ -22,10 +22,13 @@ resource "aws_lightsail_certificate" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
+
+* `name` - (Required) Name of the certificate.
+
+The following arguments are optional:
 
 * `domain_name` - (Optional) Domain name for which the certificate should be issued.
-* `name` - (Required) Name of the certificate.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 

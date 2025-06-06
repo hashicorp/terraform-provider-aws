@@ -91,14 +91,17 @@ resource "aws_ecr_repository_policy" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `is_disabled` - (Optional) Whether to disable the container service. Defaults to `false`.
 * `name` - (Required) Name of the container service. Names must be of length 1 to 63, and be unique within each AWS Region in your Lightsail account.
 * `power` - (Required) Power specification for the container service. The power specifies the amount of memory, the number of vCPUs, and the monthly price of each node of the container service. Possible values: `nano`, `micro`, `small`, `medium`, `large`, `xlarge`.
+* `scale` - (Required) Scale specification for the container service. The scale specifies the allocated compute nodes of the container service.
+
+The following arguments are optional:
+
+* `is_disabled` - (Optional) Whether to disable the container service. Defaults to `false`.
 * `private_registry_access` - (Optional) Configuration for the container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. [See below](#private-registry-access).
 * `public_domain_names` - (Optional) Public domain names to use with the container service, such as example.com and www.example.com. You can specify up to four public domain names for a container service. The domain names that you specify are used when you create a deployment with a container configured as the public endpoint of your container service. If you don't specify public domain names, then you can use the default domain of the container service. [See below](#public-domain-names).
-* `scale` - (Required) Scale specification for the container service. The scale specifies the allocated compute nodes of the container service.
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Private Registry Access
