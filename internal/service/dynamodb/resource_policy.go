@@ -39,7 +39,7 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -239,7 +239,7 @@ func (data *resourcePolicyResourceModel) setID() {
 }
 
 func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	r.WithImportByRegionalARN.ImportState(ctx, request, response)
+	r.WithImportByARN.ImportState(ctx, request, response)
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 }
