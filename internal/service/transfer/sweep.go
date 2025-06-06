@@ -28,6 +28,8 @@ func RegisterSweepers() {
 			"aws_transfer_server",
 		},
 	})
+
+	awsv2.Register("aws_transfer_web_app", sweepWebApps)
 }
 
 func sweepServers(region string) error {
