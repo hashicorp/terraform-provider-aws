@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -423,6 +424,12 @@ func resourceInstance() *schema.Resource {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrPassword, "password_wo"},
+			},
+			"disable_master_user_password_rotation": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{"manage_master_user_password"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -1949,6 +1956,16 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if v, ok := d.GetOk("disable_master_user_password_rotation"); ok {
+		disableMasterUserPasswordRotation := v.(bool)
+		if disableMasterUserPasswordRotation && instance.MasterUserSecret != nil {
+			if v := instance.MasterUserSecret.SecretArn; v != nil {
+				secretsManagerClient := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+				diags = cancelSecretRotation(ctx, secretsManagerClient, v, diags)
+			}
+		}
+	}
+
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
@@ -2039,6 +2056,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
 	//
 	// manage_master_user_password
+	// disable_master_user_password_rotation
 	// master_password
 	//
 	// Expose the MasterUserSecret structure as a computed attribute
@@ -2360,8 +2378,33 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					// Attempted change, but update error as it's a stopped instance, so revert to original value
 					old, _ := d.GetChange("manage_master_user_password")
 					d.Set("manage_master_user_password", old.(bool))
+					old, _ = d.GetChange("disable_master_user_password_rotation")
+					d.Set("disable_master_user_password_rotation", old.(bool))
 				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+		}
+	}
+
+	// Separate request to delete managed secret password rotation
+	if d.HasChange("disable_master_user_password_rotation") {
+		if manageMasterUserPassword, ok := d.GetOk("manage_master_user_password"); ok {
+			old, new := d.GetChange("disable_master_user_password_rotation")
+
+			if manageMasterUserPassword.(bool) && !old.(bool) && new.(bool) {
+
+				if v, ok := d.GetOk("master_user_secret"); ok {
+					musList := v.([]any)
+
+					if len(musList) > 0 && musList[0] != nil {
+						mus := musList[0].(map[string]any)
+
+						if secretArn, ok := mus["secret_arn"]; ok {
+							secretsManagerClient := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
+							diags = cancelSecretRotation(ctx, secretsManagerClient, aws.String(secretArn.(string)), diags)
+						}
+					}
+				}
 			}
 		}
 	}
@@ -3277,4 +3320,20 @@ func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.Resourc
 		}
 	}
 	return false
+}
+
+func cancelSecretRotation(ctx context.Context, conn *secretsmanager.Client, secretId *string, diags diag.Diagnostics) diag.Diagnostics {
+	_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
+		SecretId: secretId,
+	})
+
+	if err != nil && !tfresource.NotFound(err) {
+		diags = sdkdiag.AppendWarningf(diags, "failed to cancel rotation for secret (%s): %s.", aws.ToString(secretId), err)
+	} else {
+		tflog.Debug(ctx, "Successfully cancelled master user password rotation", map[string]any{
+			"secret_id": aws.ToString(secretId),
+		})
+	}
+
+	return diags
 }
