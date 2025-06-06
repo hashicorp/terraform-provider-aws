@@ -52,16 +52,19 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"config_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the configuration.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the security configuration.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -70,8 +73,9 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.SecurityConfigType](),
-				Required:   true,
+				Description: "Type of configuration. Must be `saml`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.SecurityConfigType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -81,26 +85,30 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Attributes: map[string]schema.Attribute{
 					"group_attribute": schema.StringAttribute{
-						Optional: true,
+						Description: "Group attribute for this SAML integration.",
+						Optional:    true,
 						Validators: []validator.String{
 							stringvalidator.LengthBetween(1, 2048),
 						},
 					},
 					"metadata": schema.StringAttribute{
-						Required: true,
+						Description: "The XML IdP metadata file generated from your identity provider.",
+						Required:    true,
 						Validators: []validator.String{
 							stringvalidator.LengthBetween(1, 20480),
 						},
 					},
 					"session_timeout": schema.Int64Attribute{
-						Optional: true,
-						Computed: true,
+						Description: "Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.",
+						Optional:    true,
+						Computed:    true,
 						Validators: []validator.Int64{
 							int64validator.Between(5, 1540),
 						},
 					},
 					"user_attribute": schema.StringAttribute{
-						Optional: true,
+						Description: "User attribute for this SAML integration.",
+						Optional:    true,
 						Validators: []validator.String{
 							stringvalidator.LengthBetween(1, 2048),
 						},

@@ -38,29 +38,36 @@ func (d *dataSourceLifecyclePolicy) Schema(_ context.Context, _ datasource.Schem
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "The date the lifecycle policy was created.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "The date the lifecycle policy was last modified.",
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				Computed: true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				Computed:    true,
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
+				Description: "Type of lifecycle policy. Must be `retention`.",
+				Required:    true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.LifecyclePolicyType](),
 				},
