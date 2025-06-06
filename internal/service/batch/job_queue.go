@@ -53,7 +53,7 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 type jobQueueResource struct {
 	framework.ResourceWithModel[jobQueueResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
