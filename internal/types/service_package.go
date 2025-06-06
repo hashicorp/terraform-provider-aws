@@ -95,7 +95,7 @@ type ServicePackageSDKResource struct {
 }
 
 type Identity struct {
-	Global                 bool   // All
+	IsGlobalResource       bool   // All
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
 	IdentityAttribute      string // ARN
@@ -153,9 +153,9 @@ func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
 	return arnIdentity(false, name, opts)
 }
 
-func arnIdentity(isGlobal bool, name string, opts []IdentityOptsFunc) Identity {
+func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Identity {
 	identity := Identity{
-		Global:            isGlobal,
+		IsGlobalResource:  isGlobalResource,
 		ARN:               true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -192,8 +192,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 
 func GlobalSingletonIdentity() Identity {
 	return Identity{
-		Global:    true,
-		Singleton: true,
+		IsGlobalResource: true,
+		Singleton:        true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
@@ -205,8 +205,8 @@ func GlobalSingletonIdentity() Identity {
 
 func RegionalSingletonIdentity() Identity {
 	return Identity{
-		Global:    false,
-		Singleton: true,
+		IsGlobalResource: false,
+		Singleton:        true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",

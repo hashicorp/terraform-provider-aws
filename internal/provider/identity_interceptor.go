@@ -198,7 +198,7 @@ func setAttribute(d *schema.ResourceData, name, value string) {
 }
 
 func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImporter {
-	if identity.Global {
+	if identity.IsGlobalResource {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
