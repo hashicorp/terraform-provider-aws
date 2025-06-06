@@ -15,6 +15,7 @@ var (
 	ResourceBucket                             = resourceBucket
 	ResourceBucketLifecycleConfiguration       = resourceBucketLifecycleConfiguration
 	ResourceBucketPolicy                       = resourceBucketPolicy
+	ResourceDirectoryBucketAccessPointScope    = newDirectoryBucketAccessPointScopeResource
 	ResourceMultiRegionAccessPoint             = resourceMultiRegionAccessPoint
 	ResourceMultiRegionAccessPointPolicy       = resourceMultiRegionAccessPointPolicy
 	ResourceObjectLambdaAccessPoint            = resourceObjectLambdaAccessPoint
@@ -30,6 +31,7 @@ var (
 	FindBucketByTwoPartKey                                 = findBucketByTwoPartKey
 	FindBucketLifecycleConfigurationByTwoPartKey           = findBucketLifecycleConfigurationByTwoPartKey
 	FindBucketPolicyByTwoPartKey                           = findBucketPolicyByTwoPartKey
+	FindDirectoryAccessPointScopeByTwoPartKey              = findDirectoryAccessPointScopeByTwoPartKey
 	FindMultiRegionAccessPointByTwoPartKey                 = findMultiRegionAccessPointByTwoPartKey
 	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey   = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
 	FindObjectLambdaAccessPointAliasByTwoPartKey           = findObjectLambdaAccessPointAliasByTwoPartKey

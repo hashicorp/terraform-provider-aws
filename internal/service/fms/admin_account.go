@@ -56,16 +56,20 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
-	// Ensure there is not an existing FMS Admin Account.
-	output, err := findAdminAccount(ctx, conn)
-
-	if !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
-	}
-
 	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
+	}
+
+	// Ensure there is not an existing FMS Admin Account.
+	output, err := findAdminAccount(ctx, conn)
+
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading FMS Admin Account (%s): %s", accountID, err)
+	default:
+		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
 	}
 
 	if _, err := waitAdminAccountCreated(ctx, conn, accountID, d.Timeout(schema.TimeoutCreate)); err != nil {

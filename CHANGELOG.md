@@ -1,4 +1,49 @@
-## 5.99.0 (Unreleased)
+## 5.100.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_dsql_cluster` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
+* **New Resource:** `aws_dsql_cluster_peering` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
+* **New Resource:** `aws_prometheus_workspace_configuration` ([#42478](https://github.com/hashicorp/terraform-provider-aws/issues/42478))
+* **New Resource:** `aws_s3control_directory_bucket_access_point_scope` ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
+* **New Resource:** `aws_vpc_route_server` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
+* **New Resource:** `aws_vpc_route_server_endpoint` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
+* **New Resource:** `aws_vpc_route_server_peer` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
+* **New Resource:** `aws_vpc_route_server_propagation` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
+* **New Resource:** `aws_vpc_route_server_vpc_association` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
+* **New Resource:** `aws_workspacesweb_data_protection_settings` ([#42852](https://github.com/hashicorp/terraform-provider-aws/issues/42852))
+* **New Resource:** `aws_workspacesweb_ip_access_settings` ([#42863](https://github.com/hashicorp/terraform-provider-aws/issues/42863))
+* **New Resource:** `aws_workspacesweb_user_access_logging_settings` ([#42868](https://github.com/hashicorp/terraform-provider-aws/issues/42868))
+
+ENHANCEMENTS:
+
+* data-source/aws_neptune_engine_version: Add several arguments and attributes to support dynamic selection of versions including `latest`, `has_major_target`, `preferred_major_targets`, and `preferred_upgrade_targets` ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* resource/aws_fsx_lustre_file_system: Add `data_read_cache_configuration` and `throughput_capacity` arguments in support of the [Intelligent-Tiering storage class](https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-fsx-lustre.html#how-INT-tiering-works) ([#42839](https://github.com/hashicorp/terraform-provider-aws/issues/42839))
+* resource/aws_s3_access_point: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
+* resource/aws_s3control_access_point_policy: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
+* resource/aws_vpn_connection: Add `preshared_key_storage` argument and `preshared_key_arn` attribute ([#42819](https://github.com/hashicorp/terraform-provider-aws/issues/42819))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_log_destination: Fix to return the first matched destination name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_group: Fix to return the first matched group name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_metric_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_query_definition: Fix to return the first matched query definition ID during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_resource_policy: Fix to return the first matched policy name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_subscription_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel ([#42884](https://github.com/hashicorp/terraform-provider-aws/issues/42884))
+
+## 5.99.1 (May 30, 2025)
+
+BUG FIXES:
+
+* resource/aws_fms_admin_account: Fix `panic: runtime error: invalid memory address or nil pointer dereference` ([#42813](https://github.com/hashicorp/terraform-provider-aws/issues/42813))
+* resource/aws_lb: Ignore `InvalidAction` exceptions for `DescribeCapacityReservation` operations. This fixes a regression introduced in [v5.99.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5990-may-29-2025) ([#42812](https://github.com/hashicorp/terraform-provider-aws/issues/42812))
+* resource/aws_s3_bucket_lifecycle_configuration: Correctly handles switching child attributes of `rule.filter`. ([#42655](https://github.com/hashicorp/terraform-provider-aws/issues/42655))
+
+## 5.99.0 (May 29, 2025)
 
 FEATURES:
 
@@ -8,21 +53,30 @@ FEATURES:
 * **New Resource:** `aws_notifications_notification_hub` ([#42544](https://github.com/hashicorp/terraform-provider-aws/issues/42544))
 * **New Resource:** `aws_notificationscontacts_email_contact` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
 * **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
+* **New Resource:** `aws_workspacesweb_browser_settings` ([#42681](https://github.com/hashicorp/terraform-provider-aws/issues/42681))
+* **New Resource:** `aws_workspacesweb_network_settings` ([#42722](https://github.com/hashicorp/terraform-provider-aws/issues/42722))
+* **New Resource:** `aws_workspacesweb_user_settings` ([#42783](https://github.com/hashicorp/terraform-provider-aws/issues/42783))
 
 ENHANCEMENTS:
 
 * data-source/aws_ami: Add `block_device_mappings.ebs["volume_initialization_rate"]` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
 * data-source/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
 * data-source/aws_verifiedpermissions_policy_store: Add `tags` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource` IAM permission ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+* resource/aws_ecs_service: Add `volume_configuration.managed_ebs_volume.volume_initialization_rate` argument ([#42750](https://github.com/hashicorp/terraform-provider-aws/issues/42750))
 * resource/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` argument ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
 * resource/aws_lb: Add `minimum_load_balancer_capacity` configuration block. This functionality requires the `elasticloadbalancing:DescribeCapacityReservations` and `elasticloadbalancing:ModifyCapacityReservation` IAM permissions ([#42685](https://github.com/hashicorp/terraform-provider-aws/issues/42685))
+* resource/aws_organizations_account: Allow `name` to be updated in-place. This functionality requires the `account:PutAccountName` IAM permission ([#42350](https://github.com/hashicorp/terraform-provider-aws/issues/42350))
 * resource/aws_securityhub_standards_subscription: Add configurable Create and Delete timeouts ([#42759](https://github.com/hashicorp/terraform-provider-aws/issues/42759))
 * resource/aws_verifiedpermissions_policy_store: Add `tags` argument and `tags_all` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource`, `verifiedpermissions:TagResource`, and `verifiedpermissions:UntagResource` IAM permissions ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
 
 BUG FIXES:
 
+* data-source/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters ([#42723](https://github.com/hashicorp/terraform-provider-aws/issues/42723))
 * resource/aws_cloudwatch_log_stream: Fix to return the first matched stream name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42719](https://github.com/hashicorp/terraform-provider-aws/issues/42719))
+* resource/aws_cognitoidp_user_pool: Fix crash when the `user_pool_add_ons.advanced_security_additional_flows` block is non-empty, but contains only a single `nil` value. ([#42793](https://github.com/hashicorp/terraform-provider-aws/issues/42793))
+* resource/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters ([#42723](https://github.com/hashicorp/terraform-provider-aws/issues/42723))
 * resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively ([#42726](https://github.com/hashicorp/terraform-provider-aws/issues/42726))
+* resource/aws_s3_bucket: Ensure that `HeadBucket` S3 API calls are made using configured credentials. This fixes a regression introduced in [v5.98.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5980-may-15-2025) ([#42786](https://github.com/hashicorp/terraform-provider-aws/issues/42786))
 * resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
 * resource/aws_vpc_endpoint: Fix issue where `dns_options` were not being updated correctly when `private_dns_enabled` was set to true ([#42746](https://github.com/hashicorp/terraform-provider-aws/issues/42746))
 

@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.24.3
 
 require (
-	github.com/YakDriver/tfproviderdocs v0.20.0
+	github.com/YakDriver/tfproviderdocs v0.21.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint/v2 v2.1.6
 	github.com/hashicorp/copywrite v0.22.0
@@ -80,13 +80,13 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
-	github.com/charmbracelet/lipgloss v1.1.0 // indirect
+	github.com/charmbracelet/lipgloss v1.1.1-0.20250319133953-166f707985bc // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
 	github.com/ckaznocha/intrange v0.3.1 // indirect
-	github.com/cli/go-gh/v2 v2.11.2 // indirect
+	github.com/cli/go-gh/v2 v2.12.1 // indirect
 	github.com/cli/safeexec v1.0.1 // indirect
 	github.com/cloudflare/circl v1.6.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42 // indirect

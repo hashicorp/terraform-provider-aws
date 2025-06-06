@@ -5,7 +5,17 @@ package workspacesweb
 
 // Exports for use in tests only.
 var (
-	ResourceBrowserSettings = newBrowserSettingsResource
+	ResourceBrowserSettings           = newBrowserSettingsResource
+	ResourceDataProtectionSettings    = newDataProtectionSettingsResource
+	ResourceIPAccessSettings          = newIPAccessSettingsResource
+	ResourceNetworkSettings           = newNetworkSettingsResource
+	ResourceUserAccessLoggingSettings = newUserAccessLoggingSettingsResource
+	ResourceUserSettings              = newUserSettingsResource
 
-	FindBrowserSettingsByARN = findBrowserSettingsByARN
+	FindBrowserSettingsByARN           = findBrowserSettingsByARN
+	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
+	FindIPAccessSettingsByARN          = findIPAccessSettingsByARN
+	FindNetworkSettingsByARN           = findNetworkSettingsByARN
+	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
+	FindUserSettingsByARN              = findUserSettingsByARN
 )

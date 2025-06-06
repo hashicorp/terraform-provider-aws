@@ -753,7 +753,7 @@ type complexArgumentModel struct {
 // appropriate identifers required to delete the resource via the Delete
 // method implemented above.
 //
-// Once the sweeper function is implemented, register it in sweeper.go
+// Once the sweeper function is implemented, register it in sweep.go
 // as follows:
 //
 //   awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
