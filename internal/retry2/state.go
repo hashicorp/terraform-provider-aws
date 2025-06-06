@@ -10,36 +10,41 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 //
 // Based on https://github.com/hashicorp/terraform-plugin-sdk/helper/retry/state.go.
 //
 
-// StateRefreshFunc is a function type used for StateChangeConf that is
+// StateRefreshFuncOf is a function type used for StateChangeConf that is
 // responsible for refreshing the item being watched for a state change.
 //
 // It returns three results.
 // The first is any object that will be returned as the final object after waiting for state change.
 // The second is the latest state of that object.
 // The third any error that may have happened while refreshing the state.
-type StateRefreshFunc[T any, S ~string] func(context.Context) (T, S, error)
+type StateRefreshFuncOf[T any, S ~string] func(context.Context) (T, S, error)
 
-// StateChangeConf is the configuration struct used for `WaitForState`.
-type StateChangeConf[T any, S ~string] struct {
-	Delay          time.Duration          // Wait this time before starting checks
-	Pending        []S                    // States that are "allowed" and will continue trying
-	Refresh        StateRefreshFunc[T, S] // Refreshes the current state
-	Target         []S                    // Target state
-	Timeout        time.Duration          // The amount of time to wait before timeout
-	MinTimeout     time.Duration          // Smallest time to wait before refreshes
-	PollInterval   time.Duration          // Override MinTimeout/backoff and only poll this often
-	NotFoundChecks int                    // Number of times to allow not found (nil result from Refresh)
+// StateRefreshFunc is the specialization used in all code using helper/retry.
+type StateRefreshFunc = StateRefreshFuncOf[any, string]
+
+// StateChangeConfOf is the configuration struct used for `WaitForState`.
+type StateChangeConfOf[T any, S ~string] struct {
+	Delay          time.Duration            // Wait this time before starting checks
+	Pending        []S                      // States that are "allowed" and will continue trying
+	Refresh        StateRefreshFuncOf[T, S] // Refreshes the current state
+	Target         []S                      // Target state
+	Timeout        time.Duration            // The amount of time to wait before timeout
+	MinTimeout     time.Duration            // Smallest time to wait before refreshes
+	PollInterval   time.Duration            // Override MinTimeout/backoff and only poll this often
+	NotFoundChecks int                      // Number of times to allow not found (nil result from Refresh)
 
 	// This is to work around inconsistent APIs
 	ContinuousTargetOccurence int // Number of times the Target state has to occur continuously
 }
+
+// StateChangeConf is the specialization used in all code using helper/retry.
+type StateChangeConf = StateChangeConfOf[any, string]
 
 // WaitForState watches an object and waits for it to achieve the state
 // specified in the configuration using the specified Refresh() func,
@@ -58,7 +63,7 @@ type StateChangeConf[T any, S ~string] struct {
 //
 // Cancellation of the passed in context will cancel the refresh loop.
 
-func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) {
+func (conf *StateChangeConfOf[T, S]) WaitForState(ctx context.Context) (T, error) {
 	// Set a default for times to check for not found.
 	if conf.NotFoundChecks == 0 {
 		conf.NotFoundChecks = 20
@@ -77,7 +82,18 @@ func (conf *StateChangeConf[T, S]) WaitForState(ctx context.Context) (T, error) 
 	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
 		t, currentState, err = conf.Refresh(ctx)
 
-		if inttypes.IsZero(&t) {
+		if err != nil {
+			if l.TimedOut() {
+				err = &TimeoutError{
+					Timeout:       conf.Timeout,
+					ExpectedState: tfslices.Strings(conf.Target),
+				}
+			}
+
+			return t, err
+		}
+
+		if any(t) == nil {
 			// If we're waiting for the absence of a thing, then return.
 			if len(conf.Target) == 0 {
 				targetOccurence++
