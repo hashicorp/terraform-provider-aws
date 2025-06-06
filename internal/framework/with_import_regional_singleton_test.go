@@ -50,7 +50,7 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 	}
 }
 
-func TestRegionalSingleton_ImportID_Valid_NoRegionSet(t *testing.T) {
+func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -71,7 +71,7 @@ func TestRegionalSingleton_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}
 }
 
-func TestRegionalSingleton_ImportID_Valid_RegionSet(t *testing.T) {
+func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
 	ctx := context.Background()
 
 	region := "a-region-1"

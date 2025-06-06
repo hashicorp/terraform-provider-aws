@@ -59,7 +59,7 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 	}
 }
 
-func TestRegionalSingleton_ImportID_Valid_NoRegionSet(t *testing.T) {
+func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
 	region := "a-region-1"
 
 	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{})
@@ -78,7 +78,7 @@ func TestRegionalSingleton_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}
 }
 
-func TestRegionalSingleton_ImportID_Valid_RegionSet(t *testing.T) {
+func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
 	region := "a-region-1"
 
 	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{
@@ -163,7 +163,7 @@ func TestRegionalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
 	}
 }
 
-func TestRegionalSingleton_Identity_Valid_RegionSet(t *testing.T) {
+func TestRegionalSingleton_Identity_Valid_RegionOverride(t *testing.T) {
 	accountID := "123456789012"
 	region := "a-region-1"
 	client := mockClient{

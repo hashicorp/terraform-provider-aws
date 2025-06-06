@@ -70,7 +70,7 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 	}
 }
 
-func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
+func TestRegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	region := "a-region-1"
 	arn := arn.ARN{
@@ -101,7 +101,7 @@ func TestRegionalARN_ImportID_Valid_NoRegionSet(t *testing.T) {
 	}
 }
 
-func TestRegionalARN_ImportID_Valid_RegionSet(t *testing.T) {
+func TestRegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
 	region := "a-region-1"
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{
 		"region": region,
