@@ -10,10 +10,56 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/resourceattribute"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
+
+var globalARNSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"arn": framework.ARNAttributeComputedOnly(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+	},
+}
+
+var globalARNWithIDSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"arn": framework.ARNAttributeComputedOnly(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+		"id": framework.IDAttributeDeprecatedNoReplacement(),
+	},
+}
+
+var globalARNIdentitySchema = identityschema.Schema{
+	Attributes: map[string]identityschema.Attribute{
+		"arn": identityschema.StringAttribute{
+			RequiredForImport: true,
+		},
+	},
+}
+
+func globalARNImporter() (importer framework.WithImportByARN) {
+	importer.SetIdentitySpec(
+		inttypes.GlobalARNIdentity(),
+	)
+	return
+}
+
+func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
+	importer.SetIdentitySpec(
+		inttypes.GlobalARNIdentity(
+			inttypes.WithIdentityDuplicateAttrs(attrs...),
+		),
+	)
+	return
+}
 
 func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
 	ctx := context.Background()
@@ -231,16 +277,45 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	}
 }
 
-func globalARNImporter() (importer framework.WithImportByARN) {
+var regionalARNSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"arn": framework.ARNAttributeComputedOnly(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+		"region": resourceattribute.Region(),
+	},
+}
+
+var regionalARNWithIDSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"arn": framework.ARNAttributeComputedOnly(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+		"id":     framework.IDAttributeDeprecatedNoReplacement(),
+		"region": resourceattribute.Region(),
+	},
+}
+
+var regionalARNIdentitySchema = identityschema.Schema{
+	Attributes: map[string]identityschema.Attribute{
+		"arn": identityschema.StringAttribute{
+			RequiredForImport: true,
+		},
+	},
+}
+
+func regionalARNImporter() (importer framework.WithImportByARN) {
 	importer.SetIdentitySpec(
-		inttypes.GlobalARNIdentity(),
+		inttypes.RegionalARNIdentity(),
 	)
 	return
 }
 
-func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
+func regionalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
 	importer.SetIdentitySpec(
-		inttypes.GlobalARNIdentity(
+		inttypes.RegionalARNIdentity(
 			inttypes.WithIdentityDuplicateAttrs(attrs...),
 		),
 	)
@@ -532,20 +607,4 @@ func TestImportByARN_RegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
 		}
 	}
-}
-
-func regionalARNImporter() (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.RegionalARNIdentity(),
-	)
-	return
-}
-
-func regionalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.RegionalARNIdentity(
-			inttypes.WithIdentityDuplicateAttrs(attrs...),
-		),
-	)
-	return
 }

@@ -19,33 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-var globalARNSchema = schema.Schema{
-	Attributes: map[string]schema.Attribute{
-		"arn": framework.ARNAttributeComputedOnly(),
-		"attr": schema.StringAttribute{
-			Optional: true,
-		},
-	},
-}
-
-var globalARNWithIDSchema = schema.Schema{
-	Attributes: map[string]schema.Attribute{
-		"arn": framework.ARNAttributeComputedOnly(),
-		"attr": schema.StringAttribute{
-			Optional: true,
-		},
-		"id": framework.IDAttributeDeprecatedNoReplacement(),
-	},
-}
-
-var globalARNIdentitySchema = identityschema.Schema{
-	Attributes: map[string]identityschema.Attribute{
-		"arn": identityschema.StringAttribute{
-			RequiredForImport: true,
-		},
-	},
-}
-
 func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	ctx := context.Background()
 
