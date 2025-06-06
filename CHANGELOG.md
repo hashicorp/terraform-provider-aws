@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Resource:** `aws_dsql_cluster` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
+* **New Resource:** `aws_dsql_cluster_peering` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
 * **New Resource:** `aws_prometheus_workspace_configuration` ([#42478](https://github.com/hashicorp/terraform-provider-aws/issues/42478))
 * **New Resource:** `aws_s3control_directory_bucket_access_point_scope` ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
 * **New Resource:** `aws_vpc_route_server` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
@@ -23,6 +25,12 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_log_destination: Fix to return the first matched destination name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_group: Fix to return the first matched group name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_metric_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_query_definition: Fix to return the first matched query definition ID during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_resource_policy: Fix to return the first matched policy name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
+* resource/aws_cloudwatch_log_subscription_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
 * resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
 * resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
 * resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel ([#42884](https://github.com/hashicorp/terraform-provider-aws/issues/42884))
