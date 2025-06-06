@@ -334,7 +334,7 @@ Advanced logging settings. See [Configuring advanced logging controls for your L
 * `application_log_level` - (Optional) for JSON structured logs, choose the detail level of the logs your application sends to CloudWatch when using supported logging libraries.
 * `log_format` - (Required) select between `Text` and structured `JSON` format for your function's logs.
 * `log_group` - (Optional) the CloudWatch log group your function sends logs to.
-* `system_log_level` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `ERROR`, `DEBUG`, or `INFO`.
+* `system_log_level` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `WARN`, `DEBUG`, or `INFO`.
 
 ### snap_start
 
