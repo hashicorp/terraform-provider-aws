@@ -5,6 +5,7 @@ package cloudfrontkeyvaluestore
 
 import (
 	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
@@ -125,72 +126,52 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 
 	put, del, _ := intflex.DiffSlices(have, want, resourceKeyValuePairEqual)
 
-	// We need to perform a batched operation in the event of many Key Value Pairs to stay within AWS service limits
+	// We need to perform a batched operation in the event of many Key Value Pairs
+	// to stay within AWS service limits
+	//
 	// https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-keyvaluestores
 	batchSize := int(plan.MaximumBatchSize.ValueInt64())
-
-	allPuts := expandPutKeyRequestListItem(put)
-	allDeletes := expandDeleteKeyRequestListItem(del)
-
-	totalChanges := len(allPuts) + len(allDeletes)
+	etag := kvs.ETag
 	totalSizeInBytes := kvs.TotalSizeInBytes
 
-	if totalChanges > 0 {
-		numBatches := (totalChanges + batchSize - 1) / batchSize
-
-		currentPutIndex := 0
-		currentDeleteIndex := 0
-		etag := kvs.ETag
-
-		for range numBatches {
-			input := cloudfrontkeyvaluestore.UpdateKeysInput{
-				KvsARN:  aws.String(kvsARN),
-				IfMatch: etag,
-			}
-
-			putsInBatch := 0
-			deletesInBatch := 0
-
-			for putsInBatch < batchSize && currentPutIndex < len(allPuts) {
-				if (putsInBatch + deletesInBatch) < batchSize {
-					putsInBatch++
-					currentPutIndex++
-				} else {
-					break
-				}
-			}
-
-			for deletesInBatch < batchSize && currentDeleteIndex < len(allDeletes) {
-				if (putsInBatch + deletesInBatch) < batchSize {
-					deletesInBatch++
-					currentDeleteIndex++
-				} else {
-					break
-				}
-			}
-
-			if putsInBatch > 0 {
-				input.Puts = allPuts[currentPutIndex-putsInBatch : currentPutIndex]
-			}
-
-			if deletesInBatch > 0 {
-				input.Deletes = allDeletes[currentDeleteIndex-deletesInBatch : currentDeleteIndex]
-			}
-
-			if len(input.Puts) > 0 || len(input.Deletes) > 0 {
-				out, err := conn.UpdateKeys(ctx, &input)
-				if err != nil {
-					diags.AddError(
-						create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionSynchronizing, ResNameKeysExclusive, kvsARN, err),
-						err.Error(),
-					)
-					return diags
-				}
-				etag = out.ETag
-				totalSizeInBytes = out.TotalSizeInBytes
-			}
+	for chunk := range slices.Chunk(expandPutKeyRequestListItem(put), batchSize) {
+		input := cloudfrontkeyvaluestore.UpdateKeysInput{
+			KvsARN:  aws.String(kvsARN),
+			IfMatch: etag,
+			Puts:    chunk,
 		}
+
+		out, err := conn.UpdateKeys(ctx, &input)
+		if err != nil {
+			diags.AddError(
+				create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionSynchronizing, ResNameKeysExclusive, kvsARN, err),
+				err.Error(),
+			)
+			return diags
+		}
+		etag = out.ETag
+		totalSizeInBytes = out.TotalSizeInBytes
 	}
+
+	for chunk := range slices.Chunk(expandDeleteKeyRequestListItem(del), batchSize) {
+		input := cloudfrontkeyvaluestore.UpdateKeysInput{
+			KvsARN:  aws.String(kvsARN),
+			IfMatch: etag,
+			Deletes: chunk,
+		}
+
+		out, err := conn.UpdateKeys(ctx, &input)
+		if err != nil {
+			diags.AddError(
+				create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionSynchronizing, ResNameKeysExclusive, kvsARN, err),
+				err.Error(),
+			)
+			return diags
+		}
+		etag = out.ETag
+		totalSizeInBytes = out.TotalSizeInBytes
+	}
+
 	plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, totalSizeInBytes)
 
 	return diags
