@@ -42,7 +42,7 @@ resource "aws_lightsail_key_pair" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are optional:
 
 * `name` - (Optional) Name of the Lightsail Key Pair. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.

@@ -64,15 +64,18 @@ resource "aws_lightsail_instance" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `add_on` - (Optional) Add-on configuration for the instance. [See below](#add_on).
 * `availability_zone` - (Required) Availability Zone in which to create your instance. A list of available zones can be obtained using the AWS CLI command: [`aws lightsail get-regions --include-availability-zones`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-regions.html).
 * `blueprint_id` - (Required) ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: [`aws lightsail get-blueprints`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-blueprints.html).
 * `bundle_id` - (Required) Bundle of specification information. A list of available bundle IDs can be obtained using the AWS CLI command: [`aws lightsail get-bundles`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-bundles.html).
+* `name` - (Required) Name of the Lightsail Instance. Names must be unique within each AWS Region in your Lightsail account.
+
+The following arguments are optional:
+
+* `add_on` - (Optional) Add-on configuration for the instance. [See below](#add_on).
 * `ip_address_type` - (Optional) IP address type of the Lightsail Instance. Valid values: `dualstack`, `ipv4`, `ipv6`. Default: `dualstack`.
 * `key_pair_name` - (Optional) Name of your key pair. Created in the Lightsail console (cannot use `aws_key_pair` at this time).
-* `name` - (Required) Name of the Lightsail Instance. Names must be unique within each AWS Region in your Lightsail account.
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data.
 
