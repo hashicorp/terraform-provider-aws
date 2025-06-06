@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_bucket"
 description: |-
-  Manages a Lightsail bucket.
+  Manages a Lightsail object storage bucket.
 ---
 
 # Resource: aws_lightsail_bucket
 
-Manages a Lightsail bucket.
+Manages a Lightsail bucket. Use this resource to create and manage object storage buckets for storing files, images, and other data in Lightsail.
 
 ## Example Usage
 

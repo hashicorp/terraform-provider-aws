@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_certificate"
 description: |-
-  Manages a Lightsail certificate.
+  Manages a Lightsail SSL/TLS certificate for custom domains.
 ---
 
 # Resource: aws_lightsail_certificate
 
-Manages a Lightsail certificate.
+Manages a Lightsail certificate. Use this resource to create and manage SSL/TLS certificates for securing custom domains with your Lightsail resources.
 
 ## Example Usage
 

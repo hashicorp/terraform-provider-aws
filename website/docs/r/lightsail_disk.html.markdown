@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_disk"
 description: |-
-  Manages a Lightsail disk.
+  Manages a Lightsail block storage disk.
 ---
 
 # Resource: aws_lightsail_disk
 
-Manages a Lightsail disk.
+Manages a Lightsail disk. Use this resource to create additional block storage that can be attached to Lightsail instances for extra storage capacity.
 
 ## Example Usage
 

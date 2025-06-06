@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_container_service"
 description: |- 
-  Manages a Lightsail container service.
+  Manages a Lightsail container service for running containerized applications.
 ---
 
 # Resource: aws_lightsail_container_service
 
-Manages a Lightsail container service. Amazon Lightsail container service is a highly scalable compute and networking resource on which you can deploy, run, and manage containers. For more information, see [Container services in Amazon Lightsail](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-container-services).
+Manages a Lightsail container service. Use this resource to create and manage a scalable compute and networking platform for deploying, running, and managing containerized applications in Lightsail.
 
 ~> **Note:** For more information about the AWS Regions in which you can create Amazon Lightsail container services, see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail).
 

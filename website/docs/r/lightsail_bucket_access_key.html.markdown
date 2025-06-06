@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_bucket_access_key"
 description: |-
-  Manages a Lightsail bucket access key.
+  Manages a Lightsail bucket access key for programmatic access.
 ---
 
 # Resource: aws_lightsail_bucket_access_key
 
-Manages a Lightsail bucket access key. Creates credentials that allow API requests to be made to the Lightsail bucket.
+Manages a Lightsail bucket access key. Use this resource to create credentials that allow programmatic access to your Lightsail bucket via API requests.
 
 ## Example Usage
 
