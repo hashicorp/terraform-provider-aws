@@ -74,7 +74,7 @@ func testAccDataLake_Identity_Basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			// testAccPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
@@ -116,7 +116,7 @@ func testAccDataLake_Identity_RegionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			// testAccPreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
