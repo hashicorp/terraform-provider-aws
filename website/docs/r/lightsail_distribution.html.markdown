@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lightsail_distribution
 
-Manages a Lightsail content delivery network (CDN) distribution. Distributions cache content at edge locations to reduce latency for users.
+Manages a Lightsail content delivery network (CDN) distribution. Use this resource to cache content at edge locations and reduce latency for users accessing your content.
 
 ## Example Usage
 

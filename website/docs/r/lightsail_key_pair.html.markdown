@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_key_pair"
 description: |-
-  Manages a Lightsail Key Pair
+  Manages a Lightsail Key Pair.
 ---
 
 # Resource: aws_lightsail_key_pair
 
-Manages a Lightsail Key Pair, for use with Lightsail Instances. These key pairs are separate from EC2 Key Pairs, and must be created or imported for use with Lightsail.
+Manages a Lightsail Key Pair for use with Lightsail Instances. Use this resource to create or import key pairs that are separate from EC2 Key Pairs and required for Lightsail instances.
 
 ~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
 

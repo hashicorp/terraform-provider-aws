@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lightsail_domain_entry
 
-Manages a Lightsail domain entry (DNS record). Domain entries define how DNS queries for your domain are handled.
+Manages a Lightsail domain entry (DNS record). Use this resource to define how DNS queries for your domain are handled.
 
 ~> **NOTE on `id`:** In an effort to simplify imports, this resource `id` field has been updated to the standard resource id separator, a comma (`,`). For backward compatibility, the previous separator (underscore `_`) can still be used to read and import existing resources. When state is refreshed, the `id` will be updated to use the new standard separator. The previous separator will be deprecated in a future major release.
 

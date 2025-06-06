@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_instance"
 description: |-
-  Manages a Lightsail Instance
+  Manages a Lightsail Instance.
 ---
 
 # Resource: aws_lightsail_instance
 
-Manages a Lightsail Instance. Amazon Lightsail is a service to provide easy virtual private servers with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail) for more information.
+Manages a Lightsail Instance. Use this resource to create easy virtual private servers with custom software already setup.
 
 ~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
 
