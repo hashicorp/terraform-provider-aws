@@ -47,7 +47,7 @@ import (
 // @ArnIdentity("job_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetModelCustomizationJobOutput")
 // @Testing(serialize=true)
-// @Testing(importIgnore="base_model_identifier")
+// @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
