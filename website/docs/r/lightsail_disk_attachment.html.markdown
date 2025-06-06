@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_disk_attachment"
 description: |-
-  Provides a Lightsail disk attachment.
+  Manages a Lightsail disk attachment.
 ---
 
 # Resource: aws_lightsail_disk_attachment
 
-Provides a Lightsail disk attachment. Attaches a Lightsail disk to a Lightsail instance.
+Manages a Lightsail disk attachment. Attaches a Lightsail disk to a Lightsail instance.
 
 ## Example Usage
 

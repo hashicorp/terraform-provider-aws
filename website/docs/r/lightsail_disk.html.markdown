@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_disk"
 description: |-
-  Provides a Lightsail disk.
+  Manages a Lightsail disk.
 ---
 
 # Resource: aws_lightsail_disk
 
-Provides a Lightsail disk.
+Manages a Lightsail disk.
 
 ## Example Usage
 

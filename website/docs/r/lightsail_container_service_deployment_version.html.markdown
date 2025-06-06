@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_container_service_deployment_version"
 description: |-
-  Provides a Lightsail container service deployment version.
+  Manages a Lightsail container service deployment version.
 ---
 
 # Resource: aws_lightsail_container_service_deployment_version
 
-Provides a Lightsail container service deployment version. Manages a deployment version for your Amazon Lightsail container service.
+Manages a Lightsail container service deployment version. Manages a deployment version for your Amazon Lightsail container service.
 
 ~> **NOTE:** The Amazon Lightsail container service must be enabled to create a deployment.
 

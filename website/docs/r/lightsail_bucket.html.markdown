@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_bucket"
 description: |-
-  Provides a Lightsail bucket.
+  Manages a Lightsail bucket.
 ---
 
 # Resource: aws_lightsail_bucket
 
-Provides a Lightsail bucket.
+Manages a Lightsail bucket.
 
 ## Example Usage
 

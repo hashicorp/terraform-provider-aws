@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_certificate"
 description: |-
-  Provides a Lightsail certificate.
+  Manages a Lightsail certificate.
 ---
 
 # Resource: aws_lightsail_certificate
 
-Provides a Lightsail certificate.
+Manages a Lightsail certificate.
 
 ## Example Usage
 

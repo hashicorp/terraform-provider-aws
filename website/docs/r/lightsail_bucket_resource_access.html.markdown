@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_bucket_resource_access"
 description: |-
-  Provides a Lightsail bucket resource access.
+  Manages a Lightsail bucket resource access.
 ---
 
 # Resource: aws_lightsail_bucket_resource_access
 
-Provides a Lightsail bucket resource access. Grants a Lightsail resource access to a bucket.
+Manages a Lightsail bucket resource access. Grants a Lightsail resource access to a bucket.
 
 ## Example Usage
 
