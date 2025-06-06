@@ -43,7 +43,7 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 type appBundleResource struct {
 	framework.ResourceWithModel[appBundleResourceModel]
 	framework.WithNoOpUpdate[appBundleResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
