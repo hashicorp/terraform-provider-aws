@@ -59,7 +59,7 @@ func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, er
 type customModelResource struct {
 	framework.ResourceWithModel[customModelResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *customModelResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

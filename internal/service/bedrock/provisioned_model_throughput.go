@@ -50,7 +50,7 @@ type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
