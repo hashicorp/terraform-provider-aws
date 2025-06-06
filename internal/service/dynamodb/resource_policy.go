@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -239,70 +238,8 @@ func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
 }
 
-// Equivalent to WithImportByRegionalARN, but also sets default value
 func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	if request.ID != "" {
-		arnARN, err := arn.Parse(request.ID)
-		if err != nil {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				"The import ID could not be parsed as an ARN.\n\n"+
-					fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-			)
-			return
-		}
+	r.WithImportByRegionalARN.ImportState(ctx, request, response)
 
-		var region types.String
-		response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !region.IsNull() {
-			if region.ValueString() != arnARN.Region {
-				response.Diagnostics.AddError(
-					"Invalid Resource Import ID Value",
-					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
-				)
-				return
-			}
-		} else {
-			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)          // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-
-		return
-	}
-
-	if identity := request.Identity; identity != nil {
-		arnPath := path.Root(names.AttrResourceARN)
-		var arnVal string
-		identity.GetAttribute(ctx, arnPath, &arnVal)
-
-		arnARN, err := arn.Parse(arnVal)
-		if err != nil {
-			response.Diagnostics.AddAttributeError(
-				arnPath,
-				"Invalid Import Attribute Value",
-				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
-			)
-			return
-		}
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), arnVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), arnVal)...)
-	}
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 }
