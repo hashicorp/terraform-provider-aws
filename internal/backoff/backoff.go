@@ -141,10 +141,11 @@ func defaultLoopConfig() LoopConfig {
 
 // Loop holds state for managing loops with a timeout.
 type Loop struct {
-	attempt  uint
-	config   LoopConfig
-	deadline inttypes.Deadline
-	timedOut bool
+	attempt     uint
+	config      LoopConfig
+	deadline    inttypes.Deadline
+	gracePeriod time.Duration
+	timedOut    bool
 }
 
 // NewLoopWithOptions returns a new loop configured with the provided options.
@@ -155,8 +156,9 @@ func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
 	}
 
 	return &Loop{
-		config:   config,
-		deadline: inttypes.NewDeadline(timeout + config.gracePeriod),
+		config:      config,
+		deadline:    inttypes.NewDeadline(timeout),
+		gracePeriod: config.gracePeriod,
 	}
 }
 
@@ -172,7 +174,12 @@ func (r *Loop) Continue(ctx context.Context) bool {
 	if r.attempt != 0 && r.deadline.Remaining() == 0 {
 		r.timedOut = true
 
-		return false
+		// Any non-zero grace period allows one more attempt.
+		if r.gracePeriod == 0 {
+			return false
+		}
+
+		r.gracePeriod = 0
 	}
 
 	r.sleep(ctx, r.config.delay(r.attempt))
