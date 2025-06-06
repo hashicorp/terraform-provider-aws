@@ -269,14 +269,14 @@ func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	}
 }
 
-func emtpyStateFromSchema(schema schema.Schema) tfsdk.State {
+func emtpyStateFromSchema(ctx context.Context, schema schema.Schema) tfsdk.State {
 	return tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), nil),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
 }
 
-func stateFromSchema(schema schema.Schema, values map[string]string) tfsdk.State {
+func stateFromSchema(ctx context.Context, schema schema.Schema, values map[string]string) tfsdk.State {
 	val := make(map[string]tftypes.Value)
 	for name := range maps.Keys(schema.Attributes) {
 		if v, ok := values[name]; ok {
@@ -286,19 +286,19 @@ func stateFromSchema(schema schema.Schema, values map[string]string) tfsdk.State
 		}
 	}
 	return tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), val),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), val),
 		Schema: schema,
 	}
 }
 
-func emtpyIdentityFromSchema(schema identityschema.Schema) *tfsdk.ResourceIdentity {
+func emtpyIdentityFromSchema(ctx context.Context, schema identityschema.Schema) *tfsdk.ResourceIdentity {
 	return &tfsdk.ResourceIdentity{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), nil),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
 	}
 }
 
-func identityFromSchema(schema identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
+func identityFromSchema(ctx context.Context, schema identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
 	val := make(map[string]tftypes.Value)
 	for name := range maps.Keys(schema.Attributes) {
 		if v, ok := values[name]; ok {
@@ -308,7 +308,7 @@ func identityFromSchema(schema identityschema.Schema, values map[string]string) 
 		}
 	}
 	return &tfsdk.ResourceIdentity{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(context.Background()), val),
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), val),
 		Schema: schema,
 	}
 }

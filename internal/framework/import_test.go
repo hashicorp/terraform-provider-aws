@@ -16,14 +16,14 @@ type importStater interface {
 }
 
 func importByID(ctx context.Context, importer importStater, resourceSchema schema.Schema, id string, identitySchema identityschema.Schema) resource.ImportStateResponse {
-	identity := emtpyIdentityFromSchema(identitySchema)
+	identity := emtpyIdentityFromSchema(ctx, identitySchema)
 
 	request := resource.ImportStateRequest{
 		ID:       id,
 		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(resourceSchema),
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -32,14 +32,14 @@ func importByID(ctx context.Context, importer importStater, resourceSchema schem
 }
 
 func importByIDWithState(ctx context.Context, importer importStater, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema identityschema.Schema) resource.ImportStateResponse {
-	identity := emtpyIdentityFromSchema(identitySchema)
+	identity := emtpyIdentityFromSchema(ctx, identitySchema)
 
 	request := resource.ImportStateRequest{
 		ID:       id,
 		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
-		State:    stateFromSchema(resourceSchema, stateAttrs),
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
 		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -53,7 +53,7 @@ func importByIDNoIdentity(ctx context.Context, importer importStater, resourceSc
 		Identity: nil,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(resourceSchema),
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
 		Identity: nil,
 	}
 	importer.ImportState(ctx, request, &response)
@@ -62,13 +62,13 @@ func importByIDNoIdentity(ctx context.Context, importer importStater, resourceSc
 }
 
 func importByIdentity(ctx context.Context, importer importStater, resourceSchema schema.Schema, identitySchema identityschema.Schema, identityAttrs map[string]string) resource.ImportStateResponse {
-	identity := identityFromSchema(identitySchema, identityAttrs)
+	identity := identityFromSchema(ctx, identitySchema, identityAttrs)
 
 	request := resource.ImportStateRequest{
 		Identity: identity,
 	}
 	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(resourceSchema),
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
 	importer.ImportState(ctx, request, &response)
