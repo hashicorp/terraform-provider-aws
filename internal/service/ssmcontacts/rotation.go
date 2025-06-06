@@ -50,7 +50,7 @@ func newRotationResource(context.Context) (resource.ResourceWithConfigure, error
 
 type rotationResource struct {
 	framework.ResourceWithModel[rotationResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
