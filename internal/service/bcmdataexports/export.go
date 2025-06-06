@@ -55,7 +55,7 @@ const (
 type exportResource struct {
 	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByGlobalARN
+	framework.WithImportByARN
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
