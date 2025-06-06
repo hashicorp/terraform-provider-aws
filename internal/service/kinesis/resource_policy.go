@@ -38,7 +38,7 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 
 type resourcePolicyResource struct {
 	framework.ResourceWithModel[resourcePolicyResourceModel]
-	framework.WithImportByRegionalARN
+	framework.WithImportByARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
