@@ -56,7 +56,7 @@ func resourceRole() *schema.Resource {
 				// Import-by-id case
 				if rd.Id() != "" {
 					rd.Set(names.AttrName, rd.Id())
-					return resourceRoleImport(ctx, rd, meta)
+					return resourceRoleImport(rd)
 				}
 
 				identity, err := rd.Identity()
@@ -77,7 +77,7 @@ func resourceRole() *schema.Resource {
 				rd.Set(names.AttrName, name)
 				rd.SetId(name)
 
-				return resourceRoleImport(ctx, rd, meta)
+				return resourceRoleImport(rd)
 			},
 		},
 
@@ -540,7 +540,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	return diags
 }
 
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceRoleImport(d *schema.ResourceData) ([]*schema.ResourceData, error) {
 	d.Set("force_detach_policies", false)
 	return []*schema.ResourceData{d}, nil
 }
