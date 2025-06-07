@@ -47,8 +47,6 @@ func (e expectAttributeFormatCheck) CheckState(ctx context.Context, request stat
 		response.Error = fmt.Errorf("expected value %s for ExpectAttributeFormat check, got: %s", expectedValue, otherVal)
 		return
 	}
-
-	return
 }
 
 func ExpectAttributeFormat(resourceAddress string, attributePath tfjsonpath.Path, format string) statecheck.StateCheck {

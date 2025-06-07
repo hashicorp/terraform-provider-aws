@@ -59,6 +59,4 @@ func (w *WithImportByGlobalARN) ImportState(ctx context.Context, request resourc
 	if identity := response.Identity; identity != nil {
 		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(w.attributeName), arnVal)...)
 	}
-
-	return
 }
