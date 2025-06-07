@@ -21,6 +21,7 @@ var regionalSingletonSchema = map[string]*schema.Schema{
 	"region": attribute.Region(),
 }
 
+// lintignore:S013 // Identity Schemas cannot specify Computed, Optional, or Required
 var regionalSingletonIdentitySchema = map[string]*schema.Schema{
 	"region": {
 		Type:              schema.TypeString,
@@ -234,6 +235,7 @@ var globalSingletonSchema = map[string]*schema.Schema{
 	},
 }
 
+// lintignore:S013 // Identity Schemas cannot specify Computed, Optional, or Required
 var globalSingletonIdentitySchema = map[string]*schema.Schema{
 	"account_id": {
 		Type:              schema.TypeString,

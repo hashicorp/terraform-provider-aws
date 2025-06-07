@@ -27,6 +27,7 @@ var regionalARNSchema = map[string]*schema.Schema{
 	"region": attribute.Region(),
 }
 
+// lintignore:S013 // Identity Schemas cannot specify Computed, Optional, or Required
 var regionalARNIdentitySchema = map[string]*schema.Schema{
 	"arn": {
 		Type:              schema.TypeString,
@@ -286,6 +287,7 @@ var globalARNSchema = map[string]*schema.Schema{
 	},
 }
 
+// lintignore:S013 // Identity Schemas cannot specify Computed, Optional, or Required
 var globalARNIdentitySchema = map[string]*schema.Schema{
 	"arn": {
 		Type:              schema.TypeString,
