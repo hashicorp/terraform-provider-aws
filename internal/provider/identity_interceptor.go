@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -197,7 +196,7 @@ func setAttribute(d *schema.ResourceData, name, value string) {
 	}
 }
 
-func arnIdentityResourceImporter(identity types.Identity) *schema.ResourceImporter {
+func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
 	if identity.IsGlobalResource {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
