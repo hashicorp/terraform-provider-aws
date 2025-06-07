@@ -150,8 +150,8 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to  = aws_inspector2_filter.example
-  arn = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
+  to = aws_inspector2_filter.example
+  id = "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 }
 ```
 
