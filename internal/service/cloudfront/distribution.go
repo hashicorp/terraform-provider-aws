@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -68,6 +70,12 @@ func resourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"connection_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ConnectionModeDirect,
+				ValidateDiagFunc: enum.Validate[awstypes.ConnectionMode](),
 			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
@@ -786,6 +794,62 @@ func resourceDistribution() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenant_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parameter_definition": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"definition": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"string_schema_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"required": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+															names.AttrComment: {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															names.AttrDefaultValue: {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringLenBetween(1, 256),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									names.AttrName: {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain alphanumeric, underscores or dashes only"),
+											validation.StringLenBetween(1, 128),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"trusted_key_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -893,9 +957,100 @@ func resourceDistribution() *schema.Resource {
 	}
 }
 
+func validateMultiTenantDistributionConfig(d *schema.ResourceData) error {
+	if v, ok := d.GetOk("continuous_deployment_policy_id"); ok && v.(string) != "" {
+		return fmt.Errorf("continuous_deployment_policy_id is not supported for multi-tenant distributions")
+	}
+
+	if origins, ok := d.GetOk("origin"); ok {
+		for _, o := range origins.(*schema.Set).List() {
+			if om, ok := o.(map[string]interface{}); ok {
+				if s3cfg, ok := om["s3_origin_config"]; ok && len(s3cfg.([]interface{})) > 0 {
+					return fmt.Errorf("origin_access_identity (OAI) is not supported for multi-tenant distributions; use origin access control (OAC) instead")
+				}
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("web_acl_id"); ok && v.(string) != "" {
+		if len(v.(string)) > 0 && !strings.HasPrefix(v.(string), "arn:aws:wafv2:") {
+			return fmt.Errorf("only AWS WAF V2 web ACLs are supported for multi-tenant distributions")
+		}
+	}
+
+	if logging, ok := d.GetOk("logging_config"); ok && len(logging.([]interface{})) > 0 {
+		return fmt.Errorf("standard logging (legacy) is not supported for multi-tenant distributions")
+	}
+
+	checkCacheBehavior := func(tfMap map[string]any) error {
+		if _, ok := tfMap["min_ttl"]; ok {
+			return fmt.Errorf("min_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["default_ttl"]; ok {
+			return fmt.Errorf("default_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["max_ttl"]; ok {
+			return fmt.Errorf("max_ttl is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["forwarded_values"]; ok {
+			return fmt.Errorf("forwarded_values is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["trusted_signers"]; ok {
+			return fmt.Errorf("trusted_signers is not supported for multi-tenant distributions")
+		}
+		if _, ok := tfMap["smooth_streaming"]; ok {
+			return fmt.Errorf("smooth_streaming is not supported for multi-tenant distributions")
+		}
+		return nil
+	}
+
+	if dcb, ok := d.GetOk("default_cache_behavior"); ok {
+		if err := checkCacheBehavior(dcb.(map[string]any)); err != nil {
+			return err
+		}
+	}
+
+	if ocb, ok := d.GetOk("ordered_cache_behavior"); ok {
+		for _, cb := range ocb.([]map[string]any) {
+			if err := checkCacheBehavior(cb); err != nil {
+				return err
+			}
+		}
+	}
+
+	if _, ok := d.GetOk("price_class"); ok {
+		return fmt.Errorf("price_class is not supported for multi-tenant distributions")
+	}
+
+	if _, ok := d.GetOk("is_ipv6_enabled"); ok {
+		return fmt.Errorf("is_ipv6_enabled is not supported for multi-tenant distributions")
+	}
+
+	if viewerCerts, ok := d.GetOk("viewer_certificate"); ok && len(viewerCerts.([]any)) > 0 {
+		vc := viewerCerts.([]any)[0].(map[string]any)
+		if _, ok := vc["iam_certificate_id"]; ok {
+			return fmt.Errorf("IAM server certificates are not supported for multi-tenant distributions")
+		}
+		if v, ok := vc["minimum_protocol_version"]; ok && v.(string) == string(awstypes.MinimumProtocolVersionSSLv3) {
+			return fmt.Errorf("minimum_protocol_version SSLv3 is not supported for multi-tenant distributions")
+		}
+		if v, ok := vc["ssl_support_method"]; ok && v.(string) != string(awstypes.SSLSupportMethodSniOnly) {
+			return fmt.Errorf("only sni-only ssl_support_method is supported for multi-tenant distributions")
+		}
+	}
+
+	return nil
+}
+
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		if err := validateMultiTenantDistributionConfig(d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating multi-tenant distribution config: %s", err)
+		}
+	}
 
 	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
@@ -962,6 +1117,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
+	d.Set("connection_mode", distributionConfig.ConnectionMode)
 	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
@@ -1010,6 +1166,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
+	if err := d.Set("tenant_config", flattenTenantConfig(distributionConfig.TenantConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tenant_config: %s", err)
+	}
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
@@ -1027,6 +1186,12 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		if err := validateMultiTenantDistributionConfig(d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "validating multi-tenant distribution config: %s", err)
+		}
+	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudfront.UpdateDistributionInput{
@@ -1327,17 +1492,22 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]any)),
 		CallerReference:              aws.String(id.UniqueId()),
 		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
+		ConnectionMode:               awstypes.ConnectionMode(d.Get("connection_mode").(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
 		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
 		Enabled:                      aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
 		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
-		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
 		Staging:                      aws.Bool(d.Get("staging").(bool)),
+		TenantConfig:                 expandTenantConfig(d.Get("tenant_config").([]any)[0].(map[string]any)),
 		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
+	}
+
+	if apiObject.ConnectionMode != awstypes.ConnectionModeTenantOnly {
+		apiObject.IsIPV6Enabled = aws.Bool(d.Get("is_ipv6_enabled").(bool))
+		apiObject.PriceClass = awstypes.PriceClass(d.Get("price_class").(string))
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
@@ -1348,6 +1518,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("caller_reference"); ok {
 		apiObject.CallerReference = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("connection_mode"); ok && v.(string) == string(awstypes.ConnectionModeTenantOnly) {
+		apiObject.IsIPV6Enabled = nil
 	}
 
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1465,6 +1639,66 @@ func expandCacheBehaviors(tfList []any) *awstypes.CacheBehaviors {
 		Items:    items,
 		Quantity: aws.Int32(int32(len(items))),
 	}
+}
+
+func expandTenantConfig(tfMap map[string]any) *awstypes.TenantConfig {
+	tenantConfig := &awstypes.TenantConfig{}
+	if tfMap == nil {
+		return tenantConfig
+	}
+	if v, ok := tfMap["parameter_definition"]; ok && v != nil {
+		var defs []awstypes.ParameterDefinition
+		for _, defRaw := range v.([]any) {
+			defMap, ok := defRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			paramDef := awstypes.ParameterDefinition{}
+			if name, ok := defMap[names.AttrName].(string); ok {
+				paramDef.Name = aws.String(name)
+			}
+			if defList, ok := defMap["definition"].([]any); ok && len(defList) > 0 {
+				defSchemaMap, ok := defList[0].(map[string]any)
+				if ok {
+					if strSchemaList, ok := defSchemaMap["string_schema_config"].([]any); ok && len(strSchemaList) > 0 {
+						strSchemaMap, ok := strSchemaList[0].(map[string]any)
+						if ok {
+							paramDef.Definition = &awstypes.ParameterDefinitionSchema{
+								StringSchema: &awstypes.StringSchemaConfig{
+									Required:     aws.Bool(strSchemaMap["required"].(bool)),
+									Comment:      aws.String(strSchemaMap[names.AttrComment].(string)),
+									DefaultValue: aws.String(strSchemaMap[names.AttrDefaultValue].(string)),
+								},
+							}
+						}
+					}
+				}
+			}
+			defs = append(defs, paramDef)
+		}
+		tenantConfig.ParameterDefinitions = defs
+	}
+
+	return tenantConfig
+}
+
+func flattenTenantConfig(apiObject *awstypes.TenantConfig) map[string]any {
+	tfMap := make(map[string]any)
+	if apiObject.ParameterDefinitions != nil {
+		for _, v := range apiObject.ParameterDefinitions {
+			tfMap["parameter_definition"] = append(tfMap["parameter_definition"].([]any), map[string]any{
+				names.AttrName: aws.ToString(v.Name),
+				"definition": []any{map[string]any{
+					"string_schema_config": []any{map[string]any{
+						"required":             aws.ToBool(v.Definition.StringSchema.Required),
+						names.AttrComment:      aws.ToString(v.Definition.StringSchema.Comment),
+						names.AttrDefaultValue: aws.ToString(v.Definition.StringSchema.DefaultValue),
+					}},
+				}},
+			})
+		}
+	}
+	return tfMap
 }
 
 func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
