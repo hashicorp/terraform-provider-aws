@@ -350,22 +350,6 @@ resource "aws_ssoadmin_application" "test" {
 `, rName, applicationProviderARN)
 }
 
-func testAccApplicationConfig_regionOverride(rName, applicationProviderARN string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {
-  region = %[3]q
-}
-
-resource "aws_ssoadmin_application" "test" {
-  region = %[3]q
-
-  name                     = %[1]q
-  application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-`, rName, applicationProviderARN, acctest.AlternateRegion())
-}
-
 func testAccApplicationConfig_description(rName, applicationProviderARN, description string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}

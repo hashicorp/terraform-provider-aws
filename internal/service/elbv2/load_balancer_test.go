@@ -159,135 +159,6 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 	})
 }
 
-// func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var conf awstypes.LoadBalancer
-// 	resourceName := "aws_lb.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-// 			tfversion.SkipBelow(tfversion.Version1_12_0),
-// 		},
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccLoadBalancerConfig_basic(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-// 						"arn": tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName))),
-// 					}),
-// 				},
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateKind:   resource.ImportCommandWithID,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				ResourceName:    resourceName,
-// 				ImportState:     true,
-// 				ImportStateKind: resource.ImportBlockWithID,
-// 				ImportPlanChecks: resource.ImportPlanChecks{
-// 					PreApply: []plancheck.PlanCheck{
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
-// 					},
-// 				},
-// 			},
-// 			// {
-// 			// 	ResourceName:    resourceName,
-// 			// 	ImportState:     true,
-// 			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-// 			// 	ImportPlanChecks: resource.ImportPlanChecks{
-// 			// 		PreApply: []plancheck.PlanCheck{
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.Region())),
-// 			// 		},
-// 			// 	},
-// 			// },
-// 		},
-// 	})
-// }
-
-// func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	resourceName := "aws_lb.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-// 			tfversion.SkipBelow(tfversion.Version1_12_0),
-// 		},
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccLoadBalancerConfig_regionOverride(rName),
-// 				Check:  resource.ComposeAggregateTestCheckFunc(),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-// 						"arn": tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName))),
-// 					}),
-// 				},
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
-// 				ImportState:       true,
-// 				ImportStateKind:   resource.ImportCommandWithID,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateKind:   resource.ImportCommandWithID,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
-// 				ImportState:       true,
-// 				ImportStateKind:   resource.ImportBlockWithID,
-// 				ImportPlanChecks: resource.ImportPlanChecks{
-// 					PreApply: []plancheck.PlanCheck{
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
-// 					},
-// 				},
-// 			},
-// 			// {
-// 			// 	ResourceName:    resourceName,
-// 			// 	ImportState:     true,
-// 			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-// 			// 	ImportPlanChecks: resource.ImportPlanChecks{
-// 			// 		PreApply: []plancheck.PlanCheck{
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-// 			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("region"), knownvalue.StringExact(acctest.AlternateRegion())),
-// 			// 		},
-// 			// 	},
-// 			// },
-// 		},
-// 	})
-// }
-
 func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancer
@@ -322,70 +193,6 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 		},
 	})
 }
-
-// func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var conf awstypes.LoadBalancer
-// 	resourceName := "aws_lb.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccLoadBalancerConfig_basic(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 				},
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
-
-// func TestAccELBV2LoadBalancer_Identity_RegionOverride(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	resourceName := "aws_lb.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             acctest.CheckDestroyNoop,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccLoadBalancerConfig_regionOverride(rName),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName)))),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 				},
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
 
 func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2587,33 +2394,6 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_baseInternal_regionOverride(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets_RegionOverride(rName, subnetCount, acctest.AlternateRegion()),
-		fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  region = %[2]q
-
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, rName, acctest.AlternateRegion()))
-}
-
 func testAccLoadBalancerConfig_baseIPAMPools(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -2664,26 +2444,6 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 `, rName, nSubnetsReferenced))
-}
-
-func testAccLoadBalancerConfig_regionOverride(rName string) string {
-	return testAccLoadBalancerConfig_subnetCount_regionOverride(rName, 2, 2)
-}
-
-func testAccLoadBalancerConfig_subnetCount_regionOverride(rName string, nSubnets, nSubnetsReferenced int) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal_regionOverride(rName, nSubnets), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  region = %[3]q
-
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = slice(aws_subnet.test[*].id, 0, %[2]d)
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-}
-`, rName, nSubnetsReferenced, acctest.AlternateRegion()))
 }
 
 func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int) string {

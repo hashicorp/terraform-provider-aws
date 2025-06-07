@@ -329,24 +329,6 @@ resource "aws_resourceexplorer2_view" "test" {
 `, rName)
 }
 
-func testAccViewConfig_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_resourceexplorer2_view" "test" {
-  region = %[2]q
-
-  name = %[1]q
-
-  depends_on = [aws_resourceexplorer2_index.test]
-}
-
-resource "aws_resourceexplorer2_index" "test" {
-  region = %[2]q
-
-  type = "LOCAL"
-}
-`, rName, acctest.AlternateRegion())
-}
-
 func testAccViewConfig_defaultView(rName string, defaultView bool) string {
 	return fmt.Sprintf(`
 resource "aws_resourceexplorer2_index" "test" {

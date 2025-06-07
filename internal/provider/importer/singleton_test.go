@@ -123,7 +123,6 @@ func TestRegionalSingleton_Identity_Invalid_WrongAccountID(t *testing.T) {
 			t.Fatalf("Unexpected error: %s", err)
 		}
 	}
-
 }
 
 func TestRegionalSingleton_Identity_Valid_AttributesNotSet(t *testing.T) {

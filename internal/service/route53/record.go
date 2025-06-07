@@ -129,7 +129,6 @@ func resourceRecord() *schema.Resource {
 				d.SetId(strings.Join(vars, "_"))
 
 				return []*schema.ResourceData{d}, nil
-
 			},
 		},
 

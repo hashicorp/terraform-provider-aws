@@ -6,7 +6,6 @@ package auditmanager_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"testing"
 
@@ -188,14 +187,6 @@ func testAccAccountRegistrationConfig_basic() string {
 	return `
 resource "aws_auditmanager_account_registration" "test" {}
 `
-}
-
-func testAccAccountRegistrationConfig_regionOverride() string {
-	return fmt.Sprintf(`
-resource "aws_auditmanager_account_registration" "test" {
-  region = %[1]q
-}
-`, acctest.AlternateRegion())
 }
 
 func testAccAccountRegistrationConfig_deregisterOnDestroy() string {

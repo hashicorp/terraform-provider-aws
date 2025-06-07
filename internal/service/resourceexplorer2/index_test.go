@@ -239,13 +239,3 @@ resource "aws_resourceexplorer2_index" "test" {
 }
 `, typ)
 }
-
-func testAccIndexConfig_regionOverride() string {
-	return fmt.Sprintf(`
-resource "aws_resourceexplorer2_index" "test" {
-  region = %[1]q
-
-  type = "LOCAL"
-}
-`, acctest.AlternateRegion())
-}

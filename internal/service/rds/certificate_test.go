@@ -257,13 +257,3 @@ resource "aws_rds_certificate" "test" {
 }
 `, certificateID)
 }
-
-func testAccCertificateConfig_regionOverride() string {
-	return fmt.Sprintf(`
-resource "aws_rds_certificate" "test" {
-  region = %[1]q
-
-  certificate_identifier = "rds-ca-rsa4096-g1"
-}
-`, acctest.AlternateRegion())
-}

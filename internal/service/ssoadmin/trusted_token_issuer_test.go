@@ -244,31 +244,6 @@ resource "aws_ssoadmin_trusted_token_issuer" "test" {
 `, rName)
 }
 
-func testAccTrustedTokenIssuerConfigBase_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {
-  region = %[2]q
-}
-
-resource "aws_ssoadmin_trusted_token_issuer" "test" {
-  region = %[2]q
-
-  name                      = %[1]q
-  instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  trusted_token_issuer_type = "OIDC_JWT"
-
-  trusted_token_issuer_configuration {
-    oidc_jwt_configuration {
-      claim_attribute_path          = "email"
-      identity_store_attribute_path = "emails.value"
-      issuer_url                    = "https://example.com"
-      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
-    }
-  }
-}
-`, rName, acctest.AlternateRegion())
-}
-
 func testAccTrustedTokenIssuerConfigBase_basicUpdated(rNameUpdated, claimAttributePath, identityStoreAttributePath string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}

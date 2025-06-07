@@ -72,9 +72,3 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
-func testAccPreCheckInRegion(ctx context.Context, t *testing.T, region string) {
-	// Push region into Context.
-	ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
-	testAccPreCheck(ctx, t)
-}

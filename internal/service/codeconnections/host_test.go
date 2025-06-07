@@ -239,18 +239,6 @@ resource "aws_codeconnections_host" "test" {
 `, rName)
 }
 
-func testAccHostConfig_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_host" "test" {
-  region = %[2]q
-
-  name              = %[1]q
-  provider_endpoint = "https://example.com"
-  provider_type     = "GitHubEnterpriseServer"
-}
-`, rName, acctest.AlternateRegion())
-}
-
 func testAccHostConfig_vpcNoCertificate(rName string) string {
 	return acctest.ConfigCompose(testAccHostVPCBaseConfig(rName), fmt.Sprintf(`
 resource "aws_codeconnections_host" "test" {

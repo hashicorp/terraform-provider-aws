@@ -8,10 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,28 +46,6 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
 			},
-		},
-	})
-}
-
-func testAccImageBlockPublicAccess_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_ec2_image_block_public_access.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccImageBlockPublicAccessConfig_basic("unblocked"),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-					}),
-				},
-			},
-			// Not importable
 		},
 	})
 }

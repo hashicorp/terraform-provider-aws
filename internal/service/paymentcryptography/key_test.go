@@ -466,27 +466,6 @@ resource "aws_paymentcryptography_key" "test" {
 `, rName)
 }
 
-func testAccKeyConfig_regionOverride() string {
-	return fmt.Sprintf(`
-resource "aws_paymentcryptography_key" "test" {
-  region = %[1]q
-
-  exportable = true
-  key_attributes {
-    key_algorithm = "TDES_3KEY"
-    key_class     = "SYMMETRIC_KEY"
-    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
-    key_modes_of_use {
-      decrypt = true
-      encrypt = true
-      wrap    = true
-      unwrap  = true
-    }
-  }
-}
-`, acctest.AlternateRegion())
-}
-
 func testAccKeyConfig_tags2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {

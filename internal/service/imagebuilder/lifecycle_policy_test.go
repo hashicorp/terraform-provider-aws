@@ -361,38 +361,6 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 `, rName))
 }
 
-func testAccLifecyclePolicyConfig_regionOverride(rName string) string {
-	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
-resource "aws_imagebuilder_lifecycle_policy" "test" {
-  region = %[2]q
-
-  name           = %[1]q
-  description    = "Used for setting lifecycle policies"
-  execution_role = aws_iam_role.test.arn
-  resource_type  = "AMI_IMAGE"
-  policy_detail {
-    action {
-      type = "DELETE"
-    }
-    filter {
-      type            = "AGE"
-      value           = 6
-      retain_at_least = 10
-      unit            = "YEARS"
-    }
-  }
-  resource_selection {
-    tag_map = {
-      "key1" = "value1"
-      "key2" = "value2"
-    }
-  }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-`, rName, acctest.AlternateRegion()))
-}
-
 func testAccLifecyclePolicyConfig_policyDetails(rName string) string {
 	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {

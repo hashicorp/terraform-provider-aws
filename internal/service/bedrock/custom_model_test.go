@@ -12,14 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,70 +72,6 @@ func testAccCustomModel_basic(t *testing.T) {
 		},
 	})
 }
-
-func testAccCustomModel_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_custom_model.test"
-	var v bedrock.GetModelCustomizationJobOutput
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomModelConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("job_arn"), tfknownvalue.RegionalARNRegexp("bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+/[0-9a-z]+`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("job_arn"), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_model_identifier"},
-			},
-		},
-	})
-}
-
-// func testAccCustomModel_Identity_RegionOverride(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_bedrock_custom_model.test"
-// 	var v bedrock.GetModelCustomizationJobOutput
-
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomModelConfig_regionOverride(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("job_arn"), tfknownvalue.RegionalARNAlternateRegionRegexp("bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+/[0-9a-z]+`))),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("job_arn"), compare.ValuesSame()),
-// 				},
-// 			},
-// 			{
-// 				ResourceName:            resourceName,
-// 				ImportState:             true,
-// 				ImportStateVerify:       true,
-// 				ImportStateVerifyIgnore: []string{"base_model_identifier"},
-// 			},
-// 		},
-// 	})
-// }
 
 func testAccCustomModel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)

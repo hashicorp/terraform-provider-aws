@@ -189,26 +189,3 @@ resource "aws_ssoadmin_application_assignment_configuration" "test" {
 }
 `, rName, testAccApplicationProviderARN, assignmentRequired)
 }
-
-func testAccApplicationAssignmentConfigurationConfig_regionOverride(rName string, assignmentRequired bool) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {
-  region = %[4]q
-}
-
-resource "aws_ssoadmin_application" "test" {
-  region = %[4]q
-
-  name                     = %[1]q
-  application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-
-resource "aws_ssoadmin_application_assignment_configuration" "test" {
-  region = %[4]q
-
-  application_arn     = aws_ssoadmin_application.test.application_arn
-  assignment_required = %[3]t
-}
-`, rName, testAccApplicationProviderARN, assignmentRequired, acctest.AlternateRegion())
-}

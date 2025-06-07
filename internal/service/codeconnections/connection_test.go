@@ -171,17 +171,6 @@ resource "aws_codeconnections_connection" "test" {
 `, rName)
 }
 
-func testAccConnectionConfig_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_codeconnections_connection" "test" {
-  region = %[2]q
-
-  name          = %[1]q
-  provider_type = "Bitbucket"
-}
-`, rName, acctest.AlternateRegion())
-}
-
 func testAccConnectionConfig_hostARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codeconnections_host" "test" {

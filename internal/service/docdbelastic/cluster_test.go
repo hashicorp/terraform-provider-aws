@@ -304,20 +304,6 @@ resource "aws_security_group" "test" {
 	)
 }
 
-func testAccClusterBaseConfig_regionOverride(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets_RegionOverride(rName, 2, acctest.AlternateRegion()),
-		fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  region = %[2]q
-
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-}
-`, rName, acctest.AlternateRegion()),
-	)
-}
-
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
@@ -343,35 +329,6 @@ resource "aws_docdbelastic_cluster" "test" {
   ]
 }
 `, rName))
-}
-
-func testAccClusterConfig_regionOverride(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig_regionOverride(rName),
-		fmt.Sprintf(`
-resource "aws_docdbelastic_cluster" "test" {
-  region = %[2]q
-
-  name           = %[1]q
-  shard_capacity = 2
-  shard_count    = 1
-
-  admin_user_name     = "testuser"
-  admin_user_password = "testpassword"
-  auth_type           = "PLAIN_TEXT"
-
-  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
-
-  vpc_security_group_ids = [
-    aws_security_group.test.id
-  ]
-
-  subnet_ids = [
-    aws_subnet.test[0].id,
-    aws_subnet.test[1].id
-  ]
-}
-`, rName, acctest.AlternateRegion()))
 }
 
 func testAccClusterConfig_update(rName string, shardCapacity, backupRetentionPeriod int) string {

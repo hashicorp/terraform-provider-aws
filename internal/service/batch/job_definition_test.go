@@ -1316,23 +1316,6 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  region = %[2]q
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-  name = %[1]q
-  type = "container"
-}
-`, rName, acctest.AlternateRegion())
-}
-
 func testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, param string, retries, timeout int) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
