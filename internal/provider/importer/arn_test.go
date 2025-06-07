@@ -35,6 +35,8 @@ var regionalARNIdentitySchema = map[string]*schema.Schema{
 }
 
 func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	rd.SetId("not a valid ARN")
 
@@ -49,6 +51,8 @@ func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{
 		"region": "another-region-1",
 	})
@@ -71,6 +75,8 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 }
 
 func TestRegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	region := "a-region-1"
 	arn := arn.ARN{
@@ -102,6 +108,8 @@ func TestRegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
 }
 
 func TestRegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{
 		"region": region,
@@ -135,6 +143,8 @@ func TestRegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
 }
 
 func TestRegionalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataWithIdentityRaw(t, regionalARNSchema, regionalARNIdentitySchema, map[string]string{})
 
 	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
@@ -148,6 +158,8 @@ func TestRegionalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
 }
 
 func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataWithIdentityRaw(t, regionalARNSchema, regionalARNIdentitySchema, map[string]string{
 		"arn": "not a valid ARN",
 	})
@@ -163,6 +175,8 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestRegionalARN_Identity_Valid(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 	arn := arn.ARN{
 		Partition: "aws",
@@ -195,6 +209,8 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 }
 
 func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	region := "a-region-1"
 	arn := arn.ARN{
@@ -226,6 +242,8 @@ func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 }
 
 func TestRegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 	arn := arn.ARN{
 		Partition: "aws",
@@ -276,6 +294,8 @@ var globalARNIdentitySchema = map[string]*schema.Schema{
 }
 
 func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, globalARNSchema, map[string]any{})
 	rd.SetId("not a valid ARN")
 
@@ -290,6 +310,8 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestGlobalARN_ImportID_Valid(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, globalARNSchema, map[string]any{})
 	arn := arn.ARN{
 		Partition: "aws",
@@ -317,6 +339,8 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataWithIdentityRaw(t, globalARNSchema, globalARNIdentitySchema, map[string]string{})
 
 	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
@@ -330,6 +354,8 @@ func TestGlobalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
 }
 
 func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataWithIdentityRaw(t, globalARNSchema, globalARNIdentitySchema, map[string]string{
 		"arn": "not a valid ARN",
 	})
@@ -345,6 +371,8 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestGlobalARN_Identity_Valid(t *testing.T) {
+	t.Parallel()
+
 	arn := arn.ARN{
 		Partition: "aws",
 		Service:   "a-service",
@@ -373,6 +401,8 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	t.Parallel()
+
 	rd := schema.TestResourceDataRaw(t, globalARNSchema, map[string]any{})
 	arn := arn.ARN{
 		Partition: "aws",
@@ -400,6 +430,8 @@ func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	t.Parallel()
+
 	arn := arn.ARN{
 		Partition: "aws",
 		Service:   "a-service",

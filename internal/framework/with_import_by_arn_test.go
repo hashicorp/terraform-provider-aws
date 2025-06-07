@@ -62,6 +62,7 @@ func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.Wi
 }
 
 func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -98,6 +99,7 @@ func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -128,6 +130,7 @@ func TestImportByARN_GlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	importer := globalARNImporter()
@@ -143,6 +146,7 @@ func TestImportByARN_GlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -181,6 +185,7 @@ func TestImportByARN_GlobalARN_Identity_Valid(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	importer := globalARNImporter()
@@ -198,6 +203,7 @@ func TestImportByARN_GlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -237,6 +243,7 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 }
 
 func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -323,6 +330,7 @@ func regionalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.
 }
 
 func TestImportByARN_RegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -363,6 +371,7 @@ func TestImportByARN_RegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -405,6 +414,7 @@ func TestImportByARN_RegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -439,6 +449,7 @@ func TestImportByARN_RegionalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	importer := regionalARNImporter()
@@ -454,6 +465,7 @@ func TestImportByARN_RegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -480,6 +492,7 @@ func TestImportByARN_RegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -522,6 +535,7 @@ func TestImportByARN_RegionalARN_Identity_Valid(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -565,6 +579,7 @@ func TestImportByARN_RegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 }
 
 func TestImportByARN_RegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"

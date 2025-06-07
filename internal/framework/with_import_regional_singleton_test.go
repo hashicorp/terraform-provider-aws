@@ -32,6 +32,7 @@ var regionalSingletonIdentitySchema = identityschema.Schema{
 }
 
 func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -51,6 +52,7 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 }
 
 func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -72,6 +74,7 @@ func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
 }
 
 func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"
@@ -95,6 +98,7 @@ func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	region := "a-region-1"

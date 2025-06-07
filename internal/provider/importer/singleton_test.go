@@ -42,6 +42,8 @@ func (c mockClient) Region(ctx context.Context) string {
 }
 
 func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 
 	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{
@@ -60,6 +62,8 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 }
 
 func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 
 	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{})
@@ -79,6 +83,8 @@ func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
 }
 
 func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 
 	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{
@@ -100,6 +106,8 @@ func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Invalid_WrongAccountID(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 	client := mockClient{
 		accountID: "123456789012",
@@ -119,6 +127,8 @@ func TestRegionalSingleton_Identity_Invalid_WrongAccountID(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Valid_AttributesNotSet(t *testing.T) {
+	t.Parallel()
+
 	region := "a-region-1"
 	client := mockClient{
 		accountID: "123456789012",
@@ -140,6 +150,8 @@ func TestRegionalSingleton_Identity_Valid_AttributesNotSet(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	region := "a-region-1"
 	client := mockClient{
@@ -164,6 +176,8 @@ func TestRegionalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Valid_RegionOverride(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	region := "a-region-1"
 	client := mockClient{
@@ -188,6 +202,8 @@ func TestRegionalSingleton_Identity_Valid_RegionOverride(t *testing.T) {
 }
 
 func TestRegionalSingleton_Identity_Valid_AccountIDAndRegionSet(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	region := "a-region-1"
 	client := mockClient{
@@ -227,6 +243,8 @@ var globalSingletonIdentitySchema = map[string]*schema.Schema{
 }
 
 func TestGlobalSingleton_ImportID_Valid_AcceptsAnything(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	client := mockClient{
 		accountID: accountID,
@@ -246,6 +264,8 @@ func TestGlobalSingleton_ImportID_Valid_AcceptsAnything(t *testing.T) {
 }
 
 func TestGlobalSingleton_ImportID_Valid_AccountID(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	client := mockClient{
 		accountID: accountID,
@@ -265,6 +285,8 @@ func TestGlobalSingleton_ImportID_Valid_AccountID(t *testing.T) {
 }
 
 func TestGlobalSingleton_Identity_Valid_AttributeNotSet(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	client := mockClient{
 		accountID: accountID,
@@ -283,6 +305,8 @@ func TestGlobalSingleton_Identity_Valid_AttributeNotSet(t *testing.T) {
 }
 
 func TestGlobalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
+	t.Parallel()
+
 	accountID := "123456789012"
 	region := "a-region-1"
 	client := mockClient{

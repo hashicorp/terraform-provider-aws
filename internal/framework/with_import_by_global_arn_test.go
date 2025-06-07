@@ -20,6 +20,7 @@ import (
 )
 
 func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
@@ -36,6 +37,7 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestGlobalARN_ImportID_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -73,6 +75,7 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -104,6 +107,7 @@ func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 }
 
 func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	importer := framework.WithImportByGlobalARN{}
@@ -122,6 +126,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 }
 
 func TestGlobalARN_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -161,6 +166,7 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
@@ -201,6 +207,7 @@ func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 }
 
 func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	arn := arn.ARN{
