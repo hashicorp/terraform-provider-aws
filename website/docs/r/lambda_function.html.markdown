@@ -57,7 +57,7 @@ resource "aws_lambda_function" "test_lambda" {
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.test"
 
-  source_code_hash = data.archive_file.lambda.output_base64sha256
+  source_code_hash_sha256 = data.archive_file.lambda.output_base64sha256
 
   runtime = "nodejs18.x"
 
@@ -291,7 +291,8 @@ Set the `replacement_security_group_ids` attribute to use a custom list of secur
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. When `s3_bucket` is set, `s3_key` is required.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Set to true if you do not wish the function to be deleted at destroy time, and instead just remove the function from the Terraform state.
-* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
+* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive. **NOTE** Since this is a virtual attribute, it is not refreshed via AWS API calls, and changes made outside of Terraform cannot be detected as drift.
+* `source_code_hash_sha256` – (Optional) Base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. This is useful for triggering function updates when the source code changes. The typical way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where `"file.zip"` is the local filename of the Lambda function source archive. **NOTE** This attribute is refreshed using the `CodeSha256` value from the AWS `GetFunction` API response. Changes made outside of Terraform can be detected as drift.
 * `snap_start` - (Optional) Snap start settings block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
