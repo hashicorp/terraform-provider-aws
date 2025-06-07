@@ -98,8 +98,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **Note:** If both `templateBody` and `templateS3Uri` are specified, AWS Config uses the `templateS3Uri` and ignores the `templateBody`.
-
 This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the conformance pack. Must begin with a letter and contain from 1 to 256 alphanumeric characters and hyphens.
@@ -108,6 +106,8 @@ This resource supports the following arguments:
 * `inputParameter` - (Optional) Set of configuration blocks describing input parameters passed to the conformance pack template. Documented below. When configured, the parameters must also be included in the `templateBody` or in the template stored in Amazon S3 if using `templateS3Uri`.
 * `templateBody` - (Optional, required if `templateS3Uri` is not provided) A string containing full conformance pack template body. Maximum length of 51200. Drift detection is not possible with this argument.
 * `templateS3Uri` - (Optional, required if `templateBody` is not provided) Location of file, e.g., `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
+
+~> **Note:** If both `templateBody` and `templateS3Uri` are specified, AWS Config uses the `templateS3Uri` and ignores the `templateBody`.
 
 ### input_parameter Argument Reference
 
@@ -150,4 +150,4 @@ Using `terraform import`, import Config Conformance Packs using the `name`. For 
 % terraform import aws_config_conformance_pack.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9b0defdfe60abc1e0da0ee2106060d9b4d8ba9d395e95cb7bfeb8edd7770d0c5 -->
+<!-- cache-key: cdktf-0.20.8 input-12d063c99df038398e8c54061ab20a0f2b9f1b96ee51d70b6d8d12cd3155ef3c -->

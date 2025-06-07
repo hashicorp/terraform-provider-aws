@@ -28,7 +28,6 @@ func newTemplateAssociationResource(context.Context) (resource.ResourceWithConfi
 
 type resourceTemplateAssociation struct {
 	framework.ResourceWithModel[templateAssociationResourceModel]
-	framework.WithNoOpUpdate[templateAssociationResourceModel]
 	framework.WithImportByID
 }
 

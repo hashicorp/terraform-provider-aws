@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 

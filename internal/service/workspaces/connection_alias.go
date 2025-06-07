@@ -40,7 +40,6 @@ func newConnectionAliasResource(_ context.Context) (resource.ResourceWithConfigu
 
 type connectionAliasResource struct {
 	framework.ResourceWithModel[connectionAliasResourceModel]
-	framework.WithNoOpUpdate[connectionAliasResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }

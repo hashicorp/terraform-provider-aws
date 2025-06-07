@@ -45,7 +45,6 @@ func newReservedCacheNodeResource(context.Context) (resource.ResourceWithConfigu
 
 type reservedCacheNodeResource struct {
 	framework.ResourceWithModel[reservedCacheNodeResourceModel]
-	framework.WithNoOpUpdate[reservedCacheNodeResourceModel]
 	framework.WithNoOpDelete
 	framework.WithImportByID
 	framework.WithTimeouts

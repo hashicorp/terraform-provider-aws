@@ -1,13 +1,9 @@
-## 6.0.0-beta2 (May 22, 2025)
+## 6.0.0-beta3 (June  5, 2025)
 
 ENHANCEMENTS:
 
-* resource/aws_ecs_service: Add `arn` attribute ([#42733](https://github.com/hashicorp/terraform-provider-aws/issues/42733))
-
-## 6.0.0-beta2 (May 22, 2025)
-
-ENHANCEMENTS:
-
+* resource/aws_auditmanager_framework_share: Add plan-time validation of `destination_account` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
+* resource/aws_auditmanager_organization_admin_account_registration: Add plan-time validation of `admin_account_id` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
 * resource/aws_ecs_service: Add `arn` attribute ([#42733](https://github.com/hashicorp/terraform-provider-aws/issues/42733))
 
 ## 6.0.0-beta2 (May 22, 2025)
@@ -177,6 +173,50 @@ BUG FIXES:
 * resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
 * resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 
+## 5.99.1 (May 30, 2025)
+
+BUG FIXES:
+
+* resource/aws_fms_admin_account: Fix `panic: runtime error: invalid memory address or nil pointer dereference` ([#42813](https://github.com/hashicorp/terraform-provider-aws/issues/42813))
+* resource/aws_lb: Ignore `InvalidAction` exceptions for `DescribeCapacityReservation` operations. This fixes a regression introduced in [v5.99.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5990-may-29-2025) ([#42812](https://github.com/hashicorp/terraform-provider-aws/issues/42812))
+* resource/aws_s3_bucket_lifecycle_configuration: Correctly handles switching child attributes of `rule.filter`. ([#42655](https://github.com/hashicorp/terraform-provider-aws/issues/42655))
+
+## 5.99.0 (May 29, 2025)
+
+FEATURES:
+
+* **New Resource:** `aws_notifications_channel_association` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_event_rule` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_notification_configuration` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_notifications_notification_hub` ([#42544](https://github.com/hashicorp/terraform-provider-aws/issues/42544))
+* **New Resource:** `aws_notificationscontacts_email_contact` ([#42575](https://github.com/hashicorp/terraform-provider-aws/issues/42575))
+* **New Resource:** `aws_quicksight_account_settings` ([#42185](https://github.com/hashicorp/terraform-provider-aws/issues/42185))
+* **New Resource:** `aws_workspacesweb_browser_settings` ([#42681](https://github.com/hashicorp/terraform-provider-aws/issues/42681))
+* **New Resource:** `aws_workspacesweb_network_settings` ([#42722](https://github.com/hashicorp/terraform-provider-aws/issues/42722))
+* **New Resource:** `aws_workspacesweb_user_settings` ([#42783](https://github.com/hashicorp/terraform-provider-aws/issues/42783))
+
+ENHANCEMENTS:
+
+* data-source/aws_ami: Add `block_device_mappings.ebs["volume_initialization_rate"]` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
+* data-source/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` attribute ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
+* data-source/aws_verifiedpermissions_policy_store: Add `tags` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource` IAM permission ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+* resource/aws_ecs_service: Add `volume_configuration.managed_ebs_volume.volume_initialization_rate` argument ([#42750](https://github.com/hashicorp/terraform-provider-aws/issues/42750))
+* resource/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` argument ([#42684](https://github.com/hashicorp/terraform-provider-aws/issues/42684))
+* resource/aws_lb: Add `minimum_load_balancer_capacity` configuration block. This functionality requires the `elasticloadbalancing:DescribeCapacityReservations` and `elasticloadbalancing:ModifyCapacityReservation` IAM permissions ([#42685](https://github.com/hashicorp/terraform-provider-aws/issues/42685))
+* resource/aws_organizations_account: Allow `name` to be updated in-place. This functionality requires the `account:PutAccountName` IAM permission ([#42350](https://github.com/hashicorp/terraform-provider-aws/issues/42350))
+* resource/aws_securityhub_standards_subscription: Add configurable Create and Delete timeouts ([#42759](https://github.com/hashicorp/terraform-provider-aws/issues/42759))
+* resource/aws_verifiedpermissions_policy_store: Add `tags` argument and `tags_all` attribute. This functionality requires the `verifiedpermissions:ListTagsForResource`, `verifiedpermissions:TagResource`, and `verifiedpermissions:UntagResource` IAM permissions ([#42663](https://github.com/hashicorp/terraform-provider-aws/issues/42663))
+
+BUG FIXES:
+
+* data-source/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters ([#42723](https://github.com/hashicorp/terraform-provider-aws/issues/42723))
+* resource/aws_cloudwatch_log_stream: Fix to return the first matched stream name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42719](https://github.com/hashicorp/terraform-provider-aws/issues/42719))
+* resource/aws_cognitoidp_user_pool: Fix crash when the `user_pool_add_ons.advanced_security_additional_flows` block is non-empty, but contains only a single `nil` value. ([#42793](https://github.com/hashicorp/terraform-provider-aws/issues/42793))
+* resource/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters ([#42723](https://github.com/hashicorp/terraform-provider-aws/issues/42723))
+* resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively ([#42726](https://github.com/hashicorp/terraform-provider-aws/issues/42726))
+* resource/aws_s3_bucket: Ensure that `HeadBucket` S3 API calls are made using configured credentials. This fixes a regression introduced in [v5.98.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5980-may-15-2025) ([#42786](https://github.com/hashicorp/terraform-provider-aws/issues/42786))
+* resource/aws_s3_bucket_lifecycle_configuration: No longer returns warning on empty `rule.filter`. ([#42624](https://github.com/hashicorp/terraform-provider-aws/issues/42624))
+* resource/aws_vpc_endpoint: Fix issue where `dns_options` were not being updated correctly when `private_dns_enabled` was set to true ([#42746](https://github.com/hashicorp/terraform-provider-aws/issues/42746))
 
 ## 5.98.0 (May 15, 2025)
 

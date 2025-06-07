@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 * `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
@@ -85,4 +85,4 @@ Using `terraform import`, import MSK configurations using the configuration ARN.
 % terraform import aws_msk_vpc_connection.example arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b1983aad22e07fb109f5b2adb453a2e83d036de6685d43ca610e71d747466b69 -->
+<!-- cache-key: cdktf-0.20.8 input-524432b1f815859517435701ac6c65030f86f4283ff0a3f2d393c2271df1932c -->

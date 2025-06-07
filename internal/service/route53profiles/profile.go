@@ -47,7 +47,6 @@ const (
 
 type profileResource struct {
 	framework.ResourceWithModel[profileResourceModel]
-	framework.WithNoOpUpdate[profileResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }

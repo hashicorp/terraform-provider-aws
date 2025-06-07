@@ -7,10 +7,12 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,6 +24,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newAccountSettingsResource,
+			TypeName: "aws_quicksight_account_settings",
+			Name:     "Account Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
 		{
 			Factory:  newFolderMembershipResource,
 			TypeName: "aws_quicksight_folder_membership",
@@ -227,6 +235,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 					"override_region": region,
 				})
 				o.Region = region
+			}
+		},
+		func(o *quicksight.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
 			}
 		},
 		withExtraOptions(ctx, p, config),

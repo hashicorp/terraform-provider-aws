@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider/resourceattribute"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 )
 
 var regionalSingletonSchema = schema.Schema{

@@ -1111,11 +1111,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Region etc.
 	//
-	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = c.S3UsePathStyle(ctx)
-	})
+	region, err := findBucketRegion(ctx, c, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

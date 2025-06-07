@@ -20,5 +20,6 @@ Route 53 Recovery Readiness
 STS (Security Token)
 Shield
 User Notifications
+User Notifications Contacts
 WAF Classic
 Web Services Budgets

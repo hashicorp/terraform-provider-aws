@@ -51,8 +51,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** By default of the AWS Kendra API, updates to an existing `aws_kendra_experience` resource (e.g. updating the `name`) will also update the `configuration.content_source_configuration.direct_put_content` parameter to `false` if not already provided.
-
 The following arguments are required:
 
 * `indexId` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra experience.
@@ -63,6 +61,8 @@ The following arguments are optional:
 
 * `description` - (Optional, Forces new resource if removed) A description for your Amazon Kendra experience.
 * `configuration` - (Optional) Configuration information for your Amazon Kendra experience. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#configuration).
+
+~> **NOTE:** By default of the AWS Kendra API, updates to an existing `aws_kendra_experience` resource (e.g. updating the `name`) will also update the `configuration.content_source_configuration.direct_put_content` parameter to `false` if not already provided.
 
 ### `configuration`
 
@@ -139,4 +139,4 @@ Using `terraform import`, import Kendra Experience using the unique identifiers 
 % terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-477863d25f90cf21db701a32b4767e8783661101976bd8e3bf55b7323f3e6452 -->
+<!-- cache-key: cdktf-0.20.8 input-93f3c5218ba7efdf689932da81da13390005cf5b64596163f47b9e618a9c1de8 -->

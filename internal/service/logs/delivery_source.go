@@ -40,7 +40,6 @@ func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure,
 
 type deliverySourceResource struct {
 	framework.ResourceWithModel[deliverySourceResourceModel]
-	framework.WithNoOpUpdate[deliverySourceResourceModel]
 }
 
 func (r *deliverySourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

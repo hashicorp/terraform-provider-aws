@@ -42,7 +42,6 @@ func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, erro
 
 type appBundleResource struct {
 	framework.ResourceWithModel[appBundleResourceModel]
-	framework.WithNoOpUpdate[appBundleResourceModel]
 	framework.WithImportByARN
 }
 

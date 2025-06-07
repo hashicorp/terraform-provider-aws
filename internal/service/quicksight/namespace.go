@@ -51,7 +51,6 @@ const (
 type namespaceResource struct {
 	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[namespaceResourceModel]
 	framework.WithImportByID
 }
 
