@@ -3,18 +3,20 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_lb_certificate"
 description: |-
-  Provides a Lightsail Load Balancer
+  Manages a Lightsail Load Balancer Certificate.
 ---
 
 # Resource: aws_lightsail_lb_certificate
 
-Creates a Lightsail load balancer Certificate resource.
+Manages a Lightsail Load Balancer Certificate.
+
+Use this resource to create and manage SSL/TLS certificates for Lightsail Load Balancers. The certificate must be validated before it can be attached to a load balancer to enable HTTPS traffic.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_lb" "test" {
-  name              = "test-load-balancer"
+resource "aws_lightsail_lb" "example" {
+  name              = "example-load-balancer"
   health_check_path = "/"
   instance_port     = "80"
   tags = {
@@ -22,31 +24,34 @@ resource "aws_lightsail_lb" "test" {
   }
 }
 
-resource "aws_lightsail_lb_certificate" "test" {
-  name        = "test-load-balancer-certificate"
-  lb_name     = aws_lightsail_lb.test.id
-  domain_name = "test.com"
+resource "aws_lightsail_lb_certificate" "example" {
+  name        = "example-load-balancer-certificate"
+  lb_name     = aws_lightsail_lb.example.id
+  domain_name = "example.com"
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `domain_name` - (Required) The domain name (e.g., example.com) for your SSL/TLS certificate.
-* `lb_name` - (Required) The load balancer name where you want to create the SSL/TLS certificate.
-* `name` - (Required) The SSL/TLS certificate name.
-* `name` - (Required) The SSL/TLS certificate name.
+* `domain_name` - (Required) Domain name (e.g., example.com) for your SSL/TLS certificate.
+* `lb_name` - (Required) Load balancer name where you want to create the SSL/TLS certificate.
+* `name` - (Required) SSL/TLS certificate name.
+
+The following arguments are optional:
+
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of attributes to create a unique id: `lb_name`,`name`
-* `arn` - The ARN of the lightsail certificate.
-* `created_at` - The timestamp when the instance was created.
-* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined.
+* `arn` - ARN of the lightsail certificate.
+* `created_at` - Timestamp when the instance was created.
+* `domain_validation_records` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined.
+* `id` - Combination of attributes to create a unique id: `lb_name`,`name`
+* `support_code` - Support code for the certificate.
 
 ## Import
 
@@ -54,7 +59,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lightsail_lb_certificate.test
+  to = aws_lightsail_lb_certificate.example
   id = "example-load-balancer,example-load-balancer-certificate"
 }
 ```
@@ -62,5 +67,5 @@ import {
 Using `terraform import`, import `aws_lightsail_lb_certificate` using the id attribute. For example:
 
 ```console
-% terraform import aws_lightsail_lb_certificate.test example-load-balancer,example-load-balancer-certificate
+% terraform import aws_lightsail_lb_certificate.example example-load-balancer,example-load-balancer-certificate
 ```

@@ -3,45 +3,63 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip_attachment"
 description: |-
-  Provides an Lightsail Static IP Attachment
+  Manages a Lightsail Static IP Attachment.
 ---
 
 # Resource: aws_lightsail_static_ip_attachment
 
-Provides a static IP address attachment - relationship between a Lightsail static IP & Lightsail instance.
+Manages a static IP address attachment - relationship between a Lightsail static IP and Lightsail instance.
 
-~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
+Use this resource to attach a static IP address to a Lightsail instance to provide a consistent public IP address that persists across instance restarts.
+
+~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_static_ip_attachment" "test" {
-  static_ip_name = aws_lightsail_static_ip.test.id
-  instance_name  = aws_lightsail_instance.test.id
-}
-
-resource "aws_lightsail_static_ip" "test" {
+resource "aws_lightsail_static_ip" "example" {
   name = "example"
 }
 
-resource "aws_lightsail_instance" "test" {
+resource "aws_lightsail_instance" "example" {
   name              = "example"
-  availability_zone = "us-east-1b"
-  blueprint_id      = "string"
-  bundle_id         = "string"
-  key_pair_name     = "some_key_name"
+  availability_zone = "us-east-1a"
+  blueprint_id      = "ubuntu_20_04"
+  bundle_id         = "nano_2_0"
+}
+
+resource "aws_lightsail_static_ip_attachment" "example" {
+  static_ip_name = aws_lightsail_static_ip.example.id
+  instance_name  = aws_lightsail_instance.example.id
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `static_ip_name` - (Required) The name of the allocated static IP
-* `instance_name` - (Required) The name of the Lightsail instance to attach the IP to
+* `instance_name` - (Required) Name of the Lightsail instance to attach the IP to.
+* `static_ip_name` - (Required) Name of the allocated static IP.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `ip_address` - The allocated static IP address
+* `ip_address` - Allocated static IP address.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_static_ip_attachment` using the static IP name. For example:
+
+```terraform
+import {
+  to = aws_lightsail_static_ip_attachment.example
+  id = "example-static-ip"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_static_ip_attachment` using the static IP name. For example:
+
+```console
+% terraform import aws_lightsail_static_ip_attachment.example example-static-ip
+```

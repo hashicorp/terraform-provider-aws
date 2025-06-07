@@ -3,18 +3,20 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_lb_https_redirection_policy"
 description: |-
-  Configures Https Redirection for a Lightsail Load Balancer
+  Manages HTTPS redirection for a Lightsail Load Balancer.
 ---
 
 # Resource: aws_lightsail_lb_https_redirection_policy
 
-Configures Https Redirection for a Lightsail Load Balancer. A valid Certificate must be attached to the load balancer in order to enable https redirection.
+Manages HTTPS redirection for a Lightsail Load Balancer.
+
+Use this resource to configure automatic redirection of HTTP traffic to HTTPS on a Lightsail Load Balancer. A valid certificate must be attached to the load balancer before enabling HTTPS redirection.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_lb" "test" {
-  name              = "test-load-balancer"
+resource "aws_lightsail_lb" "example" {
+  name              = "example-load-balancer"
   health_check_path = "/"
   instance_port     = "80"
   tags = {
@@ -22,35 +24,35 @@ resource "aws_lightsail_lb" "test" {
   }
 }
 
-resource "aws_lightsail_lb_certificate" "test" {
-  name        = "test-load-balancer-certificate"
-  lb_name     = aws_lightsail_lb.test.id
-  domain_name = "test.com"
+resource "aws_lightsail_lb_certificate" "example" {
+  name        = "example-load-balancer-certificate"
+  lb_name     = aws_lightsail_lb.example.id
+  domain_name = "example.com"
 }
 
-resource "aws_lightsail_lb_certificate_attachment" "test" {
-  lb_name          = aws_lightsail_lb.test.name
-  certificate_name = aws_lightsail_lb_certificate.test.name
+resource "aws_lightsail_lb_certificate_attachment" "example" {
+  lb_name          = aws_lightsail_lb.example.name
+  certificate_name = aws_lightsail_lb_certificate.example.name
 }
 
-resource "aws_lightsail_lb_https_redirection_policy" "test" {
-  lb_name = aws_lightsail_lb.test.name
+resource "aws_lightsail_lb_https_redirection_policy" "example" {
+  lb_name = aws_lightsail_lb.example.name
   enabled = true
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `lb_name` - (Required) The name of the load balancer to which you want to enable http to https redirection.
-* `enabled` - (Required) - The Https Redirection state of the load balancer. `true` to activate http to https redirection or `false` to deactivate http to https redirection.
+* `enabled` - (Required) Whether to enable HTTP to HTTPS redirection. `true` to activate HTTP to HTTPS redirection or `false` to deactivate HTTP to HTTPS redirection.
+* `lb_name` - (Required) Name of the load balancer to which you want to enable HTTP to HTTPS redirection.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name used for this load balancer (matches `lb_name`).
+* `id` - Name used for this load balancer (matches `lb_name`).
 
 ## Import
 
@@ -58,7 +60,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lightsail_lb_https_redirection_policy.test
+  to = aws_lightsail_lb_https_redirection_policy.example
   id = "example-load-balancer"
 }
 ```
@@ -66,5 +68,5 @@ import {
 Using `terraform import`, import `aws_lightsail_lb_https_redirection_policy` using the `lb_name` attribute. For example:
 
 ```console
-% terraform import aws_lightsail_lb_https_redirection_policy.test example-load-balancer
+% terraform import aws_lightsail_lb_https_redirection_policy.example example-load-balancer
 ```
