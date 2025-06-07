@@ -27,6 +27,10 @@ func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]a
 					return aws.TrueTernary
 				}
 
+				if tfawserr.ErrCodeEquals(err, errCodeInsufficientVolumeCapacity) { // CreateCapacityReservation, RunInstances
+					return aws.TrueTernary
+				}
+
 				if tfawserr.ErrMessageContains(err, errCodeOperationNotPermitted, "Endpoint cannot be created while another endpoint is being created") { // CreateClientVpnEndpoint
 					return aws.TrueTernary
 				}

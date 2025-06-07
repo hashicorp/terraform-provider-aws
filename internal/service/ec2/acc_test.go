@@ -27,6 +27,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 			"HostLimitExceeded",
 			"ReservationCapacityExceeded",
 			"InsufficientInstanceCapacity",
+			"InsufficientVolumeCapacity",
 			"There is no Spot capacity available that matches your request",
 		),
 		acctest.ErrorCheckSkipMessagesMatches(t,
