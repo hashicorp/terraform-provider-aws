@@ -2292,7 +2292,7 @@ func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *te
 				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest.zip"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "s3_bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest.zip"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_code_hash", "terraform_data.lambdatest_zip_sha256", "input"),
 				),
@@ -2315,7 +2315,7 @@ func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *te
 				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest_modified.zip", "lambdatest_modified.zip"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "s3_bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest_modified.zip"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_code_hash", "terraform_data.lambdatest_modified_zip_sha256", "input"),
 				),
