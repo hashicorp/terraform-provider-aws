@@ -185,6 +185,7 @@ provider "aws" {
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
