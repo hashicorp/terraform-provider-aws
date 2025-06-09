@@ -56,6 +56,71 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 	})
 }
 
+// func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var keyvaluestore awstypes.KeyValueStore
+// 	resourceName := "aws_cloudfront_key_value_store.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+// 			tfversion.SkipBelow(tfversion.Version1_12_0),
+// 		},
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccKeyValueStoreConfig_basic(rName),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+// 				),
+// 				ConfigStateChecks: []statecheck.StateCheck{
+// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+// 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+// 						names.AttrAccountID: tfknownvalue.AccountID(),
+// 						names.AttrName:      knownvalue.StringExact(rName),
+// 					}),
+// 				},
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+// 				ImportStateKind:   resource.ImportCommandWithID,
+// 				ImportStateVerify: true,
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+// 				ImportStateKind:   resource.ImportBlockWithID,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+// 					},
+// 				},
+// 			},
+// 			{
+// 				ResourceName:    resourceName,
+// 				ImportState:     true,
+// 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+// 				ImportPlanChecks: resource.ImportPlanChecks{
+// 					PreApply: []plancheck.PlanCheck{
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
+// 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+// 					},
+// 				},
+// 			},
+// 		},
+// 	})
+// }
+
 func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyvaluestore awstypes.KeyValueStore

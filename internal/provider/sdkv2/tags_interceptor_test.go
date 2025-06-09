@@ -10,6 +10,7 @@ import (
 	"unique"
 
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -158,4 +159,8 @@ func (d *resourceData) HasChange(key string) bool {
 
 func (d *resourceData) HasChanges(keys ...string) bool {
 	return false
+}
+
+func (d *resourceData) Identity() (*schema.IdentityData, error) {
+	return nil, nil
 }

@@ -1,4 +1,5 @@
 resource "aws_lb" "test" {
+{{- template "region" }}
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -11,6 +12,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_security_group" "test" {
+{{- template "region" }}
   name   = var.rName
   vpc_id = aws_vpc.test.id
 
@@ -32,10 +34,12 @@ resource "aws_security_group" "test" {
 # acctest.ConfigVPCWithSubnets
 
 resource "aws_vpc" "test" {
+{{- template "region" }}
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+{{- template "region" }}
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -44,6 +48,7 @@ resource "aws_subnet" "test" {
 }
 
 data "aws_availability_zones" "available" {
+{{- template "region" }}
   state = "available"
 
   filter {

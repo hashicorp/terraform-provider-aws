@@ -24,7 +24,7 @@ import (
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
-// @Testing(importIgnore="token;user_name")
+// @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
 func resourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,

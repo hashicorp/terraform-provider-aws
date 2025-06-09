@@ -8,30 +8,39 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
+func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccSSOAdminTrustedTokenIssuer_basic,
+		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
+		"update":             testAccSSOAdminTrustedTokenIssuer_update,
+		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,80 +67,14 @@ func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var application ssoadmin.DescribeTrustedTokenIssuerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustedTokenIssuerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrustedTokenIssuerConfigBase_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstancesWithRegion(ctx, t, acctest.AlternateRegion())
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustedTokenIssuerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrustedTokenIssuerConfigBase_regionOverride(rName),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/ssoins-[0-9a-z]{16}/tti-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`))),
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -164,13 +107,13 @@ func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -188,13 +131,13 @@ func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -299,31 +242,6 @@ resource "aws_ssoadmin_trusted_token_issuer" "test" {
   }
 }
 `, rName)
-}
-
-func testAccTrustedTokenIssuerConfigBase_regionOverride(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {
-  region = %[2]q
-}
-
-resource "aws_ssoadmin_trusted_token_issuer" "test" {
-  region = %[2]q
-
-  name                      = %[1]q
-  instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  trusted_token_issuer_type = "OIDC_JWT"
-
-  trusted_token_issuer_configuration {
-    oidc_jwt_configuration {
-      claim_attribute_path          = "email"
-      identity_store_attribute_path = "emails.value"
-      issuer_url                    = "https://example.com"
-      jwks_retrieval_option         = "OPEN_ID_DISCOVERY"
-    }
-  }
-}
-`, rName, acctest.AlternateRegion())
 }
 
 func testAccTrustedTokenIssuerConfigBase_basicUpdated(rNameUpdated, claimAttributePath, identityStoreAttributePath string) string {

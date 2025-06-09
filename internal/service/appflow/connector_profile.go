@@ -27,24 +27,16 @@ import (
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
 // @IdentityAttribute("name")
 // @ArnFormat("connectorprofile/{name}")
+// @WrappedImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")
-// @Testing(identityTest=true)
 func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
 		ReadWithoutTimeout:   resourceConnectorProfileRead,
 		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
 		DeleteWithoutTimeout: resourceConnectorProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set(names.AttrName, d.Id())
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

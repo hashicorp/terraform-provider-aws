@@ -33,6 +33,9 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
+// @Testing(importStateIdAttribute="name")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyValueStoreResource{}
 
@@ -44,6 +47,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 type keyValueStoreResource struct {
 	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
+	// framework.WithImportByParameterizedIdentity
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -241,10 +245,6 @@ func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func (r *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
 func findKeyValueStoreByName(ctx context.Context, conn *cloudfront.Client, name string) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	input := cloudfront.DescribeKeyValueStoreInput{
 		Name: aws.String(name),
@@ -310,4 +310,22 @@ type keyValueStoreResourceModel struct {
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
+}
+
+func (r *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Import-by-id case
+	if request.ID != "" {
+		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		var name string
+		response.Diagnostics.Append(identity.GetAttribute(ctx, path.Root(names.AttrName), &name)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
+	}
 }

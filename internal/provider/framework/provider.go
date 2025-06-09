@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
@@ -558,6 +559,29 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
 			}
 
+			if res.Import.WrappedImport {
+				if res.Identity.ARN {
+					switch v := inner.(type) {
+					case framework.ImportByARNAttributer:
+						v.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
+
+					case framework.ImportByIdentityer:
+						v.SetIdentitySpec(res.Identity)
+
+					default:
+						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot configure importer", typeName))
+						continue
+					}
+				} else if !res.Identity.Singleton {
+					identity, ok := inner.(framework.ImportByIdentityer)
+					if !ok {
+						errs = append(errs, fmt.Errorf("resource type %s: defines Parameterized Identity, but cannot set Identity attributes", typeName))
+						continue
+					}
+					identity.SetIdentitySpec(res.Identity)
+				}
+			}
+
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
@@ -586,6 +610,11 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				interceptors: interceptors,
 				typeName:     typeName,
 			}
+			if len(res.Identity.Attributes) > 0 {
+				opts.identity = res.Identity
+				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(res.Identity.Attributes))
+			}
+
 			p.resources = append(p.resources, func() resource.Resource {
 				return newWrappedResource(inner, opts)
 			})

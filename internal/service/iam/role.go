@@ -41,7 +41,9 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
+// @IdentityAttribute("name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
+// @Testing(identityTest=false)
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -50,7 +52,33 @@ func resourceRole() *schema.Resource {
 		DeleteWithoutTimeout: resourceRoleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// Import-by-id case
+				if rd.Id() != "" {
+					rd.Set(names.AttrName, rd.Id())
+					return resourceRoleImport(rd)
+				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				nameRaw, ok := identity.GetOk(names.AttrName)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
+				}
+
+				name, ok := nameRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
+				}
+
+				rd.Set(names.AttrName, name)
+				rd.SetId(name)
+
+				return resourceRoleImport(rd)
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -512,7 +540,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	return diags
 }
 
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceRoleImport(d *schema.ResourceData) ([]*schema.ResourceData, error) {
 	d.Set("force_detach_policies", false)
 	return []*schema.ResourceData{d}, nil
 }

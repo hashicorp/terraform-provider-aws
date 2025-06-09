@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,9 +49,10 @@ func resourceCertificateAuthority() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateAuthorityUpdate,
 		DeleteWithoutTimeout: resourceCertificateAuthorityDelete,
 
+		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, d, names.AttrARN); err != nil {
+				if err := importer.RegionalARN(ctx, d, names.AttrARN, []string{names.AttrID}); err != nil {
 					return nil, err
 				}
 

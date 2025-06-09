@@ -32,23 +32,16 @@ import (
 // @SDKResource("aws_appflow_flow", name="Flow")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
+// @WrappedImport
+// @ArnFormat("flow/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 // @Testing(idAttrDuplicates="name")
-// @Testing(identityTest=true)
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
 		ReadWithoutTimeout:   resourceFlowRead,
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set(names.AttrName, d.Id())
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

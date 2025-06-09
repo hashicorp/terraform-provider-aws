@@ -13,13 +13,16 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -85,6 +88,32 @@ func main() {
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
 		}
+
+		var imports []goImport
+		for resource := range maps.Values(v.ephemeralResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.frameworkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkDataSources) {
+			imports = append(imports, resource.goImports...)
+		}
+		for resource := range maps.Values(v.sdkResources) {
+			imports = append(imports, resource.goImports...)
+		}
+		slices.SortFunc(imports, func(a, b goImport) int {
+			if n := strings.Compare(a.Path, b.Path); n != 0 {
+				return n
+			}
+			return strings.Compare(a.Alias, b.Alias)
+		})
+		imports = slices.Compact(imports)
+		s.GoImports = imports
+
 		templateFuncMap := template.FuncMap{
 			"Camel": names.ToCamelCase,
 		}
@@ -125,10 +154,28 @@ type ResourceDatum struct {
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
 	ValidateRegionOverrideInPartition bool
+	IdentityAttributes                []identityAttribute
 	ARNIdentity                       bool
 	arnAttribute                      string
 	SingletonIdentity                 bool
+	MutableIdentity                   bool
 	WrappedImport                     bool
+	goImports                         []goImport
+	IdentityDuplicateAttrs            []string
+}
+
+type identityAttribute struct {
+	Name     string
+	Optional bool
+}
+
+type goImport struct {
+	Path              string
+	Alias             string
+	ARNIdentity       bool
+	arnAttribute      string
+	SingletonIdentity bool
+	WrappedImport     bool
 }
 
 func (r ResourceDatum) HasARNAttribute() bool {
@@ -143,6 +190,10 @@ func (d ResourceDatum) RegionOverrideEnabled() bool {
 	return d.regionOverrideEnabled && !d.IsGlobal
 }
 
+func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
+	return len(r.IdentityDuplicateAttrs) > 0
+}
+
 type ServiceDatum struct {
 	GenerateClient          bool
 	IsGlobal                bool // Is the service global?
@@ -155,9 +206,10 @@ type ServiceDatum struct {
 	FrameworkResources      map[string]ResourceDatum
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
+	GoImports               []goImport
 }
 
-//go:embed file.gtpl
+//go:embed service_package_gen.go.gtpl
 var tmpl string
 
 //go:embed endpoint_resolver.go.gtpl
@@ -223,13 +275,27 @@ func (v *visitor) processFile(file *ast.File) {
 func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
-	// Look first for per-resource annotations such as tagging and Region.
 	d := ResourceDatum{
 		IsGlobal:                          false,
 		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
 	}
 
+	annotations := make(map[string]bool)
+	for _, line := range funcDecl.Doc.List {
+		line := line.Text
+
+		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
+			annotationName := m[1]
+			annotations[annotationName] = true
+		}
+	}
+	keys := slices.Collect(maps.Keys(annotations))
+	if slices.Contains(keys, "IdentityAttribute") && slices.Contains(keys, "ArnIdentity") {
+		v.errs = append(v.errs, fmt.Errorf(`only one of "IdentityAttribute" and "ArnIdentity" can be specified: %s`, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+	}
+
+	// Look first for per-resource annotations such as tagging and Region.
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
 
@@ -241,6 +307,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.IsGlobal = global
+						if global {
+							d.regionOverrideEnabled = false
+							d.ValidateRegionOverrideInPartition = false
+						}
 					}
 				}
 				if attr, ok := args.Keyword["overrideEnabled"]; ok {
@@ -257,6 +327,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.ValidateRegionOverrideInPartition = validate
 					}
 				}
+
 			case "Tags":
 				d.TransparentTagging = true
 
@@ -271,6 +342,27 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["resourceType"]; ok {
 					d.TagsResourceType = attr
 				}
+
+			case "IdentityAttribute":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				identityAttribute := identityAttribute{
+					Name: namesgen.ConstOrQuote(args.Positional[0]),
+				}
+
+				if attr, ok := args.Keyword["optional"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.Optional = b
+					}
+				}
+
+				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 			case "WrappedImport":
 				if len(args.Positional) == 0 {
@@ -295,8 +387,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.arnAttribute = args.Positional[0]
 				}
 
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs := strings.Split(attr, ";")
+					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+						return namesgen.ConstOrQuote(s)
+					})
+				}
+
+			case "MutableIdentity":
+				d.MutableIdentity = true
+
 			case "SingletonIdentity":
 				d.SingletonIdentity = true
+				d.WrappedImport = true
+
+			case "NoImport":
+				d.WrappedImport = false
 			}
 		}
 	}
@@ -430,7 +536,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				} else {
 					v.sdkResources[typeName] = d
 				}
-			case "Region", "Tags", "ArnIdentity", "SingletonIdentity":
+
+			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags":
 				// Handled above.
 			case "ArnFormat", "Testing", "WrappedImport":
 				// Ignored.

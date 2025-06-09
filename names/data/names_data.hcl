@@ -2821,7 +2821,8 @@ service "ebs" {
 
 service "imagebuilder" {
   sdk {
-    id = "imagebuilder"
+    id          = "imagebuilder"
+    arn_service = "imagebuilder"
   }
 
   names {
@@ -5613,7 +5614,8 @@ service "networkfirewall" {
   }
 
   sdk {
-    id = "Network Firewall"
+    id          = "Network Firewall"
+    arn_service = "network-firewall"
   }
 
   names {

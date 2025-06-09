@@ -18,23 +18,40 @@ import (
 type WithImportRegionalSingleton struct{}
 
 func (w *WithImportRegionalSingleton) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
-	if response.Diagnostics.HasError() {
+	regionPath := path.Root(names.AttrRegion)
+
+	if request.ID != "" {
+		var region types.String
+		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &region)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if !region.IsNull() {
+			if region.ValueString() != request.ID {
+				response.Diagnostics.AddError(
+					"Invalid Resource Import ID Value",
+					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), request.ID),
+				)
+				return
+			}
+		} else {
+			response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, request.ID)...)
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+
 		return
 	}
 
-	if !region.IsNull() {
-		if region.ValueString() != request.ID {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), request.ID),
-			)
+	if identity := request.Identity; identity != nil {
+		var regionVal string
+		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, regionVal)...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), regionVal)...)
+	}
 }

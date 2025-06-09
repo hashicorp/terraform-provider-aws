@@ -37,10 +37,9 @@ import (
 
 // @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
-// @Testing(idAttrDuplicates="arn")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 
@@ -62,7 +61,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -176,7 +175,6 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// Set values for unknowns.
 	data.JobQueueARN = fwflex.StringToFramework(ctx, output.JobQueueArn)
 	data.setID()
 
@@ -221,6 +219,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
