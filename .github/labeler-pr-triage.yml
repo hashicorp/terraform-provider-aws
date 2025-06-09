@@ -926,6 +926,12 @@ service/evidently:
           - any-glob-to-any-file:
               - 'internal/service/evidently/**/*'
               - 'website/**/evidently_*'
+service/evs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/evs/**/*'
+              - 'website/**/evs_*'
 service/finspace:
   - any:
       - changed-files:

@@ -133,6 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.39.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.24.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/evs v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.37.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fis v1.33.2 // indirect

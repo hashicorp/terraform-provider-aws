@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_instance_public_ports"
 description: |-
-  Provides an Lightsail Instance
+  Manages public ports for a Lightsail instance.
 ---
 
 # Resource: aws_lightsail_instance_public_ports
 
-Opens ports for a specific Amazon Lightsail instance, and specifies the IP addresses allowed to connect to the instance through the ports, and the protocol.
+Manages public ports for a Lightsail instance. Use this resource to open ports for a specific Amazon Lightsail instance and specify the IP addresses allowed to connect to the instance through the ports and the protocol.
 
 -> See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail) for more information.
 
@@ -17,20 +17,36 @@ Opens ports for a specific Amazon Lightsail instance, and specifies the IP addre
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_instance" "test" {
-  name              = "yak_sail"
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lightsail_instance" "example" {
+  name              = "example-instance"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
 }
 
-resource "aws_lightsail_instance_public_ports" "test" {
-  instance_name = aws_lightsail_instance.test.name
+resource "aws_lightsail_instance_public_ports" "example" {
+  instance_name = aws_lightsail_instance.example.name
 
   port_info {
     protocol  = "tcp"
     from_port = 80
     to_port   = 80
+  }
+
+  port_info {
+    protocol  = "tcp"
+    from_port = 443
+    to_port   = 443
+    cidrs     = ["192.168.1.0/24"]
   }
 }
 ```
@@ -40,20 +56,21 @@ resource "aws_lightsail_instance_public_ports" "test" {
 The following arguments are required:
 
 * `instance_name` - (Required) Name of the Lightsail Instance.
-* `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below.
+* `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. [See below](#port_info).
 
 ### port_info
 
 The following arguments are required:
 
 * `from_port` - (Required) First port in a range of open ports on an instance.
-* `protocol` - (Required) IP protocol name. Valid values are `tcp`, `all`, `udp`, and `icmp`.
+* `protocol` - (Required) IP protocol name. Valid values: `tcp`, `all`, `udp`, `icmp`.
 * `to_port` - (Required) Last port in a range of open ports on an instance.
 
 The following arguments are optional:
 
-* `cidrs` - (Optional) Set of CIDR blocks.
 * `cidr_list_aliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
+* `cidrs` - (Optional) Set of CIDR blocks.
+* `ipv6_cidrs` - (Optional) Set of IPv6 CIDR blocks.
 
 ## Attribute Reference
 

@@ -9014,3 +9014,26 @@ service "ec2" {
   doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
+
+service "evs" {
+  sdk {
+    id = "EVS"
+  }
+
+  names {
+    provider_name_upper = "EVS"
+    human_friendly      = "Elastic VMware"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEnvironments"
+  }
+
+  resource_prefix {
+    correct = "aws_evs_"
+  }
+
+  provider_package_correct = "evs"
+  doc_prefix               = ["evs_"]
+  brand                    = "Amazon"
+}

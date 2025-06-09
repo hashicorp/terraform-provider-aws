@@ -3,36 +3,34 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_domain"
 description: |-
-  Provides an Lightsail Domain
+  Manages a Lightsail domain for DNS management.
 ---
 
 # Resource: aws_lightsail_domain
 
-Creates a domain resource for the specified domain (e.g., example.com).
-You cannot register a new domain name using Lightsail. You must register
-a domain name using Amazon Route 53 or another domain name registrar.
-If you have already registered your domain, you can enter its name in
-this parameter to manage the DNS records for that domain.
+Manages a Lightsail domain for DNS management. Use this resource to manage DNS records for a domain that you have already registered with a domain registrar.
 
-~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
+~> **Note:** You cannot register a new domain name using Lightsail. Register your domain using Amazon Route 53 or another domain name registrar before using this resource.
+
+~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_domain" "domain_test" {
-  domain_name = "mydomain.com"
+resource "aws_lightsail_domain" "example" {
+  domain_name = "example.com"
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `domain_name` - (Required) The name of the Lightsail domain to manage
+* `domain_name` - (Required) Name of the Lightsail domain to manage.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The name used for this domain
-* `arn` - The ARN of the Lightsail domain
+* `arn` - ARN of the Lightsail domain.
+* `id` - Name used for this domain.
