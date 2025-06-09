@@ -393,7 +393,7 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	defer randomnessSources.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
