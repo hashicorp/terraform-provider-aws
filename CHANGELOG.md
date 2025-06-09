@@ -17,7 +17,10 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
 * data-source/aws_neptune_engine_version: Add several arguments and attributes to support dynamic selection of versions including `latest`, `has_major_target`, `preferred_major_targets`, and `preferred_upgrade_targets` ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
 * provider: Support `ap-east-2` as a valid AWS Region ([#42906](https://github.com/hashicorp/terraform-provider-aws/issues/42906))
 * resource/aws_fsx_lustre_file_system: Add `data_read_cache_configuration` and `throughput_capacity` arguments in support of the [Intelligent-Tiering storage class](https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-fsx-lustre.html#how-INT-tiering-works) ([#42839](https://github.com/hashicorp/terraform-provider-aws/issues/42839))
 * resource/aws_s3_access_point: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
@@ -26,6 +29,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Batch update operations to stay under the Key Value Store Service Quota. The `max_batch_size` argument can be used to override the default value of `50` items. ([#42795](https://github.com/hashicorp/terraform-provider-aws/issues/42795))
 * resource/aws_cloudwatch_log_destination: Fix to return the first matched destination name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
 * resource/aws_cloudwatch_log_group: Fix to return the first matched group name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
 * resource/aws_cloudwatch_log_metric_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
