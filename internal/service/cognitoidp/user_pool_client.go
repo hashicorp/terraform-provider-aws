@@ -418,11 +418,12 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 	}
 
 	// Set attributes for import.
+	tokenValidityUnitsNull := data.TokenValidityUnits.IsNull()
 	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if tokenValidityUnitsNull := data.TokenValidityUnits.IsNull(); tokenValidityUnitsNull && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
 		data.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
@@ -437,12 +438,16 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 }
 
 func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new userPoolClientResourceModel
+	var old, new, config userPoolClientResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -480,7 +485,7 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if !old.TokenValidityUnits.IsNull() && new.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+	if !old.TokenValidityUnits.IsNull() && config.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
 		new.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
@@ -534,23 +539,6 @@ func (r *userPoolClientResource) ImportState(ctx context.Context, request resour
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), parts[0])...)
-}
-
-func (r *userPoolClientResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
-		var data userPoolClientResourceModel
-		response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if data.TokenValidityUnits.IsNull() {
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("token_validity_units"), fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx))...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-		}
-	}
 }
 
 func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
