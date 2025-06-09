@@ -1,2 +1,3 @@
 ```release-note:bug
-resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Ensure that UpdateKeys API calls are batched to stay under the Key Value Store Service Quota. The `max_batch_size` schema can be used to override the default when a user has key value store items that are large in size and need to use smaller batches.
+resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Batch update operations to stay under the Key Value Store Service Quota. The `max_batch_size` argument can be used to override the default value of `50` items.
+```
