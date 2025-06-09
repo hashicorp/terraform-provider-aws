@@ -43,6 +43,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `container_orchestration_type` - The orchestration type of the compute environment.
+* `container_properties` - An [object](#container) describing the container properties of AWS ECS-based jobs.
 * `scheduling_priority` - The scheduling priority for jobs that are submitted with this job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority.
 * `id` - The ARN
 * `eks_properties` - An [object](#eks_properties) with various properties that are specific to Amazon EKS based jobs. This must not be specified for Amazon ECS based job definitions.

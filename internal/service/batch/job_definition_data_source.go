@@ -53,6 +53,10 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			"container_orchestration_type": schema.StringAttribute{
 				Computed: true,
 			},
+			"container_properties": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[containerPropertiesModel](ctx),
+				Computed:   true,
+			},
 			"eks_properties": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[eksPropertiesModel](ctx),
 				Computed:   true,
@@ -134,7 +138,6 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		}
 
 		output, err := findJobDefinition(ctx, conn, input)
-
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s)", arn), err.Error())
 
@@ -188,6 +191,38 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		}
 	}
 
+	if cProps := jd.ContainerProperties; cProps != nil {
+		// HACK: populate .ResourceRequirements using the .Memory and .Vcpus fields.
+		// Currently, the AWS SDK returns the deprecated `.memory` and `.vcpus` fields
+		// but doesn't populate the preferred `.resourceRequirements` array.
+		// see: https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerProperties.html#Batch-Type-ContainerProperties-memory
+		// see: https://docs.aws.amazon.com/batch/latest/APIReference/API_ContainerProperties.html#Batch-Type-ContainerProperties-vcpus
+
+		resourceRequirements := map[awstypes.ResourceType]*string{}
+		for _, r := range cProps.ResourceRequirements {
+			resourceRequirements[r.Type] = r.Value
+		}
+
+		if cProps.Memory != nil {
+			if _, found := resourceRequirements[awstypes.ResourceTypeMemory]; !found {
+				val := fmt.Sprintf("%d", aws.ToInt32(cProps.Memory))
+				cProps.ResourceRequirements = append(cProps.ResourceRequirements, awstypes.ResourceRequirement{
+					Type:  awstypes.ResourceTypeMemory,
+					Value: &val,
+				})
+			}
+		}
+		if cProps.Vcpus != nil {
+			if _, found := resourceRequirements[awstypes.ResourceTypeVcpu]; !found {
+				val := fmt.Sprintf("%d", aws.ToInt32(cProps.Vcpus))
+				cProps.ResourceRequirements = append(cProps.ResourceRequirements, awstypes.ResourceRequirement{
+					Type:  awstypes.ResourceTypeVcpu,
+					Value: &val,
+				})
+			}
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, jd, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -211,20 +246,21 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 }
 
 type jobDefinitionDataSourceModel struct {
-	ARNPrefix                  types.String                                         `tfsdk:"arn_prefix"`
-	ContainerOrchestrationType types.String                                         `tfsdk:"container_orchestration_type"`
-	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]  `tfsdk:"eks_properties"`
-	ID                         types.String                                         `tfsdk:"id"`
-	JobDefinitionARN           fwtypes.ARN                                          `tfsdk:"arn"`
-	JobDefinitionName          types.String                                         `tfsdk:"name"`
-	NodeProperties             fwtypes.ListNestedObjectValueOf[nodePropertiesModel] `tfsdk:"node_properties"`
-	RetryStrategy              fwtypes.ListNestedObjectValueOf[retryStrategyModel]  `tfsdk:"retry_strategy"`
-	Revision                   types.Int64                                          `tfsdk:"revision"`
-	SchedulingPriority         types.Int64                                          `tfsdk:"scheduling_priority"`
-	Status                     types.String                                         `tfsdk:"status"`
-	Tags                       tftags.Map                                           `tfsdk:"tags"`
-	Timeout                    fwtypes.ListNestedObjectValueOf[jobTimeoutModel]     `tfsdk:"timeout"`
-	Type                       types.String                                         `tfsdk:"type"`
+	ARNPrefix                  types.String                                              `tfsdk:"arn_prefix"`
+	ContainerOrchestrationType types.String                                              `tfsdk:"container_orchestration_type"`
+	ContainerProperties        fwtypes.ListNestedObjectValueOf[containerPropertiesModel] `tfsdk:"container_properties"`
+	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]       `tfsdk:"eks_properties"`
+	ID                         types.String                                              `tfsdk:"id"`
+	JobDefinitionARN           fwtypes.ARN                                               `tfsdk:"arn"`
+	JobDefinitionName          types.String                                              `tfsdk:"name"`
+	NodeProperties             fwtypes.ListNestedObjectValueOf[nodePropertiesModel]      `tfsdk:"node_properties"`
+	RetryStrategy              fwtypes.ListNestedObjectValueOf[retryStrategyModel]       `tfsdk:"retry_strategy"`
+	Revision                   types.Int64                                               `tfsdk:"revision"`
+	SchedulingPriority         types.Int64                                               `tfsdk:"scheduling_priority"`
+	Status                     types.String                                              `tfsdk:"status"`
+	Tags                       tftags.Map                                                `tfsdk:"tags"`
+	Timeout                    fwtypes.ListNestedObjectValueOf[jobTimeoutModel]          `tfsdk:"timeout"`
+	Type                       types.String                                              `tfsdk:"type"`
 }
 
 type eksPropertiesModel struct {
