@@ -141,3 +141,19 @@ rules:
     paths:
       include:
         - "**/*_test.go"
+
+  - id: wrap-statechangeconf
+    languages: [go]
+    message: "Use state.NewStateChangeConf to wrap state change data structures for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      &retry.StateChangeConf{
+        $...CFG,
+      }
+    fix: |
+      state.NewStateChangeConf(ctx, retry.StateChangeConf{
+        $...CFG,
+      })
+    paths:
+      include:
+        - "**/*.go"
