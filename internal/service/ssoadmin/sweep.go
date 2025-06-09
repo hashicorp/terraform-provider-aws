@@ -68,12 +68,12 @@ func sweepAccountAssignments(region string) error {
 
 		// To sweep account assignments, we need to first determine which Permission Sets
 		// are available and then search for their respective assignments
-		input := &ssoadmin.ListPermissionSetsInput{
+		input := ssoadmin.ListPermissionSetsInput{
 			InstanceArn: aws.String(instanceArn),
 		}
 
 		var permissionSetArns []string
-		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
+		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
 			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
@@ -90,13 +90,13 @@ func sweepAccountAssignments(region string) error {
 		}
 
 		for _, permissionSetArn := range permissionSetArns {
-			input := &ssoadmin.ListAccountAssignmentsInput{
+			input := ssoadmin.ListAccountAssignmentsInput{
 				AccountId:        aws.String(client.AccountID(ctx)),
 				InstanceArn:      aws.String(instanceArn),
 				PermissionSetArn: aws.String(permissionSetArn),
 			}
 
-			paginator := ssoadmin.NewListAccountAssignmentsPaginator(conn, input)
+			paginator := ssoadmin.NewListAccountAssignmentsPaginator(conn, &input)
 			for paginator.HasMorePages() {
 				page, err := paginator.NextPage(ctx)
 				if awsv2.SkipSweepError(err) {
@@ -158,11 +158,11 @@ func sweepApplications(region string) error {
 	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
 		instanceArn := v.([]any)[0].(string)
 
-		input := &ssoadmin.ListApplicationsInput{
+		input := ssoadmin.ListApplicationsInput{
 			InstanceArn: aws.String(instanceArn),
 		}
 
-		paginator := ssoadmin.NewListApplicationsPaginator(conn, input)
+		paginator := ssoadmin.NewListApplicationsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
 			if awsv2.SkipSweepError(err) {
@@ -215,11 +215,11 @@ func sweepPermissionSets(region string) error {
 	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
 		instanceArn := v.([]any)[0].(string)
 
-		input := &ssoadmin.ListPermissionSetsInput{
+		input := ssoadmin.ListPermissionSetsInput{
 			InstanceArn: aws.String(instanceArn),
 		}
 
-		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
+		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
 			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
