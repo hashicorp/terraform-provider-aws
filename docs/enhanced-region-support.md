@@ -20,6 +20,15 @@ The effective Region is the value of the top-level `region` argument if configur
 
 ## Model Structure
 
+When using Terraform Plugin Framework, a resource's [model structure](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values#get-the-entire-configuration-plan-or-state) must correspond to all the attributes in the resource's [schema](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas). Although the top-level `region` argument is transparently injected into a resource's schema it must be explictly added to the resource's model. This can be done by directly embedding the `framework.WithRegionModel` structure.
+
+```go
+type exampleResourceModel struct {
+    framework.WithRegionModel
+    // Fields corresponding to attributes declared in the Schema.
+}
+```
+
 ## Annotations
 
 ## Documentation
