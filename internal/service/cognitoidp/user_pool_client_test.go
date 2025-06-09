@@ -1097,9 +1097,14 @@ func TestAccCognitoIDPUserPoolClient_frameworkMigration_nulls(t *testing.T) {
 				},
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccUserPoolClientConfig_nulls(rName),
-				PlanOnly:                 true,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.62.0",
+					},
+				},
+				Config:   testAccUserPoolClientConfig_nulls(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1129,9 +1134,14 @@ func TestAccCognitoIDPUserPoolClient_frameworkMigration_basic(t *testing.T) {
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccUserPoolClientConfig_basic(rName),
-				PlanOnly:                 true,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.62.0",
+					},
+				},
+				Config:   testAccUserPoolClientConfig_basic(rName),
+				PlanOnly: true,
 			},
 		},
 	})
