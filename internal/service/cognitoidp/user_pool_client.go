@@ -58,7 +58,7 @@ type userPoolClientResource struct {
 
 // Schema returns the schema for this resource.
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	s := schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
@@ -352,8 +352,6 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 			},
 		},
 	}
-
-	response.Schema = s
 }
 
 func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -386,7 +384,12 @@ func (r *userPoolClientResource) Create(ctx context.Context, request resource.Cr
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.TokenValidityUnits = flattenTokenValidityUnits(ctx, upc.TokenValidityUnits, &response.Diagnostics)
+	tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.TokenValidityUnits = tvu
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -422,7 +425,12 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 	if tokenValidityUnitsNull := data.TokenValidityUnits.IsNull(); tokenValidityUnitsNull && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
 		data.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
-		data.TokenValidityUnits = flattenTokenValidityUnits(ctx, upc.TokenValidityUnits, &response.Diagnostics)
+		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.TokenValidityUnits = tvu
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -475,7 +483,12 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	if !old.TokenValidityUnits.IsNull() && new.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
 		new.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
-		new.TokenValidityUnits = flattenTokenValidityUnits(ctx, upc.TokenValidityUnits, &response.Diagnostics)
+		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		new.TokenValidityUnits = tvu
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -521,6 +534,23 @@ func (r *userPoolClientResource) ImportState(ctx context.Context, request resour
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), parts[0])...)
+}
+
+func (r *userPoolClientResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		var data userPoolClientResourceModel
+		response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if data.TokenValidityUnits.IsNull() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("token_validity_units"), fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx))...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
 }
 
 func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -648,15 +678,20 @@ func resolveTokenValidityUnits(ctx context.Context, list fwtypes.ListNestedObjec
 	return nil
 }
 
-func flattenTokenValidityUnits(ctx context.Context, tvu *awstypes.TokenValidityUnitsType, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel] {
+func flattenTokenValidityUnits(ctx context.Context, tvu *awstypes.TokenValidityUnitsType) (fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if tvu == nil || (tvu.AccessToken == "" && tvu.IdToken == "" && tvu.RefreshToken == "") {
-		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx), diags
 	}
 
 	var result tokenValidityUnitsModel
 	diags.Append(fwflex.Flatten(ctx, tvu, &result)...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx), diags
+	}
 
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result)
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result), diags
 }
 
 var _ resource.ConfigValidator = &resourceUserPoolClientAccessTokenValidityValidator{}
