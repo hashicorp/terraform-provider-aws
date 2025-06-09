@@ -38,25 +38,25 @@ data "aws_mq_broker_instance_type_offerings" "all" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine_type` - (Optional) Filter response by engine type.
 * `host_instance_type` - (Optional) Filter response by host instance type.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_type` - (Optional) Filter response by storage type.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `broker_instance_options` -  Option for host instance type. See Broker Instance Options below.
+* `broker_instance_options` - Option for host instance type. See [Broker Instance Options](#broker-instance-options) below.
 
 ### Broker Instance Options
 
-* `availability_zones` - List of available AZs. See Availability Zones. below
+* `availability_zones` - List of available AZs. See [Availability Zones](#availability-zones) below.
 * `engine_type` - Broker's engine type.
 * `host_instance_type` - Broker's instance type.
 * `storage_type` - Broker's storage type.
-* `supported_deployment_modes` - The list of supported deployment modes.
-* `supported_engine_versions` - The list of supported engine versions.
+* `supported_deployment_modes` - List of supported deployment modes.
+* `supported_engine_versions` - List of supported engine versions.
 
 ### Availability Zones
 
