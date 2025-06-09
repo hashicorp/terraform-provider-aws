@@ -154,11 +154,11 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringy interface {
+type stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringy](s S) []string {
+func Strings[S ~[]E, E stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})
