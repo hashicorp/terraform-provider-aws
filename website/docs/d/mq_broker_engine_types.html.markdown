@@ -3,16 +3,14 @@ subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker_engine_types"
 description: |-
-  Retrieve information about available broker engines.
+  Provides details about available MQ broker engine types.
 ---
 
 # Data Source: aws_mq_broker_engine_types
 
-Retrieve information about available broker engines.
+Provides details about available MQ broker engine types. Use this data source to retrieve supported engine types and their versions for Amazon MQ brokers.
 
 ## Example Usage
-
-### Basic Usage
 
 ```terraform
 data "aws_mq_broker_engine_types" "example" {
