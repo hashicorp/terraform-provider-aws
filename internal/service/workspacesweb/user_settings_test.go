@@ -530,6 +530,86 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5(t *testing.T) {
 	})
 }
 
+func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userSettings awstypes.UserSettings
+	resourceName := "aws_workspacesweb_user_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.99.0",
+					},
+				},
+				Config: testAccUserSettingsConfig_toolbarConfigurationBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("toolbar_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"hidden_toolbar_items": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("Webcam"),
+							}),
+							"max_display_resolution": knownvalue.Null(),
+							"toolbar_type":           knownvalue.StringExact("Docked"),
+							"visual_mode":            knownvalue.StringExact("Dark"),
+						}),
+					})),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccUserSettingsConfig_toolbarConfigurationAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("toolbar_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"hidden_toolbar_items": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("Webcam"),
+								knownvalue.StringExact("Microphone"),
+							}),
+							"max_display_resolution": knownvalue.Null(),
+							"toolbar_type":           knownvalue.StringExact("Floating"),
+							"visual_mode":            knownvalue.StringExact("Light"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
