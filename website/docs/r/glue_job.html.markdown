@@ -87,13 +87,13 @@ resource "aws_s3_object" "glue_etl_script" {
 
 ```terraform
 resource "aws_glue_job" "python_shell_job" {
-  name            = "example-python-shell-job"
-  description     = "An example Python shell job"
-  role_arn        = aws_iam_role.glue_job_role.arn
-  max_capacity    = "0.0625"
-  max_retries     = 0
-  timeout         = 2880
-  connections     = [aws_glue_connection.example.name]
+  name         = "example-python-shell-job"
+  description  = "An example Python shell job"
+  role_arn     = aws_iam_role.glue_job_role.arn
+  max_capacity = "0.0625"
+  max_retries  = 0
+  timeout      = 2880
+  connections  = [aws_glue_connection.example.name]
 
   command {
     script_location = "s3://${aws_s3_bucket.glue_scripts.bucket}/jobs/shell_job.py"
