@@ -83,13 +83,6 @@ func (conf *StateChangeConfOf[T, S]) WaitForState(ctx context.Context) (T, error
 		t, currentState, err = conf.Refresh(ctx)
 
 		if err != nil {
-			if l.TimedOut() {
-				err = &TimeoutError{
-					Timeout:       conf.Timeout,
-					ExpectedState: tfslices.Strings(conf.Target),
-				}
-			}
-
 			return t, err
 		}
 
@@ -143,7 +136,9 @@ func (conf *StateChangeConfOf[T, S]) WaitForState(ctx context.Context) (T, error
 
 	// Timed out or Context canceled.
 	if l.TimedOut() {
-		return t, &TimeoutError{
+		var zero T
+
+		return zero, &TimeoutError{
 			LastError:     err,
 			LastState:     string(currentState),
 			Timeout:       conf.Timeout,

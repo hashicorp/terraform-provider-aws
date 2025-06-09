@@ -25,7 +25,7 @@ func FailedStateRefreshFunc() StateRefreshFunc {
 func TimeoutStateRefreshFunc() StateRefreshFunc {
 	return func(context.Context) (any, string, error) {
 		time.Sleep(5 * time.Second)
-		return nil, "", errors.New("failed")
+		return struct{}{}, "pending", nil
 	}
 }
 
@@ -66,6 +66,7 @@ func InconsistentStateRefreshFunc() StateRefreshFunc {
 		"done", "done", "done",
 		"replicating",
 		"done", "done", "done",
+		"replicating", "replicating", "replicating", "replicating", "replicating",
 	}
 
 	r := NewStateGenerator(sequence)
@@ -142,7 +143,7 @@ func TestWaitForState_inconsistent_negative(t *testing.T) {
 	}
 
 	// we can't guarantee the exact number of refresh calls in the tests by
-	// timing them, but we want to make sure the test at least went through th
+	// timing them, but we want to make sure the test at least went through the
 	// required states.
 	if atomic.LoadInt64(&refreshCount) < 6 {
 		t.Fatal("refreshed called too few times")
@@ -168,7 +169,7 @@ func TestWaitForState_timeout(t *testing.T) {
 		t.Fatal("Expected timeout error. No error returned.")
 	}
 
-	expectedErr := "timeout while waiting for state to become 'running' (timeout: 1ms)"
+	expectedErr := "timeout while waiting for state to become 'running' (last state: 'pending', timeout: 1ms)"
 	if err.Error() != expectedErr {
 		t.Fatalf("Errors don't match.\nExpected: %q\nGiven: %q\n", expectedErr, err.Error())
 	}
