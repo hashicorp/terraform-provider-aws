@@ -384,7 +384,7 @@ func RegisterSweepers() {
 			"aws_nat_gateway",
 			"aws_network_acl",
 			"aws_networkmanager_vpc_attachment",
-			"aws_vpc_route_server_vpc_attachment",
+			"aws_vpc_route_server_vpc_association",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
