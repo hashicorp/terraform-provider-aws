@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -46,8 +46,7 @@ func sweepAccountAssignments(region string) error {
 	}
 	conn := client.SSOAdminClient(ctx)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
+	var sweepResources []sweep.Sweepable
 
 	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
@@ -77,12 +76,12 @@ func sweepAccountAssignments(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
 				log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
-				return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+				return nil
 			}
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets for Account Assignment sweep: %w", err))
+				return fmt.Errorf("error listing SSO Permission Sets for Account Assignment sweep: %w", err)
 			}
 
 			if page != nil {
@@ -105,7 +104,7 @@ func sweepAccountAssignments(region string) error {
 					continue
 				}
 				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Account Assignments for Permission Set (%s): %w", permissionSetArn, err))
+					return fmt.Errorf("error listing SSO Account Assignments for Permission Set (%s): %w", permissionSetArn, err)
 				}
 
 				for _, a := range page.AccountAssignments {
@@ -125,10 +124,10 @@ func sweepAccountAssignments(region string) error {
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Account Assignments: %w", err))
+		return fmt.Errorf("error sweeping SSO Account Assignments: %w", err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepApplications(region string) error {
@@ -139,8 +138,7 @@ func sweepApplications(region string) error {
 	}
 	conn := client.SSOAdminClient(ctx)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
+	var sweepResources []sweep.Sweepable
 
 	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
@@ -169,26 +167,24 @@ func sweepApplications(region string) error {
 			page, err := paginator.NextPage(ctx)
 			if awsv2.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping SSO Applications sweep for %s: %s", region, err)
-				return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+				return nil
 			}
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Applications: %w", err))
+				return fmt.Errorf("error listing SSO Applications: %w", err)
 			}
 
 			for _, application := range page.Applications {
 				applicationARN := aws.ToString(application.ApplicationArn)
-				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
-
 				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Applications: %w", err))
+		return fmt.Errorf("error sweeping SSO Applications: %w", err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepPermissionSets(region string) error {
@@ -199,8 +195,7 @@ func sweepPermissionSets(region string) error {
 	}
 	conn := client.SSOAdminClient(ctx)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
+	var sweepResources []sweep.Sweepable
 
 	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
@@ -227,17 +222,15 @@ func sweepPermissionSets(region string) error {
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, input)
 		for paginator.HasMorePages() {
 			page, err := paginator.NextPage(ctx)
-			if awsv2.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) || tfawserr.ErrMessageContains(err, "ValidationException", "The operation is not supported for this Identity Center instance") {
 				log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-				return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+				return nil
 			}
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets: %w", err))
+				return fmt.Errorf("error listing SSO Permission Sets: %w", err)
 			}
 
 			for _, permissionSetArn := range page.PermissionSets {
-				log.Printf("[INFO] Deleting SSO Permission Set: %s", permissionSetArn)
-
 				r := ResourcePermissionSet()
 				d := r.Data(nil)
 				d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
@@ -248,8 +241,8 @@ func sweepPermissionSets(region string) error {
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Permission Sets: %w", err))
+		return fmt.Errorf("error sweeping SSO Permission Sets: %w", err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
