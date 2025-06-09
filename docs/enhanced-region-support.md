@@ -31,4 +31,36 @@ type exampleResourceModel struct {
 
 ## Annotations
 
+Overriding the default behavior of Enhanced Region Support is done via adding resource-level annotations.
+[`make gen`](makefile-cheat-sheet.md) should be run after changing any annotations.
+
+### Global resources in regional services
+
+If a resource in a Regional service is global, i.e. the addition of a top-level `region` argument is redundant or confusing (e.g. a resource representing account-wide settings) then Enhanced Region Support can be disabled by adding the `@Region(global=true)` annotation to the resource.
+
+```go
+// @FrameworkResource("aws_something_example", name="Example")
+// @Region(global=true)
+func newExampleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+    return &resourceExample{}, nil
+}
+
+type exampleResourceModel struct {
+    // Fields corresponding to attributes in the Schema.
+    // No top-level region argument so don't embed framework.WithRegionModel.
+}
+```
+
+### Suppress `region` argument validation
+
+By default any configured value of the top-level `region` is validated as being in the configured [partition](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html) as AWS IAM credentials are only valid for a single partition. If the argument's value need not be validated (e.g. a data source that looks up a well-known value per-Region) adding the `@Region(validateOverrideInPartition=false)` annotation suppresses validation.
+
+```go
+// @FrameworkDataSource("aws_something_example", name="Example")
+// @Region(validateOverrideInPartition=false)
+func newExampleDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+    return &exampleDataSource{}, nil
+}
+```
+
 ## Documentation
