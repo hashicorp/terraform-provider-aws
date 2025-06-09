@@ -28,6 +28,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"regionCreateNull":        testAccAppBundle_regionCreateNull,
 			"regionCreateNonNull":     testAccAppBundle_regionCreateNonNull,
 			"upgradeFromV5":           testAccAppBundle_upgradeFromV5,
+			"upgradeFromV5Update":     testAccAppBundle_upgradeFromV5Update,
 			"Identity_Basic":          testAccAppBundle_Identity_Basic,
 			"Identity_RegionOverride": testAccAppBundle_Identity_RegionOverride,
 		},
