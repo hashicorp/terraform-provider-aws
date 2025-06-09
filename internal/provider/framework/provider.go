@@ -29,7 +29,6 @@ import (
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -574,10 +573,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 						continue
 					}
 				} else if !res.Identity.Singleton {
-					type parameterizedIdentity interface {
-						SetIdentitySpec(identity inttypes.Identity)
-					}
-					identity, ok := inner.(parameterizedIdentity)
+					identity, ok := inner.(framework.ImportByIdentityer)
 					if !ok {
 						errs = append(errs, fmt.Errorf("resource type %s: defines Parameterized Identity, but cannot set Identity attributes", typeName))
 						continue
