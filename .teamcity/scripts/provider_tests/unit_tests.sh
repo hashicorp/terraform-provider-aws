@@ -31,6 +31,7 @@ go test \
     ./internal/sdkv2/... \
     ./internal/semver/... \
     ./internal/slices/... \
+    ./internal/state/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
