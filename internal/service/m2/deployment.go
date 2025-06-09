@@ -337,6 +337,9 @@ func (r *deploymentResource) ModifyPlan(ctx context.Context, request resource.Mo
 		}
 
 		response.Diagnostics.Append(response.Plan.Set(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 }
 

@@ -832,9 +832,15 @@ func (r *revisionAssetsResource) ModifyPlan(ctx context.Context, req resource.Mo
 		}
 
 		if !plan.Comment.Equal(state.Comment) || !plan.Finalized.Equal(state.Finalized) {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		} else {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }

@@ -323,8 +323,10 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
 		var plan, state deliveryResourceModel
-
 		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 		if response.Diagnostics.HasError() {
 			return
