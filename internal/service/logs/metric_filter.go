@@ -105,6 +105,11 @@ func resourceMetricFilter() *schema.Resource {
 					return strings.TrimSpace(s)
 				},
 			},
+			"apply_on_transformed_logs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -116,10 +121,11 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta a
 	name := d.Get(names.AttrName).(string)
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
 	input := &cloudwatchlogs.PutMetricFilterInput{
-		FilterName:            aws.String(name),
-		FilterPattern:         aws.String(strings.TrimSpace(d.Get("pattern").(string))),
-		LogGroupName:          aws.String(logGroupName),
-		MetricTransformations: expandMetricTransformations(d.Get("metric_transformation").([]any)),
+		FilterName:             aws.String(name),
+		FilterPattern:          aws.String(strings.TrimSpace(d.Get("pattern").(string))),
+		LogGroupName:           aws.String(logGroupName),
+		MetricTransformations:  expandMetricTransformations(d.Get("metric_transformation").([]any)),
+		ApplyOnTransformedLogs: d.Get("apply_on_transformed_logs").(bool),
 	}
 
 	// Creating multiple filters on the same log group can sometimes cause
@@ -164,6 +170,7 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set(names.AttrName, mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
+	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
 
 	return diags
 }

@@ -153,6 +153,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", "[TEST]"),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", "false"),
 				),
 			},
 			{
@@ -178,6 +179,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.value", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", `{ $.d1 = "OK" }`),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", "true"),
 				),
 			},
 		},
@@ -335,7 +337,8 @@ resource "aws_cloudwatch_log_metric_filter" "test" {
     { $.d1 = "OK" }
 EOS
 
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name            = aws_cloudwatch_log_group.test.name
+  apply_on_transformed_logs = true
 
   metric_transformation {
     name      = "metric2"
