@@ -562,11 +562,8 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 
 			if res.Import.WrappedImport {
 				if res.Identity.ARN {
-					type arnIdentity interface {
-						SetARNAttributeName(attr string, duplicateAttrs []string)
-					}
 					switch v := inner.(type) {
-					case arnIdentity:
+					case framework.ImportByARNAttributer:
 						v.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
 
 					case framework.ImportByIdentityer:

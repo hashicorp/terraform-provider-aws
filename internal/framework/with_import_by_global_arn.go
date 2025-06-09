@@ -12,6 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
+// TODO: Needs a better name
+type ImportByARNAttributer interface {
+	SetARNAttributeName(attr string, duplicateAttrs []string)
+}
+
+var _ ImportByARNAttributer = &WithImportByGlobalARN{}
+
 // WithImportByGlobalARN is intended to be embedded in global resources which import state via the "arn" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByGlobalARN struct {
