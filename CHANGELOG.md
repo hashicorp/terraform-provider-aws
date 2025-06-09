@@ -18,6 +18,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_neptune_engine_version: Add several arguments and attributes to support dynamic selection of versions including `latest`, `has_major_target`, `preferred_major_targets`, and `preferred_upgrade_targets` ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* provider: Support `ap-east-2` as a valid AWS Region ([#42906](https://github.com/hashicorp/terraform-provider-aws/issues/42906))
 * resource/aws_fsx_lustre_file_system: Add `data_read_cache_configuration` and `throughput_capacity` arguments in support of the [Intelligent-Tiering storage class](https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-fsx-lustre.html#how-INT-tiering-works) ([#42839](https://github.com/hashicorp/terraform-provider-aws/issues/42839))
 * resource/aws_s3_access_point: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
 * resource/aws_s3control_access_point_policy: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
