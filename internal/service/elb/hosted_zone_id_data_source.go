@@ -18,6 +18,7 @@ import (
 var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
+	endpoints.ApEast2RegionID:      "Z02789141MW7T1WBU19PO",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
 	endpoints.ApNortheast2RegionID: "ZWKZPGTI48KDX",
 	endpoints.ApNortheast3RegionID: "Z5LXEXXYW11ES",
