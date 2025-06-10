@@ -63,7 +63,7 @@ type StateChangeConf = StateChangeConfOf[any, string]
 //
 // Cancellation of the passed in context will cancel the refresh loop.
 
-func (conf *StateChangeConfOf[T, S]) WaitForState(ctx context.Context) (T, error) {
+func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T, error) {
 	// Set a default for times to check for not found.
 	if conf.NotFoundChecks == 0 {
 		conf.NotFoundChecks = 20
