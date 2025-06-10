@@ -90,6 +90,12 @@ func resourceInstanceFleet() *schema.Resource {
 								},
 							},
 						},
+						"custom_ami_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validCustomAMIID,
+						},
 						"ebs_config": {
 							Type:     schema.TypeSet,
 							Optional: true,
