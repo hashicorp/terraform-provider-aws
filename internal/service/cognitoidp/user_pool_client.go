@@ -56,7 +56,6 @@ type userPoolClientResource struct {
 	framework.ResourceWithModel[userPoolClientResourceModel]
 }
 
-// Schema returns the schema for this resource.
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -414,6 +413,7 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
@@ -438,12 +438,12 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 }
 
 func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new, config userPoolClientResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	var state, plan, config userPoolClientResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -455,13 +455,13 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	conn := r.Meta().CognitoIDPClient(ctx)
 
 	var input cognitoidentityprovider.UpdateUserPoolClientInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, fwflex.WithFieldNamePrefix("Client"))...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// If removing `token_validity_units`, reset to defaults
-	if !old.TokenValidityUnits.IsNull() && new.TokenValidityUnits.IsNull() {
+	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() {
 		input.TokenValidityUnits = &awstypes.TokenValidityUnitsType{
 			AccessToken:  awstypes.TimeUnitsTypeHours,
 			IdToken:      awstypes.TimeUnitsTypeHours,
@@ -475,28 +475,30 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
+
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito User Pool Client (%s)", new.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	upc := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
-	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &new, fwflex.WithFieldNamePrefix("Client"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &plan, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if !old.TokenValidityUnits.IsNull() && config.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
-		new.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+	if !state.TokenValidityUnits.IsNull() && config.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+		plan.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		new.TokenValidityUnits = tvu
+		plan.TokenValidityUnits = tvu
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

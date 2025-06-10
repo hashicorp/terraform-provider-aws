@@ -50,9 +50,8 @@ type managedUserPoolClientResource struct {
 	framework.WithNoOpDelete
 }
 
-// Schema returns the schema for this resource.
 func (r *managedUserPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	s := schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
@@ -357,37 +356,29 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 			},
 		},
 	}
-
-	response.Schema = s
 }
 
 func (r *managedUserPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data managedUserPoolClientResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	var config managedUserPoolClientResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var plan managedUserPoolClientResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	filter := tfslices.PredicateTrue[*awstypes.UserPoolClientDescription]()
-	if namePattern := plan.NamePattern; !namePattern.IsUnknown() && !namePattern.IsNull() {
+	if namePattern := data.NamePattern; !namePattern.IsUnknown() && !namePattern.IsNull() {
 		filter = func(v *awstypes.UserPoolClientDescription) bool {
 			return namePattern.ValueRegexp().MatchString(aws.ToString(v.ClientName))
 		}
 	}
-	if namePrefix := plan.NamePrefix; !namePrefix.IsUnknown() && !namePrefix.IsNull() {
+	if namePrefix := data.NamePrefix; !namePrefix.IsUnknown() && !namePrefix.IsNull() {
 		filter = func(v *awstypes.UserPoolClientDescription) bool {
 			return strings.HasPrefix(aws.ToString(v.ClientName), namePrefix.ValueString())
 		}
 	}
-	userPoolID := plan.UserPoolID.ValueString()
+	userPoolID := data.UserPoolID.ValueString()
 
 	upc, err := findUserPoolClientByName(ctx, conn, userPoolID, filter)
 
@@ -397,7 +388,9 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	id := aws.ToString(upc.ClientId)
+	var currentState managedUserPoolClientResourceModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &currentState, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -406,93 +399,76 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 	if response.Diagnostics.HasError() {
 		return
 	}
-	config.TokenValidityUnits = tvu
+	currentState.TokenValidityUnits = tvu
 
 	needsUpdate := false
-
-	if !plan.AccessTokenValidity.IsUnknown() && !plan.AccessTokenValidity.Equal(config.AccessTokenValidity) {
+	if !data.AccessTokenValidity.IsUnknown() && !data.AccessTokenValidity.Equal(currentState.AccessTokenValidity) {
 		needsUpdate = true
-		config.AccessTokenValidity = plan.AccessTokenValidity
 	}
-	if !plan.AllowedOauthFlows.IsUnknown() && !plan.AllowedOauthFlows.Equal(config.AllowedOauthFlows) {
+	if !data.AllowedOauthFlows.IsUnknown() && !data.AllowedOauthFlows.Equal(currentState.AllowedOauthFlows) {
 		needsUpdate = true
-		config.AllowedOauthFlows = plan.AllowedOauthFlows
 	}
-	if !plan.AllowedOauthFlowsUserPoolClient.IsUnknown() && !plan.AllowedOauthFlowsUserPoolClient.Equal(config.AllowedOauthFlowsUserPoolClient) {
+	if !data.AllowedOauthFlowsUserPoolClient.IsUnknown() && !data.AllowedOauthFlowsUserPoolClient.Equal(currentState.AllowedOauthFlowsUserPoolClient) {
 		needsUpdate = true
-		config.AllowedOauthFlowsUserPoolClient = plan.AllowedOauthFlowsUserPoolClient
 	}
-	if !plan.AllowedOauthScopes.IsUnknown() && !plan.AllowedOauthScopes.Equal(config.AllowedOauthScopes) {
+	if !data.AllowedOauthScopes.IsUnknown() && !data.AllowedOauthScopes.Equal(currentState.AllowedOauthScopes) {
 		needsUpdate = true
-		config.AllowedOauthScopes = plan.AllowedOauthScopes
 	}
-	if !plan.AnalyticsConfiguration.IsUnknown() && !plan.AnalyticsConfiguration.Equal(config.AnalyticsConfiguration) {
+	if !data.AnalyticsConfiguration.IsUnknown() && !data.AnalyticsConfiguration.Equal(currentState.AnalyticsConfiguration) {
 		needsUpdate = true
-		config.AnalyticsConfiguration = plan.AnalyticsConfiguration
 	}
-	if !plan.AuthSessionValidity.IsUnknown() && !plan.AuthSessionValidity.Equal(config.AuthSessionValidity) {
+	if !data.AuthSessionValidity.IsUnknown() && !data.AuthSessionValidity.Equal(currentState.AuthSessionValidity) {
 		needsUpdate = true
-		config.AuthSessionValidity = plan.AuthSessionValidity
 	}
-	if !plan.CallbackUrls.IsUnknown() && !plan.CallbackUrls.Equal(config.CallbackUrls) {
+	if !data.CallbackUrls.IsUnknown() && !data.CallbackUrls.Equal(currentState.CallbackUrls) {
 		needsUpdate = true
-		config.CallbackUrls = plan.CallbackUrls
 	}
-	if !plan.DefaultRedirectUri.IsUnknown() && !plan.DefaultRedirectUri.Equal(config.DefaultRedirectUri) {
+	if !data.DefaultRedirectUri.IsUnknown() && !data.DefaultRedirectUri.Equal(currentState.DefaultRedirectUri) {
 		needsUpdate = true
-		config.DefaultRedirectUri = plan.DefaultRedirectUri
 	}
-	if !plan.EnablePropagateAdditionalUserContextData.IsUnknown() && !plan.EnablePropagateAdditionalUserContextData.Equal(config.EnablePropagateAdditionalUserContextData) {
+	if !data.EnablePropagateAdditionalUserContextData.IsUnknown() && !data.EnablePropagateAdditionalUserContextData.Equal(currentState.EnablePropagateAdditionalUserContextData) {
 		needsUpdate = true
-		config.EnablePropagateAdditionalUserContextData = plan.EnablePropagateAdditionalUserContextData
 	}
-	if !plan.EnableTokenRevocation.IsUnknown() && !plan.EnableTokenRevocation.Equal(config.EnableTokenRevocation) {
+	if !data.EnableTokenRevocation.IsUnknown() && !data.EnableTokenRevocation.Equal(currentState.EnableTokenRevocation) {
 		needsUpdate = true
-		config.EnableTokenRevocation = plan.EnableTokenRevocation
 	}
-	if !plan.ExplicitAuthFlows.IsUnknown() && !plan.ExplicitAuthFlows.Equal(config.ExplicitAuthFlows) {
+	if !data.ExplicitAuthFlows.IsUnknown() && !data.ExplicitAuthFlows.Equal(currentState.ExplicitAuthFlows) {
 		needsUpdate = true
-		config.ExplicitAuthFlows = plan.ExplicitAuthFlows
 	}
-	if !plan.IdTokenValidity.IsUnknown() && !plan.IdTokenValidity.Equal(config.IdTokenValidity) {
+	if !data.IdTokenValidity.IsUnknown() && !data.IdTokenValidity.Equal(currentState.IdTokenValidity) {
 		needsUpdate = true
-		config.IdTokenValidity = plan.IdTokenValidity
 	}
-	if !plan.LogoutUrls.IsUnknown() && !plan.LogoutUrls.Equal(config.LogoutUrls) {
+	if !data.LogoutUrls.IsUnknown() && !data.LogoutUrls.Equal(currentState.LogoutUrls) {
 		needsUpdate = true
-		config.LogoutUrls = plan.LogoutUrls
 	}
-	if !plan.PreventUserExistenceErrors.IsUnknown() && !plan.PreventUserExistenceErrors.Equal(config.PreventUserExistenceErrors) {
+	if !data.PreventUserExistenceErrors.IsUnknown() && !data.PreventUserExistenceErrors.Equal(currentState.PreventUserExistenceErrors) {
 		needsUpdate = true
-		config.PreventUserExistenceErrors = plan.PreventUserExistenceErrors
 	}
-	if !plan.ReadAttributes.IsUnknown() && !plan.ReadAttributes.Equal(config.ReadAttributes) {
+	if !data.ReadAttributes.IsUnknown() && !data.ReadAttributes.Equal(currentState.ReadAttributes) {
 		needsUpdate = true
-		config.ReadAttributes = plan.ReadAttributes
 	}
-	if !plan.RefreshTokenValidity.IsUnknown() && !plan.RefreshTokenValidity.Equal(config.RefreshTokenValidity) {
+	if !data.RefreshTokenValidity.IsUnknown() && !data.RefreshTokenValidity.Equal(currentState.RefreshTokenValidity) {
 		needsUpdate = true
-		config.RefreshTokenValidity = plan.RefreshTokenValidity
 	}
-	if !plan.SupportedIdentityProviders.IsUnknown() && !plan.SupportedIdentityProviders.Equal(config.SupportedIdentityProviders) {
+	if !data.SupportedIdentityProviders.IsUnknown() && !data.SupportedIdentityProviders.Equal(currentState.SupportedIdentityProviders) {
 		needsUpdate = true
-		config.SupportedIdentityProviders = plan.SupportedIdentityProviders
 	}
-	if !plan.TokenValidityUnits.IsUnknown() && !plan.TokenValidityUnits.Equal(config.TokenValidityUnits) {
+	if !data.TokenValidityUnits.IsUnknown() && !data.TokenValidityUnits.Equal(currentState.TokenValidityUnits) {
 		needsUpdate = true
-		config.TokenValidityUnits = plan.TokenValidityUnits
 	}
-	if !plan.WriteAttributes.IsUnknown() && !plan.WriteAttributes.Equal(config.WriteAttributes) {
+	if !data.WriteAttributes.IsUnknown() && !data.WriteAttributes.Equal(currentState.WriteAttributes) {
 		needsUpdate = true
-		config.WriteAttributes = plan.WriteAttributes
 	}
 
 	if needsUpdate {
 		var input cognitoidentityprovider.UpdateUserPoolClientInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, config, &input, fwflex.WithFieldNamePrefix("Client"))...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix("Client"))...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Additional fields.
+		input.ClientId = aws.String(id)
 
 		const (
 			timeout = 2 * time.Minute
@@ -500,40 +476,41 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 			return conn.UpdateUserPoolClient(ctx, &input)
 		})
+
 		if err != nil {
-			response.Diagnostics.AddError(
-				fmt.Sprintf("updating Cognito Managed User Pool Client (%s)", plan.ID.ValueString()),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("creating Cognito Managed User Pool Client (%s)", id), err.Error())
+
 			return
 		}
 
-		upc := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
-		response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &config, fwflex.WithFieldNamePrefix("Client"))...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		config.TokenValidityUnits = tvu
+		upc = output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	tvu, diags = flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.TokenValidityUnits = tvu
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *managedUserPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state managedUserPoolClientResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data managedUserPoolClientResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	upc, err := findUserPoolClientByTwoPartKey(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
+	upc, err := findUserPoolClientByTwoPartKey(ctx, conn, data.UserPoolID.ValueString(), data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -543,50 +520,46 @@ func (r *managedUserPoolClientResource) Read(ctx context.Context, request resour
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed User Pool Client (%s)", state.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed User Pool Client (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	tokenValidityUnitsNull := state.TokenValidityUnits.IsNull()
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &state, fwflex.WithFieldNamePrefix("Client"))...)
+	// Set attributes for import.
+	tokenValidityUnitsNull := data.TokenValidityUnits.IsNull()
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
-		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+		data.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		state.TokenValidityUnits = tvu
+		data.TokenValidityUnits = tvu
 	}
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *managedUserPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var config managedUserPoolClientResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var plan managedUserPoolClientResourceModel
+	var state, plan, config managedUserPoolClientResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	var state managedUserPoolClientResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -614,43 +587,42 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf("updating Cognito Managed User Pool Client (%s)", plan.ID.ValueString()),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito Managed User Pool Client (%s)", plan.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	upc := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
-	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &config, fwflex.WithFieldNamePrefix("Client"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &plan, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
-		config.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+	if !state.TokenValidityUnits.IsNull() && config.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+		plan.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
 	} else {
 		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		config.TokenValidityUnits = tvu
+		plan.TokenValidityUnits = tvu
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID)))
+
 		return
 	}
-	userPoolId := parts[0]
-	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), parts[0])...)
 }
 
 func (r *managedUserPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
