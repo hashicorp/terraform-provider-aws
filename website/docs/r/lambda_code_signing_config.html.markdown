@@ -18,8 +18,8 @@ For information about Lambda code signing configurations and how to use them, se
 resource "aws_lambda_code_signing_config" "new_csc" {
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.example1.arn,
-      aws_signer_signing_profile.example2.arn,
+      aws_signer_signing_profile.example1.version_arn,
+      aws_signer_signing_profile.example2.version_arn,
     ]
   }
 
