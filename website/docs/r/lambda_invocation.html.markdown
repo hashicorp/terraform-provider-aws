@@ -86,7 +86,6 @@ resource "aws_lambda_invocation" "example" {
   })
 
   lifecycle_scope = "CRUD"
-  terraform_key   = "terraform_lifecycle"
 }
 ```
 
@@ -107,7 +106,7 @@ When the resource from the CRUD example above is created, the Lambda will receiv
     "username": "admin",
     "password": "secret123"
   },
-  "terraform_lifecycle": {
+  "tf": {
     "action": "create",
     "prev_input": null
   }
@@ -124,7 +123,7 @@ If the `database_url` changes, the Lambda will be invoked again with:
     "username": "admin",
     "password": "secret123"
   },
-  "terraform_lifecycle": {
+  "tf": {
     "action": "update",
     "prev_input": {
       "resource_name": "database_setup",
@@ -148,7 +147,7 @@ When the invocation resource is removed, the final invocation will have:
     "username": "admin",
     "password": "secret123"
   },
-  "terraform_lifecycle": {
+  "tf": {
     "action": "delete",
     "prev_input": {
       "resource_name": "database_setup",

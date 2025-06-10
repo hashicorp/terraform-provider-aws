@@ -33,16 +33,6 @@ resource "aws_lambda_function_recursion_config" "example" {
 }
 ```
 
-### Terminate Recursive Invocations (Default)
-
-```terraform
-# Explicitly set recursion to terminate (this is the default behavior)
-resource "aws_lambda_function_recursion_config" "example" {
-  function_name  = aws_lambda_function.example.function_name
-  recursive_loop = "Terminate"
-}
-```
-
 ### Production Safety Configuration
 
 ```terraform
