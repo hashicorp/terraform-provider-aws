@@ -368,7 +368,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_sns_topic" "test" {
   name = %[1]q
-policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -376,7 +376,7 @@ policy = jsonencode({
         Principal = {
           Service = "sms-voice.amazonaws.com"
         },
-        Action = "SNS:Publish",
+        Action   = "SNS:Publish",
         Resource = "*",
         Condition = {
           StringEquals = {
@@ -387,7 +387,6 @@ policy = jsonencode({
     ]
   })
 }
-
 
 resource "aws_iam_role" "test" {
   name = %[2]q
@@ -411,8 +410,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name   = "pinpointsmsvoicev2-sns-policy"
-  role   = aws_iam_role.test.id
+  name = "pinpointsmsvoicev2-sns-policy"
+  role = aws_iam_role.test.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -427,22 +426,18 @@ resource "aws_iam_role_policy" "test" {
   })
 }
 
-
 resource "aws_pinpointsmsvoicev2_phone_number" "test" {
-  iso_country_code              = "US"
-  message_type                  = "TRANSACTIONAL"
-  number_type                   = "SIMULATOR"
-  two_way_channel_arn           = aws_sns_topic.test.arn
-  two_way_channel_role          = aws_iam_role.test.arn
-  two_way_channel_enabled       = true
-
+  iso_country_code        = "US"
+  message_type            = "TRANSACTIONAL"
+  number_type             = "SIMULATOR"
+  two_way_channel_arn     = aws_sns_topic.test.arn
+  two_way_channel_role    = aws_iam_role.test.arn
+  two_way_channel_enabled = true
   number_capabilities = [
     "SMS",
     "VOICE",
   ]
-  depends_on = [ aws_iam_role.test, aws_sns_topic.test ]
 }
-
 `, snsTopicName, iamRoleName)
 }
 
