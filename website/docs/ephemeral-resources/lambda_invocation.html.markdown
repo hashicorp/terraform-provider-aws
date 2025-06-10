@@ -102,13 +102,13 @@ resource "aws_autoscaling_group" "example" {
 # Function that validates configuration against compliance rules
 ephemeral "aws_lambda_invocation" "compliance_validator" {
   function_name = "compliance-checker"
-  log_type      = "Tail"  # Include execution logs
+  log_type      = "Tail" # Include execution logs
 
   payload = jsonencode({
     resource_config = {
-      instance_type = var.instance_type
+      instance_type     = var.instance_type
       storage_encrypted = var.encrypt_storage
-      backup_enabled = var.enable_backups
+      backup_enabled    = var.enable_backups
     }
     compliance_framework = "SOC2"
   })
@@ -116,8 +116,8 @@ ephemeral "aws_lambda_invocation" "compliance_validator" {
 
 locals {
   validation_result = jsondecode(ephemeral.aws_lambda_invocation.compliance_validator.result)
-  is_compliant     = validation_result.compliant
-  violations       = validation_result.violations
+  is_compliant      = validation_result.compliant
+  violations        = validation_result.violations
 }
 
 # Conditional resource creation based on compliance
@@ -132,7 +132,7 @@ resource "aws_instance" "example" {
   }
 
   tags = {
-    Environment    = var.environment
+    Environment     = var.environment
     ComplianceCheck = "passed"
   }
 }
@@ -152,16 +152,16 @@ resource "null_resource" "compliance_gate" {
 ```terraform
 # Function that calls external APIs for configuration data
 ephemeral "aws_lambda_invocation" "external_config" {
-  function_name  = "config-fetcher"
+  function_name = "config-fetcher"
   client_context = base64encode(jsonencode({
-    source = "terraform"
+    source  = "terraform"
     version = "1.0"
   }))
 
   payload = jsonencode({
     config_service_url = var.config_service_url
-    environment       = var.environment
-    service_name      = "web-app"
+    environment        = var.environment
+    service_name       = "web-app"
   })
 }
 
@@ -221,7 +221,7 @@ Since ephemeral resources are designed to not persist data in state, they are id
 ```terraform
 ephemeral "aws_lambda_invocation" "credentials" {
   function_name = "credential-generator"
-  
+
   payload = jsonencode({
     service = "database"
     type    = "temporary"
@@ -242,7 +242,7 @@ Always check for function errors in your configuration:
 ```terraform
 locals {
   invocation_result = jsondecode(ephemeral.aws_lambda_invocation.example.result)
-  has_error        = ephemeral.aws_lambda_invocation.example.function_error != null
+  has_error         = ephemeral.aws_lambda_invocation.example.function_error != null
 }
 
 # Fail if function returns an error
@@ -258,7 +258,7 @@ Enable detailed logging for debugging:
 ```terraform
 ephemeral "aws_lambda_invocation" "example" {
   function_name = "my-function"
-  log_type     = "Tail"
+  log_type      = "Tail"
 
   payload = jsonencode({
     debug = true
