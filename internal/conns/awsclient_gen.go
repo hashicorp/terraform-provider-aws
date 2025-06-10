@@ -107,6 +107,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -643,6 +644,10 @@ func (c *AWSClient) EMRContainersClient(ctx context.Context) *emrcontainers.Clie
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless.Client {
 	return errs.Must(client[*emrserverless.Client](ctx, c, names.EMRServerless, make(map[string]any)))
+}
+
+func (c *AWSClient) EVSClient(ctx context.Context) *evs.Client {
+	return errs.Must(client[*evs.Client](ctx, c, names.EVS, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache.Client {

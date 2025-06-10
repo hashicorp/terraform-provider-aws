@@ -50,8 +50,8 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to       = aws_bedrock_provisioned_model_throughput.example
-  model_id = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e"
+  to = aws_bedrock_provisioned_model_throughput.example
+  id = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e"
 }
 ```
 

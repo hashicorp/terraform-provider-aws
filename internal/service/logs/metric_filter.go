@@ -221,7 +221,7 @@ func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Clie
 }
 
 func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter]) (*awstypes.MetricFilter, error) {
-	output, err := findMetricFilters(ctx, conn, input, filter)
+	output, err := findMetricFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -230,8 +230,9 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
+func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.MetricFilter, error) {
 	var output []awstypes.MetricFilter
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -251,6 +252,9 @@ func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *
 		for _, v := range page.MetricFilters {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}

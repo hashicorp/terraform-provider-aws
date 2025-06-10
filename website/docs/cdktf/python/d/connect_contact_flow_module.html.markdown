@@ -56,13 +56,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_module_id` is required.
-
 This data source supports the following arguments:
 
 * `contact_flow_module_id` - (Optional) Returns information on a specific Contact Flow Module by contact flow module id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow Module by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_module_id` is required.
 
 ## Attribute Reference
 
@@ -75,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
 * `status` - Status of the Contact Flow Module Module. Values are either `PUBLISHED` or `SAVED`.
 
-<!-- cache-key: cdktf-0.20.8 input-36d74ce212337468ed16b9c73d9b8eae28e8ca14412ec76111d571764d479c9a -->
+<!-- cache-key: cdktf-0.20.8 input-52cdffa5c1084b9718b894778e048543a4c5d79a35de546106f5cb7c6574163c -->

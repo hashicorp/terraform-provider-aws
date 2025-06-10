@@ -133,10 +133,6 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 ## Argument Reference
 
-~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
-
-~> **NOTE:** If the `associated_gateway_id` is in another region, an [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) in a new provider block for that region should be specified.
-
 This resource supports the following arguments:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
@@ -147,6 +143,10 @@ Used for cross-account Direct Connect gateway associations.
 * `proposal_id` - (Optional) The ID of the Direct Connect gateway association proposal.
 Used for cross-account Direct Connect gateway associations.
 * `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
+
+~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
+
+~> **NOTE:** If the `associated_gateway_id` is in another region, an [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) in a new provider block for that region should be specified.
 
 ## Attribute Reference
 
@@ -190,4 +190,4 @@ Using `terraform import`, import Direct Connect gateway associations using `dx_g
 % terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c28bf82c103aa1982a96936974596b9df68f54efdcdbc9af3d8eff96f3003ab8 -->
+<!-- cache-key: cdktf-0.20.8 input-c9ad229b64aa3068db43ac8cc3de5289ce6e64257e623c7bdfa7976374a636c1 -->

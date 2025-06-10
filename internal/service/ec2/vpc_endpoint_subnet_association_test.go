@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +20,6 @@ import (
 
 func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpce awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -34,7 +32,7 @@ func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointSubnetAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -49,7 +47,6 @@ func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
 
 func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpce awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_subnet_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -62,7 +59,7 @@ func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccVPCEndpointSubnetAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointSubnetAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,7 +70,6 @@ func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 
 func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpce awstypes.VpcEndpoint
 	resourceName0 := "aws_vpc_endpoint_subnet_association.test.0"
 	resourceName1 := "aws_vpc_endpoint_subnet_association.test.1"
 	resourceName2 := "aws_vpc_endpoint_subnet_association.test.2"
@@ -88,9 +84,9 @@ func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 			{
 				Config: testAccVPCEndpointSubnetAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName0, &vpce),
-					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName1, &vpce),
-					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName2, &vpce),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName0),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName1),
+					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName2),
 				),
 			},
 		},
@@ -123,49 +119,27 @@ func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n string, vpce *awstypes.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		out, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID])
+		err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes[names.AttrSubnetID])
-
-		if err != nil {
-			return err
-		}
-
-		*vpce = *out
-
-		return nil
+		return err
 	}
 }
 
 func testAccVPCEndpointSubnetAssociationConfig_base(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 data "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
   name   = "default"
@@ -184,25 +158,11 @@ resource "aws_vpc_endpoint" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  count = 3
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName))
 }
 
 func testAccVPCEndpointSubnetAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCEndpointSubnetAssociationConfig_base(rName),
-		`
+	return acctest.ConfigCompose(testAccVPCEndpointSubnetAssociationConfig_base(rName), `
 resource "aws_vpc_endpoint_subnet_association" "test" {
   vpc_endpoint_id = aws_vpc_endpoint.test.id
   subnet_id       = aws_subnet.test[0].id
@@ -211,9 +171,7 @@ resource "aws_vpc_endpoint_subnet_association" "test" {
 }
 
 func testAccVPCEndpointSubnetAssociationConfig_multiple(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCEndpointSubnetAssociationConfig_base(rName),
-		`
+	return acctest.ConfigCompose(testAccVPCEndpointSubnetAssociationConfig_base(rName), `
 resource "aws_vpc_endpoint_subnet_association" "test" {
   count = 3
 

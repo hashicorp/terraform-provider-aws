@@ -46,9 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route Table in the current region. The given filters must match exactly one Route Table whose data will be exported as attributes.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gateway_id` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).
@@ -115,4 +113,4 @@ Associations are also exported with the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-e02f8a1af89557e3d4f7912192d3d91ac681003bf0f578fd465030e054563a1e -->
+<!-- cache-key: cdktf-0.20.8 input-3f30574f6cd5df24116fb5050ac5bb5bffc6820003fc1416008321c0c9cc102f -->

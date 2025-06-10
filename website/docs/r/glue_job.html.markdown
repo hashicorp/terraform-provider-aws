@@ -14,18 +14,131 @@ Provides a Glue Job resource.
 
 ## Example Usage
 
-### Python Job
+### Python Glue Job
 
 ```terraform
-resource "aws_glue_job" "example" {
-  name         = "example"
-  glue_version = "5.0"
-  role_arn     = aws_iam_role.example.arn
+resource "aws_glue_job" "etl_job" {
+  name              = "example-etl-job"
+  description       = "An example Glue ETL job"
+  role_arn          = aws_iam_role.glue_job_role.arn
+  glue_version      = "5.0"
+  max_retries       = 0
+  timeout           = 2880
+  number_of_workers = 2
+  worker_type       = "G.1X"
+  connections       = [aws_glue_connection.example.name]
+  execution_class   = "STANDARD"
 
   command {
-    script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
+    script_location = "s3://${aws_s3_bucket.glue_scripts.bucket}/jobs/etl_job.py"
+    name            = "glueetl"
     python_version  = "3"
   }
+
+  notification_property {
+    notify_delay_after = 3 # delay in minutes
+  }
+
+  default_arguments = {
+    "--job-language"                     = "python"
+    "--continuous-log-logGroup"          = "/aws-glue/jobs"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-continuous-log-filter"     = "true"
+    "--enable-metrics"                   = ""
+    "--enable-auto-scaling"              = "true"
+  }
+
+  execution_property {
+    max_concurrent_runs = 1
+  }
+
+  tags = {
+    "ManagedBy" = "AWS"
+  }
+}
+
+# IAM role for Glue jobs
+resource "aws_iam_role" "glue_job_role" {
+  name = "glue-job-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "glue_etl_script" {
+  bucket = aws_s3_bucket.glue_scripts.id
+  key    = "jobs/etl_job.py"
+  source = "jobs/etl_job.py" # Make sure this file exists locally
+}
+
+```
+
+### Pythonshell Job
+
+```terraform
+resource "aws_glue_job" "python_shell_job" {
+  name         = "example-python-shell-job"
+  description  = "An example Python shell job"
+  role_arn     = aws_iam_role.glue_job_role.arn
+  max_capacity = "0.0625"
+  max_retries  = 0
+  timeout      = 2880
+  connections  = [aws_glue_connection.example.name]
+
+  command {
+    script_location = "s3://${aws_s3_bucket.glue_scripts.bucket}/jobs/shell_job.py"
+    name            = "pythonshell"
+    python_version  = "3.9"
+  }
+
+  default_arguments = {
+    "--job-language"                     = "python" # Default is python
+    "--continuous-log-logGroup"          = "/aws-glue/jobs"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "library-set"                        = "analytics" # loads common analytics libraries
+  }
+
+  execution_property {
+    max_concurrent_runs = 1
+  }
+
+  tags = {
+    "ManagedBy" = "AWS"
+  }
+}
+
+# IAM role for Glue jobs
+resource "aws_iam_role" "glue_job_role" {
+  name = "glue-job-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "python_shell_script" {
+  bucket = aws_s3_bucket.glue_scripts.id
+  key    = "jobs/shell_job.py"
+  source = "jobs/shell_job.py" # Make sure this file exists locally
 }
 ```
 
