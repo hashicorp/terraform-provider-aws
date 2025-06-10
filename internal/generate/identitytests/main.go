@@ -27,6 +27,7 @@ import (
 	"github.com/dlclark/regexp2"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/testgen"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -176,9 +177,9 @@ func main() {
 				g.Fatalf("parsing base Terraform config template: %s", err)
 			}
 
-			tfTemplates, err = tfTemplates.Parse(acctestTfTmpl)
+			tfTemplates, err = testgen.AddCommonTemplates(tfTemplates)
 			if err != nil {
-				g.Fatalf("parsing common \"acctest\" config template: %s", err)
+				g.Fatalf(err.Error())
 			}
 
 			_, err = tfTemplates.New("body").Parse(configTmpl)
@@ -451,9 +452,6 @@ type ConfigDatum struct {
 
 //go:embed resource_test.go.gtpl
 var resourceTestGoTmpl string
-
-//go:embed acctest.tf.gtpl
-var acctestTfTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
