@@ -23,6 +23,11 @@ The Lambda function is invoked with [RequestResponse](https://docs.aws.amazon.co
 ### Generate Sensitive Configuration
 
 ```terraform
+variable "environment" {
+  description = "The environment name (e.g., dev, prod)"
+  type        = string
+}
+
 # Lambda function that generates API keys or secrets
 ephemeral "aws_lambda_invocation" "secret_generator" {
   function_name = aws_lambda_function.secret_generator.function_name
@@ -99,6 +104,11 @@ resource "aws_autoscaling_group" "example" {
 ### Validation and Compliance Checks
 
 ```terraform
+variable "instance_type" {
+  description = "The EC2 instance type to use"
+  type        = string
+}
+
 # Function that validates configuration against compliance rules
 ephemeral "aws_lambda_invocation" "compliance_validator" {
   function_name = "compliance-checker"
