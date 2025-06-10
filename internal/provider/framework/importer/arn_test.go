@@ -147,7 +147,7 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 
 	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNSchema, "not a valid ARN", globalARNIdentitySchema, globalARNSpec())
 	if response.Diagnostics.HasError() {
-		if response.Diagnostics[0].Summary() != "Invalid Resource Import ID Value" {
+		if response.Diagnostics[0].Summary() != importer.InvalidResourceImportIDValue {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 		}
 	} else {
@@ -212,7 +212,7 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	identitySpec := globalARNSpec()
 	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, identity, identitySpec)
 	if response.Diagnostics.HasError() {
-		if response.Diagnostics[0].Summary() != "Invalid Import Attribute Value" {
+		if response.Diagnostics[0].Summary() != "Invalid Identity Attribute Value" {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 		}
 	} else {

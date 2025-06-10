@@ -58,11 +58,10 @@ func importByARN(ctx context.Context, client AWSClient, request resource.ImportS
 		var err error
 		arnARN, err = arn.Parse(arnVal)
 		if err != nil {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				"The import ID could not be parsed as an ARN.\n\n"+
+			response.Diagnostics.Append(InvalidResourceImportIDError(
+				"could not be parsed as an ARN.\n\n" +
 					fmt.Sprintf("Value: %q\nError: %s", arnVal, err),
-			)
+			))
 			return arn.ARN{}
 		}
 	} else if identity := request.Identity; identity != nil {
@@ -72,12 +71,11 @@ func importByARN(ctx context.Context, client AWSClient, request resource.ImportS
 		var err error
 		arnARN, err = arn.Parse(arnVal)
 		if err != nil {
-			response.Diagnostics.AddAttributeError(
+			response.Diagnostics.Append(InvalidIdentityAttributeError(
 				arnPath,
-				"Invalid Import Attribute Value",
-				fmt.Sprintf("Import attribute %q could not be parsed as an ARN.\n\n", arnPath)+
+				"could not be parsed as an ARN.\n\n"+
 					fmt.Sprintf("Value: %q\nError: %s", arnVal, err),
-			)
+			))
 			return arn.ARN{}
 		}
 	}
@@ -85,17 +83,15 @@ func importByARN(ctx context.Context, client AWSClient, request resource.ImportS
 	accountID := client.AccountID(ctx)
 	if arnARN.AccountID != accountID {
 		if request.ID != "" {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The import ID contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnARN.AccountID, accountID, arnVal),
-			)
+			response.Diagnostics.Append(InvalidResourceImportIDError(
+				fmt.Sprintf("contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnARN.AccountID, accountID, arnVal),
+			))
 		} else {
 			arnPath := path.Root(identitySpec.IdentityAttribute)
-			response.Diagnostics.AddAttributeError(
+			response.Diagnostics.Append(InvalidIdentityAttributeError(
 				arnPath,
-				"Invalid Import Attribute Value",
-				fmt.Sprintf("Import attribute %q contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnPath, arnARN.AccountID, accountID, arnVal),
-			)
+				fmt.Sprintf("contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnARN.AccountID, accountID, arnVal),
+			))
 		}
 		return arn.ARN{}
 	}

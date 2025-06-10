@@ -17,18 +17,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 )
 
 func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", nil)
 
-	response := importByID(ctx, &importer, globalARNSchema, "not a valid ARN", globalARNIdentitySchema)
+	response := importByID(ctx, &resImporter, globalARNSchema, "not a valid ARN", globalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
-		if response.Diagnostics[0].Summary() != "Invalid Resource Import ID Value" {
+		if response.Diagnostics[0].Summary() != importer.InvalidResourceImportIDValue {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 		}
 	} else {
@@ -48,10 +49,10 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", nil)
 
-	response := importByID(ctx, &importer, globalARNSchema, arn, globalARNIdentitySchema)
+	response := importByID(ctx, &resImporter, globalARNSchema, arn, globalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -86,10 +87,10 @@ func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", nil)
 
-	response := importByIDNoIdentity(ctx, &importer, globalARNSchema, arn)
+	response := importByIDNoIdentity(ctx, &resImporter, globalARNSchema, arn)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -110,10 +111,10 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", nil)
 
-	response := importByIdentity(ctx, &importer, globalARNSchema, globalARNIdentitySchema, map[string]string{
+	response := importByIdentity(ctx, &resImporter, globalARNSchema, globalARNIdentitySchema, map[string]string{
 		"arn": "not a valid ARN",
 	})
 	if response.Diagnostics.HasError() {
@@ -137,10 +138,10 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", nil)
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", nil)
 
-	response := importByIdentity(ctx, &importer, globalARNSchema, globalARNIdentitySchema, map[string]string{
+	response := importByIdentity(ctx, &resImporter, globalARNSchema, globalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
 	if response.Diagnostics.HasError() {
@@ -177,10 +178,10 @@ func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id", "attr"})
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", []string{"id", "attr"})
 
-	response := importByID(ctx, &importer, globalARNWithIDSchema, arn, globalARNIdentitySchema)
+	response := importByID(ctx, &resImporter, globalARNWithIDSchema, arn, globalARNIdentitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -218,10 +219,10 @@ func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String()
 
-	importer := framework.WithImportByGlobalARN{}
-	importer.SetARNAttributeName("arn", []string{"id", "attr"})
+	resImporter := framework.WithImportByGlobalARN{}
+	resImporter.SetARNAttributeName("arn", []string{"id", "attr"})
 
-	response := importByIdentity(ctx, &importer, globalARNWithIDSchema, globalARNIdentitySchema, map[string]string{
+	response := importByIdentity(ctx, &resImporter, globalARNWithIDSchema, globalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
 	if response.Diagnostics.HasError() {
