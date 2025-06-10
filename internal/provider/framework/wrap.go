@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -408,6 +409,7 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 			return
 		}
 
+		ctx = importer.Context(ctx, w.meta)
 		f := func(ctx context.Context, request *resource.ImportStateRequest, response *resource.ImportStateResponse) diag.Diagnostics {
 			v.ImportState(ctx, *request, response)
 			return response.Diagnostics

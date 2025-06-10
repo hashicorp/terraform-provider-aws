@@ -15,14 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TODO: Testing is currently handled in `internal/framework`
-
-func GlobalARN(ctx context.Context, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
-	importByARN(ctx, request, identitySpec, response)
+func GlobalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+	importByARN(ctx, client, request, identitySpec, response)
 }
 
-func RegionalARN(ctx context.Context, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
-	arnARN := importByARN(ctx, request, identitySpec, response)
+func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+	arnARN := importByARN(ctx, client, request, identitySpec, response)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -51,7 +49,7 @@ func RegionalARN(ctx context.Context, request resource.ImportStateRequest, ident
 	}
 }
 
-func importByARN(ctx context.Context, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) arn.ARN {
+func importByARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) arn.ARN {
 	var (
 		arnARN arn.ARN
 		arnVal string
@@ -77,10 +75,29 @@ func importByARN(ctx context.Context, request resource.ImportStateRequest, ident
 			response.Diagnostics.AddAttributeError(
 				arnPath,
 				"Invalid Import Attribute Value",
-				fmt.Sprintf("Import attribute %q is not a valid ARN, got: %s", arnPath, arnVal),
+				fmt.Sprintf("Import attribute %q could not be parsed as an ARN.\n\n", arnPath)+
+					fmt.Sprintf("Value: %q\nError: %s", arnVal, err),
 			)
 			return arn.ARN{}
 		}
+	}
+
+	accountID := client.AccountID(ctx)
+	if arnARN.AccountID != accountID {
+		if request.ID != "" {
+			response.Diagnostics.AddError(
+				"Invalid Resource Import ID Value",
+				fmt.Sprintf("The import ID contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnARN.AccountID, accountID, arnVal),
+			)
+		} else {
+			arnPath := path.Root(identitySpec.IdentityAttribute)
+			response.Diagnostics.AddAttributeError(
+				arnPath,
+				"Invalid Import Attribute Value",
+				fmt.Sprintf("Import attribute %q contains an Account ID %q which does not match the provider's %q.\n\nValue: %q", arnPath, arnARN.AccountID, accountID, arnVal),
+			)
+		}
+		return arn.ARN{}
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(identitySpec.IdentityAttribute), arnVal)...)

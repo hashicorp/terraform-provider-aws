@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package framework_test
+package importer_test
 
 import (
 	"context"
@@ -10,8 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
@@ -46,20 +49,12 @@ var globalARNIdentitySchema = identityschema.Schema{
 	},
 }
 
-func globalARNImporter() (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.GlobalARNIdentity(),
-	)
-	return
-}
-
-func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.GlobalARNIdentity(
-			inttypes.WithIdentityDuplicateAttrs(attrs...),
-		),
-	)
-	return
+func globalARNSpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
+	}
+	return inttypes.GlobalARNIdentity(opts...)
 }
 
 type mockClient struct {
@@ -70,7 +65,7 @@ func (c *mockClient) AccountID(_ context.Context) string {
 	return c.accountID
 }
 
-func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
+func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -85,11 +80,8 @@ func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporter()
-
-	response := importByID(ctx, &resImporter, globalARNSchema, arn, globalARNIdentitySchema)
+	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNSchema, arn, globalARNIdentitySchema, globalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -112,7 +104,7 @@ func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
+func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -127,11 +119,8 @@ func TestImportByARN_GlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporter()
-
-	response := importByIDNoIdentity(ctx, &resImporter, globalARNSchema, arn)
+	response := importARNByIDNoIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, arn, globalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -148,18 +137,15 @@ func TestImportByARN_GlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
+func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporter()
-
-	response := importByID(ctx, &resImporter, globalARNSchema, "not a valid ARN", globalARNIdentitySchema)
+	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNSchema, "not a valid ARN", globalARNIdentitySchema, globalARNSpec())
 	if response.Diagnostics.HasError() {
 		if response.Diagnostics[0].Summary() != "Invalid Resource Import ID Value" {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -169,7 +155,7 @@ func TestImportByARN_GlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_Identity_Valid(t *testing.T) {
+func TestGlobalARN_Identity_Valid(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -184,13 +170,12 @@ func TestImportByARN_GlobalARN_Identity_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporter()
-
-	response := importByIdentity(ctx, &resImporter, globalARNSchema, globalARNIdentitySchema, map[string]string{
+	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
+	identitySpec := globalARNSpec()
+	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, identity, identitySpec)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -213,20 +198,19 @@ func TestImportByARN_GlobalARN_Identity_Valid(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
+func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporter()
-
-	response := importByIdentity(ctx, &resImporter, globalARNSchema, globalARNIdentitySchema, map[string]string{
+	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
 		"arn": "not a valid ARN",
 	})
+	identitySpec := globalARNSpec()
+	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, identity, identitySpec)
 	if response.Diagnostics.HasError() {
 		if response.Diagnostics[0].Summary() != "Invalid Import Attribute Value" {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -236,7 +220,7 @@ func TestImportByARN_GlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
+func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -251,11 +235,9 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporterWithDuplicateAttrs("id", "attr")
-
-	response := importByID(ctx, &resImporter, globalARNWithIDSchema, arn, globalARNIdentitySchema)
+	identitySpec := globalARNSpec("id", "attr")
+	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNWithIDSchema, arn, globalARNIdentitySchema, identitySpec)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -281,7 +263,7 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	}
 }
 
-func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
+func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
@@ -296,13 +278,12 @@ func TestImportByARN_GlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := globalARNImporterWithDuplicateAttrs("id", "attr")
-
-	response := importByIdentity(ctx, &resImporter, globalARNWithIDSchema, globalARNIdentitySchema, map[string]string{
+	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
+	identitySpec := globalARNSpec("id", "attr")
+	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNWithIDSchema, identity, identitySpec)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -357,20 +338,12 @@ var regionalARNIdentitySchema = identityschema.Schema{
 	},
 }
 
-func regionalARNImporter() (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.RegionalARNIdentity(),
-	)
-	return
-}
-
-func regionalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.WithImportByARN) {
-	importer.SetIdentitySpec(
-		inttypes.RegionalARNIdentity(
-			inttypes.WithIdentityDuplicateAttrs(attrs...),
-		),
-	)
-	return
+func regionalARNSpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
+	}
+	return inttypes.RegionalARNIdentity(opts...)
 }
 
 func TestImportByARN_RegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
@@ -389,11 +362,8 @@ func TestImportByARN_RegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByID(ctx, &resImporter, regionalARNSchema, arn, regionalARNIdentitySchema)
+	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, regionalARNIdentitySchema, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -435,13 +405,10 @@ func TestImportByARN_RegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByIDWithState(ctx, &resImporter, regionalARNSchema, arn, map[string]string{
+	response := importARNByIDWithState(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, map[string]string{
 		"region": region,
-	}, regionalARNIdentitySchema)
+	}, regionalARNIdentitySchema, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -483,11 +450,8 @@ func TestImportByARN_RegionalARN_ImportID_Valid_NoIdentity(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByIDNoIdentity(ctx, &resImporter, regionalARNSchema, arn)
+	response := importARNByIDNoIdentity(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -514,11 +478,8 @@ func TestImportByARN_RegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByID(ctx, &resImporter, regionalARNSchema, "not a valid ARN", regionalARNIdentitySchema)
+	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNSchema, "not a valid ARN", regionalARNIdentitySchema, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The import ID could not be parsed as an ARN.") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -544,13 +505,10 @@ func TestImportByARN_RegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByIDWithState(ctx, &resImporter, regionalARNSchema, arn, map[string]string{
+	response := importARNByIDWithState(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, map[string]string{
 		"region": "another-region-1",
-	}, regionalARNIdentitySchema)
+	}, regionalARNIdentitySchema, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The region passed for import,") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -576,13 +534,12 @@ func TestImportByARN_RegionalARN_Identity_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporter()
-
-	response := importByIdentity(ctx, &resImporter, regionalARNSchema, regionalARNIdentitySchema, map[string]string{
+	identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
+
+	response := importARNByIdentity(ctx, importer.RegionalARN, &client, regionalARNSchema, identity, regionalARNSpec())
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -624,11 +581,10 @@ func TestImportByARN_RegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporterWithDuplicateAttrs("id", "attr")
+	identitySpec := regionalARNSpec("id", "attr")
 
-	response := importByID(ctx, &resImporter, regionalARNWithIDSchema, arn, regionalARNIdentitySchema)
+	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNWithIDSchema, arn, regionalARNIdentitySchema, identitySpec)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -673,13 +629,14 @@ func TestImportByARN_RegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 	client := mockClient{
 		accountID: "123456789012",
 	}
-	ctx = importer.Context(ctx, &client)
 
-	resImporter := regionalARNImporterWithDuplicateAttrs("id", "attr")
+	identitySpec := regionalARNSpec("id", "attr")
 
-	response := importByIdentity(ctx, &resImporter, regionalARNWithIDSchema, regionalARNIdentitySchema, map[string]string{
+	identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
 		"arn": arn,
 	})
+
+	response := importARNByIdentity(ctx, importer.RegionalARN, &client, regionalARNWithIDSchema, identity, identitySpec)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
 	}
@@ -706,4 +663,75 @@ func TestImportByARN_RegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
 		}
 	}
+}
+
+type importARNFunc func(ctx context.Context, client importer.AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse)
+
+func importARNByID(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	identity := emtpyIdentityFromSchema(ctx, identitySchema)
+
+	request := resource.ImportStateRequest{
+		ID:       id,
+		Identity: identity,
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
+		Identity: identity,
+	}
+	f(ctx, client, request, &identitySpec, &response)
+
+	return response
+}
+
+func importARNByIDWithState(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	identity := emtpyIdentityFromSchema(ctx, identitySchema)
+
+	request := resource.ImportStateRequest{
+		ID:       id,
+		Identity: identity,
+	}
+	response := resource.ImportStateResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	f(ctx, client, request, &identitySpec, &response)
+
+	return response
+}
+
+func importARNByIDNoIdentity(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	request := resource.ImportStateRequest{
+		ID:       id,
+		Identity: nil,
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
+		Identity: nil,
+	}
+	f(ctx, client, request, &identitySpec, &response)
+
+	return response
+}
+
+func importARNByIdentity(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, identity *tfsdk.ResourceIdentity, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	request := resource.ImportStateRequest{
+		Identity: identity,
+	}
+	response := resource.ImportStateResponse{
+		State:    emtpyStateFromSchema(ctx, resourceSchema),
+		Identity: identity,
+	}
+	f(ctx, client, request, &identitySpec, &response)
+
+	return response
+}
+
+func getAttributeValue(ctx context.Context, t *testing.T, state tfsdk.State, path path.Path) string {
+	t.Helper()
+
+	var attrVal types.String
+	if diags := state.GetAttribute(ctx, path, &attrVal); diags.HasError() {
+		t.Fatalf("Unexpected error getting attribute %q: %s", path, fwdiag.DiagnosticsError(diags))
+	}
+	return attrVal.ValueString()
 }

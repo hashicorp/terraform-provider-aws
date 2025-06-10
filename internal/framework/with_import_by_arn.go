@@ -27,9 +27,20 @@ func (w *WithImportByARN) SetIdentitySpec(identity inttypes.Identity) {
 }
 
 func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	client := importer.Client(ctx)
+	if client == nil {
+		response.Diagnostics.AddError(
+			"Unexpected Error",
+			"An unexpected error occurred while importing a resource. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Importer context was nil.",
+		)
+		return
+	}
 	if w.identity.IsGlobalResource {
-		importer.GlobalARN(ctx, request, &w.identity, response)
+		importer.GlobalARN(ctx, client, request, &w.identity, response)
 	} else {
-		importer.RegionalARN(ctx, request, &w.identity, response)
+		importer.RegionalARN(ctx, client, request, &w.identity, response)
 	}
 }
