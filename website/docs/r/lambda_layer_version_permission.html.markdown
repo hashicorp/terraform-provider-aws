@@ -21,9 +21,9 @@ For information about Lambda Layer Permissions and how to use them, see [Using R
 ```terraform
 # Lambda layer to share
 resource "aws_lambda_layer_version" "example" {
-  filename         = "layer.zip"
-  layer_name      = "shared_utilities"
-  description     = "Common utilities for Lambda functions"
+  filename            = "layer.zip"
+  layer_name          = "shared_utilities"
+  description         = "Common utilities for Lambda functions"
   compatible_runtimes = ["nodejs20.x", "python3.12"]
 }
 
@@ -31,7 +31,7 @@ resource "aws_lambda_layer_version" "example" {
 resource "aws_lambda_layer_version_permission" "example" {
   layer_name     = aws_lambda_layer_version.example.layer_name
   version_number = aws_lambda_layer_version.example.version
-  principal      = "123456789012"  # Target AWS account ID
+  principal      = "123456789012" # Target AWS account ID
   action         = "lambda:GetLayerVersion"
   statement_id   = "dev-account-access"
 }
@@ -44,7 +44,7 @@ resource "aws_lambda_layer_version_permission" "example" {
   layer_name      = aws_lambda_layer_version.example.layer_name
   version_number  = aws_lambda_layer_version.example.version
   principal       = "*"
-  organization_id = "o-1234567890"  # AWS Organization ID
+  organization_id = "o-1234567890" # AWS Organization ID
   action          = "lambda:GetLayerVersion"
   statement_id    = "org-wide-access"
 }
@@ -56,7 +56,7 @@ resource "aws_lambda_layer_version_permission" "example" {
 resource "aws_lambda_layer_version_permission" "example" {
   layer_name     = aws_lambda_layer_version.example.layer_name
   version_number = aws_lambda_layer_version.example.version
-  principal      = "*"  # All AWS accounts
+  principal      = "*" # All AWS accounts
   action         = "lambda:GetLayerVersion"
   statement_id   = "public-access"
 }
@@ -129,5 +129,5 @@ import {
 For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-$ terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1
+% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456789012:layer:shared_utilities,1
 ```

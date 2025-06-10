@@ -23,9 +23,9 @@ Manages an AWS Lambda Function invocation. Use this resource to invoke a Lambda 
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "data_processor"
-  role         = aws_iam_role.lambda_role.arn
-  handler      = "index.handler"
-  runtime      = "python3.12"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
 }
 
 # Invoke the function once during resource creation

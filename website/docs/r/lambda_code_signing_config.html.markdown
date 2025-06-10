@@ -48,7 +48,7 @@ resource "aws_lambda_code_signing_config" "example" {
   }
 
   policies {
-    untrusted_artifact_on_deployment = "Enforce"  # Block deployments that fail code signing validation
+    untrusted_artifact_on_deployment = "Enforce" # Block deployments that fail code signing validation
   }
 
   tags = {
@@ -71,7 +71,7 @@ resource "aws_lambda_code_signing_config" "example" {
   }
 
   policies {
-    untrusted_artifact_on_deployment = "Warn"  # Allow deployments but log validation failures
+    untrusted_artifact_on_deployment = "Warn" # Allow deployments but log validation failures
   }
 
   tags = {
@@ -170,5 +170,5 @@ import {
 For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-$ terraform import aws_lambda_code_signing_config.example arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
+% terraform import aws_lambda_code_signing_config.example arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```

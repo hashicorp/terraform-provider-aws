@@ -21,9 +21,9 @@ Manages an AWS Lambda Function Recursion Config. Use this resource to control ho
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "recursive_processor"
-  role         = aws_iam_role.lambda_role.arn
-  handler      = "index.handler"
-  runtime      = "python3.12"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.12"
 }
 
 # Allow the function to invoke itself recursively
@@ -50,10 +50,10 @@ resource "aws_lambda_function_recursion_config" "example" {
 resource "aws_lambda_function" "production_processor" {
   filename      = "processor.zip"
   function_name = "production-data-processor"
-  role         = aws_iam_role.lambda_role.arn
-  handler      = "app.handler"
-  runtime      = "nodejs20.x"
-  
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "app.handler"
+  runtime       = "nodejs20.x"
+
   tags = {
     Environment = "production"
     Purpose     = "data-processing"
@@ -63,7 +63,7 @@ resource "aws_lambda_function" "production_processor" {
 # Prevent infinite loops in production
 resource "aws_lambda_function_recursion_config" "example" {
   function_name  = aws_lambda_function.production_processor.function_name
-  recursive_loop = "Terminate"  # Safety first in production
+  recursive_loop = "Terminate" # Safety first in production
 }
 ```
 
@@ -96,5 +96,5 @@ import {
 For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-$ terraform import aws_lambda_function_recursion_config.example recursive_processor
+% terraform import aws_lambda_function_recursion_config.example recursive_processor
 ```
