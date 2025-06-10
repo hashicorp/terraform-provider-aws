@@ -65,247 +65,160 @@ func (c *mockClient) AccountID(_ context.Context) string {
 	return c.accountID
 }
 
-func TestGlobalARN_ImportID_Valid(t *testing.T) {
+func TestGlobalARN(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
-	arn := arn.ARN{
+	accountID := "123456789012"
+	validARN := arn.ARN{
 		Partition: "aws",
 		Service:   "a-service",
 		Region:    "",
-		AccountID: "123456789012",
+		AccountID: accountID,
 		Resource:  "res-abc123",
 	}.String()
 
-	client := mockClient{
-		accountID: "123456789012",
+	testCases := map[string]struct {
+		importMethod         string // "ID", "IDNoIdentity", or "Identity"
+		inputARN             string
+		duplicateAttrs       []string
+		useSchemaWithID      bool
+		expectError          bool
+		expectedErrorSummary string
+	}{
+		"ImportID_Valid": {
+			importMethod: "ID",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"ImportID_Valid_NoIdentity": {
+			importMethod: "IDNoIdentity",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"ImportID_Invalid_NotAnARN": {
+			importMethod:         "ID",
+			inputARN:             "not a valid ARN",
+			expectError:          true,
+			expectedErrorSummary: importer.InvalidResourceImportIDValue,
+		},
+		"Identity_Valid": {
+			importMethod: "Identity",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"Identity_Invalid_NotAnARN": {
+			importMethod:         "Identity",
+			inputARN:             "not a valid ARN",
+			expectError:          true,
+			expectedErrorSummary: "Invalid Identity Attribute Value",
+		},
+		"DuplicateAttrs_ImportID_Valid": {
+			importMethod:    "ID",
+			duplicateAttrs:  []string{"id", "attr"},
+			useSchemaWithID: true,
+			inputARN:        validARN,
+			expectError:     false,
+		},
+		"DuplicateAttrs_Identity_Valid": {
+			importMethod:    "Identity",
+			duplicateAttrs:  []string{"id", "attr"},
+			useSchemaWithID: true,
+			inputARN:        validARN,
+			expectError:     false,
+		},
 	}
 
-	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNSchema, arn, globalARNIdentitySchema, globalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
 
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
+			client := mockClient{
+				accountID: accountID,
+			}
 
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
+			var identitySpec inttypes.Identity
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = globalARNSpec(tc.duplicateAttrs...)
+			} else {
+				identitySpec = globalARNSpec()
+			}
 
-func TestGlobalARN_ImportID_Valid_NoIdentity(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+			var response resource.ImportStateResponse
+			schema := globalARNSchema
+			if tc.useSchemaWithID {
+				schema = globalARNWithIDSchema
+			}
 
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    "",
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
+			switch tc.importMethod {
+			case "ID":
+				response = importARNByID(ctx, importer.GlobalARN, &client, schema, tc.inputARN, globalARNIdentitySchema, identitySpec)
+			case "IDNoIdentity":
+				response = importARNByIDNoIdentity(ctx, importer.GlobalARN, &client, schema, tc.inputARN, identitySpec)
+			case "Identity":
+				identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
+					"arn": tc.inputARN,
+				})
+				response = importARNByIdentity(ctx, importer.GlobalARN, &client, schema, identity, identitySpec)
+			}
 
-	client := mockClient{
-		accountID: "123456789012",
-	}
+			if tc.expectError {
+				if !response.Diagnostics.HasError() {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorSummary != "" && response.Diagnostics[0].Summary() != tc.expectedErrorSummary {
+					t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+				}
+				return
+			}
 
-	response := importARNByIDNoIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, arn, globalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
+			if response.Diagnostics.HasError() {
+				t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+			}
 
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
+			// Check ARN value
+			if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+				t.Errorf("expected `arn` to be %q, got %q", e, a)
+			}
 
-	if response.Identity != nil {
-		t.Error("Identity should not be set")
-	}
-}
+			// Check attr value
+			expectedAttrValue := ""
+			if len(tc.duplicateAttrs) > 0 && tc.useSchemaWithID {
+				for _, attr := range tc.duplicateAttrs {
+					if attr == "attr" {
+						expectedAttrValue = tc.inputARN
+						break
+					}
+				}
+			}
+			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+				t.Errorf("expected `attr` to be %q, got %q", e, a)
+			}
 
-func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+			// Check ID value if using schema with ID
+			if tc.useSchemaWithID {
+				if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+					t.Errorf("expected `id` to be %q, got %q", e, a)
+				}
+			}
 
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNSchema, "not a valid ARN", globalARNIdentitySchema, globalARNSpec())
-	if response.Diagnostics.HasError() {
-		if response.Diagnostics[0].Summary() != importer.InvalidResourceImportIDValue {
-			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-		}
-	} else {
-		t.Fatal("Expected error, got none")
-	}
-}
-
-func TestGlobalARN_Identity_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    "",
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
-		"arn": arn,
-	})
-	identitySpec := globalARNSpec()
-	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, identity, identitySpec)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
-
-func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
-		"arn": "not a valid ARN",
-	})
-	identitySpec := globalARNSpec()
-	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNSchema, identity, identitySpec)
-	if response.Diagnostics.HasError() {
-		if response.Diagnostics[0].Summary() != "Invalid Identity Attribute Value" {
-			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-		}
-	} else {
-		t.Fatal("Expected error, got none")
-	}
-}
-
-func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    "",
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identitySpec := globalARNSpec("id", "attr")
-	response := importARNByID(ctx, importer.GlobalARN, &client, globalARNWithIDSchema, arn, globalARNIdentitySchema, identitySpec)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
-
-func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    "",
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
-		"arn": arn,
-	})
-	identitySpec := globalARNSpec("id", "attr")
-	response := importARNByIdentity(ctx, importer.GlobalARN, &client, globalARNWithIDSchema, identity, identitySpec)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `attr` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
+			// Check identity
+			if tc.importMethod == "IDNoIdentity" {
+				if response.Identity != nil {
+					t.Error("Identity should not be set")
+				}
+			} else {
+				if identity := response.Identity; identity == nil {
+					t.Error("Identity should be set")
+				} else {
+					var arnVal string
+					identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+					if e, a := tc.inputARN, arnVal; e != a {
+						t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+					}
+				}
+			}
+		})
 	}
 }
 
@@ -346,322 +259,186 @@ func regionalARNSpec(attrs ...string) inttypes.Identity {
 	return inttypes.RegionalARNIdentity(opts...)
 }
 
-func TestImportByARN_RegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
+func TestRegionalARN(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
+	accountID := "123456789012"
 	region := "a-region-1"
-	arn := arn.ARN{
+	validARN := arn.ARN{
 		Partition: "aws",
 		Service:   "a-service",
 		Region:    region,
-		AccountID: "123456789012",
+		AccountID: accountID,
 		Resource:  "res-abc123",
 	}.String()
 
-	client := mockClient{
-		accountID: "123456789012",
+	testCases := map[string]struct {
+		importMethod        string // "ID", "IDNoIdentity", "Identity", "IDWithState"
+		inputARN            string
+		duplicateAttrs      []string
+		useSchemaWithID     bool
+		stateAttrs          map[string]string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"ImportID_Valid_DefaultRegion": {
+			importMethod: "ID",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"ImportID_Valid_RegionOverride": {
+			importMethod: "IDWithState",
+			inputARN:     validARN,
+			stateAttrs: map[string]string{
+				"region": region,
+			},
+			expectError: false,
+		},
+		"ImportID_Valid_NoIdentity": {
+			importMethod: "IDNoIdentity",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"ImportID_Invalid_NotAnARN": {
+			importMethod:        "ID",
+			inputARN:            "not a valid ARN",
+			expectError:         true,
+			expectedErrorPrefix: "The import ID could not be parsed as an ARN.",
+		},
+		"ImportID_Invalid_WrongRegion": {
+			importMethod: "IDWithState",
+			inputARN:     validARN,
+			stateAttrs: map[string]string{
+				"region": "another-region-1",
+			},
+			expectError:         true,
+			expectedErrorPrefix: "The region passed for import,",
+		},
+		"Identity_Valid": {
+			importMethod: "Identity",
+			inputARN:     validARN,
+			expectError:  false,
+		},
+		"Identity_Invalid_NotAnARN": {
+			importMethod:        "Identity",
+			inputARN:            "not a valid ARN",
+			expectError:         true,
+			expectedErrorPrefix: "Identity attribute \"arn\" could not be parsed as an ARN.",
+		},
+		"DuplicateAttrs_ImportID_Valid": {
+			importMethod:    "ID",
+			duplicateAttrs:  []string{"id", "attr"},
+			useSchemaWithID: true,
+			inputARN:        validARN,
+			expectError:     false,
+		},
+		"DuplicateAttrs_Identity_Valid": {
+			importMethod:    "Identity",
+			duplicateAttrs:  []string{"id", "attr"},
+			useSchemaWithID: true,
+			inputARN:        validARN,
+			expectError:     false,
+		},
 	}
 
-	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, regionalARNIdentitySchema, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
 
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
+			client := mockClient{
+				accountID: accountID,
+			}
 
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
+			var identitySpec inttypes.Identity
+			if len(tc.duplicateAttrs) > 0 {
+				identitySpec = regionalARNSpec(tc.duplicateAttrs...)
+			} else {
+				identitySpec = regionalARNSpec()
+			}
 
-func TestImportByARN_RegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+			var response resource.ImportStateResponse
+			schema := regionalARNSchema
+			if tc.useSchemaWithID {
+				schema = regionalARNWithIDSchema
+			}
 
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
+			switch tc.importMethod {
+			case "ID":
+				response = importARNByID(ctx, importer.RegionalARN, &client, schema, tc.inputARN, regionalARNIdentitySchema, identitySpec)
+			case "IDWithState":
+				response = importARNByIDWithState(ctx, importer.RegionalARN, &client, schema, tc.inputARN, tc.stateAttrs, regionalARNIdentitySchema, identitySpec)
+			case "IDNoIdentity":
+				response = importARNByIDNoIdentity(ctx, importer.RegionalARN, &client, schema, tc.inputARN, identitySpec)
+			case "Identity":
+				identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
+					"arn": tc.inputARN,
+				})
+				response = importARNByIdentity(ctx, importer.RegionalARN, &client, schema, identity, identitySpec)
+			}
 
-	client := mockClient{
-		accountID: "123456789012",
-	}
+			if tc.expectError {
+				if !response.Diagnostics.HasError() {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(response.Diagnostics[0].Detail(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+				}
+				return
+			}
 
-	response := importARNByIDWithState(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, map[string]string{
-		"region": region,
-	}, regionalARNIdentitySchema, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
+			if response.Diagnostics.HasError() {
+				t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+			}
 
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
+			// Check ARN value
+			if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+				t.Errorf("expected `arn` to be %q, got %q", e, a)
+			}
 
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
+			// Check attr value
+			expectedAttrValue := ""
+			if len(tc.duplicateAttrs) > 0 && tc.useSchemaWithID {
+				for _, attr := range tc.duplicateAttrs {
+					if attr == "attr" {
+						expectedAttrValue = tc.inputARN
+						break
+					}
+				}
+			}
+			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+				t.Errorf("expected `attr` to be %q, got %q", e, a)
+			}
 
-func TestImportByARN_RegionalARN_ImportID_Valid_NoIdentity(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
+			// Check region value
+			if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
+				t.Errorf("expected `region` to be %q, got %q", e, a)
+			}
 
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
+			// Check ID value if using schema with ID
+			if tc.useSchemaWithID {
+				if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+					t.Errorf("expected `id` to be %q, got %q", e, a)
+				}
+			}
 
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	response := importARNByIDNoIdentity(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-
-	if response.Identity != nil {
-		t.Error("Identity should not be set")
-	}
-}
-
-func TestImportByARN_RegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNSchema, "not a valid ARN", regionalARNIdentitySchema, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The import ID could not be parsed as an ARN.") {
-			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-		}
-	} else {
-		t.Fatal("Expected error, got none")
-	}
-}
-
-func TestImportByARN_RegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	response := importARNByIDWithState(ctx, importer.RegionalARN, &client, regionalARNSchema, arn, map[string]string{
-		"region": "another-region-1",
-	}, regionalARNIdentitySchema, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The region passed for import,") {
-			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-		}
-	} else {
-		t.Fatal("Expected error, got none")
-	}
-}
-
-func TestImportByARN_RegionalARN_Identity_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
-		"arn": arn,
-	})
-
-	response := importARNByIdentity(ctx, importer.RegionalARN, &client, regionalARNSchema, identity, regionalARNSpec())
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := "", getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
-
-func TestImportByARN_RegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identitySpec := regionalARNSpec("id", "attr")
-
-	response := importARNByID(ctx, importer.RegionalARN, &client, regionalARNWithIDSchema, arn, regionalARNIdentitySchema, identitySpec)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
-	}
-}
-
-func TestImportByARN_RegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-
-	region := "a-region-1"
-	arn := arn.ARN{
-		Partition: "aws",
-		Service:   "a-service",
-		Region:    region,
-		AccountID: "123456789012",
-		Resource:  "res-abc123",
-	}.String()
-
-	client := mockClient{
-		accountID: "123456789012",
-	}
-
-	identitySpec := regionalARNSpec("id", "attr")
-
-	identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
-		"arn": arn,
-	})
-
-	response := importARNByIdentity(ctx, importer.RegionalARN, &client, regionalARNWithIDSchema, identity, identitySpec)
-	if response.Diagnostics.HasError() {
-		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := arn, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
-		t.Errorf("expected `arn` to be %q, got %q", e, a)
-	}
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-
-	if identity := response.Identity; identity == nil {
-		t.Error("Identity should be set")
-	} else {
-		var arnVal string
-		identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-		if e, a := arn, arnVal; e != a {
-			t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
-		}
+			// Check identity
+			if tc.importMethod == "IDNoIdentity" {
+				if response.Identity != nil {
+					t.Error("Identity should not be set")
+				}
+			} else {
+				if identity := response.Identity; identity == nil {
+					t.Error("Identity should be set")
+				} else {
+					var arnVal string
+					identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
+					if e, a := tc.inputARN, arnVal; e != a {
+						t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
+					}
+				}
+			}
+		})
 	}
 }
 
