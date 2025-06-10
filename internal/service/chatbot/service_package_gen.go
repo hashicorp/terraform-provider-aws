@@ -20,6 +20,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory:  newDataSourceSlackChannelConfiguration,
 			TypeName: "aws_chatbot_slack_channel_configuration",
 			Name:     "Slack Channel Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "chat_configuration_arn",
+			},
 		},
 		{
 			Factory:  newDataSourceSlackWorkspace,

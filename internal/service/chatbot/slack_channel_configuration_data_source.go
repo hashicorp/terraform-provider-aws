@@ -22,6 +22,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_chatbot_slack_channel_configuration", name="Slack Channel Configuration")
+// @Tags(identifierAttribute="chat_configuration_arn")
 func newDataSourceSlackChannelConfiguration(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSlackChannelConfiguration{}, nil
 }
@@ -115,8 +116,6 @@ func (d *dataSourceSlackChannelConfiguration) Read(ctx context.Context, req data
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
