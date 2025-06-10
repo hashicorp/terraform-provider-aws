@@ -35,41 +35,6 @@ output "result" {
 }
 ```
 
-### Configuration Validation
-
-```terraform
-# Lambda function to validate configuration
-data "aws_lambda_invocation" "validator" {
-  function_name = "config-validator"
-
-  input = jsonencode({
-    config = {
-      database = {
-        host     = var.db_host
-        port     = var.db_port
-        username = var.db_user
-        # Note: Avoid sending sensitive values to Lambda
-      }
-      cache = {
-        enabled = var.cache_enabled
-        ttl     = var.cache_ttl
-      }
-    }
-  })
-}
-
-# Use validation results
-locals {
-  validation_result = jsondecode(data.aws_lambda_invocation.validator.result)
-}
-
-resource "aws_rds_cluster" "example" {
-  count = local.validation_result.valid ? 1 : 0
-
-  # ... other configuration ...
-}
-```
-
 ### Dynamic Resource Configuration
 
 ```terraform

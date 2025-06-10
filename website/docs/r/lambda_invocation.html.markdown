@@ -90,7 +90,7 @@ resource "aws_lambda_invocation" "example" {
 }
 ```
 
-~> **Note:** `lifecycle_scope = "CRUD"` will inject a key `terraform_lifecycle` (or the value of `terraform_key`) in the input event to pass lifecycle information! This allows the Lambda function to handle different lifecycle transitions uniquely.
+~> **Note:** `lifecycle_scope = "CRUD"` will inject a key `tf` in the input event to pass lifecycle information! This allows the Lambda function to handle different lifecycle transitions uniquely. If you need to use a key `tf` in your own input JSON, the default key name can be overridden with the `terraform_key` argument.
 
 The lifecycle key gets added with subkeys:
 
