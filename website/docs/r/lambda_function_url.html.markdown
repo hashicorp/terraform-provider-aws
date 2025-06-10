@@ -35,7 +35,7 @@ resource "aws_lambda_function_url" "example" {
     allow_methods     = ["GET", "POST"]
     allow_headers     = ["date", "keep-alive"]
     expose_headers    = ["keep-alive", "date"]
-    max_age          = 86400
+    max_age           = 86400
   }
 }
 ```

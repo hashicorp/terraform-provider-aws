@@ -22,7 +22,7 @@ More information about asynchronous invocations and the configurable values can 
 # SQS queue for failed invocations
 resource "aws_sqs_queue" "dlq" {
   name = "lambda-dlq"
-  
+
   tags = {
     Environment = "production"
     Purpose     = "lambda-error-handling"
@@ -32,7 +32,7 @@ resource "aws_sqs_queue" "dlq" {
 # SNS topic for successful invocations
 resource "aws_sns_topic" "success" {
   name = "lambda-success-notifications"
-  
+
   tags = {
     Environment = "production"
     Purpose     = "lambda-success-notifications"
@@ -42,8 +42,8 @@ resource "aws_sns_topic" "success" {
 # Complete event invoke configuration
 resource "aws_lambda_function_event_invoke_config" "example" {
   function_name                = aws_lambda_function.example.function_name
-  maximum_event_age_in_seconds = 300   # 5 minutes
-  maximum_retry_attempts       = 1     # Retry once on failure
+  maximum_event_age_in_seconds = 300 # 5 minutes
+  maximum_retry_attempts       = 1   # Retry once on failure
 
   destination_config {
     on_failure {
@@ -62,8 +62,8 @@ resource "aws_lambda_function_event_invoke_config" "example" {
 ```terraform
 resource "aws_lambda_function_event_invoke_config" "example" {
   function_name                = aws_lambda_function.example.function_name
-  maximum_event_age_in_seconds = 60    # 1 minute - fail fast
-  maximum_retry_attempts       = 0     # No retries
+  maximum_event_age_in_seconds = 60 # 1 minute - fail fast
+  maximum_retry_attempts       = 0  # No retries
 }
 ```
 
@@ -81,8 +81,8 @@ resource "aws_lambda_function_event_invoke_config" "example" {
   function_name = aws_lambda_function.example.function_name
   qualifier     = aws_lambda_alias.example.name
 
-  maximum_event_age_in_seconds = 1800  # 30 minutes for production
-  maximum_retry_attempts       = 2     # Default retry behavior
+  maximum_event_age_in_seconds = 1800 # 30 minutes for production
+  maximum_retry_attempts       = 2    # Default retry behavior
 
   destination_config {
     on_failure {
@@ -100,14 +100,14 @@ resource "aws_lambda_function_event_invoke_config" "example" {
   qualifier     = aws_lambda_function.example.version
 
   # Conservative settings for specific version
-  maximum_event_age_in_seconds = 21600  # 6 hours maximum
+  maximum_event_age_in_seconds = 21600 # 6 hours maximum
   maximum_retry_attempts       = 2
 
   destination_config {
     on_failure {
       destination = aws_sqs_queue.version_dlq.arn
     }
-    
+
     on_success {
       destination = aws_sns_topic.version_success.arn
     }
@@ -123,8 +123,8 @@ resource "aws_lambda_function_event_invoke_config" "example" {
   qualifier     = "$LATEST"
 
   # Development settings - fail fast
-  maximum_event_age_in_seconds = 120   # 2 minutes
-  maximum_retry_attempts       = 0     # No retries in development
+  maximum_event_age_in_seconds = 120 # 2 minutes
+  maximum_retry_attempts       = 0   # No retries in development
 
   destination_config {
     on_failure {

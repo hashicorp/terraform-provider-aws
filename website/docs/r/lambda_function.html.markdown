@@ -53,8 +53,8 @@ data "archive_file" "example" {
 resource "aws_lambda_function" "example" {
   filename         = data.archive_file.example.output_path
   function_name    = "example_lambda_function"
-  role            = aws_iam_role.example.arn
-  handler         = "index.handler"
+  role             = aws_iam_role.example.arn
+  handler          = "index.handler"
   source_code_hash = data.archive_file.example.output_base64sha256
 
   runtime = "nodejs20.x"
@@ -62,7 +62,7 @@ resource "aws_lambda_function" "example" {
   environment {
     variables = {
       ENVIRONMENT = "production"
-      LOG_LEVEL  = "info"
+      LOG_LEVEL   = "info"
     }
   }
 
@@ -78,9 +78,9 @@ resource "aws_lambda_function" "example" {
 ```terraform
 resource "aws_lambda_function" "example" {
   function_name = "example_container_function"
-  role         = aws_iam_role.example.arn
-  package_type = "Image"
-  image_uri    = "${aws_ecr_repository.example.repository_url}:latest"
+  role          = aws_iam_role.example.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.example.repository_url}:latest"
 
   image_config {
     entry_point = ["/lambda-entrypoint.sh"]
@@ -90,7 +90,7 @@ resource "aws_lambda_function" "example" {
   memory_size = 512
   timeout     = 30
 
-  architectures = ["arm64"]  # Graviton support for better price/performance
+  architectures = ["arm64"] # Graviton support for better price/performance
 }
 ```
 
@@ -101,26 +101,26 @@ resource "aws_lambda_function" "example" {
 ```terraform
 # Common dependencies layer
 resource "aws_lambda_layer_version" "example" {
-  filename         = "layer.zip"
-  layer_name      = "example_dependencies_layer"
-  description     = "Common dependencies for Lambda functions"
+  filename            = "layer.zip"
+  layer_name          = "example_dependencies_layer"
+  description         = "Common dependencies for Lambda functions"
   compatible_runtimes = ["nodejs20.x", "python3.12"]
-  
+
   compatible_architectures = ["x86_64", "arm64"]
 }
 
 # Function using the layer
 resource "aws_lambda_function" "example" {
-  filename         = "function.zip"
-  function_name    = "example_layered_function"
-  role            = aws_iam_role.example.arn
-  handler         = "index.handler"
-  runtime         = "nodejs20.x"
-  
+  filename      = "function.zip"
+  function_name = "example_layered_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
   layers = [aws_lambda_layer_version.example.arn]
 
   tracing_config {
-    mode = "Active"  # Enable X-Ray tracing
+    mode = "Active" # Enable X-Ray tracing
   }
 }
 ```
@@ -131,16 +131,16 @@ resource "aws_lambda_function" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example_vpc_function"
-  role         = aws_iam_role.example.arn
-  handler      = "app.handler"
-  runtime      = "python3.12"
-  memory_size  = 1024
-  timeout      = 30
+  role          = aws_iam_role.example.arn
+  handler       = "app.handler"
+  runtime       = "python3.12"
+  memory_size   = 1024
+  timeout       = 30
 
   vpc_config {
-    subnet_ids         = [aws_subnet.example_private1.id, aws_subnet.example_private2.id]
-    security_group_ids = [aws_security_group.example_lambda.id]
-    ipv6_allowed_for_dual_stack = true  # Enable IPv6 support
+    subnet_ids                  = [aws_subnet.example_private1.id, aws_subnet.example_private2.id]
+    security_group_ids          = [aws_security_group.example_lambda.id]
+    ipv6_allowed_for_dual_stack = true # Enable IPv6 support
   }
 
   # Increase /tmp storage to 5GB
@@ -161,7 +161,7 @@ resource "aws_lambda_function" "example" {
 # EFS file system for Lambda
 resource "aws_efs_file_system" "example" {
   encrypted = true
-  
+
   tags = {
     Name = "lambda-efs"
   }
@@ -206,9 +206,9 @@ resource "aws_efs_access_point" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example_efs_function"
-  role         = aws_iam_role.example.arn
-  handler      = "index.handler"
-  runtime      = "nodejs20.x"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
 
   vpc_config {
     subnet_ids         = var.subnet_ids
@@ -231,7 +231,7 @@ resource "aws_lambda_function" "example" {
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/example_function"
   retention_in_days = 14
-  
+
   tags = {
     Environment = "production"
     Application = "example"
@@ -241,15 +241,15 @@ resource "aws_cloudwatch_log_group" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example_function"
-  role         = aws_iam_role.example.arn
-  handler      = "index.handler"
-  runtime      = "nodejs20.x"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
 
   # Advanced logging configuration
   logging_config {
-    log_format = "JSON"
+    log_format            = "JSON"
     application_log_level = "INFO"
-    system_log_level     = "WARN"
+    system_log_level      = "WARN"
   }
 
   # Ensure log group exists before function
@@ -264,9 +264,9 @@ resource "aws_lambda_function" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example_function"
-  role         = aws_iam_role.example.arn
-  handler      = "index.handler"
-  runtime      = "nodejs20.x"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
 
   dead_letter_config {
     target_arn = aws_sqs_queue.dlq.arn
@@ -305,7 +305,7 @@ variable "function_name" {
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = 14
-  
+
   tags = {
     Environment = "production"
     Function    = var.function_name
@@ -315,7 +315,7 @@ resource "aws_cloudwatch_log_group" "example" {
 # Lambda execution role
 resource "aws_iam_role" "example" {
   name = "lambda_execution_role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -332,8 +332,8 @@ resource "aws_iam_role" "example" {
 
 # CloudWatch Logs policy
 resource "aws_iam_policy" "lambda_logging" {
-  name = "lambda_logging"
-  path = "/"
+  name        = "lambda_logging"
+  path        = "/"
   description = "IAM policy for logging from Lambda"
 
   policy = jsonencode({
@@ -360,17 +360,17 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 
 # Lambda function with logging
 resource "aws_lambda_function" "example" {
-  filename         = "function.zip"
-  function_name    = var.function_name
-  role            = aws_iam_role.example.arn
-  handler         = "index.handler"
-  runtime         = "nodejs20.x"
-  
+  filename      = "function.zip"
+  function_name = var.function_name
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
   # Advanced logging configuration
   logging_config {
-    log_format = "JSON"
+    log_format            = "JSON"
     application_log_level = "INFO"
-    system_log_level     = "WARN"
+    system_log_level      = "WARN"
   }
 
   # Ensure IAM role and log group are ready

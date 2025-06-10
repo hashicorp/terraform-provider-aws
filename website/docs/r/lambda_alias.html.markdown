@@ -36,8 +36,8 @@ resource "aws_lambda_alias" "example" {
 
   routing_config {
     additional_version_weights = {
-      "1" = 0.1  # Send 10% of traffic to version 1
-      "3" = 0.2  # Send 20% of traffic to version 3
+      "1" = 0.1 # Send 10% of traffic to version 1
+      "3" = 0.2 # Send 20% of traffic to version 3
       # Remaining 70% goes to version 2 (the primary version)
     }
   }
@@ -52,11 +52,11 @@ resource "aws_lambda_alias" "example" {
   name             = "live"
   description      = "Live traffic with gradual rollout to new version"
   function_name    = aws_lambda_function.example.function_name
-  function_version = "5"  # Current stable version
+  function_version = "5" # Current stable version
 
   routing_config {
     additional_version_weights = {
-      "6" = 0.05  # Send 5% of traffic to new version for testing
+      "6" = 0.05 # Send 5% of traffic to new version for testing
     }
   }
 }
