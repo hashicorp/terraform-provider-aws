@@ -104,7 +104,7 @@ type Identity struct {
 	IdentityDuplicateAttrs []string
 }
 
-func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",

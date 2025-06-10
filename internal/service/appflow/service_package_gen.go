@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_appflow_connector_profile",
 			Name:     "Connector Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			),
 			Import: inttypes.Import{
@@ -52,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.ParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity(
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			),
 			Import: inttypes.Import{

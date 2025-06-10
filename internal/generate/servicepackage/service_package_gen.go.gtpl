@@ -129,7 +129,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- end }}
 					),
 				{{ else }}
-					Identity: inttypes.ParameterizedIdentity(
+					Identity: inttypes.RegionalParameterizedIdentity(
 						{{- range $value.IdentityAttributes }}
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
@@ -239,7 +239,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- end }}
 					),
 				{{- else }}
-					Identity: inttypes.ParameterizedIdentity(
+					Identity: inttypes.RegionalParameterizedIdentity(
 						{{- range $value.IdentityAttributes }}
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
