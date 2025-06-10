@@ -210,3 +210,37 @@ resource "aws_chatbot_slack_channel_configuration" "test" {
 }
 `, rName, channelID, teamID)
 }
+
+func testAccSlackChannelConfigurationConfig_tags1(rName, channelID, teamID, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["chatbot.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_chatbot_slack_channel_configuration" "test" {
+  configuration_name = %[1]q
+  iam_role_arn       = aws_iam_role.test.arn
+  slack_channel_id   = %[2]q
+  slack_team_id      = %[3]q
+
+  tags = {
+    %[4]s = %[5]q
+    key2  = "value2"
+  }
+}
+`, rName, channelID, teamID, tagKey1, tagValue1)
+}
