@@ -612,7 +612,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
 				d.ARNFormat = args.Positional[0]
-				d.arnAttribute = "arn"
+
+				if attr, ok := args.Keyword["attribute"]; ok {
+					d.arnAttribute = attr
+				}
 
 			case "MutableIdentity":
 				d.MutableIdentity = true
