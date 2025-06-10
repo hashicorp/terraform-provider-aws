@@ -148,35 +148,35 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function. [See below](#vpc_config-attribute-reference).
 
-### dead_letter_config Attribute Reference
+### dead_letter_config
 
 * `target_arn` - ARN of an SNS topic or SQS queue to notify when an invocation fails.
 
-### environment Attribute Reference
+### environment
 
 * `variables` - Map of environment variables that are accessible from the function code during execution.
 
-### ephemeral_storage Attribute Reference
+### ephemeral_storage
 
 * `size` - Size of the Lambda function ephemeral storage (`/tmp`) in MB.
 
-### file_system_config Attribute Reference
+### file_system_config
 
 * `arn` - ARN of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - Path where the function can access the file system, starting with `/mnt/`.
 
-### logging_config Attribute Reference
+### logging_config
 
 * `application_log_level` - Detail level of the logs your application sends to CloudWatch when using supported logging libraries.
 * `log_format` - Format for your function's logs. Valid values: `Text`, `JSON`.
 * `log_group` - CloudWatch log group your function sends logs to.
 * `system_log_level` - Detail level of the Lambda platform event logs sent to CloudWatch.
 
-### tracing_config Attribute Reference
+### tracing_config
 
 * `mode` - Tracing mode. Valid values: `Active`, `PassThrough`.
 
-### vpc_config Attribute Reference
+### vpc_config
 
 * `security_group_ids` - List of security group IDs associated with the Lambda function.
 * `subnet_ids` - List of subnet IDs associated with the Lambda function.
