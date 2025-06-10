@@ -35,7 +35,7 @@ func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportS
 		if !region.IsNull() {
 			if region.ValueString() != arnARN.Region {
 				response.Diagnostics.AddError(
-					"Invalid Resource Import ID Value",
+					"Invalid Resource Import Region Value",
 					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
 				)
 				return
