@@ -393,6 +393,161 @@ func testAccVerifiedAccessEndpoint_rds(t *testing.T, semaphore tfsync.Semaphore)
 	})
 }
 
+func testAccVerifiedAccessEndpoint_portRangeTCP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portRangeTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portTCP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portHTTP(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portHTTP(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "http"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessEndpoint_portHTTPS(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v types.VerifiedAccessEndpoint
+	resourceName := "aws_verifiedaccess_endpoint.test"
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessEndpointConfig_portHTTPS(
+					rName,
+					acctest.TLSPEMEscapeNewlines(key),
+					acctest.TLSPEMEscapeNewlines(cert),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -1038,167 +1193,7 @@ resource "aws_verifiedaccess_endpoint" "test" {
 `, rName))
 }
 
-func TestAccVerifiedAccessEndpoint_PortRangeTCP(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var v types.VerifiedAccessEndpoint
-	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccess(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessEndpointConfig_PortRangeTCP(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
-			},
-		},
-	})
-}
-
-func TestAccVerifiedAccessEndpoint_PortTCP(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var v types.VerifiedAccessEndpoint
-	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccess(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessEndpointConfig_PortTCP(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.from_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port_range.0.to_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "tcp"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
-			},
-		},
-	})
-}
-
-func TestAccVerifiedAccessEndpoint_PortHTTP(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var v types.VerifiedAccessEndpoint
-	resourceName := "aws_verifiedaccess_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccess(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessEndpointConfig_PortHTTP(
-					rName,
-					acctest.TLSPEMEscapeNewlines(key),
-					acctest.TLSPEMEscapeNewlines(cert),
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "http"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
-			},
-		},
-	})
-}
-
-func TestAccVerifiedAccessEndpoint_PortHTTPS(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.VerifiedAccessEndpoint
-	resourceName := "aws_verifiedaccess_endpoint.test"
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	cert := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckVerifiedAccess(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVerifiedAccessEndpointConfig_PortHTTPS(
-					rName,
-					acctest.TLSPEMEscapeNewlines(key),
-					acctest.TLSPEMEscapeNewlines(cert),
-				),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"endpoint_domain_prefix"},
-			},
-		},
-	})
-}
-
-func testAccVerifiedAccessEndpointConfig_PortRangeTCP(rName string) string {
+func testAccVerifiedAccessEndpointConfig_portRangeTCP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
@@ -1283,17 +1278,20 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName),
-	)
+`, rName))
 }
 
-func testAccVerifiedAccessEndpointConfig_PortTCP(rName string) string {
+func testAccVerifiedAccessEndpointConfig_portTCP(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_lb" "test_nlb" {
@@ -1372,17 +1370,20 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName),
-	)
+`, rName))
 }
 
-func testAccVerifiedAccessEndpointConfig_PortHTTPS(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_portHTTPS(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_acm_certificate" "test" {
@@ -1470,17 +1471,20 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName, key, certificate),
-	)
+`, rName, key, certificate))
 }
 
-func testAccVerifiedAccessEndpointConfig_PortHTTP(rName, key, certificate string) string {
+func testAccVerifiedAccessEndpointConfig_portHTTP(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_acm_certificate" "test" {
@@ -1566,6 +1570,5 @@ resource "aws_verifiedaccess_endpoint" "test" {
   security_group_ids       = [aws_security_group.test.id]
   verified_access_group_id = aws_verifiedaccess_group.test.id
 }
-`, rName, key, certificate),
-	)
+`, rName, key, certificate))
 }
