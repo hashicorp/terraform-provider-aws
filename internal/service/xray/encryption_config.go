@@ -12,11 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -114,8 +114,8 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	return output.EncryptionConfig, nil
 }
 
-func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEncryptionConfig(conn *xray.Client) retry.StateRefreshFuncOf[*types.EncryptionConfig, types.EncryptionStatus] {
+	return func(ctx context.Context) (*types.EncryptionConfig, types.EncryptionStatus, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
 		if tfresource.NotFound(err) {
@@ -126,7 +126,7 @@ func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateR
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, output.Status, nil
 	}
 }
 
@@ -134,18 +134,12 @@ func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*typ
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EncryptionStatusUpdating),
-		Target:  enum.Slice(types.EncryptionStatusActive),
-		Refresh: statusEncryptionConfig(ctx, conn),
+	stateConf := &retry.StateChangeConfOf[*types.EncryptionConfig, types.EncryptionStatus]{
+		Pending: enum.EnumSlice(types.EncryptionStatusUpdating),
+		Target:  enum.EnumSlice(types.EncryptionStatusActive),
+		Refresh: statusEncryptionConfig(conn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*types.EncryptionConfig); ok {
-		return output, err
-	}
-
-	return nil, err
+	return stateConf.WaitForStateContext(ctx)
 }
