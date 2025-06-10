@@ -40,15 +40,11 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = local.subnet_count
+  count = 1
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-
-locals {
-  subnet_count = 1
 }
 
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
