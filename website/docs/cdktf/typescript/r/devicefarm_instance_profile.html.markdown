@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `description` - (Optional) The description of the instance profile.
 * `excludeAppPackagesFromCleanup` - (Optional) An array of strings that specifies the list of app packages that should not be cleaned up from the device after a test run.
 * `name` - (Required) The name for the instance profile.
@@ -84,4 +86,4 @@ Using `terraform import`, import DeviceFarm Instance Profiles using their ARN. F
 % terraform import aws_devicefarm_instance_profile.example arn:aws:devicefarm:us-west-2:123456789012:instanceprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-869291a59b04d3cacb00462dab45e1d4434b9d843a3070738a3d718940fb202b -->
+<!-- cache-key: cdktf-0.20.8 input-d86437266b415c4418b80940b5f7ab5ae78552f885f204fd832d7ebe02557468 -->

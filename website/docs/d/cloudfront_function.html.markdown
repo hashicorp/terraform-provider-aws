@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront Function data source.
 ---
 
-# aws_cloudfront_function
+# Data Source: aws_cloudfront_function
 
 Provides information about a CloudFront Function.
 

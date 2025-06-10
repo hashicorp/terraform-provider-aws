@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `directoryId` - (Required) Directory identifier for registration in WorkSpaces service.
 
 ## Attribute Reference
@@ -43,6 +45,9 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - WorkSpaces directory identifier.
+* `active_directory_config` - Configuration for Active Directory integration when `workspace_type` is set to `POOLS`.
+    * `domainName` – Fully qualified domain name of the AWS Directory Service directory.
+    * `service_account_secret_arn` – ARN of the Secrets Manager secret that contains the credentials for the service account.
 * `alias` - Directory alias.
 * `customerUserName` - User name for the service account.
 * `directoryName` - Name of the directory.
@@ -52,37 +57,32 @@ This data source exports the following attributes in addition to the arguments a
 * `ipGroupIds` - Identifiers of the IP access control groups associated with the directory.
 * `registrationCode` - Registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
 * `selfServicePermissions` – The permissions to enable or disable self-service capabilities.
+    * `changeComputeType` – Whether WorkSpaces directory users can change the compute type (bundle) for their workspace.
+    * `increaseVolumeSize` – Whether WorkSpaces directory users can increase the volume size of the drives on their workspace.
+    * `rebuildWorkspace` – Whether WorkSpaces directory users can rebuild the operating system of a workspace to its original state.
+    * `restartWorkspace` – Whether WorkSpaces directory users can restart their workspace.
+    * `switchRunningMode` – Whether WorkSpaces directory users can switch the running mode of their workspace.
 * `subnetIds` - Identifiers of the subnets where the directory resides.
 * `tags` – A map of tags assigned to the WorkSpaces directory.
-* `workspaceCreationProperties` – The default properties that are used for creating WorkSpaces. Defined below.
-* `workspaceAccessProperties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
-* `workspaceSecurityGroupId` - The identifier of the security group that is assigned to new WorkSpaces. Defined below.
+* `user_identity_type` - The user identity type for the WorkSpaces directory.
+* `workspaceAccessProperties` – Specifies which devices and operating systems users can use to access their WorkSpaces.
+    * `deviceTypeAndroid` – (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
+    * `deviceTypeChromeos` – (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
+    * `deviceTypeIos` – (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
+    * `deviceTypeLinux` – (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
+    * `deviceTypeOsx` – (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
+    * `deviceTypeWeb` – (Optional) Indicates whether users can access their WorkSpaces through a web browser.
+    * `deviceTypeWindows` – (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
+    * `deviceTypeZeroclient` – (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
+* `workspaceCreationProperties` – The default properties that are used for creating WorkSpaces.
+    * `customSecurityGroupId` – The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+    * `defaultOu` – The default organizational unit (OU) for your WorkSpace directories.
+    * `enableInternetAccess` – Indicates whether internet access is enabled for your WorkSpaces.
+    * `enableMaintenanceMode` – Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).
+    * `userEnabledAsLocalAdministrator` – Indicates whether users are local administrators of their WorkSpaces.
+* `workspace_directory_description` - The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
+* `workspace_directory_name` - The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
+* `workspaceSecurityGroupId` - The identifier of the security group that is assigned to new WorkSpaces.
+* `workspace_type` - The type of WorkSpaces directory.
 
-### self_service_permissions
-
-* `changeComputeType` – Whether WorkSpaces directory users can change the compute type (bundle) for their workspace.
-* `increaseVolumeSize` – Whether WorkSpaces directory users can increase the volume size of the drives on their workspace.
-* `rebuildWorkspace` – Whether WorkSpaces directory users can rebuild the operating system of a workspace to its original state.
-* `restartWorkspace` – Whether WorkSpaces directory users can restart their workspace.
-* `switchRunningMode` – Whether WorkSpaces directory users can switch the running mode of their workspace.
-
-### workspace_access_properties
-
-* `deviceTypeAndroid` – (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
-* `deviceTypeChromeos` – (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
-* `deviceTypeIos` – (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
-* `deviceTypeLinux` – (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
-* `deviceTypeOsx` – (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
-* `deviceTypeWeb` – (Optional) Indicates whether users can access their WorkSpaces through a web browser.
-* `deviceTypeWindows` – (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
-* `deviceTypeZeroclient` – (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
-
-### workspace_creation_properties
-
-* `customSecurityGroupId` – The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
-* `defaultOu` – The default organizational unit (OU) for your WorkSpace directories.
-* `enableInternetAccess` – Indicates whether internet access is enabled for your WorkSpaces.
-* `enableMaintenanceMode` – Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).
-* `userEnabledAsLocalAdministrator` – Indicates whether users are local administrators of their WorkSpaces.
-
-<!-- cache-key: cdktf-0.20.8 input-b94343197f46538817cb6fbc22fc3a4b2fd2b6a8ee88d85032acad20463566b5 -->
+<!-- cache-key: cdktf-0.20.8 input-d7808a628e8c687da5a387957aa42f4deb015c677cf9afbd635c05389f8be042 -->

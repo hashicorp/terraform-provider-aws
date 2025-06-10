@@ -10,7 +10,7 @@ description: |-
 
 Terraform data source for managing an AWS Transfer Family Connector.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 data "aws_transfer_connector" "test" {
@@ -20,7 +20,7 @@ data "aws_transfer_connector" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `id` - (Required) Unique identifier for connector
 

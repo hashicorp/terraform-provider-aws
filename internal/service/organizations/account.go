@@ -3,7 +3,7 @@
 
 package organizations
 
-import (
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"errors"
 	"fmt"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,6 +44,7 @@ func resourceAccount() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
@@ -91,7 +93,6 @@ func resourceAccount() *schema.Resource {
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"parent_id": {
@@ -244,7 +245,35 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	connOrg := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	connAcc := meta.(*conns.AWSClient).AccountClient(ctx)
+
+	if d.HasChange(names.AttrName) {
+		name := d.Get(names.AttrName).(string)
+		input := account.PutAccountNameInput{
+			AccountId:   aws.String(d.Id()),
+			AccountName: aws.String(name),
+		}
+		_, err := connAcc.PutAccountName(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AWS Account (%s) name: %s", d.Id(), err)
+		}
+
+		_, err = tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), name, func() (string, error) {
+			output, err := findAccountByID(ctx, connOrg, d.Id())
+
+			if err != nil {
+				return "", err
+			}
+
+			return aws.ToString(output.Name), nil
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for AWS Account (%s) name update: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -255,7 +284,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			DestinationParentId: aws.String(n.(string)),
 		}
 
-		_, err := conn.MoveAccount(ctx, input)
+		_, err := connOrg.MoveAccount(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving AWS Organizations Account (%s): %s", d.Id(), err)

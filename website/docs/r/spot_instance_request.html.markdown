@@ -51,8 +51,9 @@ resource "aws_spot_instance_request" "cheap_worker" {
 
 ## Argument Reference
 
-Spot Instance Requests support all the same arguments as
-[`aws_instance`](instance.html), with the addition of:
+This resource supports the following arguments:
+
+Spot Instance Requests support all the same arguments as [`aws_instance`](instance.html), with the addition of:
 
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will

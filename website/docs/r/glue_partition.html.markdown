@@ -14,9 +14,9 @@ Provides a Glue Partition Resource.
 
 ```terraform
 resource "aws_glue_partition" "example" {
-  database_name = "some-database"
-  table_name    = "some-table"
-  values        = ["some-value"]
+  database_name    = "some-database"
+  table_name       = "some-table"
+  partition_values = ["some-value"]
 }
 ```
 

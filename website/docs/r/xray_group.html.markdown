@@ -26,6 +26,8 @@ resource "aws_xray_group" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `group_name` - (Required) The name of the group.
 * `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
 * `insights_configuration` - (Optional) Configuration options for enabling insights.

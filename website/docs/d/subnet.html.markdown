@@ -50,9 +50,7 @@ data "aws_subnet" "selected" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available subnets in the current region. The given filters must match exactly one subnet whose data will be exported as attributes.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.

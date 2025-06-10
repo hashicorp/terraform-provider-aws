@@ -28,7 +28,7 @@ resource "aws_apprunner_auto_scaling_configuration_version" "example" {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `auto_scaling_configuration_name` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `max_concurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.

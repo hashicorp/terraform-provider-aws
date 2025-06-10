@@ -32,7 +32,7 @@ resource "aws_networkmonitor_probe" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 - `destination` - (Required) The destination IP address. This must be either IPV4 or IPV6.
 - `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
@@ -40,9 +40,6 @@ The following arguments are required:
 - `protocol` - (Required) The protocol used for the network traffic between the source and destination. This must be either TCP or ICMP.
 - `source_arn` - (Required) The ARN of the subnet.
 - `packet_size` - (Optional) The size of the packets sent between the source and destination. This must be a number between 56 and 8500.
-
-The following arguments are optional:
-
 - `tags` - (Optional) Key-value tags for the monitor. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

@@ -870,6 +870,65 @@ func TestAccFSxLustreFileSystem_efaEnabled(t *testing.T) {
 	})
 }
 
+func TestAccFSxLustreFileSystem_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_intelligentTiering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "data_compression_type", string(awstypes.DataCompressionTypeNone)),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.sizing_mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.size", "32"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent2)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`fs-.+\.fsx\.`)),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "6000"),
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeIntelligentTiering)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "4000"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem awstypes.FileSystem
@@ -2026,4 +2085,26 @@ resource "aws_fsx_lustre_file_system" "test" {
   }
 }
 `, rName, efaEnabled))
+}
+
+func testAccLustreFileSystemConfig_intelligentTiering(rName string) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), `
+resource "aws_fsx_lustre_file_system" "test" {
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "PERSISTENT_2"
+  storage_type        = "INTELLIGENT_TIERING"
+  throughput_capacity = 4000
+
+  data_read_cache_configuration {
+    sizing_mode = "USER_PROVISIONED"
+    size        = 32
+  }
+
+  metadata_configuration {
+    mode = "USER_PROVISIONED"
+    iops = 6000
+  }
+
+}
+`)
 }

@@ -32,17 +32,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the RDS certificate override. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the RDS certificate override using the `region`. For example:
 
 ```terraform
 import {
   to = aws_rds_certificate.example
-  id = default
+  id = "us-west-2"
 }
 ```
 
-Using `terraform import`, import the default EBS encryption state. For example:
+Using `terraform import`, import the RDS certificate override using the `region`. For example:
 
 ```console
-% terraform import aws_rds_certificate.example default
+% terraform import aws_rds_certificate.example us-west-2
 ```

@@ -107,6 +107,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -169,6 +170,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/notifications"
+	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
@@ -643,6 +646,10 @@ func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless.Clie
 	return errs.Must(client[*emrserverless.Client](ctx, c, names.EMRServerless, make(map[string]any)))
 }
 
+func (c *AWSClient) EVSClient(ctx context.Context) *evs.Client {
+	return errs.Must(client[*evs.Client](ctx, c, names.EVS, make(map[string]any)))
+}
+
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache.Client {
 	return errs.Must(client[*elasticache.Client](ctx, c, names.ElastiCache, make(map[string]any)))
 }
@@ -917,6 +924,14 @@ func (c *AWSClient) NetworkManagerClient(ctx context.Context) *networkmanager.Cl
 
 func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Client {
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
+}
+
+func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {
+	return errs.Must(client[*notifications.Client](ctx, c, names.Notifications, make(map[string]any)))
+}
+
+func (c *AWSClient) NotificationsContactsClient(ctx context.Context) *notificationscontacts.Client {
+	return errs.Must(client[*notificationscontacts.Client](ctx, c, names.NotificationsContacts, make(map[string]any)))
 }
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {

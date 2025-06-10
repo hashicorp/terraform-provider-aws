@@ -38,17 +38,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `analysisId` - (Required) Identifier for the analysis.
-
-The following arguments are optional:
-
 * `awsAccountId` - (Optional) AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [Analysis Resource](/docs/providers/aws/r/quicksight_analysis.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-38402a4af27e773d5f029908d58dbad1645d59049aa34309041de532adcafc54 -->
+<!-- cache-key: cdktf-0.20.8 input-94bda4c03536309c6942f2976e9590db610de2649ebb07a37908b3d48b9bee15 -->

@@ -14,13 +14,13 @@ Get information on EC2 Transit Gateway Peering Attachments.
 
 ### All Resources
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_peering_attachments" "test" {}
 ```
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_peering_attachments" "filtered" {
   filter {
     name   = "state"

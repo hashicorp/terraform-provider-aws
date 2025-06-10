@@ -21,6 +21,8 @@ data "aws_secretsmanager_random_password" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.

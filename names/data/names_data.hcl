@@ -5651,6 +5651,68 @@ service "nimble" {
   not_implemented          = true
 }
 
+service "notifications" {
+  go_packages {
+    v2_package = "notifications"
+  }
+
+  sdk {
+    id             = "notifications"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "Notifications"
+    human_friendly      = "User Notifications"
+  }
+
+  endpoint_info {
+    endpoint_api_call         = "ListNotificationConfigurations"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notifications_"
+  }
+
+  provider_package_correct = "notifications"
+  doc_prefix               = ["notifications_"]
+  brand                    = "AWS"
+}
+
+service "notificationscontacts" {
+  go_packages {
+    v2_package = "notificationscontacts"
+  }
+
+  sdk {
+    id             = "notificationscontacts"
+    client_version = 2
+  }
+
+  names {
+    provider_name_upper = "NotificationsContacts"
+    human_friendly      = "User Notifications Contacts"
+  }
+
+  endpoint_info {
+    endpoint_api_call         = "ListEmailContacts"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notificationscontacts_"
+  }
+
+  provider_package_correct = "notificationscontacts"
+  doc_prefix               = ["notificationscontacts_"]
+  brand                    = "AWS"
+}
+
 service "oam" {
   sdk {
     id = "OAM"
@@ -8806,7 +8868,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_"]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_","vpc_route_server"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true
@@ -8950,5 +9012,28 @@ service "ec2" {
   split_package            = "ec2"
   file_prefix              = "ec2_"
   doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  brand                    = "Amazon"
+}
+
+service "evs" {
+  sdk {
+    id = "EVS"
+  }
+
+  names {
+    provider_name_upper = "EVS"
+    human_friendly      = "Elastic VMware"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEnvironments"
+  }
+
+  resource_prefix {
+    correct = "aws_evs_"
+  }
+
+  provider_package_correct = "evs"
+  doc_prefix               = ["evs_"]
   brand                    = "Amazon"
 }

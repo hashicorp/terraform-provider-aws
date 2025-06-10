@@ -62,7 +62,7 @@ The following arguments are required:
 * `target_repository` (Required) The destination repository for the container image. Detailed below.
 * `version` (Required) Version of the container recipe.
 
-The following attributes are optional:
+The following arguments are optional:
 
 * `description` - (Optional) The description of the container recipe.
 * `dockerfile_template_data` - (Optional) The Dockerfile template used to build the image as an inline data blob.
@@ -159,4 +159,4 @@ Using `terraform import`, import `aws_imagebuilder_container_recipe` resources u
 % terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->
+<!-- cache-key: cdktf-0.20.8 input-b43a6f1d9d7fb0a795033de7e94ff309ab7235f99d202dd7f3dbf646c2aede2b -->

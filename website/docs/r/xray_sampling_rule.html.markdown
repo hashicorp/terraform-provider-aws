@@ -34,6 +34,8 @@ resource "aws_xray_sampling_rule" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `rule_name` - (Required) The name of the sampling rule.
 * `resource_arn` - (Required) Matches the ARN of the AWS resource on which the service runs.
 * `priority` - (Required) The priority of the sampling rule.

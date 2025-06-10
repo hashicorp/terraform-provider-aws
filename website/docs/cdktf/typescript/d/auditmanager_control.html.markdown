@@ -94,13 +94,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the control.
 * `type` - (Required) Type of control. Valid values are `Custom` and `Standard`.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-3db48c85023c8e29684006da94ab0858a40f92b8fb222869b34399953eba3333 -->
+<!-- cache-key: cdktf-0.20.8 input-1f28e366706a9337f2c1fbfa44e105f4c5ae1ac268594f50a9ca5aa4bbe7528e -->

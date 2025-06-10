@@ -57,6 +57,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `applicationId` - (Required) ARN of the application.
 * `semanticVersion` - (Optional) Requested version of the application. By default, retrieves the latest version.
 
@@ -70,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceCodeUrl` - URL pointing to the source code of the application version.
 * `templateUrl` - URL pointing to the Cloud Formation template for the application version.
 
-<!-- cache-key: cdktf-0.20.8 input-4067d08c02e21d01320463b039dbb33009c80dd466c694f17352beb6a7e00e63 -->
+<!-- cache-key: cdktf-0.20.8 input-8646f18dad4072267c94cded816a181704e4725810c9929485887186eeb576ea -->

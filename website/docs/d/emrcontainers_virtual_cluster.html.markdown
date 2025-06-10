@@ -28,6 +28,8 @@ output "arn" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `virtual_cluster_id` - (Required) ID of the cluster.
 
 ## Attribute Reference

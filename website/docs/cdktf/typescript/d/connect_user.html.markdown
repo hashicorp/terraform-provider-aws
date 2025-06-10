@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `userId` is required.
-
 This data source supports the following arguments:
 
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
 * `userId` - (Optional) Returns information on a specific User by User id
+
+~> **NOTE:** `instanceId` and one of either `name` or `userId` is required.
 
 ## Attribute Reference
 
@@ -92,7 +92,7 @@ An `identityInfo` block supports the following attributes:
 * `email` - The email address.
 * `firstName` - The first name.
 * `lastName` - The last name.
-* `secondary_email` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
+* `secondaryEmail` - The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 ### `phoneConfig`
 
@@ -103,4 +103,4 @@ A `phoneConfig` block supports the following attributes:
 * `deskPhoneNumber` - The phone number for the user's desk phone.
 * `phoneType` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-7f88146fd5e714f31cff5512374264e830c13ef50c58f6f741b40f7c96f77171 -->
+<!-- cache-key: cdktf-0.20.8 input-896cedc13de71a0aa44da15310257ce493218c76e42d9828bd8dd10d0dadbd22 -->

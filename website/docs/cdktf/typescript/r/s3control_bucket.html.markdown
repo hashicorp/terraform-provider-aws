@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket.
 * `outpostId` - (Required) Identifier of the Outpost to contain this bucket.
@@ -87,4 +87,4 @@ Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->
+<!-- cache-key: cdktf-0.20.8 input-ac33c943808703ed55c750b7e1c8d6c8d3ef79a85f5e0c3d258e77c06f5cd64a -->

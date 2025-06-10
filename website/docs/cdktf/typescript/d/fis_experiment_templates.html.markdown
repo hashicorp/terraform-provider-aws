@@ -87,6 +87,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired experiment templates.
 
@@ -96,4 +98,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the experiment template ids found.
 
-<!-- cache-key: cdktf-0.20.8 input-1de350657fcef3be6a456372dafddc7be800fa6e9cf13640b7cf9f1c1083861e -->
+<!-- cache-key: cdktf-0.20.8 input-34e1ab0361e5b787a939b2c8842596350431d2cbff4a5f9cc56a762387ff3ab3 -->

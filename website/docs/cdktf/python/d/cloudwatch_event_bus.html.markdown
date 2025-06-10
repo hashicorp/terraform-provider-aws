@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the event bus.
 
 ## Attribute Reference
@@ -42,8 +44,10 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the event bus.
+* `dead_letter_config` - Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block has the following arguments:
+    * `arn` - The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - Event bus description.
 * `id` - Name of the event bus.
 * `kms_key_identifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
 
-<!-- cache-key: cdktf-0.20.8 input-0f202eb646a70b6cabb315f5503e544b82e58b15b92eb5ed135673db2adbee31 -->
+<!-- cache-key: cdktf-0.20.8 input-477fea65d1e101c47f11ca48fecf0b7385dc4c6b80fe4a2f389fa93fcc8c07ce -->

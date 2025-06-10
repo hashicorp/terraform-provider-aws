@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `identity_pool_name` - (Required)  The Cognito Identity Pool name.
 
@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_login_providers` - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - A map of tags to assigned to the Identity Pool.
 
-<!-- cache-key: cdktf-0.20.8 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->
+<!-- cache-key: cdktf-0.20.8 input-7bbf1ac48f199fa2000119111059fa71ad9af298523508b01c7af277ea5af795 -->

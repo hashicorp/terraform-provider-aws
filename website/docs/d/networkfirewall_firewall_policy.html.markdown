@@ -43,10 +43,12 @@ AWS Network Firewall does not allow multiple firewall policies with the same nam
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - ARN of the firewall policy.
 * `name` - Descriptive name of the firewall policy.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 

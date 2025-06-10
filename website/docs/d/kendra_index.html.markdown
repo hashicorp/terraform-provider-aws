@@ -12,7 +12,7 @@ Provides details about a specific Amazon Kendra Index.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kendra_index" "example" {
   id = "12345678-1234-1234-1234-123456789123"
 }

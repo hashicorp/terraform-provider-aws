@@ -42,22 +42,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-regions. The given filters must match exactly one region whose data will be
-exported as attributes.
+This data source supports the following arguments:
 
 * `name` - (Optional) Full name of the region to select.
-
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `name` - Name of the selected region.
-
-* `endpoint` - EC2 endpoint for the selected region.
-
 * `description` - Region's description in this format: "Location (Region name)".
 
-<!-- cache-key: cdktf-0.20.8 input-aa7c9151f3a0b19e57d6cc253b49c17fa63fbcf513e80e2ad30986f51d764653 -->
+<!-- cache-key: cdktf-0.20.8 input-36533d4d45b12ba7bddef3c249e0fb6756ff6fa643a4d00fec190edc69fe9b13 -->

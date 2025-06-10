@@ -79,6 +79,169 @@ resource "aws_ssm_association" "example" {
 }
 ```
 
+### Create an association with multiple instances with their instance ids
+
+```
+# Removed EC2 provisioning dependencies for brevity
+
+resource "aws_ssm_association" "system_update" {
+  name = "AWS-RunShellScript"
+
+  targets {
+    key = "InstanceIds"
+    values = [
+      aws_instance.web_server_1.id,
+      aws_instance.web_server_2.id
+    ]
+  }
+
+  schedule_expression = "cron(0 2 ? * SUN *)"
+
+  parameters = {
+    commands = join("\n", [
+      "#!/bin/bash",
+      "echo 'Starting system update on $(hostname)'",
+      "echo 'Instance ID: $(curl -s http://169.254.169.254/latest/meta-data/instance-id)'",
+      "yum update -y",
+      "echo 'System update completed successfully'",
+      "systemctl status httpd",
+      "df -h",
+      "free -m"
+    ])
+    workingDirectory = "/tmp"
+    executionTimeout = "3600"
+  }
+
+  association_name    = "weekly-system-update"
+  compliance_severity = "MEDIUM"
+  max_concurrency     = "1" # Run on one instance at a time
+  max_errors          = "0" # Stop if any instance fails
+
+
+  tags = {
+    Name        = "Weekly System Update"
+    Environment = "demo"
+    Purpose     = "maintenance"
+  }
+}
+
+# First EC2 instance
+resource "aws_instance" "web_server_1" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+  EOF
+
+}
+
+# Second EC2 instance
+resource "aws_instance" "web_server_2" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+
+  user_data = <<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+  EOF
+}
+
+```
+
+### Create an association with multiple instances with their values matching their tags
+
+```
+# SSM Association for Webbased Servers
+resource "aws_ssm_association" "database_association" {
+  name = aws_ssm_document.system_update.name # Use the name of the document as the association name
+  targets {
+    key    = "tag:Role"
+    values = ["WebServer","Database"]
+  }
+
+  parameters = {
+    restartServices = "true"
+  }
+  schedule_expression = "cron(0 3 ? * SUN *)" # Run every Sunday at 3 AM
+}
+
+# EC2 Instance 1 - Web Server with "ServerType" tag
+resource "aws_instance" "web_server" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = data.aws_subnet.default.id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+    
+    # Install Apache web server
+    yum install -y httpd
+    systemctl enable httpd
+    systemctl start httpd
+    echo "<h1>Web Server - ${var.prefix}</h1>" > /var/www/html/index.html
+  EOF
+  )
+
+  tags = {
+    Name        = "${var.prefix}-web-server"
+    ServerType  = "WebServer"
+    Role        = "WebServer"
+    Environment = var.environment
+    Owner       = var.owner
+  }
+}
+
+# EC2 Instance 2 - Database Server with "Role" tag
+resource "aws_instance" "database_server" {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = data.aws_subnet.default.id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+
+  user_data = base64encode(<<-EOF
+    #!/bin/bash
+    yum update -y
+    yum install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+    
+    # Install MySQL
+    yum install -y mysql-server
+    systemctl enable mysqld
+    systemctl start mysqld
+  EOF
+  )
+
+  tags = {
+    Name        = "${var.prefix}-database-server"
+    Role        = "Database"
+    Environment = var.environment
+    Owner       = var.owner
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -109,7 +272,7 @@ Output Location (`output_location`) is an S3 bucket where you want to store the 
 Targets specify what instance IDs or tags to apply the document to and has these keys:
 
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
-* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
+* `values` - (Required) User-defined criteria that maps to Key. A list of instance IDs or tag values.
 
 ## Attribute Reference
 

@@ -283,6 +283,8 @@ service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evidently_'
+service/evs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evs_'
 service/finspace:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_finspace_'
 service/finspacedata:
@@ -497,6 +499,10 @@ service/networkmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/notifications:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notifications_'
+service/notificationscontacts:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
 service/opensearch:
