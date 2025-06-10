@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -193,6 +194,11 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"public_dns_names_ipv6": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
@@ -559,6 +565,19 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_prefixes: %s", err)
 	}
 	d.Set("ipv6_prefix_count", len(eni.Ipv6Prefixes))
+
+	region := meta.(*conns.AWSClient).Region(ctx)
+
+	var dns_names_ipv6 []string
+	for i, ipv6Address := range flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses) {
+		ipv6 := net.ParseIP(ipv6Address)
+		if ipv6 == nil {
+			return sdkdiag.AppendErrorf(diags, "parsing IPv6 address index %d: %s", i, ipv6Address)
+		}
+		dns_names_ipv6 = append(dns_names_ipv6, calculatePublicDNSNameIPv6(region, ipv6))
+	}
+	d.Set("public_dns_names_ipv6", dns_names_ipv6)
+
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
 	d.Set(names.AttrOwnerID, ownerID)
