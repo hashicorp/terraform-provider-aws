@@ -30,6 +30,7 @@ func newEnvironmentResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type environmentResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[environmentResourceModel]
 }
 
 func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -88,22 +89,6 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-}
-
-func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old environmentResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().EVSClient(ctx)
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
