@@ -39,8 +39,8 @@ resource "aws_api_gateway_integration" "example" {
   http_method = aws_api_gateway_method.example.http_method
 
   integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = data.aws_lambda_alias.api_handler.invoke_arn
+  type                    = "AWS_PROXY"
+  uri                     = data.aws_lambda_alias.api_handler.invoke_arn
 }
 
 # Grant API Gateway permission to invoke the alias
@@ -76,9 +76,9 @@ locals {
 
 output "deployment_status" {
   value = {
-    production_version = data.aws_lambda_alias.production.function_version
-    staging_version    = data.aws_lambda_alias.staging.function_version
-    version_drift      = local.version_drift
+    production_version  = data.aws_lambda_alias.production.function_version
+    staging_version     = data.aws_lambda_alias.staging.function_version
+    version_drift       = local.version_drift
     ready_for_promotion = !local.version_drift
   }
 }

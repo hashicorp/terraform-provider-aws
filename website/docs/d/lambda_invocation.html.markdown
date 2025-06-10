@@ -65,7 +65,7 @@ locals {
 
 resource "aws_rds_cluster" "example" {
   count = local.validation_result.valid ? 1 : 0
-  
+
   # ... other configuration ...
 }
 ```
@@ -76,7 +76,7 @@ resource "aws_rds_cluster" "example" {
 # Get resource configuration from Lambda
 data "aws_lambda_invocation" "resource_config" {
   function_name = "resource-config-generator"
-  qualifier     = "production"  # Use production alias
+  qualifier     = "production" # Use production alias
 
   input = jsonencode({
     environment = var.environment
@@ -92,9 +92,9 @@ locals {
 # Use dynamic configuration
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = local.config.cache.cluster_id
-  engine              = local.config.cache.engine
-  node_type           = local.config.cache.node_type
-  num_cache_nodes     = local.config.cache.nodes
+  engine               = local.config.cache.engine
+  node_type            = local.config.cache.node_type
+  num_cache_nodes      = local.config.cache.nodes
   parameter_group_name = local.config.cache.parameter_group
 
   tags = local.config.tags
@@ -117,7 +117,7 @@ locals {
   result = jsondecode(data.aws_lambda_invocation.example.result)
 
   # Check for errors in the response
-  has_errors = try(local.result.errors != null, false)
+  has_errors     = try(local.result.errors != null, false)
   error_messages = local.has_errors ? join(", ", local.result.errors) : null
 }
 

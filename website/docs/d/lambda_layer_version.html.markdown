@@ -23,9 +23,9 @@ data "aws_lambda_layer_version" "example" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "example_function"
-  role         = aws_iam_role.lambda_role.arn
-  handler      = "index.handler"
-  runtime      = "nodejs20.x"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
 
   layers = [data.aws_lambda_layer_version.example.arn]
 }
@@ -67,9 +67,9 @@ data "aws_lambda_layer_version" "arm_layer" {
 resource "aws_lambda_function" "example" {
   filename      = "function.zip"
   function_name = "multi_layer_function"
-  role         = aws_iam_role.lambda_role.arn
-  handler      = "app.handler"
-  runtime      = "python3.12"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "app.handler"
+  runtime       = "python3.12"
   architectures = ["arm64"]
 
   layers = [

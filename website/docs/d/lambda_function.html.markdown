@@ -31,7 +31,7 @@ output "function_arn" {
 ```terraform
 data "aws_lambda_function" "example" {
   function_name = "api-handler"
-  qualifier     = "production"  # Alias name
+  qualifier     = "production" # Alias name
 }
 
 # Use in API Gateway integration
@@ -39,10 +39,10 @@ resource "aws_api_gateway_integration" "example" {
   rest_api_id = aws_api_gateway_rest_api.example.id
   resource_id = aws_api_gateway_resource.example.id
   http_method = aws_api_gateway_method.example.http_method
-  
+
   integration_http_method = "POST"
-  type                   = "AWS_PROXY"
-  uri                    = data.aws_lambda_function.example.invoke_arn
+  type                    = "AWS_PROXY"
+  uri                     = data.aws_lambda_function.example.invoke_arn
 }
 ```
 
@@ -56,14 +56,14 @@ data "aws_lambda_function" "reference" {
 
 # Create new function with similar configuration
 resource "aws_lambda_function" "example" {
-  filename         = "new-function.zip"
-  function_name    = "new-function"
-  role            = data.aws_lambda_function.reference.role
-  handler         = data.aws_lambda_function.reference.handler
-  runtime         = data.aws_lambda_function.reference.runtime
-  memory_size     = data.aws_lambda_function.reference.memory_size
-  timeout         = data.aws_lambda_function.reference.timeout
-  architectures   = data.aws_lambda_function.reference.architectures
+  filename      = "new-function.zip"
+  function_name = "new-function"
+  role          = data.aws_lambda_function.reference.role
+  handler       = data.aws_lambda_function.reference.handler
+  runtime       = data.aws_lambda_function.reference.runtime
+  memory_size   = data.aws_lambda_function.reference.memory_size
+  timeout       = data.aws_lambda_function.reference.timeout
+  architectures = data.aws_lambda_function.reference.architectures
 
   vpc_config {
     subnet_ids         = data.aws_lambda_function.reference.vpc_config[0].subnet_ids
@@ -82,7 +82,7 @@ resource "aws_lambda_function" "example" {
 # Get details about specific version
 data "aws_lambda_function" "version" {
   function_name = "my-function"
-  qualifier     = "3"  # Specific version number
+  qualifier     = "3" # Specific version number
 }
 
 # Get details about latest version

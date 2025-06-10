@@ -50,7 +50,7 @@ data "aws_lambda_function_url" "example" {
 }
 
 locals {
-  cors_config = length(data.aws_lambda_function_url.example.cors) > 0 ? data.aws_lambda_function_url.example.cors[0] : null
+  cors_config     = length(data.aws_lambda_function_url.example.cors) > 0 ? data.aws_lambda_function_url.example.cors[0] : null
   allowed_origins = local.cors_config != null ? local.cors_config.allow_origins : []
 }
 

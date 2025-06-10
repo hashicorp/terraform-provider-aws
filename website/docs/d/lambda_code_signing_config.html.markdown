@@ -41,10 +41,10 @@ data "aws_lambda_code_signing_config" "security_config" {
 # Create Lambda function with code signing
 resource "aws_lambda_function" "example" {
   filename                = "function.zip"
-  function_name          = "secure-function"
-  role                   = aws_iam_role.lambda_role.arn
-  handler                = "index.handler"
-  runtime                = "nodejs20.x"
+  function_name           = "secure-function"
+  role                    = aws_iam_role.lambda_role.arn
+  handler                 = "index.handler"
+  runtime                 = "nodejs20.x"
   code_signing_config_arn = data.aws_lambda_code_signing_config.security_config.arn
 
   tags = {
@@ -73,18 +73,18 @@ resource "aws_lambda_function" "conditional" {
   count = local.profile_allowed ? 1 : 0
 
   filename                = "function.zip"
-  function_name          = "conditional-function"
-  role                   = aws_iam_role.lambda_role.arn
-  handler                = "index.handler"
-  runtime                = "python3.12"
+  function_name           = "conditional-function"
+  role                    = aws_iam_role.lambda_role.arn
+  handler                 = "index.handler"
+  runtime                 = "python3.12"
   code_signing_config_arn = data.aws_lambda_code_signing_config.example.arn
 }
 
 output "deployment_status" {
   value = {
-    profile_allowed = local.profile_allowed
+    profile_allowed  = local.profile_allowed
     function_created = local.profile_allowed
-    message = local.profile_allowed ? "Function deployed with valid signing profile" : "Deployment blocked - signing profile not allowed"
+    message          = local.profile_allowed ? "Function deployed with valid signing profile" : "Deployment blocked - signing profile not allowed"
   }
 }
 ```
@@ -106,7 +106,7 @@ data "aws_lambda_code_signing_config" "dev" {
 locals {
   prod_policy = data.aws_lambda_code_signing_config.prod.policies[0].untrusted_artifact_on_deployment
   dev_policy  = data.aws_lambda_code_signing_config.dev.policies[0].untrusted_artifact_on_deployment
-  
+
   config_comparison = {
     prod_enforcement = local.prod_policy
     dev_enforcement  = local.dev_policy

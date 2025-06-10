@@ -69,7 +69,7 @@ locals {
     for name in data.aws_lambda_functions.all.function_names :
     name if can(regex("^api-", name))
   ]
-  
+
   worker_functions = [
     for name in data.aws_lambda_functions.all.function_names :
     name if can(regex("^worker-", name))
