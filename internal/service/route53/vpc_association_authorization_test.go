@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -135,6 +136,10 @@ func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
 	})
 }
 
+const (
+	readTimeout = time.Minute * 5
+)
+
 func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
@@ -144,7 +149,7 @@ func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID])
+			_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID], readTimeout)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -170,7 +175,7 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID])
+		_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID], readTimeout)
 
 		return err
 	}
