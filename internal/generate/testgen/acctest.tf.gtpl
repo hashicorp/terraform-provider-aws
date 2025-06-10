@@ -43,8 +43,14 @@ locals {
 {{ template "acctest.configLatestAmazonLinux2HVMEBSAMI" "x86_64" }}
 {{- end }}
 
+{{ define "acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI" -}}
+# acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI
+
+{{ template "acctest.configLatestAmazonLinux2HVMEBSAMI" "arm64" }}
+{{- end }}
+
 {{ define "acctest.configLatestAmazonLinux2HVMEBSAMI" -}}
-# acctest.configLatestAmazonLinux2HVMEBSAMI
+# acctest.configLatestAmazonLinux2HVMEBSAMI("{{ . }}")
 
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-{{ . }}" {
 {{- template "region" }}
