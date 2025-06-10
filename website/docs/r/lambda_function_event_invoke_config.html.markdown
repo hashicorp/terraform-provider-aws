@@ -201,32 +201,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Function Event Invoke Configs using the fully qualified Function name or ARN. For example:
 
-### Import Using ARN
+ARN without qualifier (all versions and aliases):
 
 ```terraform
-# Without qualifier (all versions and aliases)
 import {
   to = aws_lambda_function_event_invoke_config.example
   id = "arn:aws:lambda:us-east-1:123456789012:function:my_function"
 }
+```
 
-# With qualifier
+ARN with qualifier:
+
+```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
   id = "arn:aws:lambda:us-east-1:123456789012:function:my_function:production"
 }
 ```
 
-### Import Using Function Name
+Name without qualifier (all versions and aliases):
 
 ```terraform
-# Without qualifier (all versions and aliases)
 import {
   to = aws_lambda_function_event_invoke_config.example
   id = "my_function"
 }
+```
 
-# With qualifier
+Name with qualifier:
+
+```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
   id = "my_function:production"
@@ -235,16 +239,26 @@ import {
 
 For backwards compatibility, the following legacy `terraform import` commands are also supported:
 
+Using ARN without qualifier:
+
 ```console
-# Without qualifier (all versions and aliases)
-$ terraform import aws_lambda_function_event_invoke_config.example my_function
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function
+```
 
-# With qualifier
-$ terraform import aws_lambda_function_event_invoke_config.example my_function:production
+Using ARN with qualifier:
 
-# Using ARN without qualifier
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function
+```console
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function:production
+```
 
-# Using ARN with qualifier
-$ terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function:production
+Name without qualifier (all versions and aliases):
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function
+```
+
+Name with qualifier:
+
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function:production
 ```

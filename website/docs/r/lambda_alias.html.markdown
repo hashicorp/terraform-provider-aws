@@ -112,5 +112,5 @@ import {
 For backwards compatibility, the following legacy `terraform import` command is also supported:
 
 ```console
-$ terraform import aws_lambda_alias.example my_function/production
+% terraform import aws_lambda_alias.example my_function/production
 ```

@@ -254,9 +254,9 @@ import {
 }
 ```
 
-Using `terraform import`:
+For backwards compatibility, the following legacy `terraform import` commands are also supported:
 
 ```console
-$ terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
-$ terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
+% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
+% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```

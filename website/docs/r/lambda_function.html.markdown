@@ -366,7 +366,6 @@ resource "aws_lambda_function" "example" {
   ]
 }
 ```
-```
 
 ## Specifying the Deployment Package
 
