@@ -49,7 +49,7 @@ var globalARNIdentitySchema = identityschema.Schema{
 	},
 }
 
-func globalARNSpec(attrs ...string) inttypes.Identity {
+func globalARNIdentitySpec(attrs ...string) inttypes.Identity {
 	var opts []inttypes.IdentityOptsFunc
 	if len(attrs) > 0 {
 		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
@@ -137,12 +137,7 @@ func TestGlobalARN(t *testing.T) {
 				accountID: accountID,
 			}
 
-			var identitySpec inttypes.Identity
-			if len(tc.duplicateAttrs) > 0 {
-				identitySpec = globalARNSpec(tc.duplicateAttrs...)
-			} else {
-				identitySpec = globalARNSpec()
-			}
+			identitySpec := globalARNIdentitySpec(tc.duplicateAttrs...)
 
 			var response resource.ImportStateResponse
 			schema := globalARNSchema
@@ -251,7 +246,7 @@ var regionalARNIdentitySchema = identityschema.Schema{
 	},
 }
 
-func regionalARNSpec(attrs ...string) inttypes.Identity {
+func regionalARNIdentitySpec(attrs ...string) inttypes.Identity {
 	var opts []inttypes.IdentityOptsFunc
 	if len(attrs) > 0 {
 		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
@@ -350,12 +345,7 @@ func TestRegionalARN(t *testing.T) {
 				accountID: accountID,
 			}
 
-			var identitySpec inttypes.Identity
-			if len(tc.duplicateAttrs) > 0 {
-				identitySpec = regionalARNSpec(tc.duplicateAttrs...)
-			} else {
-				identitySpec = regionalARNSpec()
-			}
+			identitySpec := regionalARNIdentitySpec(tc.duplicateAttrs...)
 
 			var response resource.ImportStateResponse
 			schema := regionalARNSchema
