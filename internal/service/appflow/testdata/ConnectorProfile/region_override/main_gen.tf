@@ -138,11 +138,15 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   region = var.region
 
-  count = 1
+  count = local.subnet_count
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+locals {
+  subnet_count = 1
 }
 
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
@@ -150,13 +154,17 @@ resource "aws_subnet" "test" {
 data "aws_availability_zones" "available" {
   region = var.region
 
-  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
   }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
 
 variable "rName" {

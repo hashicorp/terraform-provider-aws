@@ -5,51 +5,31 @@ package framework
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// WithImportByARN is intended to be embedded in resources which import state via the "arn" attribute.
-// See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
-type WithImportByARN struct{}
+// TODO: Needs a better name
+type ImportByIdentityer interface {
+	SetIdentitySpec(identity inttypes.Identity)
+}
+
+var _ ImportByIdentityer = &WithImportByARN{}
+
+type WithImportByARN struct {
+	identity inttypes.Identity
+}
+
+func (w *WithImportByARN) SetIdentitySpec(identity inttypes.Identity) {
+	w.identity = identity
+}
 
 func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	arnARN, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
-		return
-	}
-
-	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root("region"), &region)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !region.IsNull() {
-		if region.ValueString() != arnARN.Region {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
-			)
-			return
-		}
+	if w.identity.IsGlobalResource {
+		importer.GlobalARN(ctx, request, &w.identity, response)
 	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("region"), arnARN.Region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+		importer.RegionalARN(ctx, request, &w.identity, response)
 	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)  // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

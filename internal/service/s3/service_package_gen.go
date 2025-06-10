@@ -112,6 +112,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Bucket",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.ParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceBucketAccelerateConfiguration,

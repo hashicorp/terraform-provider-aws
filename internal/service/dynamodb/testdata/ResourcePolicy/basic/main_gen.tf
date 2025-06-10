@@ -11,13 +11,17 @@ data "aws_iam_policy_document" "test" {
     actions = ["dynamodb:*"]
     principals {
       type        = "AWS"
-      identifiers = [data.aws_caller_identity.current.account_id]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-    resources = [aws_dynamodb_table.test.arn, "${aws_dynamodb_table.test.arn}/*"]
+    resources = [
+      aws_dynamodb_table.test.arn,
+      "${aws_dynamodb_table.test.arn}/*",
+    ]
   }
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 # testAccTableConfig_basic
 

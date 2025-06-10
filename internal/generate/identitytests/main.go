@@ -28,6 +28,7 @@ import (
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -116,7 +117,13 @@ func main() {
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
-		templates, err := template.New("identitytests").Parse(resourceTestGoTmpl)
+
+		templateFuncMap := template.FuncMap{
+			"inc": func(i int) int {
+				return i + 1
+			},
+		}
+		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
 		if err != nil {
 			g.Fatalf("parsing base Go test template: %w", err)
 		}
@@ -214,46 +221,57 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
-func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
 	}
 
-	var (
-		service data.ServiceRecord
-		found   bool
-	)
 	for _, svc := range sr.additional {
-		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
+		if match, err := resourceTypeNameMatchesService(typeName, svc); err != nil {
 			return "", err
 		} else if match {
-			service = svc
-			found = true
+			return svc.ProviderNameUpper(), nil
 		}
 	}
 
-	if !found {
-		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
-			return "", err
+	if match, err := resourceTypeNameMatchesService(typeName, sr.primary); err != nil {
+		return "", err
+	} else if match {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", typeName)
+}
+
+func resourceTypeNameMatchesService(typeName string, sr data.ServiceRecord) (bool, error) {
+	prefixActual := sr.ResourcePrefixActual()
+	if prefixActual != "" {
+		if match, err := resourceTypeNameMatchesPrefix(typeName, prefixActual); err != nil {
+			return false, err
 		} else if match {
-			service = sr.primary
-			found = true
+			return true, nil
 		}
 	}
 
-	if found {
-		return service.ProviderNameUpper(), nil
+	if match, err := resourceTypeNameMatchesPrefix(typeName, sr.ResourcePrefixCorrect()); err != nil {
+		return false, err
+	} else if match {
+		return true, nil
 	}
 
-	return "", fmt.Errorf("No match found for resource type %q", resource)
+	return false, nil
+}
+
+func resourceTypeNameMatchesPrefix(typeName, typePrefix string) (bool, error) {
+	re, err := regexp2.Compile(typePrefix, 0)
+	if err != nil {
+		return false, err
+	}
+	match, err := re.MatchString(typeName)
+	if err != nil {
+		return false, err
+	}
+	return match, err
 }
 
 func (sr serviceRecords) PackageProviderNameUpper() string {
@@ -271,6 +289,30 @@ const (
 	implementationSDK       implementation = "sdk"
 )
 
+type importAction int
+
+const (
+	importActionNoop importAction = iota
+	importActionUpdate
+	importActionReplace
+)
+
+func (i importAction) String() string {
+	switch i {
+	case importActionNoop:
+		return "NoOp"
+
+	case importActionUpdate:
+		return "Update"
+
+	case importActionReplace:
+		return "Replace"
+
+	default:
+		return ""
+	}
+}
+
 type ResourceDatum struct {
 	ProviderPackage             string
 	ResourceProviderNameUpper   string
@@ -278,11 +320,12 @@ type ResourceDatum struct {
 	Name                        string
 	TypeName                    string
 	DestroyTakesT               bool
+	HasExistsFunc               bool
 	ExistsTypeName              string
 	ExistsTakesT                bool
 	FileName                    string
 	Generator                   string
-	idAttrDuplicates            string
+	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
 	NoImport                    bool
 	ImportStateID               string
 	importStateIDAttribute      string
@@ -293,6 +336,8 @@ type ResourceDatum struct {
 	SerializeDelay              bool
 	SerializeParallelTests      bool
 	PreChecks                   []codeBlock
+	PreChecksWithRegion         []codeBlock
+	PreCheckRegions             []string
 	GoImports                   []goImport
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
@@ -302,9 +347,17 @@ type ResourceDatum struct {
 	OverrideResourceType        string
 	ARNService                  string
 	ARNFormat                   string
-	ARNAttribute                string
+	arnAttribute                string
+	ArnIdentity                 bool
+	MutableIdentity             bool
 	IsGlobal                    bool
+	isSingleton                 bool
 	HasRegionOverrideTest       bool
+	UseAlternateAccount         bool
+	IdentityAttributes          []string
+	plannableImportAction       importAction
+	identityAttribute           string
+	IdentityDuplicateAttrs      []string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -338,11 +391,43 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {
-	return d.ARNAttribute != ""
+	return d.ArnIdentity
+}
+
+func (d ResourceDatum) ARNAttribute() string {
+	return namesgen.ConstOrQuote(d.arnAttribute)
+}
+
+func (d ResourceDatum) IsGlobalSingleton() bool {
+	return d.isSingleton && d.IsGlobal
+}
+
+func (d ResourceDatum) IsRegionalSingleton() bool {
+	return d.isSingleton && !d.IsGlobal
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
+}
+
+func (d ResourceDatum) HasInherentRegion() bool {
+	return d.IsARNIdentity() || d.IsRegionalSingleton()
+}
+
+func (d ResourceDatum) HasImportIgnore() bool {
+	return len(d.ImportIgnore) > 0
+}
+
+func (d ResourceDatum) PlannableResourceAction() string {
+	return d.plannableImportAction.String()
+}
+
+func (d ResourceDatum) IdentityAttribute() string {
+	return namesgen.ConstOrQuote(d.identityAttribute)
+}
+
+func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
+	return len(r.IdentityDuplicateAttrs) > 0
 }
 
 type goImport struct {
@@ -436,7 +521,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName:              v.fileName,
 		additionalTfVars:      make(map[string]string),
 		IsGlobal:              false,
+		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
+		plannableImportAction: importActionNoop,
 	}
 	hasIdentity := false
 	skip := false
@@ -485,17 +572,63 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnIdentity":
 				hasIdentity = true
+				d.ArnIdentity = true
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					d.ARNAttribute = "arn"
+					d.arnAttribute = "arn"
+					d.identityAttribute = "arn"
 				} else {
-					d.ARNAttribute = args.Positional[0]
+					d.arnAttribute = args.Positional[0]
+					d.identityAttribute = args.Positional[0]
 				}
-				d.idAttrDuplicates = d.ARNAttribute
+
+				var attrs []string
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs = strings.Split(attr, ";")
+				}
+				if d.Implementation == implementationSDK {
+					attrs = append(attrs, "id")
+				}
+				slices.Sort(attrs)
+				attrs = slices.Compact(attrs)
+				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+					return namesgen.ConstOrQuote(s)
+				})
+
+			case "IdentityAttribute":
+				hasIdentity = true
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+				d.IdentityAttributes = append(d.IdentityAttributes, namesgen.ConstOrQuote(args.Positional[0]))
+
+			case "SingletonIdentity":
+				hasIdentity = true
+				d.isSingleton = true
+				d.Serialize = true
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
 				d.ARNFormat = args.Positional[0]
+				d.arnAttribute = "arn"
+
+			case "MutableIdentity":
+				d.MutableIdentity = true
+
+			case "Region":
+				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["global"]; ok {
+					if global, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.IsGlobal = global
+					}
+				}
+
+			case "NoImport":
+				d.NoImport = true
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -536,6 +669,40 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					})
 					d.additionalTfVars[varName] = varName
 				}
+				if attr, ok := args.Keyword["subdomainTfVar"]; ok {
+					parentName := "domain"
+					varName := "subdomain"
+					parts := strings.Split(attr, ";")
+					if len(parts) > 1 {
+						if len(parts[0]) > 0 {
+							parentName = parts[0]
+						}
+						if len(parts[1]) > 0 {
+							varName = parts[1]
+						}
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
+					})
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
+					})
+					d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
+					d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
+				}
+				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.HasExistsFunc = b
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -571,13 +738,21 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-plugin-testing/config",
+						},
+						goImport{
+							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
+						},
+					)
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
-
 					for i, val := range d.ImportIgnore {
 						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
+					d.plannableImportAction = importActionUpdate
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
@@ -599,6 +774,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.NoImport = b
 					}
 				}
+				if attr, ok := args.Keyword["plannableImportAction"]; ok {
+					switch attr {
+					case importActionNoop.String():
+						d.plannableImportAction = importActionNoop
+
+					case importActionUpdate.String():
+						d.plannableImportAction = importActionUpdate
+
+					case importActionReplace.String():
+						d.plannableImportAction = importActionReplace
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid plannableImportAction value: %q at %s. Must be one of %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()}))
+						continue
+					}
+				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -613,14 +804,39 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["preCheckRegion"]; ok {
-					d.PreChecks = append(d.PreChecks, codeBlock{
-						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", endpointsConstOrQuote(attr)),
+					regions := strings.Split(attr, ";")
+					d.PreCheckRegions = tfslices.ApplyToAll(regions, func(s string) string {
+						return endpointsConstOrQuote(s)
 					})
 					d.GoImports = append(d.GoImports,
 						goImport{
 							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
 						},
 					)
+				}
+				if attr, ok := args.Keyword["preCheckWithRegion"]; ok {
+					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+						continue
+					} else {
+						d.PreChecksWithRegion = append(d.PreChecks, codeBlock{
+							Code: code,
+						})
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
+					}
+				}
+				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.UseAlternateAccount = true
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: "acctest.PreCheckAlternateAccount(t)",
+						})
+					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -698,6 +914,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		})
 		d.additionalTfVars["certificate_pem"] = "certificatePEM"
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+	}
+
+	if d.IsRegionalSingleton() {
+		d.idAttrDuplicates = "region"
+	}
+
+	if d.IsGlobal {
+		d.HasRegionOverrideTest = false
 	}
 
 	if hasIdentity {

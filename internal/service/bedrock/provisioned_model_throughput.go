@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -36,8 +35,9 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
-// @ArnIdentity
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(tagsTest=false)
+// @Testing(identityTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &provisionedModelThroughputResource{}
 
@@ -49,6 +49,7 @@ func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWi
 type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -267,40 +268,4 @@ type provisionedModelThroughputResourceModel struct {
 
 func (data *provisionedModelThroughputResourceModel) setID() {
 	data.ID = data.ProvisionedModelARN
-}
-
-func (r *provisionedModelThroughputResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	arnARN, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
-		return
-	}
-
-	var region types.String
-	response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !region.IsNull() {
-		if region.ValueString() != arnARN.Region {
-			response.Diagnostics.AddError(
-				"Invalid Resource Import ID Value",
-				fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ARN %q", region.ValueString(), arnARN.Region, request.ID),
-			)
-			return
-		}
-	} else {
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), arnARN.Region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("provisioned_model_arn"), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)            // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

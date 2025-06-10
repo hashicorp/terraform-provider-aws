@@ -53,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_certificate",
 			Name:     "Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
 		{
 			Factory:  resourceCertificateAuthority,
@@ -63,14 +63,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(),
+			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 		},
 		{
 			Factory:  resourceCertificateAuthorityCertificate,
 			TypeName: "aws_acmpca_certificate_authority_certificate",
 			Name:     "Certificate Authority Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed("certificate_authority_arn"),
+			Identity: inttypes.RegionalARNIdentityNamed("certificate_authority_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},
@@ -86,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_policy",
 			Name:     "Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},

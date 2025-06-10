@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -44,7 +43,10 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 }
 
 // @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
-// @ArnIdentity
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/shield/types;awstypes;awstypes.ApplicationLayerAutomaticResponseConfiguration")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
+// @Testing(preCheck="testAccPreCheck")
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
@@ -58,6 +60,7 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 type applicationLayerAutomaticResponseResource struct {
 	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -323,19 +326,4 @@ type applicationLayerAutomaticResponseResourceModel struct {
 
 func (data *applicationLayerAutomaticResponseResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
-}
-
-func (r *applicationLayerAutomaticResponseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	_, err := arn.Parse(request.ID)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Invalid Resource Import ID Value",
-			"The import ID could not be parsed as an ARN.\n\n"+
-				fmt.Sprintf("Value: %q\nError: %s", request.ID, err),
-		)
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)          // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
 }

@@ -93,18 +93,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iot_event_configurations",
 			Name:     "Event Configurations",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceIndexingConfiguration,
 			TypeName: "aws_iot_indexing_configuration",
 			Name:     "Indexing Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceLoggingOptions,
 			TypeName: "aws_iot_logging_options",
 			Name:     "Logging Options",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
 		},
 		{
 			Factory:  resourcePolicy,

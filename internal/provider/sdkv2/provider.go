@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -550,12 +551,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := &schema.Schema{
-						Type:        schema.TypeString,
-						Optional:    true,
-						Computed:    true,
-						Description: names.TopLevelRegionAttributeDescription,
-					}
+					regionSchema := attribute.Region()
 
 					if f := r.SchemaFunc; f != nil {
 						r.SchemaFunc = func() map[string]*schema.Schema {
@@ -656,12 +652,8 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if _, ok := s[names.AttrRegion]; !ok {
 					// Inject a top-level "region" attribute.
-					regionSchema := &schema.Schema{
-						Type:        schema.TypeString,
-						Optional:    true,
-						Computed:    true,
-						Description: names.TopLevelRegionAttributeDescription,
-					}
+					regionSchema := attribute.Region()
+
 					// If the resource defines no Update handler then add a stub to fake out 'Provider.Validate'.
 					if r.UpdateWithoutTimeout == nil {
 						r.UpdateWithoutTimeout = schema.NoopContext
@@ -723,6 +715,12 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				})
 			}
 
+			if len(resource.Identity.Attributes) > 0 {
+				r.Identity = newResourceIdentity(resource.Identity)
+
+				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
+			}
+
 			if resource.Import.WrappedImport {
 				if r.Importer != nil && r.Importer.StateContext != nil {
 					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))
@@ -730,7 +728,11 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				}
 
 				if resource.Identity.ARN {
-					r.Importer = arnIdentityResourceImporter(resource.Identity.ARNAttribute, resource.Identity.Global)
+					r.Importer = arnIdentityResourceImporter(resource.Identity)
+				} else if resource.Identity.Singleton {
+					r.Importer = singletonIdentityResourceImporter(resource.Identity.IsGlobalResource)
+				} else {
+					r.Importer = newParameterizedIdentityImporter(resource.Identity)
 				}
 			}
 

@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,7 +74,155 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+				},
+			},
+
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			{
+				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
+					},
+				},
+			},
+
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_healthCheckIdTypeCNAME(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
+				},
+			},
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					},
+				},
+			},
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					},
+				},
 			},
 		},
 	})
@@ -151,7 +301,7 @@ func TestAccRoute53Record_underscored(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -178,7 +328,7 @@ func TestAccRoute53Record_fqdn(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 
 			// Ensure that changing the name to include a trailing "dot" results in
@@ -220,7 +370,7 @@ func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -247,7 +397,7 @@ func TestAccRoute53Record_Support_txt(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight, "zone_id"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "zone_id"},
 			},
 		},
 	})
@@ -275,7 +425,7 @@ func TestAccRoute53Record_Support_spf(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -303,7 +453,7 @@ func TestAccRoute53Record_Support_caa(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -330,7 +480,7 @@ func TestAccRoute53Record_Support_ds(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -357,7 +507,7 @@ func TestAccRoute53Record_generatesSuffix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -393,7 +543,7 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -438,7 +588,7 @@ func TestAccRoute53Record_failover(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -467,7 +617,7 @@ func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -494,7 +644,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
 				Config: testAccRecordConfig_simpleRoutingPolicy,
@@ -529,7 +679,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -557,7 +707,7 @@ func TestAccRoute53Record_Alias_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -589,7 +739,7 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -618,7 +768,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -646,7 +796,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 
 			{
@@ -707,7 +857,7 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
 				Config: testAccRecordConfig_cidr(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-2"),
@@ -757,7 +907,7 @@ func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -786,7 +936,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -813,7 +963,7 @@ func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdSetIdentifier("test2"),
@@ -846,7 +996,7 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdTypeA(),
@@ -881,7 +1031,7 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -903,20 +1053,36 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("www.terraform.io"),
+					})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-
-			// Cause a change, which will trigger a refresh
 			{
 				Config: testAccRecordConfig_typeChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("records"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("127.0.0.1"),
+						knownvalue.StringExact("8.8.8.8"),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -938,20 +1104,30 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("sample")),
+				},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-			// Cause a change, which will trigger a refresh
 			{
 				Config: testAccRecordConfig_nameChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 					testAccCheckRecordDoesNotExist(ctx, "aws_route53_zone.main", "sample", "CNAME"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("sample-new")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -978,7 +1154,7 @@ func TestAccRoute53Record_setIdentifierChangeBasicToWeighted(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1377,7 +1553,7 @@ func TestAccRoute53Record_Alias_change(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1414,7 +1590,7 @@ func TestAccRoute53Record_Alias_changeDualstack(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			// Cause a change, which will trigger a refresh
 			{
@@ -1449,7 +1625,7 @@ func TestAccRoute53Record_empty(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -1477,7 +1653,7 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -1505,7 +1681,7 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -1545,7 +1721,7 @@ func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -1575,7 +1751,7 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
 				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 45),
@@ -1618,7 +1794,7 @@ func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 		},
 	})
@@ -2540,7 +2716,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["127.0.0.1"]
-  set_identifier  = "test"
+  set_identifier  = "set-id"
   ttl             = "5"
   type            = "A"
 
@@ -2572,7 +2748,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["test1.domain.test"]
-  set_identifier  = "test"
+  set_identifier  = "set-id"
   ttl             = "5"
   type            = "CNAME"
 
