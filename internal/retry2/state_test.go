@@ -108,7 +108,7 @@ func TestWaitForState_inconsistent_positive(t *testing.T) {
 		ContinuousTargetOccurence: 3,
 	}
 
-	idx, err := conf.WaitForState(t.Context())
+	idx, err := conf.WaitForStateContext(t.Context())
 
 	if err != nil {
 		t.Fatalf("err: %s", err)
@@ -136,7 +136,7 @@ func TestWaitForState_inconsistent_negative(t *testing.T) {
 		ContinuousTargetOccurence: 4,
 	}
 
-	_, err := conf.WaitForState(t.Context())
+	_, err := conf.WaitForStateContext(t.Context())
 
 	if err == nil {
 		t.Fatal("Expected timeout error. No error returned.")
@@ -163,7 +163,7 @@ func TestWaitForState_timeout(t *testing.T) {
 		Timeout: 1 * time.Millisecond,
 	}
 
-	obj, err := conf.WaitForState(t.Context())
+	obj, err := conf.WaitForStateContext(t.Context())
 
 	if err == nil {
 		t.Fatal("Expected timeout error. No error returned.")
@@ -187,7 +187,7 @@ func TestWaitForState_success(t *testing.T) {
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState(t.Context())
+	obj, err := conf.WaitForStateContext(t.Context())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -203,7 +203,7 @@ func TestWaitForState_successUnknownPending(t *testing.T) {
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState(t.Context())
+	obj, err := conf.WaitForStateContext(t.Context())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -222,7 +222,7 @@ func TestWaitForState_successEmpty(t *testing.T) {
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState(t.Context())
+	obj, err := conf.WaitForStateContext(t.Context())
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -243,7 +243,7 @@ func TestWaitForState_failureEmpty(t *testing.T) {
 		Timeout:      100 * time.Millisecond,
 	}
 
-	_, err := conf.WaitForState(t.Context())
+	_, err := conf.WaitForStateContext(t.Context())
 	if err == nil {
 		t.Fatal("Expected timeout error. Got none.")
 	}
@@ -261,7 +261,7 @@ func TestWaitForState_failure(t *testing.T) {
 		Timeout: 200 * time.Second,
 	}
 
-	obj, err := conf.WaitForState(t.Context())
+	obj, err := conf.WaitForStateContext(t.Context())
 	if err == nil {
 		t.Fatal("Expected error. No error returned.")
 	}
@@ -293,7 +293,7 @@ func TestWaitForStateContext_cancel(t *testing.T) {
 	waitDone := make(chan struct{})
 	go func() {
 		defer close(waitDone)
-		_, err = conf.WaitForState(ctx)
+		_, err = conf.WaitForStateContext(ctx)
 	}()
 
 	// make sure WaitForState is blocked
