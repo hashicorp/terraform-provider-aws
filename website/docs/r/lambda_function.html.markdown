@@ -167,6 +167,13 @@ resource "aws_efs_file_system" "example" {
   }
 }
 
+# Example subnet IDs (replace with your actual subnet IDs)
+variable "subnet_ids" {
+  description = "List of subnet IDs for EFS mount targets"
+  type        = list(string)
+  default     = ["subnet-12345678", "subnet-87654321"]
+}
+
 # Mount target in each subnet
 resource "aws_efs_mount_target" "example" {
   count = length(var.subnet_ids)
@@ -287,6 +294,13 @@ resource "aws_lambda_function_event_invoke_config" "example" {
 ### CloudWatch Logging and Permissions
 
 ```terraform
+# Function name variable
+variable "function_name" {
+  description = "Name of the Lambda function"
+  type        = string
+  default     = "example_function"
+}
+
 # CloudWatch Log Group with retention
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/lambda/${var.function_name}"
