@@ -26,6 +26,7 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
 // @ArnIdentity("application_arn", identityDuplicateAttributes="id")
+// @ArnFormat(global=true)
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
