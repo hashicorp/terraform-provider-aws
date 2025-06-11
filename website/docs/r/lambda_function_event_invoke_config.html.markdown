@@ -206,7 +206,7 @@ ARN without qualifier (all versions and aliases):
 ```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
-  id = "arn:aws:lambda:us-east-1:123456789012:function:my_function"
+  id = "arn:aws:lambda:us-east-1:123456789012:function:example"
 }
 ```
 
@@ -215,7 +215,7 @@ ARN with qualifier:
 ```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
-  id = "arn:aws:lambda:us-east-1:123456789012:function:my_function:production"
+  id = "arn:aws:lambda:us-east-1:123456789012:function:example:production"
 }
 ```
 
@@ -224,7 +224,7 @@ Name without qualifier (all versions and aliases):
 ```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
-  id = "my_function"
+  id = "example"
 }
 ```
 
@@ -233,7 +233,7 @@ Name with qualifier:
 ```terraform
 import {
   to = aws_lambda_function_event_invoke_config.example
-  id = "my_function:production"
+  id = "example:production"
 }
 ```
 
@@ -242,23 +242,23 @@ For backwards compatibility, the following legacy `terraform import` commands ar
 Using ARN without qualifier:
 
 ```console
-% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:example
 ```
 
 Using ARN with qualifier:
 
 ```console
-% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:my_function:production
+% terraform import aws_lambda_function_event_invoke_config.example arn:aws:lambda:us-east-1:123456789012:function:example:production
 ```
 
 Name without qualifier (all versions and aliases):
 
 ```console
-% terraform import aws_lambda_function_event_invoke_config.example my_function
+% terraform import aws_lambda_function_event_invoke_config.example example
 ```
 
 Name with qualifier:
 
 ```console
-% terraform import aws_lambda_function_event_invoke_config.example my_function:production
+% terraform import aws_lambda_function_event_invoke_config.example example:production
 ```

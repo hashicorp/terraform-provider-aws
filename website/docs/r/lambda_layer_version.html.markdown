@@ -110,12 +110,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_layer_version.example
-  id = "arn:aws:lambda:us-west-2:123456789012:layer:my-layer:1"
+  id = "arn:aws:lambda:us-west-2:123456789012:layer:example:1"
 }
 ```
 
 Using `terraform import`, import Lambda Layers using `arn`. For example:
 
 ```console
-% terraform import aws_lambda_layer_version.example arn:aws:lambda:us-west-2:123456789012:layer:my-layer:1
+% terraform import aws_lambda_layer_version.example arn:aws:lambda:us-west-2:123456789012:layer:example:1
 ```

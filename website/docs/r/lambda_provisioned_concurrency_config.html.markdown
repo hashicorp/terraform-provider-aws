@@ -67,12 +67,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_provisioned_concurrency_config.example
-  id = "my_function,production"
+  id = "example,production"
 }
 ```
 
 Using `terraform import`, import a Lambda Provisioned Concurrency Configuration using the `function_name` and `qualifier` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_lambda_provisioned_concurrency_config.example my_function,production
+% terraform import aws_lambda_provisioned_concurrency_config.example example,production
 ```

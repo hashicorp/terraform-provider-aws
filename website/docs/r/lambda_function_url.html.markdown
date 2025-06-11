@@ -84,12 +84,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_lambda_function_url.example
-  id = "my_test_lambda_function"
+  id = "example"
 }
 ```
 
 Using `terraform import`, import Lambda function URLs using the `function_name` or `function_name/qualifier`. For example:
 
 ```console
-% terraform import aws_lambda_function_url.example my_test_lambda_function
+% terraform import aws_lambda_function_url.example example
 ```
