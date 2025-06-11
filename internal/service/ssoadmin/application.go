@@ -42,7 +42,7 @@ func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
-	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
+	framework.WithImportByARN
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

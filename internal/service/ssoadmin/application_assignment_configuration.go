@@ -38,7 +38,7 @@ const (
 
 type applicationAssignmentConfigurationResource struct {
 	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
-	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
+	framework.WithImportByARN
 }
 
 func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
