@@ -1,5 +1,9 @@
 ## 5.100.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_route53_vpc_association_authorization: Because we cannot easily replicate the highly concurrent environments in which these errors have been observed, this fix is best effort and we ask for community help in verifying the reported issues are resolved by this change ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
+
 FEATURES:
 
 * **New Resource:** `aws_dsql_cluster` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
@@ -23,9 +27,13 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Add hosted zone ID for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
 * provider: Support `ap-east-2` as a valid AWS Region ([#42906](https://github.com/hashicorp/terraform-provider-aws/issues/42906))
 * resource/aws_fsx_lustre_file_system: Add `data_read_cache_configuration` and `throughput_capacity` arguments in support of the [Intelligent-Tiering storage class](https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-fsx-lustre.html#how-INT-tiering-works) ([#42839](https://github.com/hashicorp/terraform-provider-aws/issues/42839))
+* resource/aws_pinpointsmsvoicev2_phone_number: Add `two_way_channel_role` argument ([#42950](https://github.com/hashicorp/terraform-provider-aws/issues/42950))
+* resource/aws_route53_vpc_association_authorization: Add configurable timeouts for create, read, and delete ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
 * resource/aws_s3_access_point: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
 * resource/aws_s3control_access_point_policy: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
 * resource/aws_vpn_connection: Add `preshared_key_storage` argument and `preshared_key_arn` attribute ([#42819](https://github.com/hashicorp/terraform-provider-aws/issues/42819))
+* resource/aws_wafv2_rule_group: Add `statement.asn_match_statement` configuration block ([#42965](https://github.com/hashicorp/terraform-provider-aws/issues/42965))
+* resource/aws_wafv2_web_acl: Add `statement.asn_match_statement` configuration block ([#42965](https://github.com/hashicorp/terraform-provider-aws/issues/42965))
 
 BUG FIXES:
 
@@ -38,6 +46,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_subscription_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
 * resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
 * resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* resource/aws_route53_vpc_association_authorization: Retry `InvalidPaginationToken` errors on read ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
 * resource/aws_verifiedaccess_endpoint: Fix `InvalidParameterValue: The value of loadBalancerOptions.port you provided is not valid` errors when creating TCP load balancer endpoints ([#42736](https://github.com/hashicorp/terraform-provider-aws/issues/42736))
 * resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel ([#42884](https://github.com/hashicorp/terraform-provider-aws/issues/42884))
 
