@@ -231,6 +231,14 @@ resource "aws_apigatewayv2_routing_rule" "test" {
     }
   }
   conditions {
+	match_headers {
+      any_of {
+        header     = "X-Example-Header2"
+        value_glob = "example-*"
+      }
+    }
+  }
+  conditions {
     match_base_paths {
       any_of = ["example-path"]
     }
