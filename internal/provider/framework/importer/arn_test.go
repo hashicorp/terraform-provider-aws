@@ -143,20 +143,20 @@ func TestGlobalARN(t *testing.T) {
 				identitySchema = &x
 			}
 
-			var response resource.ImportStateResponse
 			schema := globalARNSchema
 			if tc.useSchemaWithID {
 				schema = globalARNWithIDSchema
 			}
 
+			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
 			}
 
 			if tc.expectError {
@@ -346,22 +346,22 @@ func TestRegionalARN(t *testing.T) {
 				identitySchema = &x
 			}
 
-			var response resource.ImportStateResponse
 			schema := regionalARNSchema
 			if tc.useSchemaWithID {
 				schema = regionalARNWithIDSchema
 			}
 
+			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
 			case "IDWithState":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
 			}
 
 			if tc.expectError {
@@ -553,24 +553,24 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 				identitySchema = &x
 			}
 
-			var response resource.ImportStateResponse
 			schema := regionalResourceWithGlobalARNFormatSchema
 			if tc.useSchemaWithID {
 				schema = regionalResourceWithGlobalARNFormatWithIDSchema
 			}
 
+			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
 				stateAttrs := map[string]string{
 					"region": tc.inputRegion,
 				}
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"region": tc.inputRegion,
 					"arn":    tc.inputARN,
 				})
-				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
 			}
 
 			if tc.expectError {
@@ -635,59 +635,6 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			}
 		})
 	}
-}
-
-type importARNFunc func(ctx context.Context, client importer.AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse)
-
-func importARNByID(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	var identity *tfsdk.ResourceIdentity
-	if identitySchema != nil {
-		identity = emtpyIdentityFromSchema(ctx, identitySchema)
-	}
-
-	request := resource.ImportStateRequest{
-		ID:       id,
-		Identity: identity,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(ctx, resourceSchema),
-		Identity: identity,
-	}
-	f(ctx, client, request, &identitySpec, &response)
-
-	return response
-}
-
-func importARNByIDWithState(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	var identity *tfsdk.ResourceIdentity
-	if identitySchema != nil {
-		identity = emtpyIdentityFromSchema(ctx, identitySchema)
-	}
-
-	request := resource.ImportStateRequest{
-		ID:       id,
-		Identity: identity,
-	}
-	response := resource.ImportStateResponse{
-		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
-		Identity: identity,
-	}
-	f(ctx, client, request, &identitySpec, &response)
-
-	return response
-}
-
-func importARNByIdentity(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, identity *tfsdk.ResourceIdentity, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	request := resource.ImportStateRequest{
-		Identity: identity,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(ctx, resourceSchema),
-		Identity: identity,
-	}
-	f(ctx, client, request, &identitySpec, &response)
-
-	return response
 }
 
 func getAttributeValue(ctx context.Context, t *testing.T, state tfsdk.State, path path.Path) string {
