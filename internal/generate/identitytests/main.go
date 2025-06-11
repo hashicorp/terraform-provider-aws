@@ -114,6 +114,16 @@ func main() {
 			resource.IsGlobal = true
 		}
 
+		if resource.IsGlobal {
+			if resource.isARNFormatGlobal == arnFormatStateUnset {
+				if resource.IsGlobal {
+					resource.isARNFormatGlobal = arnFormatStateGlobal
+				} else {
+					resource.isARNFormatGlobal = arnFormatStateRegional
+				}
+			}
+		}
+
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
@@ -313,6 +323,14 @@ func (i importAction) String() string {
 	}
 }
 
+type arnFormatState uint
+
+const (
+	arnFormatStateUnset arnFormatState = iota
+	arnFormatStateGlobal
+	arnFormatStateRegional
+)
+
 type ResourceDatum struct {
 	ProviderPackage             string
 	ResourceProviderNameUpper   string
@@ -348,6 +366,7 @@ type ResourceDatum struct {
 	ARNService                  string
 	ARNFormat                   string
 	arnAttribute                string
+	isARNFormatGlobal           arnFormatState
 	ArnIdentity                 bool
 	MutableIdentity             bool
 	IsGlobal                    bool
@@ -428,6 +447,10 @@ func (d ResourceDatum) IdentityAttribute() string {
 
 func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrs) > 0
+}
+
+func (r ResourceDatum) IsARNFormatGlobal() bool {
+	return r.isARNFormatGlobal == arnFormatStateGlobal
 }
 
 type goImport struct {
@@ -611,10 +634,25 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
-				d.ARNFormat = args.Positional[0]
+				if len(args.Positional) > 0 {
+					d.ARNFormat = args.Positional[0]
+				}
 
 				if attr, ok := args.Keyword["attribute"]; ok {
 					d.arnAttribute = attr
+				}
+
+				if attr, ok := args.Keyword["global"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						if b {
+							d.isARNFormatGlobal = arnFormatStateGlobal
+						} else {
+							d.isARNFormatGlobal = arnFormatStateRegional
+						}
+					}
 				}
 
 			case "MutableIdentity":
