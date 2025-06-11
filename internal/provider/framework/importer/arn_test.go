@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -38,14 +39,6 @@ var globalARNWithIDSchema = schema.Schema{
 			Optional: true,
 		},
 		"id": framework.IDAttributeDeprecatedNoReplacement(),
-	},
-}
-
-var globalARNIdentitySchema = identityschema.Schema{
-	Attributes: map[string]identityschema.Attribute{
-		"arn": identityschema.StringAttribute{
-			RequiredForImport: true,
-		},
 	},
 }
 
@@ -80,25 +73,27 @@ func TestGlobalARN(t *testing.T) {
 	}.String()
 
 	testCases := map[string]struct {
-		importMethod         string // "ID", "IDNoIdentity", or "Identity"
+		importMethod         string // "ImportID" or "Identity"
 		inputARN             string
 		duplicateAttrs       []string
 		useSchemaWithID      bool
+		noIdentity           bool
 		expectError          bool
 		expectedErrorSummary string
 	}{
 		"ImportID_Valid": {
-			importMethod: "ID",
+			importMethod: "ImportID",
 			inputARN:     validARN,
 			expectError:  false,
 		},
 		"ImportID_Valid_NoIdentity": {
-			importMethod: "IDNoIdentity",
+			importMethod: "ImportID",
 			inputARN:     validARN,
+			noIdentity:   true,
 			expectError:  false,
 		},
 		"ImportID_Invalid_NotAnARN": {
-			importMethod:         "ID",
+			importMethod:         "ImportID",
 			inputARN:             "not a valid ARN",
 			expectError:          true,
 			expectedErrorSummary: importer.InvalidResourceImportIDValue,
@@ -115,7 +110,7 @@ func TestGlobalARN(t *testing.T) {
 			expectedErrorSummary: "Invalid Identity Attribute Value",
 		},
 		"DuplicateAttrs_ImportID_Valid": {
-			importMethod:    "ID",
+			importMethod:    "ImportID",
 			duplicateAttrs:  []string{"id", "attr"},
 			useSchemaWithID: true,
 			inputARN:        validARN,
@@ -141,6 +136,12 @@ func TestGlobalARN(t *testing.T) {
 
 			identitySpec := globalARNIdentitySpec(tc.duplicateAttrs...)
 
+			var identitySchema *identityschema.Schema
+			if !tc.noIdentity {
+				x := identity.NewIdentitySchema(identitySpec)
+				identitySchema = &x
+			}
+
 			var response resource.ImportStateResponse
 			schema := globalARNSchema
 			if tc.useSchemaWithID {
@@ -148,12 +149,10 @@ func TestGlobalARN(t *testing.T) {
 			}
 
 			switch tc.importMethod {
-			case "ID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, &globalARNIdentitySchema, identitySpec)
-			case "IDNoIdentity":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, nil, identitySpec)
+			case "ImportID":
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
 			case "Identity":
-				identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
+				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
 				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
@@ -200,7 +199,7 @@ func TestGlobalARN(t *testing.T) {
 			}
 
 			// Check identity
-			if tc.importMethod == "IDNoIdentity" {
+			if tc.noIdentity {
 				if response.Identity != nil {
 					t.Error("Identity should not be set")
 				}
@@ -240,14 +239,6 @@ var regionalARNWithIDSchema = schema.Schema{
 	},
 }
 
-var regionalARNIdentitySchema = identityschema.Schema{
-	Attributes: map[string]identityschema.Attribute{
-		"arn": identityschema.StringAttribute{
-			RequiredForImport: true,
-		},
-	},
-}
-
 func regionalARNIdentitySpec(attrs ...string) inttypes.Identity {
 	var opts []inttypes.IdentityOptsFunc
 	if len(attrs) > 0 {
@@ -272,7 +263,7 @@ func TestRegionalARN(t *testing.T) {
 	}.String()
 
 	testCases := map[string]struct {
-		importMethod        string // "ID", "IDNoIdentity", "Identity", "IDWithState"
+		importMethod        string // "ImportID", "Identity", or "IDWithState"
 		inputARN            string
 		duplicateAttrs      []string
 		useSchemaWithID     bool
@@ -282,7 +273,7 @@ func TestRegionalARN(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"ImportID_Valid_DefaultRegion": {
-			importMethod: "ID",
+			importMethod: "ImportID",
 			inputARN:     validARN,
 			expectError:  false,
 		},
@@ -295,13 +286,13 @@ func TestRegionalARN(t *testing.T) {
 			expectError: false,
 		},
 		"ImportID_Valid_NoIdentity": {
-			importMethod: "IDNoIdentity",
+			importMethod: "ImportID",
 			inputARN:     validARN,
 			noIdentity:   true,
 			expectError:  false,
 		},
 		"ImportID_Invalid_NotAnARN": {
-			importMethod:        "ID",
+			importMethod:        "ImportID",
 			inputARN:            "not a valid ARN",
 			expectError:         true,
 			expectedErrorPrefix: "The import ID could not be parsed as an ARN.",
@@ -327,7 +318,7 @@ func TestRegionalARN(t *testing.T) {
 			expectedErrorPrefix: "Identity attribute \"arn\" could not be parsed as an ARN.",
 		},
 		"DuplicateAttrs_ImportID_Valid": {
-			importMethod:    "ID",
+			importMethod:    "ImportID",
 			duplicateAttrs:  []string{"id", "attr"},
 			useSchemaWithID: true,
 			inputARN:        validARN,
@@ -353,6 +344,12 @@ func TestRegionalARN(t *testing.T) {
 
 			identitySpec := regionalARNIdentitySpec(tc.duplicateAttrs...)
 
+			var identitySchema *identityschema.Schema
+			if !tc.noIdentity {
+				x := identity.NewIdentitySchema(identitySpec)
+				identitySchema = &x
+			}
+
 			var response resource.ImportStateResponse
 			schema := regionalARNSchema
 			if tc.useSchemaWithID {
@@ -360,14 +357,12 @@ func TestRegionalARN(t *testing.T) {
 			}
 
 			switch tc.importMethod {
-			case "ID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, &regionalARNIdentitySchema, identitySpec)
+			case "ImportID":
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
 			case "IDWithState":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, &regionalARNIdentitySchema, identitySpec)
-			case "IDNoIdentity":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, nil, identitySpec)
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec)
 			case "Identity":
-				identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
+				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
 				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
@@ -442,15 +437,12 @@ var regionalResourceWithGlobalARNFormatSchema = regionalARNSchema
 
 var regionalResourceWithGlobalARNFormatWithIDSchema = regionalARNWithIDSchema
 
-var regionalResourceWithGlobalARNFormatIdentitySchema = identityschema.Schema{
-	Attributes: map[string]identityschema.Attribute{
-		"region": identityschema.StringAttribute{
-			OptionalForImport: true,
-		},
-		"arn": identityschema.StringAttribute{
-			RequiredForImport: true,
-		},
-	},
+func regionalResourceWithGlobalARNFormatIdentitySpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
+	}
+	return inttypes.RegionalResourceWithGlobalARNFormat(opts...)
 }
 
 func TestRegionalARNWithGlobalFormat(t *testing.T) {
@@ -470,7 +462,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 	}.String()
 
 	testCases := map[string]struct {
-		importMethod        string // "IDNoIdentity", "Identity", "IDWithState"
+		importMethod        string // "ImportID" or "Identity"
 		inputARN            string
 		duplicateAttrs      []string
 		useSchemaWithID     bool
@@ -481,21 +473,21 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 		expectedErrorPrefix string
 	}{
 		"ImportID_Valid_DefaultRegion": {
-			importMethod:   "IDWithState",
+			importMethod:   "ImportID",
 			inputARN:       validARN,
 			inputRegion:    defaultRegion,
 			expectedRegion: defaultRegion,
 			expectError:    false,
 		},
 		"ImportID_Valid_RegionOverride": {
-			importMethod:   "IDWithState",
+			importMethod:   "ImportID",
 			inputARN:       validARN,
 			inputRegion:    anotherRegion,
 			expectedRegion: anotherRegion,
 			expectError:    false,
 		},
 		"ImportID_Valid_NoIdentity": {
-			importMethod:   "IDNoIdentity",
+			importMethod:   "ImportID",
 			inputARN:       validARN,
 			inputRegion:    defaultRegion,
 			noIdentity:     true,
@@ -503,7 +495,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			expectError:    false,
 		},
 		"ImportID_Invalid_NotAnARN": {
-			importMethod:        "IDWithState",
+			importMethod:        "ImportID",
 			inputARN:            "not a valid ARN",
 			inputRegion:         defaultRegion,
 			expectError:         true,
@@ -533,7 +525,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 		},
 
 		"DuplicateAttrs_ImportID_Valid": {
-			importMethod:    "IDWithState",
+			importMethod:    "ImportID",
 			duplicateAttrs:  []string{"id", "attr"},
 			useSchemaWithID: true,
 			inputARN:        validARN,
@@ -562,11 +554,12 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 				accountID: accountID,
 			}
 
-			var identitySpec inttypes.Identity
-			if len(tc.duplicateAttrs) > 0 {
-				identitySpec = regionalARNIdentitySpec(tc.duplicateAttrs...)
-			} else {
-				identitySpec = regionalARNIdentitySpec()
+			identitySpec := regionalResourceWithGlobalARNFormatIdentitySpec(tc.duplicateAttrs...)
+
+			var identitySchema *identityschema.Schema
+			if !tc.noIdentity {
+				x := identity.NewIdentitySchema(identitySpec)
+				identitySchema = &x
 			}
 
 			var response resource.ImportStateResponse
@@ -575,17 +568,14 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 				schema = regionalResourceWithGlobalARNFormatWithIDSchema
 			}
 
-			stateAttrs := map[string]string{ // TODO: This only applies for the ImportID cases
-				"region": tc.inputRegion,
-			}
-
 			switch tc.importMethod {
-			case "IDWithState":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, &regionalResourceWithGlobalARNFormatIdentitySchema, identitySpec)
-			case "IDNoIdentity":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, nil, identitySpec)
+			case "ImportID":
+				stateAttrs := map[string]string{
+					"region": tc.inputRegion,
+				}
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec)
 			case "Identity":
-				identity := identityFromSchema(ctx, regionalResourceWithGlobalARNFormatIdentitySchema, map[string]string{
+				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"region": tc.inputRegion,
 					"arn":    tc.inputARN,
 				})

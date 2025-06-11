@@ -42,7 +42,7 @@ func emtpyIdentityFromSchema(ctx context.Context, schema *identityschema.Schema)
 	}
 }
 
-func identityFromSchema(ctx context.Context, schema identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
+func identityFromSchema(ctx context.Context, schema *identityschema.Schema, values map[string]string) *tfsdk.ResourceIdentity {
 	val := make(map[string]tftypes.Value)
 	for name := range maps.Keys(schema.Attributes) {
 		if v, ok := values[name]; ok {
