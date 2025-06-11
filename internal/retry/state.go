@@ -135,7 +135,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 	}
 
 	// Timed out or Context canceled.
-	if l.TimedOut() {
+	if l.Remaining() == 0 {
 		var zero T
 
 		return zero, &TimeoutError{
