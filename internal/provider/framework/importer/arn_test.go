@@ -149,9 +149,9 @@ func TestGlobalARN(t *testing.T) {
 
 			switch tc.importMethod {
 			case "ID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, globalARNIdentitySchema, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, &globalARNIdentitySchema, identitySpec)
 			case "IDNoIdentity":
-				response = importARNByIDNoIdentity(ctx, f, &client, schema, tc.inputARN, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, nil, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
 					"arn": tc.inputARN,
@@ -361,11 +361,11 @@ func TestRegionalARN(t *testing.T) {
 
 			switch tc.importMethod {
 			case "ID":
-				response = importARNByID(ctx, f, &client, schema, tc.inputARN, regionalARNIdentitySchema, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, &regionalARNIdentitySchema, identitySpec)
 			case "IDWithState":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, regionalARNIdentitySchema, identitySpec)
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, &regionalARNIdentitySchema, identitySpec)
 			case "IDNoIdentity":
-				response = importARNByIDNoIdentity(ctx, f, &client, schema, tc.inputARN, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, nil, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
 					"arn": tc.inputARN,
@@ -581,9 +581,9 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 			switch tc.importMethod {
 			case "IDWithState":
-				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, regionalResourceWithGlobalARNFormatIdentitySchema, identitySpec)
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, &regionalResourceWithGlobalARNFormatIdentitySchema, identitySpec)
 			case "IDNoIdentity":
-				response = importARNByIDNoIdentityWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySpec)
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, nil, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, regionalResourceWithGlobalARNFormatIdentitySchema, map[string]string{
 					"region": tc.inputRegion,
@@ -663,8 +663,11 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 type importARNFunc func(ctx context.Context, client importer.AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse)
 
-func importARNByID(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	identity := emtpyIdentityFromSchema(ctx, identitySchema)
+func importARNByID(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	var identity *tfsdk.ResourceIdentity
+	if identitySchema != nil {
+		identity = emtpyIdentityFromSchema(ctx, identitySchema)
+	}
 
 	request := resource.ImportStateRequest{
 		ID:       id,
@@ -679,8 +682,11 @@ func importARNByID(ctx context.Context, f importARNFunc, client importer.AWSClie
 	return response
 }
 
-func importARNByIDWithState(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	identity := emtpyIdentityFromSchema(ctx, identitySchema)
+func importARNByIDWithState(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+	var identity *tfsdk.ResourceIdentity
+	if identitySchema != nil {
+		identity = emtpyIdentityFromSchema(ctx, identitySchema)
+	}
 
 	request := resource.ImportStateRequest{
 		ID:       id,
@@ -689,34 +695,6 @@ func importARNByIDWithState(ctx context.Context, f importARNFunc, client importe
 	response := resource.ImportStateResponse{
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
 		Identity: identity,
-	}
-	f(ctx, client, request, &identitySpec, &response)
-
-	return response
-}
-
-func importARNByIDNoIdentity(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	request := resource.ImportStateRequest{
-		ID:       id,
-		Identity: nil,
-	}
-	response := resource.ImportStateResponse{
-		State:    emtpyStateFromSchema(ctx, resourceSchema),
-		Identity: nil,
-	}
-	f(ctx, client, request, &identitySpec, &response)
-
-	return response
-}
-
-func importARNByIDNoIdentityWithState(ctx context.Context, f importARNFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySpec inttypes.Identity) resource.ImportStateResponse {
-	request := resource.ImportStateRequest{
-		ID:       id,
-		Identity: nil,
-	}
-	response := resource.ImportStateResponse{
-		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
-		Identity: nil,
 	}
 	f(ctx, client, request, &identitySpec, &response)
 

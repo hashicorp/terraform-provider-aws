@@ -35,7 +35,7 @@ func stateFromSchema(ctx context.Context, schema schema.Schema, values map[strin
 	}
 }
 
-func emtpyIdentityFromSchema(ctx context.Context, schema identityschema.Schema) *tfsdk.ResourceIdentity {
+func emtpyIdentityFromSchema(ctx context.Context, schema *identityschema.Schema) *tfsdk.ResourceIdentity {
 	return &tfsdk.ResourceIdentity{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
 		Schema: schema,
