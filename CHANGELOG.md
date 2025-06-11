@@ -38,6 +38,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_subscription_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
 * resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
 * resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
+* resource/aws_verifiedaccess_endpoint: Fix `InvalidParameterValue: The value of loadBalancerOptions.port you provided is not valid` errors when creating TCP load balancer endpoints ([#42736](https://github.com/hashicorp/terraform-provider-aws/issues/42736))
 * resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel ([#42884](https://github.com/hashicorp/terraform-provider-aws/issues/42884))
 
 ## 5.99.1 (May 30, 2025)
