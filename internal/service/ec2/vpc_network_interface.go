@@ -576,7 +576,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 		dns_names_ipv6 = append(dns_names_ipv6, calculatePublicDNSNameIPv6(region, ipv6))
 	}
-	d.Set("public_dns_names_ipv6", dns_names_ipv6)
+	if err := d.Set("public_dns_names_ipv6", dns_names_ipv6); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting public_dns_names_ipv6: %s", err)
+	}
 
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("outpost_arn", eni.OutpostArn)
