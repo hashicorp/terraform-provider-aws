@@ -98,10 +98,24 @@ type Identity struct {
 	IsGlobalResource       bool   // All
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
+	IsGlobalARNFormat      bool   // ARN
 	IdentityAttribute      string // ARN
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
+}
+
+func (i Identity) HasInherentRegion() bool {
+	if i.IsGlobalResource {
+		return false
+	}
+	if i.Singleton {
+		return true
+	}
+	if i.ARN && !i.IsGlobalARNFormat {
+		return true
+	}
+	return false
 }
 
 func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
@@ -157,6 +171,7 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 	identity := Identity{
 		IsGlobalResource:  isGlobalResource,
 		ARN:               true,
+		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
