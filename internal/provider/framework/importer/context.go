@@ -9,7 +9,7 @@ import (
 
 type contextKey int
 
-var awsClientKey contextKey = 1
+var awsClientKey contextKey = 1 // nosemgrep:ci.aws-in-var-name
 
 type AWSClient interface {
 	AccountID(context.Context) string
