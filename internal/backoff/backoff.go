@@ -170,7 +170,7 @@ func NewLoop(timeout time.Duration) *Loop {
 // It returns false if the timeout has been exceeded.
 // The deadline is not checked on the first call to Continue.
 func (r *Loop) Continue(ctx context.Context) bool {
-	if r.attempt != 0 && r.TimedOut() {
+	if r.attempt != 0 && r.Remaining() == 0 {
 		// Any non-zero grace period allows one more attempt.
 		if r.gracePeriod == 0 {
 			return false
@@ -190,9 +190,9 @@ func (r *Loop) Reset() {
 	r.attempt = 0
 }
 
-// TimedOut return whether the loop timed out.
-func (r *Loop) TimedOut() bool {
-	return r.deadline.Remaining() == 0
+// Remaining returns how long the duration has remaining.
+func (r *Loop) Remaining() time.Duration {
+	return r.deadline.Remaining()
 }
 
 // sleep sleeps for the specified duration or until the context is canceled, whichever occurs first.
