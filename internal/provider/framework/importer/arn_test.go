@@ -68,6 +68,8 @@ func (c *mockClient) AccountID(_ context.Context) string {
 func TestGlobalARN(t *testing.T) {
 	t.Parallel()
 
+	f := importer.GlobalARN
+
 	accountID := "123456789012"
 	validARN := arn.ARN{
 		Partition: "aws",
@@ -147,14 +149,14 @@ func TestGlobalARN(t *testing.T) {
 
 			switch tc.importMethod {
 			case "ID":
-				response = importARNByID(ctx, importer.GlobalARN, &client, schema, tc.inputARN, globalARNIdentitySchema, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, globalARNIdentitySchema, identitySpec)
 			case "IDNoIdentity":
-				response = importARNByIDNoIdentity(ctx, importer.GlobalARN, &client, schema, tc.inputARN, identitySpec)
+				response = importARNByIDNoIdentity(ctx, f, &client, schema, tc.inputARN, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, globalARNIdentitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importARNByIdentity(ctx, importer.GlobalARN, &client, schema, identity, identitySpec)
+				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
 			}
 
 			if tc.expectError {
@@ -257,6 +259,8 @@ func regionalARNIdentitySpec(attrs ...string) inttypes.Identity {
 func TestRegionalARN(t *testing.T) {
 	t.Parallel()
 
+	f := importer.RegionalARN
+
 	accountID := "123456789012"
 	region := "a-region-1"
 	validARN := arn.ARN{
@@ -355,16 +359,16 @@ func TestRegionalARN(t *testing.T) {
 
 			switch tc.importMethod {
 			case "ID":
-				response = importARNByID(ctx, importer.RegionalARN, &client, schema, tc.inputARN, regionalARNIdentitySchema, identitySpec)
+				response = importARNByID(ctx, f, &client, schema, tc.inputARN, regionalARNIdentitySchema, identitySpec)
 			case "IDWithState":
-				response = importARNByIDWithState(ctx, importer.RegionalARN, &client, schema, tc.inputARN, tc.stateAttrs, regionalARNIdentitySchema, identitySpec)
+				response = importARNByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, regionalARNIdentitySchema, identitySpec)
 			case "IDNoIdentity":
-				response = importARNByIDNoIdentity(ctx, importer.RegionalARN, &client, schema, tc.inputARN, identitySpec)
+				response = importARNByIDNoIdentity(ctx, f, &client, schema, tc.inputARN, identitySpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, regionalARNIdentitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importARNByIdentity(ctx, importer.RegionalARN, &client, schema, identity, identitySpec)
+				response = importARNByIdentity(ctx, f, &client, schema, identity, identitySpec)
 			}
 
 			if tc.expectError {
