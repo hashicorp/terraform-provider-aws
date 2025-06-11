@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -513,26 +513,6 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 
 func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
 	if len(w.opts.identity.Attributes) > 0 {
-		resp.IdentitySchema = newIdentitySchema(w.opts.identity.Attributes)
+		resp.IdentitySchema = identity.NewIdentitySchema(w.opts.identity)
 	}
-}
-
-func newIdentitySchema(attributes []types.IdentityAttribute) identityschema.Schema {
-	schemaAttrs := make(map[string]identityschema.Attribute, len(attributes))
-	for _, attr := range attributes {
-		schemaAttrs[attr.Name] = newIdentityAttribute(attr)
-	}
-	return identityschema.Schema{
-		Attributes: schemaAttrs,
-	}
-}
-
-func newIdentityAttribute(attribute types.IdentityAttribute) identityschema.Attribute {
-	attr := identityschema.StringAttribute{}
-	if attribute.Required {
-		attr.RequiredForImport = true
-	} else {
-		attr.OptionalForImport = true
-	}
-	return attr
 }
