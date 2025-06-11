@@ -5,6 +5,7 @@ package importer_test
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"testing"
 
@@ -178,14 +179,9 @@ func TestGlobalARN(t *testing.T) {
 			}
 
 			// Check attr value
-			expectedAttrValue := ""
-			if len(tc.duplicateAttrs) > 0 && tc.useSchemaWithID {
-				for _, attr := range tc.duplicateAttrs {
-					if attr == "attr" {
-						expectedAttrValue = tc.inputARN
-						break
-					}
-				}
+			var expectedAttrValue string
+			if tc.useSchemaWithID && slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = tc.inputARN
 			}
 			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 				t.Errorf("expected `attr` to be %q, got %q", e, a)
@@ -388,14 +384,9 @@ func TestRegionalARN(t *testing.T) {
 			}
 
 			// Check attr value
-			expectedAttrValue := ""
-			if len(tc.duplicateAttrs) > 0 && tc.useSchemaWithID {
-				for _, attr := range tc.duplicateAttrs {
-					if attr == "attr" {
-						expectedAttrValue = tc.inputARN
-						break
-					}
-				}
+			var expectedAttrValue string
+			if tc.useSchemaWithID && slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = tc.inputARN
 			}
 			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 				t.Errorf("expected `attr` to be %q, got %q", e, a)
@@ -602,14 +593,9 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			}
 
 			// Check attr value
-			expectedAttrValue := ""
-			if len(tc.duplicateAttrs) > 0 && tc.useSchemaWithID {
-				for _, attr := range tc.duplicateAttrs {
-					if attr == "attr" {
-						expectedAttrValue = tc.inputARN
-						break
-					}
-				}
+			var expectedAttrValue string
+			if tc.useSchemaWithID && slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = tc.inputARN
 			}
 			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 				t.Errorf("expected `attr` to be %q, got %q", e, a)
