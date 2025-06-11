@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -2241,7 +2240,7 @@ func flattenASNMatchStatement(a *awstypes.AsnMatchStatement) any {
 	}
 
 	m := map[string]any{
-		"asn_list":            tfslices.ApplyToAll(a.AsnList, func(v int64) any { return int(v) }),
+		"asn_list":            a.AsnList,
 		"forwarded_ip_config": flattenForwardedIPConfig(a.ForwardedIPConfig),
 	}
 
