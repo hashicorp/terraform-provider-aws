@@ -9,15 +9,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,10 +67,19 @@ func (r *resourceRoutingRule) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 512),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrPriority: schema.Int64Attribute{
 				Required: true,
+				Validators: []validator.Int64{
+					int64validator.Between(1, 1000000),
+				},
 			},
 			"domain_name_id": schema.StringAttribute{
 				Optional: true,
@@ -75,25 +90,47 @@ func (r *resourceRoutingRule) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.NewListNestedObjectTypeOf[conditionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(3),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("match_headers"),
+							path.MatchRelative().AtName("match_base_paths"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"match_headers": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[matchHeadersModel](ctx),
 							Validators: []validator.List{
-								listvalidator.SizeAtMost(2),
+								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"any_of": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[anyOfModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrHeader: schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile("^[a-zA-Z0-9*?!#$%&'.^_`|~-]{1,39}$"),
+															"must be less than 40 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?!#$%&'.^_`|~-",
+														),
+													},
 												},
 												"value_glob": schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile("^[a-zA-Z0-9*?!#$%&'.^_`|~-]{1,127}$"),
+															"must be less than 128 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?!#$%&'.^_`|~-",
+														),
+													},
 												},
 											},
 										},
@@ -103,6 +140,9 @@ func (r *resourceRoutingRule) Schema(ctx context.Context, req resource.SchemaReq
 						},
 						"match_base_paths": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[matchBasePathsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"any_of": schema.ListAttribute{
