@@ -104,7 +104,11 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpc, err := findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID, d.Timeout(schema.TimeoutRead))
+	// InvalidPaginationToken errors can manifest when many authorization resources are
+	// managed concurrently. Retry these errors for a short duration.
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
+		return findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 VPC Association Authorization %s not found, removing from state", d.Id())
@@ -116,8 +120,9 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCID, vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
+	output := outputRaw.(*awstypes.VPC)
+	d.Set(names.AttrVPCID, output.VPCId)
+	d.Set("vpc_region", output.VPCRegion)
 	d.Set("zone_id", zoneID)
 
 	return diags
@@ -173,18 +178,18 @@ func vpcAssociationAuthorizationParseResourceID(id string) (string, string, erro
 	return parts[0], parts[1], nil
 }
 
-func findVPCAssociationAuthorizationByTwoPartKey(ctx context.Context, conn *route53.Client, zoneID, vpcID string, timeout time.Duration) (*awstypes.VPC, error) {
+func findVPCAssociationAuthorizationByTwoPartKey(ctx context.Context, conn *route53.Client, zoneID, vpcID string) (*awstypes.VPC, error) {
 	input := &route53.ListVPCAssociationAuthorizationsInput{
 		HostedZoneId: aws.String(zoneID),
 	}
 
 	return findVPCAssociationAuthorization(ctx, conn, input, func(v *awstypes.VPC) bool {
 		return aws.ToString(v.VPCId) == vpcID
-	}, timeout)
+	})
 }
 
-func findVPCAssociationAuthorization(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, filter tfslices.Predicate[*awstypes.VPC], timeout time.Duration) (*awstypes.VPC, error) {
-	output, err := findVPCAssociationAuthorizations(ctx, conn, input, filter, timeout)
+func findVPCAssociationAuthorization(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, filter tfslices.Predicate[*awstypes.VPC]) (*awstypes.VPC, error) {
+	output, err := findVPCAssociationAuthorizations(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -193,29 +198,21 @@ func findVPCAssociationAuthorization(ctx context.Context, conn *route53.Client, 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCAssociationAuthorizations(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, filter tfslices.Predicate[*awstypes.VPC], timeout time.Duration) ([]awstypes.VPC, error) {
-	// InvalidPaginationToken errors can manifest when many authorization resources are
-	// managed concurrently. Retry these errors for a short duration.
-	//
-	// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/40585
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidPaginationToken](ctx, timeout, func() (any, error) {
-		var listOutput []awstypes.VPC
+func findVPCAssociationAuthorizations(ctx context.Context, conn *route53.Client, input *route53.ListVPCAssociationAuthorizationsInput, filter tfslices.Predicate[*awstypes.VPC]) ([]awstypes.VPC, error) {
+	var output []awstypes.VPC
 
-		err := listVPCAssociationAuthorizationsPages(ctx, conn, input, func(page *route53.ListVPCAssociationAuthorizationsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, v := range page.VPCs {
-				if filter(&v) {
-					listOutput = append(listOutput, v)
-				}
-			}
-
+	err := listVPCAssociationAuthorizationsPages(ctx, conn, input, func(page *route53.ListVPCAssociationAuthorizationsOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
-		})
+		}
 
-		return listOutput, err
+		for _, v := range page.VPCs {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
 	})
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) {
@@ -229,5 +226,5 @@ func findVPCAssociationAuthorizations(ctx context.Context, conn *route53.Client,
 		return nil, err
 	}
 
-	return outputRaw.([]awstypes.VPC), nil
+	return output, nil
 }
