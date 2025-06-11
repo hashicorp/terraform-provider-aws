@@ -5,6 +5,7 @@ package retry
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"time"
 
@@ -80,7 +81,13 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		l                             *backoff.Loop
 	)
 	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
+		ctx, cancel := context.WithTimeout(ctx, l.Remaining())
 		t, currentState, err = conf.Refresh(ctx)
+		cancel()
+
+		if errors.Is(err, context.DeadlineExceeded) {
+			break
+		}
 
 		if err != nil {
 			return t, err

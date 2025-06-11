@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 //
@@ -23,8 +25,12 @@ func FailedStateRefreshFunc() StateRefreshFunc {
 }
 
 func TimeoutStateRefreshFunc() StateRefreshFunc {
-	return func(context.Context) (any, string, error) {
-		time.Sleep(5 * time.Second)
+	return func(ctx context.Context) (any, string, error) {
+		select {
+		case <-ctx.Done():
+			return nil, "", &aws.RequestCanceledError{Err: ctx.Err()}
+		case <-time.After(5 * time.Second):
+		}
 		return struct{}{}, "pending", nil
 	}
 }
@@ -160,7 +166,7 @@ func TestWaitForState_timeout(t *testing.T) {
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
 		Refresh: TimeoutStateRefreshFunc(),
-		Timeout: 1 * time.Millisecond,
+		Timeout: 1 * time.Second,
 	}
 
 	obj, err := conf.WaitForStateContext(t.Context())
@@ -169,8 +175,8 @@ func TestWaitForState_timeout(t *testing.T) {
 		t.Fatal("Expected timeout error. No error returned.")
 	}
 
-	expectedErr := "timeout while waiting for state to become 'running' (last state: 'pending', timeout: 1ms)"
-	if err.Error() != expectedErr {
+	expectedErr := "timeout while waiting for state to become 'running' (timeout: 1s)"
+	if !strings.HasPrefix(err.Error(), expectedErr) {
 		t.Fatalf("Errors don't match.\nExpected: %q\nGiven: %q\n", expectedErr, err.Error())
 	}
 
