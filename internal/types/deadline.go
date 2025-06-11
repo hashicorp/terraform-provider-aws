@@ -20,3 +20,10 @@ func (d Deadline) Remaining() time.Duration {
 		return v
 	}
 }
+
+var ErrDeadlineExceeded error = deadlineExceededError{}
+
+type deadlineExceededError struct{}
+
+func (deadlineExceededError) Error() string { return "deadline exceeded" }
+func (deadlineExceededError) Timeout() bool { return true } // So that os.IsTimeout() returns true.
