@@ -7235,8 +7235,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLConfig_ASNMatchStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = %[1]q
-  scope       = "REGIONAL"
+  name  = %[1]q
+  scope = "REGIONAL"
 
   default_action {
     block {}
@@ -7253,10 +7253,10 @@ resource "aws_wafv2_web_acl" "test" {
     statement {
       asn_match_statement {
         asn_list = [1, 2, 3]
-	    forwarded_ip_config {
-	      fallback_behavior = "MATCH"
-	      header_name       = "x-forwarded-for"
-	    }
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
       }
     }
 
@@ -7301,9 +7301,9 @@ resource "aws_wafv2_web_acl" "test" {
         scope_down_statement {
           asn_match_statement {
             asn_list = [1, 2, 3]
-			forwarded_ip_config {
-			  fallback_behavior = "MATCH"
-			  header_name       = "x-forwarded-for"
+            forwarded_ip_config {
+              fallback_behavior = "MATCH"
+              header_name       = "x-forwarded-for"
             }
           }
         }

@@ -462,7 +462,7 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 	}
 
 	if v, ok := m["asn_match_statement"]; ok {
-		statement.AsnMatchStatement = expandAsnMatchStatement(v.([]any))
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
@@ -528,7 +528,7 @@ func expandAndStatement(l []any) *awstypes.AndStatement {
 	}
 }
 
-func expandAsnMatchStatement(l []any) *awstypes.AsnMatchStatement {
+func expandASNMatchStatement(l []any) *awstypes.AsnMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1222,7 +1222,7 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 	}
 
 	if v, ok := m["asn_match_statement"]; ok {
-		statement.AsnMatchStatement = expandAsnMatchStatement(v.([]any))
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
@@ -2169,7 +2169,7 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.AsnMatchStatement != nil {
-		m["asn_match_statement"] = flattenAsnMatchStatement(s.AsnMatchStatement)
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {
@@ -2235,7 +2235,7 @@ func flattenAndStatement(a *awstypes.AndStatement) any {
 	return []any{m}
 }
 
-func flattenAsnMatchStatement(a *awstypes.AsnMatchStatement) any {
+func flattenASNMatchStatement(a *awstypes.AsnMatchStatement) any {
 	if a == nil {
 		return []any{}
 	}
@@ -2717,7 +2717,7 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 	}
 
 	if s.AsnMatchStatement != nil {
-		m["asn_match_statement"] = flattenAsnMatchStatement(s.AsnMatchStatement)
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {

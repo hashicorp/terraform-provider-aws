@@ -2531,8 +2531,8 @@ func TestAccWAFV2RuleGroup_ASNMatchStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                              ruleGroupName,
-						"priority":                          "10",
+						names.AttrName:                      ruleGroupName,
+						names.AttrPriority:                  "10",
 						"action.#":                          "1",
 						"action.0.allow.#":                  "0",
 						"action.0.block.#":                  "0",
@@ -5632,10 +5632,10 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       asn_match_statement {
         asn_list = [1, 2, 3]
-	    forwarded_ip_config {
-	      fallback_behavior = "MATCH"
-	      header_name       = "x-forwarded-for"
-	    }
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
       }
     }
 
@@ -5678,8 +5678,8 @@ resource "aws_wafv2_rule_group" "test" {
           asn_match_statement {
             asn_list = [1, 2, 3]
             forwarded_ip_config {
-			  fallback_behavior = "MATCH"
-			  header_name       = "x-forwarded-for"
+              fallback_behavior = "MATCH"
+              header_name       = "x-forwarded-for"
             }
           }
         }
