@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,6 +38,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_pinpointsmsvoicev2_phone_number", name="Phone Number")
@@ -130,6 +136,15 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 					),
 				},
 			},
+			"two_way_channel_role": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(
+						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
+					),
+				},
+			},
 			"two_way_channel_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -192,15 +207,25 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 
 	if (!data.SelfManagedOptOutsEnabled.IsNull() && data.SelfManagedOptOutsEnabled.ValueBool()) ||
 		!data.TwoWayChannelARN.IsNull() ||
+		!data.TwoWayChannelRole.IsNull() ||
 		(!data.TwoWayEnabled.IsNull() && data.TwoWayEnabled.ValueBool()) {
 		input := &pinpointsmsvoicev2.UpdatePhoneNumberInput{
 			PhoneNumberId:             fwflex.StringFromFramework(ctx, data.PhoneNumberID),
 			SelfManagedOptOutsEnabled: fwflex.BoolFromFramework(ctx, data.SelfManagedOptOutsEnabled),
 			TwoWayChannelArn:          fwflex.StringFromFramework(ctx, data.TwoWayChannelARN),
 			TwoWayEnabled:             fwflex.BoolFromFramework(ctx, data.TwoWayEnabled),
+			TwoWayChannelRole:         fwflex.StringFromFramework(ctx, data.TwoWayChannelRole),
 		}
 
-		_, err := conn.UpdatePhoneNumber(ctx, input)
+		for r := backoff.NewRetryLoop(iamPropagationTimeout); r.Continue(ctx); {
+			_, err := conn.UpdatePhoneNumber(ctx, input)
+
+			// IAM roles can take time to propagate in AWS
+			if tfawserr.ErrMessageContains(err, "ValidationException", "RESOURCE_NOT_ACCESSIBLE") {
+				continue
+			}
+			break
+		}
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating End User Messaging SMS Phone Number (%s)", data.PhoneNumberID.ValueString()), err.Error())
@@ -275,13 +300,23 @@ func (r *phoneNumberResource) Update(ctx context.Context, request resource.Updat
 		!new.OptOutListName.Equal(old.OptOutListName) ||
 		!new.SelfManagedOptOutsEnabled.Equal(old.SelfManagedOptOutsEnabled) ||
 		!new.TwoWayChannelARN.Equal(old.TwoWayChannelARN) ||
-		!new.TwoWayEnabled.Equal(old.TwoWayEnabled) {
+		!new.TwoWayEnabled.Equal(old.TwoWayEnabled) ||
+		!new.TwoWayChannelRole.Equal(old.TwoWayChannelRole) {
 		input := &pinpointsmsvoicev2.UpdatePhoneNumberInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
+		for r := backoff.NewRetryLoop(iamPropagationTimeout); r.Continue(ctx); {
+			_, err := conn.UpdatePhoneNumber(ctx, input)
+
+			// IAM roles can take time to propagate in AWS
+			if tfawserr.ErrMessageContains(err, "ValidationException", "RESOURCE_NOT_ACCESSIBLE") {
+				continue
+			}
+			break
+		}
 		_, err := conn.UpdatePhoneNumber(ctx, input)
 
 		if err != nil {
@@ -354,6 +389,7 @@ type phoneNumberResourceModel struct {
 	Timeouts                  timeouts.Value                                                    `tfsdk:"timeouts"`
 	TwoWayChannelARN          fwtypes.ARN                                                       `tfsdk:"two_way_channel_arn"`
 	TwoWayEnabled             types.Bool                                                        `tfsdk:"two_way_channel_enabled"`
+	TwoWayChannelRole         fwtypes.ARN                                                       `tfsdk:"two_way_channel_role"`
 }
 
 func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.PhoneNumberInformation, error) {
