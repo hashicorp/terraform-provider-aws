@@ -7,6 +7,7 @@ package guardduty
 var (
 	ResourceInviteAccepter        = resourceInviteAccepter
 	ResourceMalwareProtectionPlan = newResourceMalwareProtectionPlan
+	ResourceMalwareScanSettings   = newResourceMalwareScanSettings
 
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
 )
