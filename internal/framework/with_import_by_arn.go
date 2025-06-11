@@ -40,6 +40,8 @@ func (w *WithImportByARN) ImportState(ctx context.Context, request resource.Impo
 	}
 	if w.identity.IsGlobalResource {
 		importer.GlobalARN(ctx, client, request, &w.identity, response)
+	} else if w.identity.IsGlobalARNFormat {
+		importer.RegionalARNWithGlobalFormat(ctx, client, request, &w.identity, response)
 	} else {
 		importer.RegionalARN(ctx, client, request, &w.identity, response)
 	}

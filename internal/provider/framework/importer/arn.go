@@ -49,6 +49,44 @@ func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportS
 	}
 }
 
+func RegionalARNWithGlobalFormat(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+	importByARN(ctx, client, request, identitySpec, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	regionPath := path.Root(names.AttrRegion)
+
+	var regionVal string
+	if request.ID != "" {
+		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionVal)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else if identity := request.Identity; identity != nil {
+		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if regionVal == "" {
+			response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionVal)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), regionVal)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if identity := response.Identity; identity != nil {
+		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrRegion), regionVal)...)
+	}
+}
+
 func importByARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) arn.ARN {
 	var (
 		arnARN arn.ARN
