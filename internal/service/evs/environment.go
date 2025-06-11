@@ -9,13 +9,23 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -24,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,10 +63,72 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 		Attributes: map[string]schema.Attribute{
 			"environment_arn": framework.ARNAttributeComputedOnly(),
 			"environment_id":  framework.IDAttribute(),
+			"environment_name": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 100),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9_-]+`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"kms_key_id": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"terms_accepted": schema.BoolAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+			},
+			"vcf_version": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.VcfVersion](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrVPCID: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
+			"connectivity_info": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[connectivityInfoModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"private_route_server_peerings": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(2, 2),
+							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -259,9 +332,19 @@ func waitEnvironmentDeleted(ctx context.Context, conn *evs.Client, id string, ti
 }
 
 type environmentResourceModel struct {
-	EnvironmentARN types.String   `tfsdk:"environment_arn"`
-	EnvironmentID  types.String   `tfsdk:"environment_id"`
-	Tags           tftags.Map     `tfsdk:"tags"`
-	TagsAll        tftags.Map     `tfsdk:"tags_all"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	ConnectivityInfo fwtypes.ListNestedObjectValueOf[connectivityInfoModel] `tfsdk:"connectivity_info"`
+	EnvironmentARN   types.String                                           `tfsdk:"environment_arn"`
+	EnvironmentID    types.String                                           `tfsdk:"environment_id"`
+	EnvironmentName  types.String                                           `tfsdk:"environment_name"`
+	KMSKeyID         fwtypes.ARN                                            `tfsdk:"kms_key_id"`
+	Tags             tftags.Map                                             `tfsdk:"tags"`
+	TagsAll          tftags.Map                                             `tfsdk:"tags_all"`
+	TermsAccepted    types.Bool                                             `tfsdk:"terms_accepted"`
+	Timeouts         timeouts.Value                                         `tfsdk:"timeouts"`
+	VCFVersion       fwtypes.StringEnum[awstypes.VcfVersion]                `tfsdk:"vcf_version"`
+	VpcID            types.String                                           `tfsdk:"vpc_id"`
+}
+
+type connectivityInfoModel struct {
+	PrivateRouteServerPeerings fwtypes.SetOfString `tfsdk:"private_route_server_peerings"`
 }
