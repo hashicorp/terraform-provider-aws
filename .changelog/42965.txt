@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `asn_match_statement`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Support `asn_match_statement`
+```
