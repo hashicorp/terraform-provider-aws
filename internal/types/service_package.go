@@ -188,6 +188,22 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 	return identity
 }
 
+func RegionalResourceWithGlobalARNFormat(opts ...IdentityOptsFunc) Identity {
+	return RegionalResourceWithGlobalARNFormatNamed(names.AttrARN, opts...)
+}
+
+func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsFunc) Identity {
+	identity := RegionalARNIdentityNamed(name, opts...)
+
+	identity.IsGlobalARNFormat = true
+	identity.Attributes = slices.Insert(identity.Attributes, 0, IdentityAttribute{
+		Name:     "region",
+		Required: false,
+	})
+
+	return identity
+}
+
 func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
