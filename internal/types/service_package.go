@@ -234,8 +234,8 @@ func GlobalSingletonIdentity() Identity {
 	}
 }
 
-func RegionalSingletonIdentity() Identity {
-	return Identity{
+func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource: false,
 		Singleton:        true,
 		Attributes: []IdentityAttribute{
@@ -249,6 +249,12 @@ func RegionalSingletonIdentity() Identity {
 			},
 		},
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
 type IdentityOptsFunc func(opts *Identity)
