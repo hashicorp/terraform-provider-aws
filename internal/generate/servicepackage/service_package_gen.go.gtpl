@@ -163,9 +163,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: inttypes.GlobalSingletonIdentity(),
+					Identity: inttypes.GlobalSingletonIdentity(
+						{{- if .HasIdentityDuplicateAttrs -}}
+							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+						{{- end -}}
+					),
 				{{ else }}
-					Identity: inttypes.RegionalSingletonIdentity(),
+					Identity: inttypes.RegionalSingletonIdentity(
+						{{- if .HasIdentityDuplicateAttrs -}}
+							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+						{{- end -}}
+					),
 				{{- end }}
 			{{- end }}
 			{{- if $value.WrappedImport }}

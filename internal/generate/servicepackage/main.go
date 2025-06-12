@@ -442,6 +442,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.SingletonIdentity = true
 				d.WrappedImport = true
 
+				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
+					attrs := strings.Split(attr, ";")
+					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
+						return namesgen.ConstOrQuote(s)
+					})
+				}
+
 			case "NoImport":
 				d.WrappedImport = false
 			}
