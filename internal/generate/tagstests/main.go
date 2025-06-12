@@ -27,7 +27,7 @@ import (
 	"github.com/dlclark/regexp2"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/testgen"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -182,7 +182,7 @@ func main() {
 					g.Fatalf("parsing base Terraform config template: %s", err)
 				}
 
-				tfTemplates, err = testgen.AddCommonTemplates(tfTemplates)
+				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
 				if err != nil {
 					g.Fatalf(err.Error())
 				}
@@ -247,7 +247,7 @@ func main() {
 					g.Fatalf("parsing base Terraform config template: %s", err)
 				}
 
-				tfTemplates, err = testgen.AddCommonTemplates(tfTemplates)
+				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
 				if err != nil {
 					g.Fatalf(err.Error())
 				}
