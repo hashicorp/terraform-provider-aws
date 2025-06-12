@@ -177,7 +177,7 @@ func TestSetNestedObjectValueOfEqual(t *testing.T) {
 func TestSetNestedObjectValueOfListSemanticEquals(t *testing.T) {
 	t.Parallel()
 
-	semanticallyEqual := func(ctx context.Context, a, b fwtypes.SetNestedObjectValueOf[ObjectA]) (bool, diag.Diagnostics) {
+	semanticallyEqual := func(ctx context.Context, a, b fwtypes.NestedCollectionValue[ObjectA]) (bool, diag.Diagnostics) {
 		var diags diag.Diagnostics
 
 		if a.Equal(b) {
@@ -224,22 +224,22 @@ func TestSetNestedObjectValueOfListSemanticEquals(t *testing.T) {
 		want    bool
 	}{
 		"equal value": {
-			current: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.SetWithSemanticEqualityFunc(semanticallyEqual)),
+			current: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
 			other:   fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA),
 			want:    true,
 		},
 		"equal nil current and empty slice": {
-			current: fwtypes.NewSetNestedObjectValueOfNull(ctx, fwtypes.SetWithSemanticEqualityFunc(semanticallyEqual)),
+			current: fwtypes.NewSetNestedObjectValueOfNull(ctx, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
 			other:   fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, emptySlice),
 			want:    true,
 		},
 		"equal empty current and nil slice": {
-			current: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, emptySlice, fwtypes.SetWithSemanticEqualityFunc(semanticallyEqual)),
+			current: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, emptySlice, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
 			other:   fwtypes.NewSetNestedObjectValueOfNull[ObjectA](ctx),
 			want:    true,
 		},
 		"not equal": {
-			current: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.SetWithSemanticEqualityFunc(semanticallyEqual)),
+			current: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectA, fwtypes.WithSemanticEqualityFunc(semanticallyEqual)),
 			other:   fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &objectB),
 		},
 	}

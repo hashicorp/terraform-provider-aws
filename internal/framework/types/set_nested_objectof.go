@@ -22,16 +22,14 @@ var (
 	_ basetypes.SetValuableWithSemanticEquals = (*SetNestedObjectValueOf[struct{}])(nil)
 )
 
-type setSemanticEqualityFunc[T any] func(context.Context, SetNestedObjectValueOf[T], SetNestedObjectValueOf[T]) (bool, diag.Diagnostics)
-
 // setNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
 type setNestedObjectTypeOf[T any] struct {
 	basetypes.SetType
-	semanticEqualityFunc setSemanticEqualityFunc[T]
+	semanticEqualityFunc semanticEqualityFunc[T]
 }
 
-func NewSetNestedObjectTypeOf[T any](ctx context.Context, options ...SetNestedObjectOfOption[T]) setNestedObjectTypeOf[T] {
-	opts := newSetNestedObjectOfOptions(options...)
+func NewSetNestedObjectTypeOf[T any](ctx context.Context, options ...NestedObjectOfOption[T]) setNestedObjectTypeOf[T] {
+	opts := newNestedObjectOfOptions(options...)
 
 	return setNestedObjectTypeOf[T]{
 		SetType:              basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)},
@@ -119,7 +117,7 @@ func (t setNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap i
 func (t setNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	return NewSetNestedObjectValueOfNull[T](ctx, SetWithSemanticEqualityFunc(t.semanticEqualityFunc)), diags
+	return NewSetNestedObjectValueOfNull[T](ctx, WithSemanticEqualityFunc(t.semanticEqualityFunc)), diags
 }
 
 func (t setNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
@@ -151,7 +149,7 @@ func (t setNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slic
 // SetNestedObjectValueOf represents a Terraform Plugin Framework Set value whose elements are of type `ObjectTypeOf[T]`.
 type SetNestedObjectValueOf[T any] struct {
 	basetypes.SetValue
-	semanticEqualityFunc setSemanticEqualityFunc[T]
+	semanticEqualityFunc semanticEqualityFunc[T]
 }
 
 func (v SetNestedObjectValueOf[T]) Equal(o attr.Value) bool {
@@ -206,8 +204,8 @@ func (v SetNestedObjectValueOf[T]) ToSlice(ctx context.Context) ([]*T, diag.Diag
 	return nestedObjectValueObjectSlice[T](ctx, v.SetValue)
 }
 
-func NewSetNestedObjectValueOfNull[T any](ctx context.Context, options ...SetNestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
-	opts := newSetNestedObjectOfOptions(options...)
+func NewSetNestedObjectValueOfNull[T any](ctx context.Context, options ...NestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
+	opts := newNestedObjectOfOptions(options...)
 	return SetNestedObjectValueOf[T]{SetValue: basetypes.NewSetNull(NewObjectTypeOf[T](ctx)), semanticEqualityFunc: opts.SemanticEqualityFunc}
 }
 
@@ -215,34 +213,34 @@ func NewSetNestedObjectValueOfUnknown[T any](ctx context.Context) SetNestedObjec
 	return SetNestedObjectValueOf[T]{SetValue: basetypes.NewSetUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewSetNestedObjectValueOfPtr[T any](ctx context.Context, t *T, options ...SetNestedObjectOfOption[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
-	opts := newSetNestedObjectOfOptions(options...)
+func NewSetNestedObjectValueOfPtr[T any](ctx context.Context, t *T, options ...NestedObjectOfOption[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
+	opts := newNestedObjectOfOptions(options...)
 	return NewSetNestedObjectValueOfSlice(ctx, []*T{t}, opts.SemanticEqualityFunc)
 }
 
-func NewSetNestedObjectValueOfPtrMust[T any](ctx context.Context, t *T, options ...SetNestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfPtrMust[T any](ctx context.Context, t *T, options ...NestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
 	return fwdiag.Must(NewSetNestedObjectValueOfPtr(ctx, t, options...))
 }
 
-func NewSetNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T, f setSemanticEqualityFunc[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
+func NewSetNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T, f semanticEqualityFunc[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
 	return newSetNestedObjectValueOf[T](ctx, ts, f)
 }
 
-func NewSetNestedObjectValueOfSliceMust[T any](ctx context.Context, ts []*T, options ...SetNestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
-	opts := newSetNestedObjectOfOptions(options...)
+func NewSetNestedObjectValueOfSliceMust[T any](ctx context.Context, ts []*T, options ...NestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
+	opts := newNestedObjectOfOptions(options...)
 	return fwdiag.Must(NewSetNestedObjectValueOfSlice(ctx, ts, opts.SemanticEqualityFunc))
 }
 
-func NewSetNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T, options ...SetNestedObjectOfOption[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
-	opts := newSetNestedObjectOfOptions(options...)
+func NewSetNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T, options ...NestedObjectOfOption[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
+	opts := newNestedObjectOfOptions(options...)
 	return newSetNestedObjectValueOf[T](ctx, ts, opts.SemanticEqualityFunc)
 }
 
-func NewSetNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T, options ...SetNestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T, options ...NestedObjectOfOption[T]) SetNestedObjectValueOf[T] {
 	return fwdiag.Must(NewSetNestedObjectValueOfValueSlice(ctx, ts, options...))
 }
 
-func newSetNestedObjectValueOf[T any](ctx context.Context, elements any, f setSemanticEqualityFunc[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
+func newSetNestedObjectValueOf[T any](ctx context.Context, elements any, f semanticEqualityFunc[T]) (SetNestedObjectValueOf[T], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	typ, d := newObjectTypeOf[T](ctx)
