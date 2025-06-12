@@ -18,7 +18,8 @@ type ErrorGenerator struct {
 }
 
 func (g *ErrorGenerator) NextError() (int, error) {
-	p, err := g.position, error(nil)
+	var err error
+	p := g.position
 	if len(g.errorSequence)-1 >= p {
 		err = g.errorSequence[p]
 	} else {
