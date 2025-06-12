@@ -322,7 +322,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false, ""),
 			},
 			{
 				ResourceName:            resourceName,
@@ -331,7 +331,14 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, "KEYS_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
+				),
+			},
+			// https://github.com/hashicorp/terraform-provider-aws/issues/13662.
+			{
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, "NEW_AND_OLD_IMAGES"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
 				),
@@ -1705,15 +1712,15 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool) string {
-	var streamStatus string
-	var streamViewType string
+func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool, streamViewType string) string {
+	var streamStatusAttribute string
+	var streamViewTypeAttribute string
 	if streamEnabled {
-		streamStatus = "stream_enabled   = true"
-		streamViewType = "stream_view_type = \"KEYS_ONLY\""
+		streamStatusAttribute = "stream_enabled   = true"
+		streamViewTypeAttribute = `stream_view_type = "` + streamViewType + `"`
 	} else {
-		streamStatus = ""
-		streamViewType = ""
+		streamStatusAttribute = ""
+		streamViewTypeAttribute = ""
 	}
 
 	return fmt.Sprintf(`
@@ -1763,6 +1770,7 @@ resource "aws_dynamodb_table" "test" {
     name = "TestTableHashKey"
     type = "S"
   }
+
   %[2]s
   %[3]s
 }
@@ -1774,7 +1782,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   runtime       = "nodejs18.x"
 }
-`, rName, streamStatus, streamViewType)
+`, rName, streamStatusAttribute, streamViewTypeAttribute)
 }
 
 func testAccEventSourceMappingConfig_kafkaBase(rName string) string {
@@ -2670,8 +2678,8 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true), `
+func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, streamViewType string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true, streamViewType), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
