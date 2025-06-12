@@ -81,9 +81,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		l                             *backoff.Loop
 	)
 	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
-		ctx, cancel := context.WithTimeout(ctx, l.Remaining())
-		t, currentState, err = conf.Refresh(ctx)
-		cancel()
+		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
 			break
@@ -154,4 +152,11 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 	}
 
 	return t, ctx.Err()
+}
+
+func (conf *StateChangeConfOf[T, S]) refreshWithTimeout(ctx context.Context, timeout time.Duration) (T, S, error) {
+	// Set a deadline on the context here to maintain compatibility with the Plugin SDKv2 implementation.
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	return conf.Refresh(ctx)
 }
