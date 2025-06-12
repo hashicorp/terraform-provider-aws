@@ -25,7 +25,7 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_event_sources_config", name="Event Sources Config")
-// @SingletonIdentity
+// @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devopsguru;devopsguru.DescribeEventSourcesConfigOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
