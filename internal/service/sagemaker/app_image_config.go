@@ -5,7 +5,7 @@ package sagemaker
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -33,22 +33,29 @@ func resourceAppImageConfig() *schema.Resource {
 		ReadWithoutTimeout:   resourceAppImageConfigRead,
 		UpdateWithoutTimeout: resourceAppImageConfigUpdate,
 		DeleteWithoutTimeout: resourceAppImageConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: schema.CustomizeDiffFunc(func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-			// Ensure at least one of the three config blocks is provided
-			codeEditorConfig := d.Get("code_editor_app_image_config").([]any)
-			jupyterLabConfig := d.Get("jupyter_lab_image_config").([]any)
-			kernelGatewayConfig := d.Get("kernel_gateway_image_config").([]any)
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			n := 0
+			if _, ok := diff.GetOk("code_editor_app_image_config"); ok {
+				n++
+			}
+			if _, ok := diff.GetOk("jupyter_lab_image_config"); ok {
+				n++
+			}
+			if _, ok := diff.GetOk("kernel_gateway_image_config"); ok {
+				n++
+			}
 
-			if len(codeEditorConfig) == 0 && len(jupyterLabConfig) == 0 && len(kernelGatewayConfig) == 0 {
-				return fmt.Errorf("one of code_editor_app_image_config, jupyter_lab_image_config, or kernel_gateway_image_config must be configured")
+			if n != 1 {
+				return errors.New("exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured")
 			}
 
 			return nil
-		}),
+		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -65,10 +72,9 @@ func resourceAppImageConfig() *schema.Resource {
 				),
 			},
 			"code_editor_app_image_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"jupyter_lab_image_config", "kernel_gateway_image_config"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_config": {
@@ -129,10 +135,9 @@ func resourceAppImageConfig() *schema.Resource {
 				},
 			},
 			"jupyter_lab_image_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"code_editor_app_image_config", "kernel_gateway_image_config"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"container_config": {
@@ -193,10 +198,9 @@ func resourceAppImageConfig() *schema.Resource {
 				},
 			},
 			"kernel_gateway_image_config": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"code_editor_app_image_config", "jupyter_lab_image_config"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"file_system_config": {
