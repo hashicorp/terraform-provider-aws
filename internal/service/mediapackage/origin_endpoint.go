@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediapackage/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -522,7 +521,7 @@ func resourceOriginEndpointRead(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
-	out, err := findOriginEndpoint(ctx, conn, d.Get("id").(string), d.Get("channel_id").(string))
+	out, err := findOriginEndpoint(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaPackage OriginEndpoint (%s) not found, removing from state", d.Id())
@@ -603,7 +602,7 @@ func resourceOriginEndpointUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
 	in := &mediapackage.UpdateOriginEndpointInput{
-		Id: aws.String(d.Get("origin_endpoint_id").(string)),
+		Id: aws.String(d.Id()),
 	}
 
 	if d.HasChanges() {
@@ -682,32 +681,17 @@ func resourceOriginEndpointDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func findOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id, channelID string) (*types.OriginEndpoint, error) {
-	in := &mediapackage.ListOriginEndpointsInput{
-		ChannelId: aws.String(channelID),
+func findOriginEndpoint(ctx context.Context, conn *mediapackage.Client, id string) (*mediapackage.DescribeOriginEndpointOutput, error) {
+	in := &mediapackage.DescribeOriginEndpointInput{
+		Id: aws.String(id),
 	}
 
-	out, err := conn.ListOriginEndpoints(ctx, in)
+	out, err := conn.DescribeOriginEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 
-	var ep *types.OriginEndpoint
-
-	for _, e := range out.OriginEndpoints {
-		if aws.ToString(e.Id) == id {
-			ep = &e
-		}
-	}
-
-	if ep == nil {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	return ep, nil
+	return out, nil
 }
 
 func expandAuthorization(tfMap map[string]interface{}) *types.Authorization {

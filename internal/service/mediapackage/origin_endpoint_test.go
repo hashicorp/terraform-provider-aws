@@ -35,12 +35,12 @@ func TestAccMediaPackageOriginEndpoint_hlsPackage(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginEndpointConfig_hlsPackage(channelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+					testAccCheckOriginEndpointExists(ctx, resourceName),
 				),
 			},
 			{
@@ -65,12 +65,12 @@ func TestAccMediaPackageOriginEndpoint_mssPackage(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginEndpointConfig_mssPackage(channelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+					testAccCheckOriginEndpointExists(ctx, resourceName),
 				),
 			},
 			{
@@ -95,12 +95,12 @@ func TestAccMediaPackageOriginEndpoint_dashPackage(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginEndpointConfig_dashPackage(channelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+					testAccCheckOriginEndpointExists(ctx, resourceName),
 				),
 			},
 			{
@@ -125,12 +125,12 @@ func TestAccMediaPackageOriginEndpoint_cmafPackage(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginEndpointConfig_cmafPackage(channelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+					testAccCheckOriginEndpointExists(ctx, resourceName),
 				),
 			},
 			{
@@ -154,13 +154,13 @@ func TestAccMediaPackageOriginEndpoint_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx, channelID),
+		CheckDestroy:             testAccCheckOriginEndpointDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginEndpointConfig_hlsPackage(channelID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOriginEndpointExists(ctx, resourceName, channelID),
+					testAccCheckOriginEndpointExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmp.ResourceOriginEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -441,7 +441,7 @@ resource "aws_media_package_origin_endpoint" "test" {
 `, testAccOriginEndpointConfig_baseResource(channelID), channelID)
 }
 
-func testAccCheckOriginEndpointDestroy(ctx context.Context, channelID string) resource.TestCheckFunc {
+func testAccCheckOriginEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageClient(ctx)
 
@@ -450,7 +450,7 @@ func testAccCheckOriginEndpointDestroy(ctx context.Context, channelID string) re
 				continue
 			}
 
-			_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID, channelID)
+			_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -465,7 +465,7 @@ func testAccCheckOriginEndpointDestroy(ctx context.Context, channelID string) re
 	}
 }
 
-func testAccCheckOriginEndpointExists(ctx context.Context, name, channelID string) resource.TestCheckFunc {
+func testAccCheckOriginEndpointExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -478,7 +478,7 @@ func testAccCheckOriginEndpointExists(ctx context.Context, name, channelID strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageClient(ctx)
 
-		_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID, channelID)
+		_, err := tfmediapackage.FindOriginEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.MediaPackage, create.ErrActionCheckingExistence, tfmediapackage.ResNameOriginEndpoint, rs.Primary.ID, err)
 		}
