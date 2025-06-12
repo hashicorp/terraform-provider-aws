@@ -221,8 +221,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	return identity
 }
 
-func GlobalSingletonIdentity() Identity {
-	return Identity{
+func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource: true,
 		Singleton:        true,
 		Attributes: []IdentityAttribute{
@@ -232,6 +232,12 @@ func GlobalSingletonIdentity() Identity {
 			},
 		},
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
 func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
