@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,8 +16,6 @@ type Client interface {
 	AccountID(ctx context.Context) string
 	Region(ctx context.Context) string
 }
-
-var _ Client = &conns.AWSClient{}
 
 func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, meta any) error {
 	var region string
@@ -36,16 +33,8 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpe
 
 		client := meta.(Client)
 
-		accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-		var accountID string
-		if ok {
-			accountID, ok = accountIDRaw.(string)
-			if !ok {
-				return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-			}
-			if accountID != client.AccountID(ctx) {
-				return fmt.Errorf("identity attribute %q: Provider configured with Account ID %q cannot be used to import resources from account %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-			}
+		if err := validateAccountID(identity, client.AccountID(ctx)); err != nil {
+			return err
 		}
 
 		regionRaw, ok := identity.GetOk(names.AttrRegion)
@@ -69,21 +58,32 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpe
 	return nil
 }
 
-func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) error {
+func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, meta any) error {
 	client := meta.(Client)
 
-	if rd.Id() != "" {
-		// Historically, we have not validated the Import ID for Global Singletons
-		rd.SetId(client.AccountID(ctx))
+	accountID := client.AccountID(ctx)
 
-		return nil
+	// Historically, we have not validated the Import ID for Global Singletons
+	if rd.Id() == "" {
+		identity, err := rd.Identity()
+		if err != nil {
+			return err
+		}
+
+		if err := validateAccountID(identity, accountID); err != nil {
+			return err
+		}
 	}
 
-	identity, err := rd.Identity()
-	if err != nil {
-		return err
+	rd.SetId(accountID)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		setAttribute(rd, attr, accountID)
 	}
 
+	return nil
+}
+
+func validateAccountID(identity *schema.IdentityData, expected string) error {
 	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
 	var accountID string
 	if ok {
@@ -91,14 +91,9 @@ func GlobalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) err
 		if !ok {
 			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
 		}
-		if accountID != client.AccountID(ctx) {
-			return fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+		if accountID != expected {
+			return fmt.Errorf("identity attribute %q: Provider configured with Account ID %q cannot be used to import resources from account %q", names.AttrAccountID, expected, accountID)
 		}
-	} else {
-		accountID = client.AccountID(ctx)
 	}
-
-	rd.SetId(accountID)
-
 	return nil
 }

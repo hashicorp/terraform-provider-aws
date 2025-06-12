@@ -72,7 +72,7 @@ func TestRegionalSingleton(t *testing.T) {
 	}{
 		"ImportID_Valid_DefaultRegion": {
 			importMethod:   "ImportID",
-			inputRegion:    "",
+			inputRegion:    region,
 			expectedRegion: region,
 			expectError:    false,
 		},
@@ -160,13 +160,11 @@ func TestRegionalSingleton(t *testing.T) {
 
 			identitySpec := regionalSingletonIdentitySpec(tc.duplicateAttrs...)
 
-			var (
-				d *schema.ResourceData
-			)
+			var d *schema.ResourceData
 			switch tc.importMethod {
 			case "ImportID":
 				d = schema.TestResourceDataRaw(t, regionalSingletonSchema, tc.stateAttrs)
-				d.SetId(region)
+				d.SetId(tc.inputRegion)
 
 			case "Identity":
 				identitySchema := identity.NewIdentitySchema(identitySpec)
@@ -178,7 +176,6 @@ func TestRegionalSingleton(t *testing.T) {
 					identityAttrs["account_id"] = tc.inputAccountID
 				}
 				d = schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, identitySchema, identityAttrs)
-
 			}
 
 			err := importer.RegionalSingleton(ctx, d, &identitySpec, client)
@@ -233,88 +230,126 @@ var globalSingletonIdentitySchema = map[string]*schema.Schema{
 	},
 }
 
-func TestGlobalSingleton_ImportID_Valid_AcceptsAnything(t *testing.T) {
-	t.Parallel()
-
-	accountID := "123456789012"
-	client := mockClient{
-		accountID: accountID,
-		region:    "a-region-1",
+func globalSingletonIdentitySpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
 	}
-	rd := schema.TestResourceDataRaw(t, globalSingletonSchema, map[string]any{})
-	rd.SetId("a value")
-
-	err := importer.GlobalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := accountID, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
+	return inttypes.GlobalSingletonIdentity(opts...)
 }
 
-func TestGlobalSingleton_ImportID_Valid_AccountID(t *testing.T) {
-	t.Parallel()
-
-	accountID := "123456789012"
-	client := mockClient{
-		accountID: accountID,
-		region:    "a-region-1",
-	}
-	rd := schema.TestResourceDataRaw(t, globalSingletonSchema, map[string]any{})
-	rd.SetId(accountID)
-
-	err := importer.GlobalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := accountID, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-}
-
-func TestGlobalSingleton_Identity_Valid_AttributeNotSet(t *testing.T) {
-	t.Parallel()
-
-	accountID := "123456789012"
-	client := mockClient{
-		accountID: accountID,
-		region:    "a-region-1",
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, globalSingletonSchema, globalSingletonIdentitySchema, map[string]string{})
-
-	err := importer.GlobalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := accountID, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-}
-
-func TestGlobalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
+func TestGlobalSingleton(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
 	region := "a-region-1"
-	client := mockClient{
-		accountID: accountID,
-		region:    region,
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, globalSingletonSchema, globalSingletonIdentitySchema, map[string]string{
-		"account_id": accountID,
-	})
 
-	err := importer.GlobalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
+	testCases := map[string]struct {
+		importMethod        string // "ImportID" or "Identity"
+		inputAccountID      string
+		duplicateAttrs      []string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"ImportID_Valid_AccountID": {
+			importMethod:   "ImportID",
+			inputAccountID: accountID,
+			expectError:    false,
+		},
+		"ImportID_Valid_AcceptsAnything": {
+			importMethod:   "ImportID",
+			inputAccountID: "some value",
+			expectError:    false,
+		},
+
+		"Identity_Valid_ExplicitAccountID": {
+			importMethod:   "Identity",
+			inputAccountID: accountID,
+			expectError:    false,
+		},
+		"Identity_Valid_NoExplicitAttributes": {
+			importMethod:   "Identity",
+			inputAccountID: "",
+			expectError:    false,
+		},
+		"Identity_Invalid_WrongRegion": {
+			importMethod:        "Identity",
+			inputAccountID:      "987654321098",
+			expectError:         true,
+			expectedErrorPrefix: fmt.Sprintf("identity attribute \"account_id\": Provider configured with Account ID"),
+		},
+
+		"DuplicateAttrs_ImportID_Valid": {
+			importMethod:   "ImportID",
+			duplicateAttrs: []string{"attr"},
+			inputAccountID: accountID,
+			expectError:    false,
+		},
+
+		"DuplicateAttrs_Identity_Valid": {
+			importMethod:   "Identity",
+			duplicateAttrs: []string{"attr"},
+			inputAccountID: accountID,
+			expectError:    false,
+		},
 	}
 
-	if e, a := accountID, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			client := mockClient{
+				accountID: accountID,
+				region:    region,
+			}
+
+			identitySpec := globalSingletonIdentitySpec(tc.duplicateAttrs...)
+
+			var d *schema.ResourceData
+			switch tc.importMethod {
+			case "ImportID":
+				d = schema.TestResourceDataRaw(t, globalSingletonSchema, map[string]any{})
+				d.SetId(tc.inputAccountID)
+
+			case "Identity":
+				identitySchema := identity.NewIdentitySchema(identitySpec)
+				identityAttrs := make(map[string]string, 2)
+				if tc.inputAccountID != "" {
+					identityAttrs["account_id"] = tc.inputAccountID
+				}
+				d = schema.TestResourceDataWithIdentityRaw(t, globalSingletonSchema, identitySchema, identityAttrs)
+			}
+
+			err := importer.GlobalSingleton(ctx, d, &identitySpec, client)
+			if tc.expectError {
+				if err == nil {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(err.Error(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", err.Error())
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err.Error())
+			}
+
+			// Check attr value
+			var expectedAttrValue string
+			if slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = accountID
+			}
+			if e, a := expectedAttrValue, getAttributeValue(t, d, "attr"); e != a {
+				t.Errorf("expected `attr` to be %q, got %q", e, a)
+			}
+
+			// Check ID value
+			if e, a := accountID, getAttributeValue(t, d, "id"); e != a {
+				t.Errorf("expected `id` to be %q, got %q", e, a)
+			}
+		})
 	}
 }
 
