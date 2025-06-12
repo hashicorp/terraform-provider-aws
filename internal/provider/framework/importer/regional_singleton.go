@@ -15,6 +15,7 @@ import (
 )
 
 func RegionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+	accountIDPath := path.Root(names.AttrAccountID)
 	regionPath := path.Root(names.AttrRegion)
 
 	var regionVal string
@@ -28,16 +29,38 @@ func RegionalSingleton(ctx context.Context, client AWSClient, request resource.I
 		if !region.IsNull() {
 			if region.ValueString() != request.ID {
 				response.Diagnostics.AddError(
-					"Invalid Resource Import ID Value",
+					InvalidResourceImportIDValue,
 					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), regionVal),
 				)
 				return
 			}
 		}
 	} else if identity := request.Identity; identity != nil {
-		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
+		var accountIDAttr types.String
+		response.Diagnostics.Append(identity.GetAttribute(ctx, accountIDPath, &accountIDAttr)...)
 		if response.Diagnostics.HasError() {
 			return
+		}
+		if !accountIDAttr.IsNull() {
+			if accountIDAttr.ValueString() != client.AccountID(ctx) {
+				response.Diagnostics.AddAttributeError(
+					accountIDPath,
+					InvalidResourceImportIDValue,
+					fmt.Sprintf("Provider configured with Account ID %q cannot be used to import resources from account %q", client.AccountID(ctx), accountIDAttr.ValueString()),
+				)
+				return
+			}
+		}
+
+		var regionAttr types.String
+		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionAttr)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		if !regionAttr.IsNull() {
+			regionVal = regionAttr.ValueString()
+		} else {
+			regionVal = client.Region(ctx)
 		}
 	}
 
@@ -49,7 +72,7 @@ func RegionalSingleton(ctx context.Context, client AWSClient, request resource.I
 	accountID := client.AccountID(ctx)
 
 	if identity := response.Identity; identity != nil {
-		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), accountID)...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrRegion), regionVal)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, accountIDPath, accountID)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
 	}
 }

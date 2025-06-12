@@ -100,18 +100,40 @@ func TestRegionalSingleton(t *testing.T) {
 			expectedErrorPrefix: "The region passed for import,",
 		},
 
-		"Identity_Valid_DefaultAccountID": {
+		"Identity_Valid_ExplicitRegion": {
 			importMethod:   "Identity",
 			inputRegion:    region,
+			inputAccountID: "",
 			expectedRegion: region,
 			expectError:    false,
 		},
 		"Identity_Valid_ExplicitAccountID": {
 			importMethod:   "Identity",
+			inputRegion:    "",
+			inputAccountID: accountID,
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Valid_ExplicitRegionAndAccountID": {
+			importMethod:   "Identity",
 			inputRegion:    region,
 			inputAccountID: accountID,
 			expectedRegion: region,
 			expectError:    false,
+		},
+		"Identity_Valid_NoExplicitAttributes": {
+			importMethod:   "Identity",
+			inputRegion:    "",
+			inputAccountID: "",
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Invalid_WrongAccountID": {
+			importMethod:        "Identity",
+			inputAccountID:      "987654321098",
+			expectedRegion:      region,
+			expectError:         true,
+			expectedErrorPrefix: "Provider configured with Account ID",
 		},
 
 		"DuplicateAttrs_ImportID_Valid": {
@@ -163,8 +185,9 @@ func TestRegionalSingleton(t *testing.T) {
 			case "IDWithState":
 				response = importByIDWithState(ctx, f, &client, schema, tc.inputRegion, tc.stateAttrs, identitySchema, identitySpec)
 			case "Identity":
-				identityAttrs := map[string]string{
-					"region": tc.inputRegion,
+				identityAttrs := make(map[string]string, 2)
+				if tc.inputRegion != "" {
+					identityAttrs["region"] = tc.inputRegion
 				}
 				if tc.inputAccountID != "" {
 					identityAttrs["account_id"] = tc.inputAccountID
