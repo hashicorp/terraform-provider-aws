@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,14 +23,14 @@ func testAccBackupRegionSettings_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccBackupRegionSettings_Identity_Basic,
+		acctest.CtBasic:  TestAccBackupRegionSettings_Identity_Basic,
 		"RegionOverride": testAccBackupRegionSettings_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
+func TestAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeRegionSettingsOutput
@@ -57,7 +58,10 @@ func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						"account_id": tfknownvalue.AccountID(),
+						"region":     knownvalue.StringExact(acctest.Region()),
+					}),
 				},
 			},
 
@@ -130,7 +134,10 @@ func testAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						"account_id": tfknownvalue.AccountID(),
+						"region":     knownvalue.StringExact(acctest.AlternateRegion()),
+					}),
 				},
 			},
 

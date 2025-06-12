@@ -130,6 +130,22 @@ func TestRegionalSingleton(t *testing.T) {
 			expectError:         true,
 			expectedErrorPrefix: fmt.Sprintf("identity attribute \"account_id\": Provider configured with Account ID"),
 		},
+
+		"DuplicateAttrs_ImportID_Valid": {
+			importMethod:   "ImportID",
+			duplicateAttrs: []string{"attr"},
+			inputRegion:    region,
+			expectedRegion: region,
+			expectError:    false,
+		},
+
+		"DuplicateAttrs_Identity_Valid": {
+			importMethod:   "Identity",
+			duplicateAttrs: []string{"attr"},
+			inputRegion:    region,
+			expectedRegion: region,
+			expectError:    false,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -142,19 +158,17 @@ func TestRegionalSingleton(t *testing.T) {
 				region:    region,
 			}
 
+			identitySpec := regionalSingletonIdentitySpec(tc.duplicateAttrs...)
+
 			var (
-				d   *schema.ResourceData
-				err error
+				d *schema.ResourceData
 			)
 			switch tc.importMethod {
 			case "ImportID":
 				d = schema.TestResourceDataRaw(t, regionalSingletonSchema, tc.stateAttrs)
 				d.SetId(region)
 
-				err = importer.RegionalSingleton(ctx, d, client)
-
 			case "Identity":
-				identitySpec := regionalSingletonIdentitySpec(tc.duplicateAttrs...)
 				identitySchema := identity.NewIdentitySchema(identitySpec)
 				identityAttrs := make(map[string]string, 2)
 				if tc.inputRegion != "" {
@@ -165,8 +179,9 @@ func TestRegionalSingleton(t *testing.T) {
 				}
 				d = schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, identitySchema, identityAttrs)
 
-				err = importer.RegionalSingleton(ctx, d, client)
 			}
+
+			err := importer.RegionalSingleton(ctx, d, &identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

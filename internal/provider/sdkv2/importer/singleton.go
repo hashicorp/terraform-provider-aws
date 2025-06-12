@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,51 +20,51 @@ type Client interface {
 
 var _ Client = &conns.AWSClient{}
 
-func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) error {
-	if rd.Id() != "" {
-		if region, ok := rd.GetOk(names.AttrRegion); ok {
-			if region != rd.Id() {
-				return fmt.Errorf("the region passed for import %q does not match the region %q in the ID", region, rd.Id())
-			}
-		} else {
-			rd.Set(names.AttrRegion, rd.Id())
-		}
-
-		return nil
-	}
-
-	identity, err := rd.Identity()
-	if err != nil {
-		return err
-	}
-
-	client := meta.(Client)
-
-	accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-	var accountID string
-	if ok {
-		accountID, ok = accountIDRaw.(string)
-		if !ok {
-			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-		}
-		if accountID != client.AccountID(ctx) {
-			return fmt.Errorf("identity attribute %q: Provider configured with Account ID %q cannot be used to import resources from account %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-		}
-	}
-
-	regionRaw, ok := identity.GetOk(names.AttrRegion)
+func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, meta any) error {
 	var region string
-	if ok {
-		region, ok = regionRaw.(string)
-		if !ok {
-			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
+	if region = rd.Id(); region != "" {
+		if regionAttr, ok := rd.GetOk(names.AttrRegion); ok {
+			if region != regionAttr {
+				return fmt.Errorf("the region passed for import %q does not match the region %q in the ID", regionAttr, region)
+			}
 		}
 	} else {
-		region = client.Region(ctx)
+		identity, err := rd.Identity()
+		if err != nil {
+			return err
+		}
+
+		client := meta.(Client)
+
+		accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+		var accountID string
+		if ok {
+			accountID, ok = accountIDRaw.(string)
+			if !ok {
+				return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+			}
+			if accountID != client.AccountID(ctx) {
+				return fmt.Errorf("identity attribute %q: Provider configured with Account ID %q cannot be used to import resources from account %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+			}
+		}
+
+		regionRaw, ok := identity.GetOk(names.AttrRegion)
+		if ok {
+			region, ok = regionRaw.(string)
+			if !ok {
+				return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
+			}
+		} else {
+			region = client.Region(ctx)
+		}
+
+		rd.SetId(region)
 	}
 
 	rd.Set(names.AttrRegion, region)
-	rd.SetId(region)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		setAttribute(rd, attr, region)
+	}
 
 	return nil
 }
