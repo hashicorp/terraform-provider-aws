@@ -10,7 +10,6 @@ import (
 	"log"
 	"reflect"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -451,13 +450,10 @@ func resourceTable() *schema.Resource {
 				Computed: true,
 			},
 			"stream_view_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					value := v.(string)
-					return strings.ToUpper(value)
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				StateFunc:    sdkv2.ToUpperSchemaStateFunc,
 				ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.StreamViewType](), ""), false),
 			},
 			"table_class": {
