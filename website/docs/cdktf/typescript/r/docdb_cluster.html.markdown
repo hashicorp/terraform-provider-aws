@@ -55,9 +55,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
-
 This resource supports the following arguments:
 
 * `allowMajorVersionUpgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
@@ -100,6 +97,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate
   with the Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
 ### Restore To Point In Time
 
@@ -164,4 +164,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bfacc232c6d63cf63c32f1970792af4ab0d412fb761f6e2ffb21fefd9f20e505 -->
+<!-- cache-key: cdktf-0.20.8 input-08661ba33040431ef3a16b815974d8757d2544b0d257a0d29b574f39fdede533 -->

@@ -117,8 +117,6 @@ resource "aws_redshift_integration" "example" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
-
 The following arguments are required:
 
 * `integration_name` - (Required) Name of the integration.
@@ -135,6 +133,8 @@ You can only include this parameter if you specify the `kms_key_id` parameter.
 If you don't specify an encryption key, Redshift uses a default AWS owned key.
 You can only include this parameter if `source_arn` references a DynamoDB table.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
 
 ## Attribute Reference
 

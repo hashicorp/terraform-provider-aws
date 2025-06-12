@@ -63,16 +63,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The name of the custom plugin..
 * `contentType` - (Required, Forces new resource) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
+* `description` - (Optional, Forces new resource) A summary description of the custom plugin.
 * `location` - (Required, Forces new resource) Information about the location of a custom plugin. See [`location` Block](#location-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-The following arguments are optional:
-
-* `description` - (Optional, Forces new resource) A summary description of the custom plugin.
 
 ### `location` Block
 
@@ -136,4 +133,4 @@ Using `terraform import`, import MSK Connect Custom Plugin using the plugin's `a
 % terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-99c215706c4617e946d863efad19e9e7f54007211b1a1be9b44938c86187fe72 -->
+<!-- cache-key: cdktf-0.20.8 input-e82c9833b818a70c48742da35e4c81720d50d8f9cfd1a276d8eba54973970cc2 -->

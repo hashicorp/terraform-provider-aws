@@ -61,7 +61,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the interface endpoint.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -70,6 +71,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				Description: "One or more security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint. Up to 5 security groups can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
@@ -79,6 +81,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				Description: "One or more subnet IDs from which you'll access OpenSearch Serverless. Up to 6 subnets can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
@@ -87,7 +90,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
+				Description: "ID of the VPC from which you'll access OpenSearch Serverless.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
 				},

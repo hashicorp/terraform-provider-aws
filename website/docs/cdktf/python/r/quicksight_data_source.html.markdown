@@ -147,7 +147,7 @@ class MyConvertedCode(TerraformStack):
             parameters=QuicksightDataSourceParameters(
                 s3=QuicksightDataSourceParametersS3(
                     manifest_file_location=QuicksightDataSourceParametersS3ManifestFileLocation(
-                        bucket=example.arn,
+                        bucket=example.bucket,
                         key=Token.as_string(aws_s3_object_example.key)
                     ),
                     role_arn=Token.as_string(aws_iam_role_example.arn)
@@ -378,4 +378,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-88923fe0ac64cf85368d19b7fc917e7f16dc7f40222dc56ffc273d3204bb1fb5 -->
+<!-- cache-key: cdktf-0.20.8 input-39c44280e942ba61716c559b7b4651b6620fb727224eda3c89a529511b9790ff -->

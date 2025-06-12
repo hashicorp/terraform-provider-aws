@@ -36,23 +36,28 @@ func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRe
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				Computed: true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				Computed:    true,
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Required: true,
+				Description: "Type of access policy. Must be `data`.",
+				Required:    true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.AccessPolicyType](),
 				},

@@ -5,16 +5,21 @@ package cloudfrontkeyvaluestore
 
 import (
 	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +37,7 @@ import (
 const (
 	ResNameKeysExclusive = "Keys Exclusive"
 	ResNameKeyValueStore = "Key Value Store"
+	maxBatchSizeDefault  = 50
 )
 
 // @FrameworkResource("aws_cloudfrontkeyvaluestore_keys_exclusive", name="Keys  Exclusive")
@@ -54,6 +60,18 @@ func (r *resourceKeysExclusive) Schema(ctx context.Context, request resource.Sch
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"max_batch_size": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(maxBatchSizeDefault),
+				Validators: []validator.Int64{
+					int64validator.Between(1, 50),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+				MarkdownDescription: "Maximum resource key values pairs that you wills update in a single API request. AWS has a default quota of 50 keys or a 3 MB payload, whichever is reached first",
 			},
 			"total_size_in_bytes": schema.Int64Attribute{
 				Computed:            true,
@@ -108,25 +126,22 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 
 	put, del, _ := intflex.DiffSlices(have, want, resourceKeyValuePairEqual)
 
-	putRequired := len(put) > 0
-	deleteRequired := len(del) > 0
+	// We need to perform a batched operation in the event of many Key Value Pairs
+	// to stay within AWS service limits
+	//
+	// https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-keyvaluestores
+	batchSize := int(plan.MaximumBatchSize.ValueInt64())
+	etag := kvs.ETag
+	totalSizeInBytes := kvs.TotalSizeInBytes
 
-	if putRequired || deleteRequired {
+	for chunk := range slices.Chunk(expandPutKeyRequestListItem(put), batchSize) {
 		input := cloudfrontkeyvaluestore.UpdateKeysInput{
 			KvsARN:  aws.String(kvsARN),
-			IfMatch: kvs.ETag,
-		}
-
-		if putRequired {
-			input.Puts = expandPutKeyRequestListItem(put)
-		}
-
-		if deleteRequired {
-			input.Deletes = expandDeleteKeyRequestListItem(del)
+			IfMatch: etag,
+			Puts:    chunk,
 		}
 
 		out, err := conn.UpdateKeys(ctx, &input)
-
 		if err != nil {
 			diags.AddError(
 				create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionSynchronizing, ResNameKeysExclusive, kvsARN, err),
@@ -134,11 +149,30 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 			)
 			return diags
 		}
-
-		plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, out.TotalSizeInBytes)
-	} else {
-		plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, kvs.TotalSizeInBytes)
+		etag = out.ETag
+		totalSizeInBytes = out.TotalSizeInBytes
 	}
+
+	for chunk := range slices.Chunk(expandDeleteKeyRequestListItem(del), batchSize) {
+		input := cloudfrontkeyvaluestore.UpdateKeysInput{
+			KvsARN:  aws.String(kvsARN),
+			IfMatch: etag,
+			Deletes: chunk,
+		}
+
+		out, err := conn.UpdateKeys(ctx, &input)
+		if err != nil {
+			diags.AddError(
+				create.ProblemStandardMessage(names.CloudFrontKeyValueStore, create.ErrActionSynchronizing, ResNameKeysExclusive, kvsARN, err),
+				err.Error(),
+			)
+			return diags
+		}
+		etag = out.ETag
+		totalSizeInBytes = out.TotalSizeInBytes
+	}
+
+	plan.TotalSizeInBytes = flex.Int64ToFramework(ctx, totalSizeInBytes)
 
 	return diags
 }
@@ -184,6 +218,10 @@ func (r *resourceKeysExclusive) Read(ctx context.Context, request resource.ReadR
 
 	data.KvsARN = fwtypes.ARNValue(aws.ToString(kvs.KvsARN))
 	data.TotalSizeInBytes = types.Int64Value(aws.ToInt64(kvs.TotalSizeInBytes))
+
+	if data.MaximumBatchSize.IsNull() || data.MaximumBatchSize.ValueInt64() == 0 {
+		data.MaximumBatchSize = types.Int64Value(maxBatchSizeDefault)
+	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, keyPairs, &data.ResourceKeyValuePair)...)
 	if response.Diagnostics.HasError() {
@@ -300,5 +338,6 @@ type resourceKeyValuePairModel struct {
 type resourceKeysExclusiveModel struct {
 	ResourceKeyValuePair fwtypes.SetNestedObjectValueOf[resourceKeyValuePairModel] `tfsdk:"resource_key_value_pair"`
 	KvsARN               fwtypes.ARN                                               `tfsdk:"key_value_store_arn"`
+	MaximumBatchSize     types.Int64                                               `tfsdk:"max_batch_size"`
 	TotalSizeInBytes     types.Int64                                               `tfsdk:"total_size_in_bytes"`
 }

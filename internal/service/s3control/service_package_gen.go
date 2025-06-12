@@ -43,6 +43,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "Access Grants Location",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
+		{
+			Factory:  newDirectoryBucketAccessPointScopeResource,
+			TypeName: "aws_s3control_directory_bucket_access_point_scope",
+			Name:     "Directory Bucket Access Point Scope",
+		},
 	}
 }
 

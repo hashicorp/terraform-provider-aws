@@ -49,6 +49,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - The ARN of the Policy Store.
 * `createdDate` - The date the Policy Store was created.
 * `lastUpdatedDate` - The date the Policy Store was last updated.
+* `tags` - Map of key-value pairs associated with the policy store.
 * `validationSettings` - Validation settings for the policy store.
 
-<!-- cache-key: cdktf-0.20.8 input-124cfcb9a32266b12f988ce523b4ee94b88beeb1bf65cce66ff1e20154ba2a18 -->
+<!-- cache-key: cdktf-0.20.8 input-d22de3abf8c77497a881a4a47c37699a0c1f3a1fee0cc88a3c642a5315728554 -->

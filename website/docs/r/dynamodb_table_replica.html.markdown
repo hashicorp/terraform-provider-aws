@@ -60,11 +60,11 @@ resource "aws_dynamodb_table_replica" "example" {
 
 ## Argument Reference
 
-Required arguments:
+The following arguments are required:
 
 * `global_table_arn` - (Required) ARN of the _main_ or global table which this resource will replicate.
 
-Optional arguments:
+The following arguments are optional:
 
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.

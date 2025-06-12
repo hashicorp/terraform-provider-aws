@@ -4454,3 +4454,17 @@ rules:
             - pattern-not-regex: "^TestAccConnectCases"
             - pattern-regex: ^TestAcc.*
     severity: WARNING
+  - id: connectcases-in-const-name
+    languages:
+      - go
+    message: Do not use "ConnectCases" in const name inside connectcases package
+    paths:
+      include:
+        - internal/service/connectcases
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConnectCases"
+    severity: WARNING

@@ -104,7 +104,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `autoStartConfiguration` – (Optional) The configuration for an application to automatically start on job submission.
@@ -200,4 +200,4 @@ Using `terraform import`, import EMR Severless applications using the `id`. For 
 % terraform import aws_emrserverless_application.example id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b6a431ae1995c9cbc99268cbdcdd9e88abb7812960696ed78cdf441865883f23 -->
+<!-- cache-key: cdktf-0.20.8 input-52c96edac1b89b33d215325b591c7b64e16067b0104f8fc01d3227e392d24876 -->
