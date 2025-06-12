@@ -1726,7 +1726,6 @@ func (c *configuration) expandDefaultCacheBehavior(tfMap map[string]any) *awstyp
 	}
 
 	if !c.isMultiTenant {
-
 		if tfMap["cache_policy_id"].(string) == "" {
 			apiObject.MinTTL = aws.Int64(int64(tfMap["min_ttl"].(int)))
 			apiObject.MaxTTL = aws.Int64(int64(tfMap["max_ttl"].(int)))

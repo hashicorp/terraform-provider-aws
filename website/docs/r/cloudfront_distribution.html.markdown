@@ -305,7 +305,7 @@ resource "aws_cloudfront_distribution" "example" {
       name = "test"
       definition {
         string_schema_config {
-          required      = true
+          required      = false
           comment       = "test"
           default_value = "test"
         }
@@ -536,9 +536,9 @@ The `tenant_config` block configures multi-tenant settings for the CloudFront di
 Each `definition` block supports the following arguments:
 
 * `string_schema_config` (Optional) - Configuration block for string schema. Supports:
-    * `required` (Required) - Whether the defined parameter is required.
-    * `comment` (Optional) - A comment to describe the parameter.
-    * `default_value` (Optional) - The default value of the parameter.
+    * `required` (Required) - Specifies whether the parameter must be provided.
+    * `comment` (Optional) - A description or note about the parameter.
+    * `default_value` (Optional) - The default value assigned to the parameter. Cannot be set if `required` is `true`.
 
 #### Viewer Certificate Arguments
 
