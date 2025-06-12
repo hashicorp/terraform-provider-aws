@@ -1,3 +1,4 @@
+## 6.0.0 (Unreleased)
 ## 6.0.0-beta3 (June  5, 2025)
 
 ENHANCEMENTS:
