@@ -23,14 +23,14 @@ func testAccBackupRegionSettings_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  TestAccBackupRegionSettings_Identity_Basic,
+		acctest.CtBasic:  testAccBackupRegionSettings_Identity_Basic,
 		"RegionOverride": testAccBackupRegionSettings_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func TestAccBackupRegionSettings_Identity_Basic(t *testing.T) {
+func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeRegionSettingsOutput
@@ -59,8 +59,8 @@ func TestAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"account_id": tfknownvalue.AccountID(),
-						"region":     knownvalue.StringExact(acctest.Region()),
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 					}),
 				},
 			},
@@ -135,8 +135,8 @@ func testAccBackupRegionSettings_Identity_RegionOverride(t *testing.T) {
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"account_id": tfknownvalue.AccountID(),
-						"region":     knownvalue.StringExact(acctest.AlternateRegion()),
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 					}),
 				},
 			},
