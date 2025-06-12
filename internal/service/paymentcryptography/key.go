@@ -35,6 +35,10 @@ import (
 
 // @FrameworkResource("aws_paymentcryptography_key", name="Key")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/paymentcryptography;paymentcryptography.GetKeyOutput")
+// @Testing(generator=false)
+// @Testing(importIgnore="deletion_window_in_days")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -52,7 +56,7 @@ const (
 
 type keyResource struct {
 	framework.ResourceWithModel[keyResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

@@ -31,6 +31,16 @@ import (
 )
 
 // @SDKResource("aws_route53_record", name="Record")
+// @IdentityAttribute("zone_id")
+// @IdentityAttribute("name")
+// @IdentityAttribute("type")
+// @IdentityAttribute("set_identifier", optional="true")
+// @MutableIdentity
+// @WrappedImport(false)
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
+// @Testing(subdomainTfVar="zoneName;recordName")
+// @Testing(generator=false)
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -41,21 +51,82 @@ func resourceRecord() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				parts := recordParseResourceID(d.Id())
-				// We check that we have parsed the id into the correct number of segments.
-				// We need at least 3 segments!
-				// However, parts[1] can be the empty string if it is the root domain of the zone,
-				// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
-				if parts[0] == "" || parts[2] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
+				// Import-by-id case
+				if d.Id() != "" {
+					parts := recordParseResourceID(d.Id())
+					// We check that we have parsed the id into the correct number of segments.
+					// We need at least 3 segments!
+					// However, parts[1] can be the empty string if it is the root domain of the zone,
+					// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+					if parts[0] == "" || parts[2] == "" {
+						return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
+					}
+
+					d.Set("zone_id", parts[0])
+					d.Set(names.AttrName, parts[1])
+					d.Set(names.AttrType, parts[2])
+					if parts[3] != "" {
+						d.Set("set_identifier", parts[3])
+					}
+
+					return []*schema.ResourceData{d}, nil
 				}
 
-				d.Set("zone_id", parts[0])
-				d.Set(names.AttrName, parts[1])
-				d.Set(names.AttrType, parts[2])
-				if parts[3] != "" {
-					d.Set("set_identifier", parts[3])
+				identity, err := d.Identity()
+				if err != nil {
+					return nil, err
 				}
+
+				zoneIDRaw, ok := identity.GetOk("zone_id")
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", "zone_id")
+				}
+				zoneID, ok := zoneIDRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "zone_id", zoneIDRaw)
+				}
+				d.Set("zone_id", zoneID)
+
+				nameRaw, ok := identity.GetOk(names.AttrName)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
+				}
+				name, ok := nameRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
+				}
+				d.Set(names.AttrName, name)
+
+				typeRaw, ok := identity.GetOk(names.AttrType)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q is required", names.AttrType)
+				}
+				typ, ok := typeRaw.(string)
+				if !ok {
+					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrType, typeRaw)
+				}
+				d.Set(names.AttrType, typ)
+
+				vars := []string{
+					zoneID,
+					name,
+					typ,
+				}
+
+				setIdentifierRaw, ok := identity.GetOk("set_identifier")
+				if ok {
+					setIdentifier, ok := setIdentifierRaw.(string)
+					if !ok {
+						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "set_identifier", setIdentifierRaw)
+					}
+					d.Set("set_identifier", setIdentifier)
+
+					vars = append(vars, setIdentifier)
+				} else {
+					d.Set("set_identifier", "")
+				}
+
+				d.SetId(strings.Join(vars, "_"))
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -298,6 +369,7 @@ func resourceRecord() *schema.Resource {
 			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
+				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.RRType](),
 			},
 			"weighted_routing_policy": {

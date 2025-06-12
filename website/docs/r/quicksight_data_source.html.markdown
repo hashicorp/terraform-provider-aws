@@ -117,7 +117,7 @@ resource "aws_quicksight_data_source" "example" {
   parameters {
     s3 {
       manifest_file_location {
-        bucket = aws_s3_bucket.example.arn
+        bucket = aws_s3_bucket.example.bucket
         key    = aws_s3_object.example.key
       }
       role_arn = aws_iam_role.example.arn

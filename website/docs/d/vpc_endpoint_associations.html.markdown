@@ -22,8 +22,9 @@ data "aws_vpc_endpoint_associations" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_id` - ID of the specific VPC Endpoint to retrieve.
 
 ## Attribute Reference

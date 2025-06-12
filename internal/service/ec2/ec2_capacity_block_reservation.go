@@ -43,7 +43,6 @@ type capacityBlockReservationResource struct {
 	framework.ResourceWithModel[capacityBlockReservationReservationModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-	framework.WithNoOpUpdate[capacityBlockReservationReservationModel]
 	framework.WithNoOpDelete
 }
 

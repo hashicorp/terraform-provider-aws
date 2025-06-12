@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -34,7 +35,9 @@ import (
 
 // @FrameworkResource("aws_bedrock_provisioned_model_throughput", name="Provisioned Model Throughput")
 // @Tags(identifierAttribute="provisioned_model_arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(tagsTest=false)
+// @Testing(identityTest=false)
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &provisionedModelThroughputResource{}
 
@@ -45,9 +48,8 @@ func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWi
 
 type provisionedModelThroughputResource struct {
 	framework.ResourceWithModel[provisionedModelThroughputResourceModel]
-	framework.WithNoOpUpdate[provisionedModelThroughputResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -60,7 +62,7 @@ func (r *provisionedModelThroughputResource) Schema(ctx context.Context, request
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("provisioned_model_arn")),
 			"model_arn": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.ARNType,
@@ -138,12 +140,6 @@ func (r *provisionedModelThroughputResource) Read(ctx context.Context, request r
 	var data provisionedModelThroughputResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -268,12 +264,6 @@ type provisionedModelThroughputResourceModel struct {
 	Tags                 tftags.Map                                      `tfsdk:"tags"`
 	TagsAll              tftags.Map                                      `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
-}
-
-func (data *provisionedModelThroughputResourceModel) InitFromID() error {
-	data.ProvisionedModelARN = data.ID
-
-	return nil
 }
 
 func (data *provisionedModelThroughputResourceModel) setID() {

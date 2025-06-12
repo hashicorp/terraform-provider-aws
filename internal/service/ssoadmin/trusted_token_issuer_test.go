@@ -20,13 +20,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
+func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccSSOAdminTrustedTokenIssuer_basic,
+		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
+		"update":             testAccSSOAdminTrustedTokenIssuer_update,
+		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,14 +67,14 @@ func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,13 +107,13 @@ func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -117,13 +131,13 @@ func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

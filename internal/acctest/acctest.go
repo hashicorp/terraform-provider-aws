@@ -61,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -129,7 +130,7 @@ var (
 //
 // PreCheck(t) must be called before using this provider instance.
 var (
-	Provider *schema.Provider = errs.Must(provider.New(context.Background()))
+	Provider *schema.Provider = errs.Must(sdkv2.NewProvider(context.Background()))
 )
 
 type ProviderFunc func() *schema.Provider
@@ -1222,8 +1223,14 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 }
 
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
+}
+
+func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1244,7 +1251,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	}
 
 	if len(instances) == 0 {
-		t.Skip("skipping tests; no SSO Instances found.")
+		t.Skipf("skipping tests; no SSO Instances found in %s.", region)
 	}
 }
 

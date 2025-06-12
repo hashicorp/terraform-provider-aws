@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
 // ServicePackage is the minimal interface exported from each AWS service package.
@@ -39,6 +40,7 @@ type InContext struct {
 	overrideRegion     string // Any currently in effect per-resource Region override.
 	resourceName       string // Friendly resource name, e.g. "Subnet"
 	servicePackageName string // Canonical name defined as a constant in names package
+	vcrEnabled         bool   // Whether VCR testing is enabled
 }
 
 // OverrideRegion returns any currently in effect per-resource Region override.
@@ -56,11 +58,17 @@ func (c *InContext) ServicePackageName() string {
 	return c.servicePackageName
 }
 
+// VCREnabled indicates whether VCR testing is enabled.
+func (c *InContext) VCREnabled() bool {
+	return c.vcrEnabled
+}
+
 func NewResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
 	v := InContext{
 		overrideRegion:     overrideRegion,
 		resourceName:       resourceName,
 		servicePackageName: servicePackageName,
+		vcrEnabled:         vcr.IsEnabled(),
 	}
 
 	return context.WithValue(ctx, contextKey, &v)

@@ -1,4 +1,5 @@
 resource "aws_batch_job_queue" "test" {
+{{- template "region" }}
   name     = var.rName
   priority = 1
   state    = "DISABLED"
@@ -12,6 +13,7 @@ resource "aws_batch_job_queue" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
+{{- template "region" }}
   name         = var.rName
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"

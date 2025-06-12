@@ -4,13 +4,16 @@ package notifications
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +24,35 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newChannelAssociationResource,
+			TypeName: "aws_notifications_channel_association",
+			Name:     "Channel Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newEventRuleResource,
+			TypeName: "aws_notifications_event_rule",
+			Name:     "Event Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newNotificationConfigurationResource,
+			TypeName: "aws_notifications_notification_configuration",
+			Name:     "Notification Configuration",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newNotificationHubResource,
+			TypeName: "aws_notifications_notification_hub",
+			Name:     "Notification Hub",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -50,6 +81,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 					"override_region": region,
 				})
 				o.Region = region
+			}
+		},
+		func(o *notifications.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
 			}
 		},
 		func(o *notifications.Options) {

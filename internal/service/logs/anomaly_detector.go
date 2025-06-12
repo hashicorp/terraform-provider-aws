@@ -35,7 +35,7 @@ import (
 // @Testing(importStateIdFunc="testAccAnomalyDetectorImportStateIDFunc")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="enabled")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/logs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
 func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 

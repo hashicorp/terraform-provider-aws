@@ -42,6 +42,11 @@ import (
 
 // @FrameworkResource("aws_networkfirewall_tls_inspection_configuration", name="TLS Inspection Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("tls-configuration/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
+// @Testing(subdomainTfVar="common_name;certificate_domain")
+// @Testing(importIgnore="update_token", plannableImportAction="NoOp")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -54,7 +59,7 @@ func newTLSInspectionConfigurationResource(_ context.Context) (resource.Resource
 
 type tlsInspectionConfigurationResource struct {
 	framework.ResourceWithModel[tlsInspectionConfigurationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
@@ -329,12 +334,6 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 	var data tlsInspectionConfigurationResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -617,12 +616,6 @@ type tlsInspectionConfigurationResourceModel struct {
 	TLSInspectionConfigurationID   types.String                                                     `tfsdk:"tls_inspection_configuration_id"`
 	TLSInspectionConfigurationName types.String                                                     `tfsdk:"name"`
 	UpdateToken                    types.String                                                     `tfsdk:"update_token"`
-}
-
-func (model *tlsInspectionConfigurationResourceModel) InitFromID() error {
-	model.TLSInspectionConfigurationARN = model.ID
-
-	return nil
 }
 
 func (model *tlsInspectionConfigurationResourceModel) setID() {

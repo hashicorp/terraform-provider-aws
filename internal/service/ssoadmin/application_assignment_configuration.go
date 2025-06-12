@@ -25,6 +25,8 @@ import (
 )
 
 // @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
+// @ArnIdentity("application_arn", identityDuplicateAttributes="id")
+// @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
 }
@@ -35,6 +37,7 @@ const (
 
 type applicationAssignmentConfigurationResource struct {
 	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
+	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
 }
 
 func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -49,7 +52,7 @@ func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context,
 			"assignment_required": schema.BoolAttribute{
 				Required: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("application_arn")),
 		},
 	}
 }
@@ -166,15 +169,9 @@ func (r *applicationAssignmentConfigurationResource) Delete(ctx context.Context,
 	}
 }
 
-func (r *applicationAssignmentConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Set both id and application_arn on import to avoid immediate diff and planned replacement
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root("application_arn"), req, resp)
-}
-
-func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAssignmentConfigurationOutput, error) {
+func findApplicationAssignmentConfigurationByID(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.GetApplicationAssignmentConfigurationOutput, error) {
 	in := &ssoadmin.GetApplicationAssignmentConfigurationInput{
-		ApplicationArn: aws.String(id),
+		ApplicationArn: aws.String(arn),
 	}
 
 	out, err := conn.GetApplicationAssignmentConfiguration(ctx, in)

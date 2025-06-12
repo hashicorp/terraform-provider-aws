@@ -49,7 +49,10 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
+// @IdentityAttribute("bucket")
+// @WrappedImport
 // @Testing(importIgnore="force_destroy")
+// @Testing(identityTest=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -62,10 +65,6 @@ func resourceBucket() *schema.Resource {
 			Read:   schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -1112,11 +1111,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Region etc.
 	//
-	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = c.S3UsePathStyle(ctx)
-	})
+	region, err := findBucketRegion(ctx, c, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

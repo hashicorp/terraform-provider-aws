@@ -37,6 +37,7 @@ go test \
     ./internal/types/... \
     ./internal/unique/... \
     ./internal/vault/... \
+    ./internal/vcr/... \
     ./internal/verify/... \
     ./internal/yaml/... \
     -json

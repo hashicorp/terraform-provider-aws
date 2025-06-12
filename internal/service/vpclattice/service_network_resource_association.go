@@ -46,7 +46,6 @@ func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.R
 
 type serviceNetworkResourceAssociationResource struct {
 	framework.ResourceWithModel[serviceNetworkResourceAssociationResourceModel]
-	framework.WithNoOpUpdate[serviceNetworkResourceAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }

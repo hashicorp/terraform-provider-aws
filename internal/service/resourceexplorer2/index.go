@@ -31,7 +31,10 @@ import (
 )
 
 // @FrameworkResource("aws_resourceexplorer2_index", name="Index")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(generator=false)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -44,7 +47,7 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type indexResource struct {
 	framework.ResourceWithModel[indexResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 

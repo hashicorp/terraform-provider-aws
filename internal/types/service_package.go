@@ -5,12 +5,14 @@ package types
 
 import (
 	"context"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // ServicePackageResourceRegion represents resource-level Region information.
@@ -66,6 +68,8 @@ type ServicePackageFrameworkResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+	Import   Import
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -86,4 +90,144 @@ type ServicePackageSDKResource struct {
 	Name     string
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+	Import   Import
+}
+
+type Identity struct {
+	IsGlobalResource       bool   // All
+	Singleton              bool   // Singleton
+	ARN                    bool   // ARN
+	IdentityAttribute      string // ARN
+	IDAttrShadowsAttr      string
+	Attributes             []IdentityAttribute
+	IdentityDuplicateAttrs []string
+}
+
+func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+		{
+			Name:     "region",
+			Required: false,
+		},
+	}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	identity := Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
+}
+
+type IdentityAttribute struct {
+	Name     string
+	Required bool
+}
+
+func StringIdentityAttribute(name string, required bool) IdentityAttribute {
+	return IdentityAttribute{
+		Name:     name,
+		Required: required,
+	}
+}
+
+func GlobalARNIdentity(opts ...IdentityOptsFunc) Identity {
+	return GlobalARNIdentityNamed(names.AttrARN, opts...)
+}
+
+func GlobalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
+	return arnIdentity(true, name, opts)
+}
+
+func RegionalARNIdentity(opts ...IdentityOptsFunc) Identity {
+	return RegionalARNIdentityNamed(names.AttrARN, opts...)
+}
+
+func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
+	return arnIdentity(false, name, opts)
+}
+
+func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource:  isGlobalResource,
+		ARN:               true,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     name,
+				Required: true,
+			},
+		},
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+	baseAttributes := []IdentityAttribute{
+		{
+			Name:     "account_id",
+			Required: false,
+		},
+	}
+	baseAttributes = slices.Grow(baseAttributes, len(attributes))
+	identity := Identity{
+		Attributes: append(baseAttributes, attributes...),
+	}
+	if len(attributes) == 1 {
+		identity.IDAttrShadowsAttr = attributes[0].Name
+	}
+	return identity
+}
+
+func GlobalSingletonIdentity() Identity {
+	return Identity{
+		IsGlobalResource: true,
+		Singleton:        true,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+		},
+	}
+}
+
+func RegionalSingletonIdentity() Identity {
+	return Identity{
+		IsGlobalResource: false,
+		Singleton:        true,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+			{
+				Name:     "region",
+				Required: false,
+			},
+		},
+	}
+}
+
+type IdentityOptsFunc func(opts *Identity)
+
+func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IdentityDuplicateAttrs = attrs
+	}
+}
+
+type Import struct {
+	WrappedImport bool
 }

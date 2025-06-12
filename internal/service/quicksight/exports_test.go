@@ -5,6 +5,7 @@ package quicksight
 
 // Exports for use in tests only.
 var (
+	ResourceAccountSettings     = newAccountSettingsResource
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceAnalysis            = resourceAnalysis
 	ResourceDashboard           = resourceDashboard
@@ -28,6 +29,7 @@ var (
 	DashboardLatestVersion                = dashboardLatestVersion
 	DefaultGroupNamespace                 = defaultGroupNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
+	FindAccountSettingsByID               = findAccountSettingsByID
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
 	FindDashboardByThreePartKey           = findDashboardByThreePartKey

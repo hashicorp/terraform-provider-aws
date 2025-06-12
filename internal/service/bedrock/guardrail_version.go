@@ -42,7 +42,6 @@ func newGuardrailVersionResource(_ context.Context) (resource.ResourceWithConfig
 
 type guardrailVersionResource struct {
 	framework.ResourceWithModel[guardrailVersionResourceModel]
-	framework.WithNoOpUpdate[guardrailVersionResourceModel]
 	framework.WithTimeouts
 }
 

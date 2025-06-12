@@ -194,6 +194,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
 * `volume_type` - (Optional) Volume type.
 * `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
@@ -342,7 +343,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the service.
+* `arn` - ARN that identifies the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

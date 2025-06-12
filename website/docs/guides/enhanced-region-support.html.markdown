@@ -17,6 +17,7 @@ Version 6.0.0 of the Terraform AWS Provider adds `region` to most resources maki
 - [Can I use `region` in every resource?](#can-i-use-region-in-every-resource)
 - [Why make this change](#why-make-this-change)
 - [How `region` works](#how-region-works)
+- [Migrating from multiple provider configurations](#migrating-from-multiple-provider-configurations)
 - [Before and after examples using `region`](#before-and-after-examples-using-region)
 - [Non–region-aware resources](#nonregion-aware-resources)
 
@@ -60,6 +61,14 @@ To [import](https://developer.hashicorp.com/terraform/cli/import) a resource in 
 ```sh
 terraform import aws_vpc.test_vpc vpc-a01106c2@eu-west-1
 ```
+
+## Migrating from multiple provider configurations
+
+To migrate from a separate provider configuration for each Region to a single provider configuration block and per-resource `region` values you must ensure that Terraform state is refreshed before editing resource configuration:
+
+1. Upgrade to v6.0.0
+2. Run a Terraform apply in [refresh-only mode](https://developer.hashicorp.com/terraform/cli/commands/plan#planning-modes) -- `terraform apply -refresh-only`
+3. Modify the affected resource configurations, replacing the [`provider` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/resource-provider) with a `region` argument
 
 ## Before and after examples using `region`
 
@@ -531,6 +540,7 @@ All resources for the following services are considered _global_:
 * Route 53 ARC (`aws_route53recoverycontrolconfig_*` and `aws_route53recoveryreadiness_*`)
 * Shield Advanced (`aws_shield_*`)
 * User Notifications (`aws_notifications_*`)
+* User Notifications Contacts (`aws_notificationscontacts_*`)
 * WAF Classic (`aws_waf_*`)
 
 ### Global resources in regional services
@@ -547,6 +557,7 @@ Some regional services have a subset of resources that are global:
 | EC2 | Resource | `aws_ec2_image_block_public_access` |
 | Firewall Manager | Resource | `aws_fms_admin_account` |
 | IPAM | Resource | `aws_vpc_ipam_organization_admin_account` |
+| QuickSight | Resource | `aws_quicksight_account_settings` |
 | Resource Access Manager | Resource | `aws_ram_sharing_with_organization` |
 | S3 | Data Source | `aws_canonical_user_id` |
 | S3 | Resource | `aws_s3_account_public_access_block` |

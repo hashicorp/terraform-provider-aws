@@ -26,6 +26,9 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
+// @SingletonIdentity
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceIntegrationResource{}, nil
 }
@@ -36,13 +39,13 @@ const (
 
 type serviceIntegrationResource struct {
 	framework.ResourceWithModel[serviceIntegrationResourceModel]
-	framework.WithImportByID
+	framework.WithImportRegionalSingleton
 }
 
 func (r *serviceIntegrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			"kms_server_side_encryption": schema.ListNestedBlock{

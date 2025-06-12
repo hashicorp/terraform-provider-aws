@@ -458,7 +458,9 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccTLSInspectionConfigurationConfig_basic(rName, commonName, certificateDomainName string) string {
-	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName),
+		fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name = %[1]q
 

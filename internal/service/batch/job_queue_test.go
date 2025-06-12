@@ -38,7 +38,7 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-queue/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "0"),
@@ -49,9 +49,9 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				RefreshState: true,
-				PlanOnly:     true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

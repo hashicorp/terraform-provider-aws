@@ -82,8 +82,9 @@ If `IDENTITY_CENTER` is set, IAM Identity Center uses SAML identity-provider ini
 This resource exports the following attributes in addition to the arguments above:
 
 * `application_account` - AWS account ID.
-* `application_arn` - ARN of the application.
-* `id` - ARN of the application.
+* `application_arn` - (**Deprecated** Reference `arn` instead) ARN of the application.
+* `arn` - ARN of the application.
+* `id` - (**Deprecated** Reference `arn` instead) ARN of the application.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

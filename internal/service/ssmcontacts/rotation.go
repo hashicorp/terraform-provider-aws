@@ -37,8 +37,11 @@ const (
 
 // @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(serialize=true)
+// Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+// @Testing(identityRegionOverrideTest=false)
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &rotationResource{}
 
@@ -47,7 +50,7 @@ func newRotationResource(context.Context) (resource.ResourceWithConfigure, error
 
 type rotationResource struct {
 	framework.ResourceWithModel[rotationResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

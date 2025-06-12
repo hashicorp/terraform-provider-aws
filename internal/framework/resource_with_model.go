@@ -17,8 +17,9 @@ import (
 
 // ResourceWithModel is a structure to be embedded within a Resource that has a corresponding model.
 type ResourceWithModel[T any] struct {
-	withModel[T]
 	ResourceWithConfigure
+	withNoOpUpdate[T]
+	withModel[T]
 }
 
 // ValidateModel validates the resource's model against a schema.

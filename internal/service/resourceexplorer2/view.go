@@ -37,14 +37,17 @@ import (
 )
 
 // @FrameworkResource("aws_resourceexplorer2_view", name="View")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
+// @Testing(serialize=true)
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
 
 type viewResource struct {
 	framework.ResourceWithModel[viewResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -168,7 +171,7 @@ func (r *viewResource) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -327,7 +330,7 @@ type viewResourceModel struct {
 	ViewName           types.String                                           `tfsdk:"name"`
 }
 
-func (data *viewResourceModel) InitFromID() error {
+func (data *viewResourceModel) initFromID() error {
 	data.ViewARN = data.ID
 	arn, err := arn.Parse(data.ViewARN.ValueString())
 	if err != nil {

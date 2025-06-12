@@ -35,14 +35,16 @@ import (
 )
 
 // @FrameworkResource("aws_imagebuilder_lifecycle_policy", name="Lifecycle Policy")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("lifecycle-policy/{name}")
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
 
 type lifecyclePolicyResource struct {
 	framework.ResourceWithModel[lifecyclePolicyResourceModel]
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

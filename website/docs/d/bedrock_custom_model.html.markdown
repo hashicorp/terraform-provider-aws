@@ -50,4 +50,3 @@ This data source exports the following attributes in addition to the arguments a
         * `s3_uri` - The S3 URI where the validation data is stored..
 * `validation_metrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
-  
