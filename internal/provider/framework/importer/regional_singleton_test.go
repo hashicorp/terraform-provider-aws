@@ -24,6 +24,9 @@ import (
 var regionalSingletonSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"region": resourceattribute.Region(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
 	},
 }
 
@@ -31,6 +34,9 @@ var regionalSingletonWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"id":     framework.IDAttributeDeprecatedNoReplacement(),
 		"region": resourceattribute.Region(),
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
 	},
 }
 
@@ -144,9 +150,9 @@ func TestRegionalSingleton(t *testing.T) {
 				identitySchema = &x
 			}
 
-			schema := regionalARNSchema
+			schema := regionalSingletonSchema
 			if tc.useSchemaWithID {
-				schema = regionalARNWithIDSchema
+				schema = regionalSingletonWithIDSchema
 			}
 
 			var response resource.ImportStateResponse
@@ -183,20 +189,20 @@ func TestRegionalSingleton(t *testing.T) {
 			// Check attr value
 			var expectedAttrValue string
 			if tc.useSchemaWithID && slices.Contains(tc.duplicateAttrs, "attr") {
-				expectedAttrValue = tc.inputRegion
+				expectedAttrValue = tc.expectedRegion
 			}
 			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 				t.Errorf("expected `attr` to be %q, got %q", e, a)
 			}
 
 			// Check region value
-			if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
+			if e, a := tc.expectedRegion, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
 				t.Errorf("expected `region` to be %q, got %q", e, a)
 			}
 
 			// Check ID value if using schema with ID
 			if tc.useSchemaWithID {
-				if e, a := tc.inputRegion, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+				if e, a := tc.expectedRegion, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
 					t.Errorf("expected `id` to be %q, got %q", e, a)
 				}
 			}
