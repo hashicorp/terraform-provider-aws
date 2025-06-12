@@ -255,7 +255,7 @@ func TestGlobalSingleton(t *testing.T) {
 			inputAccountID: "",
 			expectError:    false,
 		},
-		"Identity_Invalid_WrongRegion": {
+		"Identity_Invalid_WrongAccountID": {
 			importMethod:        "Identity",
 			inputAccountID:      "987654321098",
 			expectError:         true,
