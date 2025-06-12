@@ -40,7 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `identityStoreIds` - Set of identifiers of the identity stores connected to the SSO Instances.
 
-<!-- cache-key: cdktf-0.20.8 input-f56f54131de38dcbeec3f2e88e1cd501245218eff2e9ca53862dc82398c4d12b -->
+<!-- cache-key: cdktf-0.20.8 input-d8395318ba425495baafad30df8051ff50829ed8ea5bb93f80c813033e5a93fd -->

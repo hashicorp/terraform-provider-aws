@@ -182,7 +182,7 @@ func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, nam
 }
 
 func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination]) (*awstypes.Destination, error) {
-	output, err := findDestinations(ctx, conn, input, filter)
+	output, err := findDestinations(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -191,8 +191,9 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination]) ([]awstypes.Destination, error) {
+func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.Destination, error) {
 	var output []awstypes.Destination
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -205,6 +206,9 @@ func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 		for _, v := range page.Destinations {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}

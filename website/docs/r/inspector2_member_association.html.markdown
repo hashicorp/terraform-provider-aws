@@ -22,7 +22,7 @@ resource "aws_inspector2_member_association" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `account_id` - (Required) ID of the account to associate
 

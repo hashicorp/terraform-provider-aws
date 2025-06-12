@@ -6,7 +6,7 @@ description: |-
   Get information on a Network Interface resource.
 ---
 
-# aws_network_interface
+# Data Source: aws_network_interface
 
 Use this data source to get information about a Network Interface.
 
@@ -27,9 +27,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
-See the [Network Interface](/docs/providers/aws/r/network_interface.html) for details on the returned attributes.
-
-Additionally, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
 * `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.

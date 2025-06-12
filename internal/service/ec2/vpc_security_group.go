@@ -583,11 +583,11 @@ func relatedSGs(ctx context.Context, conn *ec2.Client, id string) ([]string, err
 func securityGroupRuleHash(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
-	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
+	fmt.Fprintf(&buf, "%d-", m["from_port"].(int))
+	fmt.Fprintf(&buf, "%d-", m["to_port"].(int))
 	p := protocolForValue(m[names.AttrProtocol].(string))
-	buf.WriteString(fmt.Sprintf("%s-", p))
-	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
+	fmt.Fprintf(&buf, "%s-", p)
+	fmt.Fprintf(&buf, "%t-", m["self"].(bool))
 
 	// We need to make sure to sort the strings below so that we always
 	// generate the same hash code no matter what is in the set.
@@ -600,7 +600,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m["ipv6_cidr_blocks"]; ok {
@@ -612,7 +612,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m["prefix_list_ids"]; ok {
@@ -624,7 +624,7 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if v, ok := m[names.AttrSecurityGroups]; ok {
@@ -636,11 +636,11 @@ func securityGroupRuleHash(v any) int {
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 	if m[names.AttrDescription].(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDescription].(string)))
+		fmt.Fprintf(&buf, "%s-", m[names.AttrDescription].(string))
 	}
 
 	return create.StringHashcode(buf.String())
@@ -1431,11 +1431,11 @@ func securityGroupExpandRules(rules *schema.Set) *schema.Set {
 // to a hash to use as a key in Set.
 func idCollapseHash(rType, protocol string, toPort, fromPort int32, description string) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", rType))
-	buf.WriteString(fmt.Sprintf("%d-", toPort))
-	buf.WriteString(fmt.Sprintf("%d-", fromPort))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
-	buf.WriteString(fmt.Sprintf("%s-", description))
+	fmt.Fprintf(&buf, "%s-", rType)
+	fmt.Fprintf(&buf, "%d-", toPort)
+	fmt.Fprintf(&buf, "%d-", fromPort)
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(protocol))
+	fmt.Fprintf(&buf, "%s-", description)
 
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }
@@ -1444,11 +1444,11 @@ func idCollapseHash(rType, protocol string, toPort, fromPort int32, description 
 // maps
 func idHash(rType, protocol string, toPort, fromPort int32, self bool) string {
 	var buf bytes.Buffer
-	buf.WriteString(fmt.Sprintf("%s-", rType))
-	buf.WriteString(fmt.Sprintf("%d-", toPort))
-	buf.WriteString(fmt.Sprintf("%d-", fromPort))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(protocol)))
-	buf.WriteString(fmt.Sprintf("%t-", self))
+	fmt.Fprintf(&buf, "%s-", rType)
+	fmt.Fprintf(&buf, "%d-", toPort)
+	fmt.Fprintf(&buf, "%d-", fromPort)
+	fmt.Fprintf(&buf, "%s-", strings.ToLower(protocol))
+	fmt.Fprintf(&buf, "%t-", self)
 
 	return fmt.Sprintf("rule-%d", create.StringHashcode(buf.String()))
 }

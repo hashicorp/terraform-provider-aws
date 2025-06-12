@@ -50,6 +50,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) A description of the Policy Store.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -57,6 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `policyStoreId` - The ID of the Policy Store.
 * `arn` - The ARN of the Policy Store.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -90,4 +92,4 @@ Using `terraform import`, import Verified Permissions Policy Store using the `po
  % terraform import aws_verifiedpermissions_policy_store.example DxQg2j8xvXJQ1tQCYNWj9T
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bcdbe48defd0efe064f458091c0ef4690c079108d0a660be500f5179f62557a8 -->
+<!-- cache-key: cdktf-0.20.8 input-541b1a0c6f2e8ec4f0ebd28b7273e1e53a8311370cf5bf35b187fcfaf171aac4 -->

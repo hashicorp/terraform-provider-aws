@@ -78,6 +78,10 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Only valid for encrypted queues, not returned by SQS
+				return !d.Get("sqs_managed_sse_enabled").(bool) && d.Get("kms_master_key_id").(string) == ""
+			},
 		},
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
@@ -541,6 +545,14 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 					// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(defaultQueueKMSDataKeyReusePeriodSeconds) {
+						continue
+					}
+
+					sse, sseOK := got[types.QueueAttributeNameSqsManagedSseEnabled]
+					kmsMaster, kmsOK := got[types.QueueAttributeNameKmsMasterKeyId]
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds &&
+						((!sseOK || (sseOK && sse == "false")) && (!kmsOK || (kmsOK && kmsMaster == ""))) {
+						// API won't set if not encrypted
 						continue
 					}
 

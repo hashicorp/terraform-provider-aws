@@ -27,6 +27,8 @@ import (
 
 // @SDKResource("aws_guardduty_ipset", name="IP Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
 func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,

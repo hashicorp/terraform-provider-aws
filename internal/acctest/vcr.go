@@ -157,10 +157,11 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		transport.MaxIdleConnsPerHost = 10
 		tlsConfig := transport.TLSClientConfig
 		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
+			tlsConfig = &tls.Config{
+				MinVersion: tls.VersionTLS13,
+			}
 			transport.TLSClientConfig = tlsConfig
 		}
-		tlsConfig.MinVersion = tls.VersionTLS12
 
 		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
 

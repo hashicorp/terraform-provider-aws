@@ -20,12 +20,14 @@ data "aws_ec2_network_insights_path" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Network Insights Paths. The given filters must match exactly one Network Insights Path
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `network_insights_path_id` - (Optional) ID of the Network Insights Path to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+Network Insights Paths. The given filters must match exactly one Network Insights Path
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -43,6 +45,8 @@ This data source exports the following attributes in addition to the arguments a
 * `destination_arn` - ARN of the destination.
 * `destination_ip` - IP address of the AWS resource that is the destination of the path.
 * `destination_port` - Destination port.
+* `filter_at_destination` - Filters of the network paths at the destination.
+* `filter_at_source` - Filters of the network paths at the source.
 * `protocol` - Protocol.
 * `source` - AWS resource that is the source of the path.
 * `source_arn` - ARN of the source.

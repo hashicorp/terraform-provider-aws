@@ -30,6 +30,8 @@ resource "aws_iot_thing_principal_attachment" "att" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `principal` - (Required) The AWS IoT Certificate ARN or Amazon Cognito Identity ID.
 * `thing` - (Required) The name of the thing.
 

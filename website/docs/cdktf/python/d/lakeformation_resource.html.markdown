@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` – (Required) ARN of the resource, an S3 path.
 
 ## Attribute Reference
@@ -42,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `role_arn` – Role that the resource was registered with.
 
-<!-- cache-key: cdktf-0.20.8 input-0185c301ec1158bbafdd7e87d6616f71b92a457425fc4fc6e43f33335ee107a8 -->
+<!-- cache-key: cdktf-0.20.8 input-0c1a85f7290c6bc89a9ea51efd00a0bf4a23cdd113bd8e7bbd6cccf5fda51901 -->

@@ -48,7 +48,7 @@ resource "aws_s3control_bucket_lifecycle_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket.

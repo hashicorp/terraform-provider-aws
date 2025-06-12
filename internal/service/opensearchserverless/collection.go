@@ -73,32 +73,37 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the collection.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Computed: true,
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the collection.",
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -109,8 +114,9 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"standby_replicas": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -122,8 +128,9 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),

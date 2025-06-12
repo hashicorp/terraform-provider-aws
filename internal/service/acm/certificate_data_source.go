@@ -164,7 +164,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
 			}
 
-			if !tags.ContainsAll(KeyValueTags(ctx, tagsToMatch)) {
+			if !tags.ContainsAll(keyValueTags(ctx, tagsToMatch)) {
 				continue
 			}
 		}

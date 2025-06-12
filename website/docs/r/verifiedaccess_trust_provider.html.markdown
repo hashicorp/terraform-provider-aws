@@ -32,6 +32,7 @@ The following arguments are optional:
 * `description` - (Optional) A description for the AWS Verified Access trust provider.
 * `device_options` - (Optional) A block of options for device identity based trust providers.
 * `device_trust_provider_type` (Optional) The type of device-based trust provider.
+* `native_application_oidc_options` - (Optional) The OpenID Connect details for an Native Application OIDC, user-identity based trust provider.
 * `oidc_options` - (Optional) The OpenID Connect details for an oidc-type, user-identity based trust provider.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_trust_provider_type` - (Optional) The type of user-based trust provider.

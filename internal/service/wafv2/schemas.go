@@ -57,6 +57,7 @@ func ruleGroupRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -100,6 +101,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 						Required: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
+								"asn_match_statement":                   asnMatchStatementSchema(),
 								"byte_match_statement":                  byteMatchStatementSchema(),
 								"geo_match_statement":                   geoMatchStatementSchema(),
 								"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -131,6 +133,7 @@ func (c *schemaCache) get(level int) *schema.Schema {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"and_statement":                         previous,
+									"asn_match_statement":                   asnMatchStatementSchema(),
 									"byte_match_statement":                  byteMatchStatementSchema(),
 									"geo_match_statement":                   geoMatchStatementSchema(),
 									"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -418,6 +421,21 @@ var fieldToMatchBaseSchema = sync.OnceValue(func() *schema.Resource {
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
 								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
+						},
+					},
+				},
+			},
+			"uri_fragment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fallback_behavior": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FallbackBehavior](),
 						},
 					},
 				},
@@ -995,6 +1013,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
@@ -1180,6 +1199,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"and_statement":                         statementSchema(level),
+				"asn_match_statement":                   asnMatchStatementSchema(),
 				"byte_match_statement":                  byteMatchStatementSchema(),
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
@@ -1634,3 +1654,25 @@ var managedRuleGroupConfigATPResponseInspectionSchema = sync.OnceValue(func() *s
 		},
 	}
 })
+
+func asnMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"asn_list": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 100,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeInt,
+					},
+				},
+				"forwarded_ip_config": forwardedIPConfigSchema(),
+			},
+		},
+	}
+}

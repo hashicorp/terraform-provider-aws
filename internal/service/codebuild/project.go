@@ -1827,39 +1827,39 @@ func resourceProjectArtifactsHash(v any) int {
 	tfMap := v.(map[string]any)
 
 	if v, ok := tfMap["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["bucket_owner_access"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["encryption_disabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap[names.AttrLocation]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["namespace_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap["override_artifact_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+		fmt.Fprintf(&buf, "%t-", v.(bool))
 	}
 
 	if v, ok := tfMap["packaging"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrPath]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	if v, ok := tfMap[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 
 	return create.StringHashcode(buf.String())

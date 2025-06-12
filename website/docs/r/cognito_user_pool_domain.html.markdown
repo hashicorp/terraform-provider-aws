@@ -62,6 +62,7 @@ This resource supports the following arguments:
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+* `managed_login_version` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
 
 ## Attribute Reference
 

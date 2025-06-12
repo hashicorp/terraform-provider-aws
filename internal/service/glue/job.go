@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,12 +29,13 @@ import (
 
 // @SDKResource("aws_glue_job", name="Job")
 // @Tags(identifierAttribute="arn")
-func ResourceJob() *schema.Resource {
+func resourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
 		ReadWithoutTimeout:   resourceJobRead,
 		UpdateWithoutTimeout: resourceJobUpdate,
 		DeleteWithoutTimeout: resourceJobDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -170,6 +172,50 @@ func ResourceJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"source_control_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
+						},
+						"auth_token": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"branch": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"folder": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"last_commit_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						names.AttrOwner: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"provider": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
+						},
+						"repository": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
@@ -198,7 +244,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &glue.CreateJobInput{
+	input := glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]any)),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -263,6 +309,10 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceControlDetails = expandSourceControlDetails(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrTimeout); ok {
 		input.Timeout = aws.Int32(int32(v.(int)))
 	}
@@ -271,7 +321,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.WorkerType = awstypes.WorkerType(v.(string))
 	}
 
-	output, err := conn.CreateJob(ctx, input)
+	output, err := conn.CreateJob(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Job (%s): %s", name, err)
@@ -286,7 +336,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	job, err := FindJobByName(ctx, conn, d.Id())
+	job, err := findJobByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
@@ -331,6 +381,9 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set(names.AttrRoleARN, job.Role)
 	d.Set("security_configuration", job.SecurityConfiguration)
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
+	}
 	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
@@ -405,6 +458,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("source_control_details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			jobUpdate.SourceControlDetails = expandSourceControlDetails(v.([]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrTimeout); ok {
 			jobUpdate.Timeout = aws.Int32(int32(v.(int)))
 		}
@@ -413,12 +470,12 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			jobUpdate.WorkerType = awstypes.WorkerType(v.(string))
 		}
 
-		input := &glue.UpdateJobInput{
+		input := glue.UpdateJobInput{
 			JobName:   aws.String(d.Id()),
 			JobUpdate: jobUpdate,
 		}
 
-		_, err := conn.UpdateJob(ctx, input)
+		_, err := conn.UpdateJob(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Job (%s): %s", d.Id(), err)
@@ -433,9 +490,10 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	_, err := conn.DeleteJob(ctx, &glue.DeleteJobInput{
+	input := glue.DeleteJobInput{
 		JobName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteJob(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
@@ -446,6 +504,31 @@ func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	return diags
+}
+
+func findJobByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Job, error) {
+	input := glue.GetJobInput{
+		JobName: aws.String(name),
+	}
+
+	output, err := conn.GetJob(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Job == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Job, nil
 }
 
 func expandExecutionProperty(l []any) *awstypes.ExecutionProperty {
@@ -533,6 +616,58 @@ func flattenNotificationProperty(notificationProperty *awstypes.NotificationProp
 
 	m := map[string]any{
 		"notify_delay_after": int(aws.ToInt32(notificationProperty.NotifyDelayAfter)),
+	}
+
+	return []map[string]any{m}
+}
+
+func expandSourceControlDetails(l []any) *awstypes.SourceControlDetails {
+	m := l[0].(map[string]any)
+
+	sourceControlDetails := &awstypes.SourceControlDetails{}
+
+	if v, ok := m["auth_token"].(string); ok && v != "" {
+		sourceControlDetails.AuthToken = aws.String(v)
+	}
+
+	if v, ok := m["folder"].(string); ok && v != "" {
+		sourceControlDetails.Folder = aws.String(v)
+	}
+	if v, ok := m["auth_strategy"].(string); ok && v != "" {
+		sourceControlDetails.AuthStrategy = awstypes.SourceControlAuthStrategy(v)
+	}
+	if v, ok := m["branch"].(string); ok && v != "" {
+		sourceControlDetails.Branch = aws.String(v)
+	}
+	if v, ok := m["last_commit_id"].(string); ok && v != "" {
+		sourceControlDetails.LastCommitId = aws.String(v)
+	}
+	if v, ok := m[names.AttrOwner].(string); ok && v != "" {
+		sourceControlDetails.Owner = aws.String(v)
+	}
+	if v, ok := m["provider"].(string); ok && v != "" {
+		sourceControlDetails.Provider = awstypes.SourceControlProvider(v)
+	}
+	if v, ok := m["repository"].(string); ok && v != "" {
+		sourceControlDetails.Repository = aws.String(v)
+	}
+
+	return sourceControlDetails
+}
+
+func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDetails) []map[string]any {
+	if sourceControlDetails == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"auth_strategy":  sourceControlDetails.AuthStrategy,
+		"branch":         aws.ToString(sourceControlDetails.Branch),
+		"folder":         aws.ToString(sourceControlDetails.Folder),
+		"last_commit_id": aws.ToString(sourceControlDetails.LastCommitId),
+		names.AttrOwner:  aws.ToString(sourceControlDetails.Owner),
+		"provider":       sourceControlDetails.Provider,
+		"repository":     aws.ToString(sourceControlDetails.Repository),
 	}
 
 	return []map[string]any{m}

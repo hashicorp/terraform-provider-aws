@@ -460,6 +460,10 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 		statement.AndStatement = expandAndStatement(v.([]any))
 	}
 
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
+	}
+
 	if v, ok := m["byte_match_statement"]; ok {
 		statement.ByteMatchStatement = expandByteMatchStatement(v.([]any))
 	}
@@ -521,6 +525,24 @@ func expandAndStatement(l []any) *awstypes.AndStatement {
 	return &awstypes.AndStatement{
 		Statements: expandStatements(m["statement"].([]any)),
 	}
+}
+
+func expandASNMatchStatement(l []any) *awstypes.AsnMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	statement := &awstypes.AsnMatchStatement{
+		AsnList: flex.ExpandInt64ValueList(m["asn_list"].([]any)),
+	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		statement.ForwardedIPConfig = expandForwardedIPConfig(v.([]any))
+	}
+
+	return statement
 }
 
 func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
@@ -592,6 +614,10 @@ func expandFieldToMatch(l []any) *awstypes.FieldToMatch {
 
 	if v, ok := m["single_query_argument"]; ok && len(v.([]any)) > 0 {
 		f.SingleQueryArgument = expandSingleQueryArgument(m["single_query_argument"].([]any))
+	}
+
+	if v, ok := m["uri_fragment"]; ok && len(v.([]any)) > 0 {
+		f.UriFragment = expandURIFragment(v.([]any))
 	}
 
 	if v, ok := m["uri_path"]; ok && len(v.([]any)) > 0 {
@@ -775,6 +801,21 @@ func expandSingleQueryArgument(l []any) *awstypes.SingleQueryArgument {
 	return &awstypes.SingleQueryArgument{
 		Name: aws.String(m[names.AttrName].(string)),
 	}
+}
+
+func expandURIFragment(tfList []any) *awstypes.UriFragment {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.UriFragment{}
+
+	if v, ok := tfMap["fallback_behavior"].(string); ok && v != "" {
+		apiObject.FallbackBehavior = awstypes.FallbackBehavior(v)
+	}
+
+	return apiObject
 }
 
 func expandTextTransformations(l []any) []awstypes.TextTransformation {
@@ -1177,6 +1218,10 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 
 	if v, ok := m["and_statement"]; ok {
 		statement.AndStatement = expandAndStatement(v.([]any))
+	}
+
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
@@ -1772,6 +1817,68 @@ func expandRegex(m map[string]any) awstypes.Regex {
 	}
 }
 
+func expandDataProtectionConfig(tfList []any) *awstypes.DataProtectionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &awstypes.DataProtectionConfig{
+		DataProtections: expandDataProtections(tfMap["data_protection"].([]any)),
+	}
+}
+
+func expandDataProtections(tfList []any) []awstypes.DataProtection {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.DataProtection, 0)
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := &awstypes.DataProtection{
+			Action: awstypes.DataProtectionAction(tfMap[names.AttrAction].(string)),
+			Field:  expandFieldToProtect(tfMap[names.AttrField].([]any)),
+		}
+
+		if v, ok := tfMap["exclude_rate_based_details"].(bool); ok {
+			apiObject.ExcludeRateBasedDetails = v
+		}
+
+		if v, ok := tfMap["exclude_rule_match_details"].(bool); ok {
+			apiObject.ExcludeRuleMatchDetails = v
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFieldToProtect(tfList []any) *awstypes.FieldToProtect {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.FieldToProtect{
+		FieldType: awstypes.FieldToProtectType(tfMap["field_type"].(string)),
+	}
+
+	if v, ok := tfMap["field_keys"].([]any); ok && len(v) > 0 {
+		apiObject.FieldKeys = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
+}
+
 func flattenRules(r []awstypes.Rule) any {
 	out := make([]map[string]any, len(r))
 	for i, rule := range r {
@@ -2060,6 +2167,10 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
 	}
 
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
+	}
+
 	if s.ByteMatchStatement != nil {
 		m["byte_match_statement"] = flattenByteMatchStatement(s.ByteMatchStatement)
 	}
@@ -2118,6 +2229,19 @@ func flattenAndStatement(a *awstypes.AndStatement) any {
 
 	m := map[string]any{
 		"statement": flattenStatements(a.Statements),
+	}
+
+	return []any{m}
+}
+
+func flattenASNMatchStatement(a *awstypes.AsnMatchStatement) any {
+	if a == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"asn_list":            a.AsnList,
+		"forwarded_ip_config": flattenForwardedIPConfig(a.ForwardedIPConfig),
 	}
 
 	return []any{m}
@@ -2191,6 +2315,10 @@ func flattenFieldToMatch(f *awstypes.FieldToMatch) any {
 
 	if f.SingleQueryArgument != nil {
 		m["single_query_argument"] = flattenSingleQueryArgument(f.SingleQueryArgument)
+	}
+
+	if f.UriFragment != nil {
+		m["uri_fragment"] = flattenURIFragment(f.UriFragment)
 	}
 
 	if f.UriPath != nil {
@@ -2347,6 +2475,19 @@ func flattenSingleQueryArgument(s *awstypes.SingleQueryArgument) any {
 	}
 
 	return []any{m}
+}
+
+func flattenURIFragment(apiObject *awstypes.UriFragment) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.FallbackBehavior; v != "" {
+		tfMap["fallback_behavior"] = v
+	}
+	return []any{tfMap}
 }
 
 func flattenTextTransformations(l []awstypes.TextTransformation) []any {
@@ -2572,6 +2713,10 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 
 	if s.AndStatement != nil {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
+	}
+
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {
@@ -3203,4 +3348,52 @@ func flattenRegexPatternSet(r []awstypes.Regex) any {
 	}
 
 	return regexPatterns
+}
+
+func flattenDataProtectionConfig(apiObject *awstypes.DataProtectionConfig) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"data_protection": flattenDataProtections(apiObject.DataProtections),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDataProtections(apiObjects []awstypes.DataProtection) any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0)
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrAction:             apiObject.Action,
+			"exclude_rate_based_details": apiObject.ExcludeRateBasedDetails,
+			"exclude_rule_match_details": apiObject.ExcludeRuleMatchDetails,
+			names.AttrField:              flattenFieldToProtect(apiObject.Field),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenFieldToProtect(apiObject *awstypes.FieldToProtect) any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"field_type": apiObject.FieldType,
+	}
+
+	if v := apiObject.FieldKeys; len(v) > 0 {
+		tfMap["field_keys"] = v
+	}
+
+	return []any{tfMap}
 }

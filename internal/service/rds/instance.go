@@ -2514,6 +2514,8 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 
 	if d.HasChange("database_insights_mode") {
 		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
+		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
 	}
 
 	if d.HasChange("db_subnet_group_name") {

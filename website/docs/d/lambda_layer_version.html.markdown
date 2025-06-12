@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Layer Version data source.
 ---
 
-# aws_lambda_layer_version
+# Data Source: aws_lambda_layer_version
 
 Provides information about a Lambda Layer Version.
 

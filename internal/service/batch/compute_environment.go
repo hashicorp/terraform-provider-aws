@@ -498,7 +498,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 				if d.HasChange("compute_resources.0.tags") {
 					if tags, ok := d.GetOk("compute_resources.0.tags"); ok {
-						computeResourceUpdate.Tags = Tags(tftags.New(ctx, tags.(map[string]any)).IgnoreAWS())
+						computeResourceUpdate.Tags = svcTags(tftags.New(ctx, tags.(map[string]any)).IgnoreAWS())
 					} else {
 						computeResourceUpdate.Tags = map[string]string{}
 					}
@@ -935,7 +935,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.
 	}
 
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		apiObject.Tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if computeResourceType != "" {
@@ -1152,7 +1152,7 @@ func flattenComputeResource(ctx context.Context, apiObject *awstypes.ComputeReso
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap

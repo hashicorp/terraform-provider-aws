@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -133,22 +134,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 8000),
+					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
-			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
-				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
-				Optional:   true,
+			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prepared_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[promptOverrideConfigurationModel](ctx),
-				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -289,10 +282,10 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !new.AgentName.Equal(old.AgentName) ||
+	if !new.AgentCollaboration.Equal(old.AgentCollaboration) ||
+		!new.AgentName.Equal(old.AgentName) ||
 		!new.AgentResourceRoleARN.Equal(old.AgentResourceRoleARN) ||
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
@@ -300,8 +293,8 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
-		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) ||
-		!new.AgentCollaboration.Equal(old.AgentCollaboration) {
+		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
+		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		var input bedrockagent.UpdateAgentInput
 		response.Diagnostics.Append(flexExpandForUpdate(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -320,6 +313,18 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 
 			input.GuardrailConfiguration = guardrailConfiguration
+		}
+
+		if !new.MemoryConfiguration.Equal(old.MemoryConfiguration) {
+			memoryConfiguration := &awstypes.MemoryConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.MemoryConfiguration, memoryConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if len(memoryConfiguration.EnabledMemoryTypes) > 0 {
+				input.MemoryConfiguration = memoryConfiguration
+			}
 		}
 
 		if !new.PromptOverrideConfiguration.IsNull() {
@@ -677,7 +682,9 @@ type agentResourceModel struct {
 	ID                          types.String                                                      `tfsdk:"id"`
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
+	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	PreparedAt                  timetypes.RFC3339                                                 `tfsdk:"prepared_at"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`
@@ -698,6 +705,11 @@ func (m *agentResourceModel) setID() {
 type guardrailConfigurationModel struct {
 	GuardrailIdentifier types.String `tfsdk:"guardrail_identifier"`
 	GuardrailVersion    types.String `tfsdk:"guardrail_version"`
+}
+
+type memoryConfigurationModel struct {
+	EnabledMemoryTypes fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]] `tfsdk:"enabled_memory_types"`
+	StorageDays        types.Int32                                                  `tfsdk:"storage_days"`
 }
 
 type promptOverrideConfigurationModel struct {

@@ -973,6 +973,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// evs
+
+				"evs": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// finspace
 
 				"finspace": {
@@ -1538,6 +1546,22 @@ func endpointsSchema() *schema.Schema {
 				// networkmonitor
 
 				"networkmonitor": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// notifications
+
+				"notifications": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// notificationscontacts
+
+				"notificationscontacts": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

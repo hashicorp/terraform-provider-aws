@@ -27,7 +27,7 @@ resource "aws_detective_organization_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) AWS account identifier to designate as a delegated administrator for Detective.
 

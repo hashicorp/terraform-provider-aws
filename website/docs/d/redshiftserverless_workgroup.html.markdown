@@ -37,6 +37,7 @@ This data source exports the following attributes in addition to the arguments a
 * `publicly_accessible` - A value that specifies whether the workgroup can be accessed from a public network.
 * `security_group_ids` - An array of security group IDs to associate with the workgroup.
 * `subnet_ids` - An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
+* `track_name` - The name of the track for the workgroup.
 * `workgroup_id` - The Redshift Workgroup ID.
 
 ### Endpoint

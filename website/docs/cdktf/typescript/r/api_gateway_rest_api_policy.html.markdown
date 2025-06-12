@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
                 type: "AWS",
               },
             ],
-            resources: [test.executionArn],
+            resources: ["${" + test.executionArn + "}/*"],
           },
         ],
       }
@@ -123,4 +123,4 @@ Using `terraform import`, import `aws_api_gateway_rest_api_policy` using the RES
 % terraform import aws_api_gateway_rest_api_policy.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a578ab2cbd9dbd4f544af9402983cad6a4047d176dace00d2077faadb4d78cfa -->
+<!-- cache-key: cdktf-0.20.8 input-edfcd3e0e03b147387e0d375285883cfd209479f809d2f037d9e35a59b92dcf5 -->

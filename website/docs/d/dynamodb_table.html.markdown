@@ -26,5 +26,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.

@@ -2386,15 +2386,15 @@ func expandConfigurations(tfList []any) []awstypes.Configuration {
 func resourceInstanceTypeHashConfig(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrInstanceType].(string))
 	if v, ok := m["bid_price"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m["weighted_capacity"]; ok && v.(int) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		fmt.Fprintf(&buf, "%d-", v.(int))
 	}
 	if v, ok := m["bid_price_as_percentage_of_on_demand_price"]; ok && v.(float64) != 0 {
-		buf.WriteString(fmt.Sprintf("%f-", v.(float64)))
+		fmt.Fprintf(&buf, "%f-", v.(float64))
 	}
 	return create.StringHashcode(buf.String())
 }

@@ -75,6 +75,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
+									"volume_initialization_rate": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
 									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
@@ -830,7 +834,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -838,7 +842,6 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	lt, err := findLaunchTemplate(ctx, conn, &input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
 	}
@@ -847,7 +850,6 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 
 	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}

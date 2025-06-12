@@ -28,6 +28,8 @@ resource "aws_iot_billing_group" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Billing Group.
 * `properties` - (Optional) The Billing Group properties. Defined below.
 * `tags` - (Optional) Key-value mapping of resource tags

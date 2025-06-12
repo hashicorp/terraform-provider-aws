@@ -116,7 +116,7 @@ type getChangeDiffer interface {
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	o, n := diff.GetChange(names.AttrEngineVersion)
-	if o == "6.x" {
+	if o == "6.x" || o == "7.x" {
 		actual := diff.Get("engine_version_actual")
 		aVersion, err := gversion.NewVersion(actual.(string))
 		if err != nil {

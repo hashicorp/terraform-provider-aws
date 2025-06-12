@@ -27,6 +27,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
+			Factory:  newVPCEndpointAssociationsDataSource,
+			TypeName: "aws_vpc_endpoint_associations",
+			Name:     "VPC Endpoint Associations",
+		},
+		{
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
@@ -64,6 +69,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory:  newDefaultCreditSpecificationResource,
+			TypeName: "aws_ec2_default_credit_specification",
+			Name:     "Default Credit Specification",
 		},
 		{
 			Factory:  newInstanceConnectEndpointResource,
@@ -120,6 +130,40 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory:  newVPCEndpointServicePrivateDNSVerificationResource,
 			TypeName: "aws_vpc_endpoint_service_private_dns_verification",
 			Name:     "VPC Endpoint Service Private DNS Verification",
+		},
+		{
+			Factory:  newVPCRouteServerResource,
+			TypeName: "aws_vpc_route_server",
+			Name:     "VPC Route Server",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerEndpointResource,
+			TypeName: "aws_vpc_route_server_endpoint",
+			Name:     "VPC Route Server Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_endpoint_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerPeerResource,
+			TypeName: "aws_vpc_route_server_peer",
+			Name:     "VPC Route Server Peer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_peer_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerPropagationResource,
+			TypeName: "aws_vpc_route_server_propagation",
+			Name:     "VPC Route Server Propagation",
+		},
+		{
+			Factory:  newVPCRouteServerVPCAssociationResource,
+			TypeName: "aws_vpc_route_server_vpc_association",
+			Name:     "VPC Route Server VPC Association",
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResource,

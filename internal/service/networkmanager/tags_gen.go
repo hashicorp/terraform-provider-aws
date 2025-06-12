@@ -18,8 +18,8 @@ import (
 
 // []*SERVICE.Tag handling
 
-// Tags returns networkmanager service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns networkmanager service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -49,7 +49,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +93,7 @@ func updateTags(ctx context.Context, conn *networkmanager.Client, identifier str
 	if len(updatedTags) > 0 {
 		input := networkmanager.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

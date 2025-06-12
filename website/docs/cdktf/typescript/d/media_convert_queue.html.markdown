@@ -36,15 +36,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Required) Unique identifier of the queue. The same as `name`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Arn of the queue.
 * `name` - The same as `id`.
 * `status` - The status of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-cea02305ec5fbfab04de63ece53105b1232b24f60ce5c0d4c7c6b87963855d23 -->
+<!-- cache-key: cdktf-0.20.8 input-8843c6c70d1e4598b77a6d8cd45642165f8d098abe5c152f0479e015d6b509ca -->

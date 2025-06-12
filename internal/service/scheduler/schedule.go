@@ -710,15 +710,15 @@ func capacityProviderHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m["base"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	if v, ok := m["capacity_provider"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrWeight].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
+		fmt.Fprintf(&buf, "%d-", v)
 	}
 
 	return create.StringHashcode(buf.String())
@@ -729,11 +729,11 @@ func placementConstraintHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrExpression]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())
@@ -744,11 +744,11 @@ func placementStrategyHash(v any) int {
 	m := v.(map[string]any)
 
 	if v, ok := m[names.AttrField]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 
 	return create.StringHashcode(buf.String())

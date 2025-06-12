@@ -53,23 +53,46 @@ resource "aws_verifiedaccess_endpoint" "example" {
 }
 ```
 
+### Cidr Example
+
+```terraform
+resource "aws_verifiedaccess_endpoint" "example" {
+  attachment_type = "vpc"
+  description     = "example"
+  endpoint_type   = "cidr"
+  cidr_options {
+    cidr = aws_subnet.test[0].cidr_block
+    port_range {
+      from_port = 443
+      to_port   = 443
+    }
+    protocol   = "tcp"
+    subnet_ids = [for subnet in aws_subnet.test : subnet.id]
+  }
+
+  security_group_ids       = [aws_security_group.test.id]
+  verified_access_group_id = aws_verifiedaccess_group.test.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `application_domain` - (Required) The DNS name for users to reach your application.
 * `attachment_type` - (Required) The type of attachment. Currently, only `vpc` is supported.
-* `domain_certificate_arn` - (Required) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application.
 * `endpoint_domain_prefix` - (Required) - A custom identifier that is prepended to the DNS name that is generated for the endpoint.
 * `endpoint_type` - (Required) - The type of Verified Access endpoint to create. Currently `load-balancer` or `network-interface` are supported.
 * `verified_access_group_id` (Required) - The ID of the Verified Access group to associate the endpoint with.
 
 The following arguments are optional:
 
+* `application_domain` - (Optional) The DNS name for users to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `description` - (Optional) A description for the Verified Access endpoint.
+* `domain_certificate_arn` - (Optional) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `sse_specification` - (Optional) The options in use for server side encryption.
 * `load_balancer_options` - (Optional) The load balancer details. This parameter is required if the endpoint type is `load-balancer`.
 * `network_interface_options` - (Optional) The network interface details. This parameter is required if the endpoint type is `network-interface`.
+* `cidr_options` - (Optional) The CIDR block details. This parameter is required if the endpoint type is `cidr`.
 * `policy_document` - (Optional) The policy document that is associated with this resource.
 * `security_group_ids` - (Optional) List of the the security groups IDs to associate with the Verified Access endpoint.
 * `tags` - (Optional) Key-value tags for the Verified Access Endpoint. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

@@ -28,6 +28,8 @@ resource "aws_devicefarm_test_grid_project" "example" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the Selenium testing project.
 * `description` - (Optional) Human-readable description of the project.
 * `vpc_config` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.

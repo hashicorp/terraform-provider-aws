@@ -378,7 +378,7 @@ type ResourceDatum struct {
 	Serialize                        bool
 	SerializeDelay                   bool
 	SerializeParallelTests           bool
-	PreCheck                         bool
+	PreChecks                        []codeBlock
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
@@ -671,11 +671,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
-						d.PreCheck = b
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: fmt.Sprintf("%s(ctx, t)", code),
+						})
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
 					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {

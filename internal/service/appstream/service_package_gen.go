@@ -17,7 +17,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceImage,
+			Factory:  newImageDataSource,
 			TypeName: "aws_appstream_image",
 			Name:     "Image",
 		},
@@ -35,12 +35,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDirectoryConfig,
+			Factory:  resourceDirectoryConfig,
 			TypeName: "aws_appstream_directory_config",
 			Name:     "Directory Config",
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_appstream_fleet",
 			Name:     "Fleet",
 			Tags: &types.ServicePackageResourceTags{
@@ -48,12 +48,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFleetStackAssociation,
+			Factory:  resourceFleetStackAssociation,
 			TypeName: "aws_appstream_fleet_stack_association",
 			Name:     "Fleet Stack Association",
 		},
 		{
-			Factory:  ResourceImageBuilder,
+			Factory:  resourceImageBuilder,
 			TypeName: "aws_appstream_image_builder",
 			Name:     "Image Builder",
 			Tags: &types.ServicePackageResourceTags{
@@ -61,7 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStack,
+			Factory:  resourceStack,
 			TypeName: "aws_appstream_stack",
 			Name:     "Stack",
 			Tags: &types.ServicePackageResourceTags{
@@ -69,12 +69,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_appstream_user",
 			Name:     "User",
 		},
 		{
-			Factory:  ResourceUserStackAssociation,
+			Factory:  resourceUserStackAssociation,
 			TypeName: "aws_appstream_user_stack_association",
 			Name:     "User Stack Association",
 		},

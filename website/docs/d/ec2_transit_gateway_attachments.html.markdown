@@ -14,7 +14,7 @@ Get information on EC2 Transit Gateway Attachments.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway_attachments" "filtered" {
   filter {
     name   = "state"

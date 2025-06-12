@@ -14,14 +14,20 @@ import (
 
 // SuppressEquivalentStringCaseInsensitive provides custom difference suppression
 // for strings that are equal under case-insensitivity.
-func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
+func SuppressEquivalentStringCaseInsensitive(k, old, new string, _ *schema.ResourceData) bool {
 	return strings.EqualFold(old, new)
 }
 
 // SuppressEquivalentJSONDocuments provides custom difference suppression
 // for JSON documents in the given strings that are equivalent.
-func SuppressEquivalentJSONDocuments(k, old, new string, d *schema.ResourceData) bool {
+func SuppressEquivalentJSONDocuments(k, old, new string, _ *schema.ResourceData) bool {
 	return json.EqualStrings(old, new)
+}
+
+// SuppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
+// for strings that represent equal CloudWatch Logs log group ARNs.
+func SuppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSuffix(old, ":*") == strings.TrimSuffix(new, ":*")
 }
 
 // SuppressEquivalentRoundedTime returns a difference suppression function that compares
@@ -40,7 +46,7 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 
 // SuppressEquivalentIAMPolicyDocuments provides custom difference suppression
 // for IAM policy documents in the given strings that are equivalent.
-func SuppressEquivalentIAMPolicyDocuments(k, old, new string, d *schema.ResourceData) bool {
+func SuppressEquivalentIAMPolicyDocuments(k, old, new string, _ *schema.ResourceData) bool {
 	if equalEmptyJSONStrings(old, new) {
 		return true
 	}

@@ -185,6 +185,7 @@ provider "aws" {
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
@@ -248,6 +249,8 @@ provider "aws" {
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
+|User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|

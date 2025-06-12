@@ -100,11 +100,10 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         LambdaEventSourceMapping(self, "example",
             function_name=Token.as_string(aws_lambda_function_example.arn),
-            provisioned_poller_config=[{
-                "maximum_poller": 80,
-                "minimum_poller": 10
-            }
-            ],
+            provisioned_poller_config=LambdaEventSourceMappingProvisionedPollerConfig(
+                maximum_pollers=80,
+                minimum_pollers=10
+            ),
             self_managed_event_source=LambdaEventSourceMappingSelfManagedEventSource(
                 endpoints={
                     "KAFKA_BOOTSTRAP_SERVERS": "kafka1.example.com:9092,kafka2.example.com:9092"
@@ -242,12 +241,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `amazon_managed_kafka_event_source_config` - (Optional) Additional configuration block for Amazon Managed Kafka sources. Incompatible with "self_managed_event_source" and "self_managed_kafka_event_source_config". Detailed below.
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
 * `destination_config`: - (Optional) An Amazon SQS queue, Amazon SNS topic or Amazon S3 bucket (only available for Kafka sources) destination for failed records. Only available for stream sources (DynamoDB and Kinesis) and Kafka sources (Amazon MSK and Self-managed Apache Kafka). Detailed below.
 * `document_db_event_source_config`: - (Optional) Configuration settings for a DocumentDB event source. Detailed below.
-* `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
+* `enabled` - (Optional) Determines if the mapping is enabled. This parameter can be used to enable or disable the mapping, both during resource creation and for already created resources. Defaults to `true`.
 * `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue, MQ broker, MSK cluster or DocumentDB change stream.  It is incompatible with a Self Managed Kafka source.
 * `filter_criteria` - (Optional) The criteria to use for [event filtering](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html) Kinesis stream, DynamoDB stream, SQS queue event sources. Detailed below.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
@@ -363,4 +364,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5b9261b046b74b3f44a492b9f692640d45a84945b331800758068b1874edca3e -->
+<!-- cache-key: cdktf-0.20.8 input-2f4b8434c78b3a35089f70006197c9a8798c13c0f32b2520f0dc21c7965d5e2a -->

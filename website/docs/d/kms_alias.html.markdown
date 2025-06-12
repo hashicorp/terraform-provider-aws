@@ -22,6 +22,8 @@ data "aws_kms_alias" "s3" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 
 ## Attribute Reference

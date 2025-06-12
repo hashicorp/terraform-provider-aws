@@ -3,33 +3,52 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip"
 description: |-
-  Provides an Lightsail Static IP
+  Manages a Lightsail Static IP.
 ---
 
 # Resource: aws_lightsail_static_ip
 
-Allocates a static IP address.
+Manages a static IP address.
 
-~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
+Use this resource to allocate a static IP address that can be attached to Lightsail instances to provide a consistent public IP address that persists across instance restarts.
+
+~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details.
 
 ## Example Usage
 
 ```terraform
-resource "aws_lightsail_static_ip" "test" {
+resource "aws_lightsail_static_ip" "example" {
   name = "example"
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `name` - (Required) The name for the allocated static IP
+* `name` - (Required) Name for the allocated static IP.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Lightsail static IP
-* `ip_address` - The allocated static IP address
-* `support_code` - The support code.
+* `arn` - ARN of the Lightsail static IP.
+* `ip_address` - Allocated static IP address.
+* `support_code` - Support code for the static IP. Include this code in your email to support when you have questions about a static IP in Lightsail. This code enables our support team to look up your Lightsail information more easily.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_static_ip` using the name attribute. For example:
+
+```terraform
+import {
+  to = aws_lightsail_static_ip.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_static_ip` using the name attribute. For example:
+
+```console
+% terraform import aws_lightsail_static_ip.example example
+```

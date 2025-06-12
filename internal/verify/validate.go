@@ -23,13 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
 var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
-var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d{1,2}$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
@@ -120,8 +119,8 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid partition value (expecting to match regular expression: %s)", k, value, partitionRegexp))
 		}
 
-		if parsedARN.Region != "" && !regionRegexp.MatchString(parsedARN.Region) {
-			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value (expecting to match regular expression: %s)", k, value, regionRegexp))
+		if parsedARN.Region != "" && !inttypes.IsAWSRegion(parsedARN.Region) {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value", k, value))
 		}
 
 		if parsedARN.AccountID != "" && !accountIDRegexp.MatchString(parsedARN.AccountID) {
@@ -145,7 +144,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 func ValidAccountID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !itypes.IsAWSAccountID(value) {
+	if !inttypes.IsAWSAccountID(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
 			k, value))
@@ -157,7 +156,7 @@ func ValidAccountID(v any, k string) (ws []string, errors []error) {
 func ValidBase64String(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !itypes.IsBase64Encoded(value) {
+	if !inttypes.IsBase64Encoded(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q (%q) must be base64-encoded",
 			k, value))
@@ -169,7 +168,7 @@ func ValidBase64String(v any, k string) (ws []string, errors []error) {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
-	if err := itypes.ValidateCIDRBlock(v.(string)); err != nil {
+	if err := inttypes.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -247,7 +246,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -269,7 +268,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -397,9 +396,17 @@ func ValidOnceAWeekWindowFormat(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var (
-	ValidRegionName = validation.StringMatch(regionRegexp, "must be a valid AWS Region Code")
-)
+func ValidRegionName(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !inttypes.IsAWSRegion(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't look like AWS Region: %q",
+			k, value))
+	}
+
+	return
+}
 
 func ValidStringIsJSONOrYAML(v any, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {

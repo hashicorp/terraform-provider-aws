@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_glue_catalog_table", name="Catalog Table")
-func DataSourceCatalogTable() *schema.Resource {
+func dataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCatalogTableRead,
 

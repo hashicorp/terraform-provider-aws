@@ -30,7 +30,7 @@ func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optF
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists appmesh service tags and set them in Context.
@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns appmesh service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
+// svcTags returns appmesh service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	result := make([]awstypes.TagRef, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +67,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from appmesh service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from appmesh service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +82,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.TagRef {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.TagRef {
 // setTagsOut sets appmesh service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.TagRef) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *appmesh.Client, identifier string, ol
 	if len(updatedTags) > 0 {
 		input := appmesh.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

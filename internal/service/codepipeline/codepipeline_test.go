@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -595,7 +596,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 	})
 }
 
-func TestAccCodePipeline_pipelinetype(t *testing.T) {
+func TestAccCodePipeline_pipelineType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p types.PipelineDeclaration
 	rName := sdkacctest.RandString(10)
@@ -613,7 +614,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName, "V1"),
+				Config: testAccCodePipelineConfig_pipelineType(rName, "V1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
@@ -800,6 +801,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"stage.0.action.0.configuration.%",
 					"stage.0.action.0.configuration.OAuthToken",
+					"trigger",
 				},
 			},
 			{
@@ -875,6 +877,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"stage.0.action.0.configuration.%",
 					"stage.0.action.0.configuration.OAuthToken",
+					"trigger",
 				},
 			},
 			{
@@ -908,7 +911,8 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable.1.name", "test_var2"),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.description", "This is test pipeline variable 2."),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.git_configuration.#", "1"),
 				),
 			},
 			{
@@ -921,7 +925,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccCodePipelineConfig_pipelinetype(rName, "V2"),
+				Config: testAccCodePipelineConfig_pipelineType(rName, "V2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.codepipeline_role", names.AttrARN),
@@ -962,7 +966,8 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.run_order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.region", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.git_configuration.#", "1"),
 				),
 			},
 			{
@@ -1205,6 +1210,60 @@ func TestAccCodePipeline_conditions(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodePipeline_trigger(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p types.PipelineDeclaration
+	rName := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_trigger(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.provider_type", "CodeStarSourceConnection"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.0.source_action_name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.provider_type", "CodeStarSourceConnection"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.git_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.git_configuration.0.source_action_name", "Source"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"trigger"},
+			},
+			{
+				Config: testAccCodePipelineConfig_pipelineType(rName, string(types.PipelineTypeV2)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "0"),
+					// For V2 pipelines, AWS will inject a default trigger block when a custom one is removed
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_all.0.git_configuration.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1528,7 +1587,104 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccCodePipelineConfig_pipelinetype(rName, pipelineType string) string { // nosemgrep:ci.codepipeline-in-func-name
+func testAccCodePipelineConfig_trigger(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+
+  pipeline_type = "V2"
+
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+    git_configuration {
+      source_action_name = "Source"
+      push {
+        branches {
+          includes = ["main"]
+          excludes = ["feature/test1"]
+        }
+        file_paths {
+          includes = ["src/production1"]
+          excludes = ["test/production1"]
+        }
+        tags {
+          includes = ["tag1"]
+          excludes = ["tag11"]
+        }
+      }
+      pull_request {
+        events = ["OPEN", "UPDATED", "CLOSED"]
+        branches {
+          includes = ["main", "sub11"]
+          excludes = ["feature/test11", "feature/test12"]
+        }
+        file_paths {
+          includes = ["src/production11", "src/production12"]
+          excludes = ["test/production11", "test/production12"]
+        }
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
+}
+
+func testAccCodePipelineConfig_pipelineType(rName, pipelineType string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),

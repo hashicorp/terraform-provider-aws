@@ -109,6 +109,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
@@ -173,6 +174,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
@@ -366,6 +369,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		emrserverless.ServicePackage(ctx),
 		events.ServicePackage(ctx),
 		evidently.ServicePackage(ctx),
+		evs.ServicePackage(ctx),
 		finspace.ServicePackage(ctx),
 		firehose.ServicePackage(ctx),
 		fis.ServicePackage(ctx),
@@ -430,6 +434,8 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		networkfirewall.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		networkmonitor.ServicePackage(ctx),
+		notifications.ServicePackage(ctx),
+		notificationscontacts.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
 		opensearch.ServicePackage(ctx),
 		opensearchserverless.ServicePackage(ctx),

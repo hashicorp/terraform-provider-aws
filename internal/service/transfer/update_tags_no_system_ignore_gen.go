@@ -39,7 +39,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 	if len(updatedTags) > 0 {
 		input := transfer.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags),
+			Tags: svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)

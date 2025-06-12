@@ -289,7 +289,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)))
 	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = svcTags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok {

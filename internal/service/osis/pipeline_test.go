@@ -288,6 +288,42 @@ func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline types.Pipeline
+	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	resourceName := "aws_osis_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
+		CheckDestroy: testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.89.0",
+					},
+				},
+				Config: testAccPipelineConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPipelineConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)

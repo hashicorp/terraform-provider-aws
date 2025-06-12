@@ -91,9 +91,7 @@ resource "aws_api_gateway_usage_plan" "example" {
 
 ## Argument Reference
 
-The API Gateway Usage Plan argument layout is a structure composed of several sub-resources - these resources are laid out below.
-
-### Top-Level Arguments
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the usage plan.
 * `description` - (Optional) Description of a usage plan.

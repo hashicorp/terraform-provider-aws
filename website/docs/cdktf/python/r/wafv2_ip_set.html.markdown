@@ -48,7 +48,7 @@ This resource supports the following arguments:
 * `description` - (Optional) A friendly description of the IP set.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
 * `ip_address_version` - (Required, Forces new resource) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.
-* `addresses` - (Required) Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
+* `addresses` - (Optional) Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -84,4 +84,4 @@ Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For exampl
 % terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-77aadcbf40e914d19b69224578cd61b8e38b5741b69d7de66851afe95d9506ae -->
+<!-- cache-key: cdktf-0.20.8 input-7f82196903999cd43c0b830f8f317087ee826d45acc561c615922f3847ef0b30 -->

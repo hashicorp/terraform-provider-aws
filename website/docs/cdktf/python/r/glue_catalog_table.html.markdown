@@ -98,7 +98,7 @@ The following arguments are required:
 * `name` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 
-The follow arguments are optional:
+The following arguments are optional:
 
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
@@ -236,4 +236,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->
+<!-- cache-key: cdktf-0.20.8 input-3dca61f83e3b080e11e46459ca995d4e28ea9aa23f0cb390d25fabf872225bb6 -->

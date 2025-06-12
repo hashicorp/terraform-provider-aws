@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
             ),
             depends_on=[cluster_amazon_eks_cluster_policy],
             name="example",
-            role_arn=Token.as_string(aws_iam_role_example.arn),
+            role_arn=cluster.arn,
             version="1.31",
             vpc_config=EksClusterVpcConfig(
                 subnet_ids=[az1.id, az2.id, az3.id]
@@ -285,7 +285,7 @@ class MyConvertedCode(TerraformStack):
                 control_plane_instance_type="m5.large",
                 outpost_arns=[Token.as_string(example.arn)]
             ),
-            role_arn=Token.as_string(aws_iam_role_example.arn),
+            role_arn=cluster.arn,
             version="1.31",
             vpc_config=EksClusterVpcConfig(
                 endpoint_private_access=True,
@@ -312,6 +312,7 @@ The following arguments are optional:
 * `compute_config` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
+* `force_update_version` - (Optional) Force version update by overriding upgrade-blocking readiness checks when updating a cluster.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `remote_network_config` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.
@@ -506,4 +507,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d24990bd2ea1c0eb7e155f17072c56c6730c8900950a6c003e033a6e8faafd3 -->
+<!-- cache-key: cdktf-0.20.8 input-ff155908af1723e13fc646d53e0e6adaefe553c402abbd7a84fbb2e4ebd88f52 -->

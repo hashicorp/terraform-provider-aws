@@ -9,6 +9,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
@@ -169,6 +170,25 @@ func resourceWorkgroup() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
+			"price_performance_target": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"level": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntInSlice([]int{1, 25, 50, 75, 100}),
+						},
+					},
+				},
+			},
 			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -188,6 +208,15 @@ func resourceWorkgroup() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"track_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
+				),
 			},
 			"workgroup_id": {
 				Type:     schema.TypeString,
@@ -235,6 +264,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Port = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("price_performance_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PricePerformanceTarget = expandPerformanceTarget(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
@@ -245,6 +278,14 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("track_name"); ok {
+		input.TrackName = aws.String(v.(string))
+	}
+
+	if input.BaseCapacity != nil && input.PricePerformanceTarget != nil && input.PricePerformanceTarget.Status == awstypes.PerformanceTargetStatusEnabled {
+		return sdkdiag.AppendErrorf(diags, "base_capacity cannot be set when price_performance_target.enabled is true")
 	}
 
 	output, err := conn.CreateWorkgroup(ctx, &input)
@@ -290,9 +331,13 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
+	if err := d.Set("price_performance_target", flattenPerformanceTarget(out.PricePerformanceTarget)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting price_performance_target: %s", err)
+	}
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringValueSet(out.SecurityGroupIds))
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(out.SubnetIds))
+	d.Set(names.AttrSecurityGroupIDs, out.SecurityGroupIds)
+	d.Set(names.AttrSubnetIDs, out.SubnetIds)
+	d.Set("track_name", out.TrackName)
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
 
@@ -373,6 +418,17 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	if d.HasChange("price_performance_target") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			PricePerformanceTarget: expandPerformanceTarget(d.Get("price_performance_target").([]any)),
+			WorkgroupName:          aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	if d.HasChange("config_parameter") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
 			ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
@@ -439,6 +495,16 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		}
 	}
 
+	if d.HasChange("track_name") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			TrackName:     aws.String(d.Get("track_name").(string)),
+			WorkgroupName: aws.String(d.Id()),
+		}
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceWorkgroupRead(ctx, d, meta)...)
 }
 
@@ -447,7 +513,10 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, workgroupDeletedTimeout,
+	const (
+		retryTimeout = 10 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, retryTimeout,
 		func() (any, error) {
 			return conn.DeleteWorkgroup(ctx, &redshiftserverless.DeleteWorkgroupInput{
 				WorkgroupName: aws.String(d.Id()),
@@ -472,7 +541,10 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhen(ctx, workgroupUpdatedTimeout,
+	const (
+		retryTimeout = 20 * time.Minute
+	)
+	_, err := tfresource.RetryWhen(ctx, retryTimeout,
 		func() (any, error) {
 			return conn.UpdateWorkgroup(ctx, input)
 		}, func(err error) (bool, error) {
@@ -498,11 +570,6 @@ func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input
 
 	return nil
 }
-
-const (
-	workgroupDeletedTimeout = 10 * time.Minute
-	workgroupUpdatedTimeout = 20 * time.Minute
-)
 
 func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Workgroup, error) {
 	input := &redshiftserverless.GetWorkgroupInput{
@@ -579,6 +646,47 @@ func waitWorkgroupDeleted(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
+func expandPerformanceTarget(tfList []any) *awstypes.PerformanceTarget {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.PerformanceTarget{}
+
+	// bool is a nicer way to represent the enabled/disabled state but the API expects
+	// a string enumeration.
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		if v {
+			apiObject.Status = awstypes.PerformanceTargetStatusEnabled
+		} else {
+			apiObject.Status = awstypes.PerformanceTargetStatusDisabled
+		}
+	}
+
+	if v, ok := tfMap["level"].(int); ok && v != 0 {
+		apiObject.Level = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenPerformanceTarget(apiObject *awstypes.PerformanceTarget) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: apiObject.Status == awstypes.PerformanceTargetStatusEnabled,
+	}
+
+	if v := apiObject.Level; v != nil {
+		tfMap["level"] = aws.ToInt32(v)
+	}
+
+	return []any{tfMap}
+}
+
 func expandConfigParameter(tfMap map[string]any) awstypes.ConfigParameter {
 	apiObject := awstypes.ConfigParameter{}
 
@@ -602,7 +710,6 @@ func expandConfigParameters(tfList []any) []awstypes.ConfigParameter {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
@@ -623,6 +730,7 @@ func flattenConfigParameter(apiObject awstypes.ConfigParameter) map[string]any {
 	if v := apiObject.ParameterValue; v != nil {
 		tfMap["parameter_value"] = aws.ToString(v)
 	}
+
 	return tfMap
 }
 
@@ -646,6 +754,7 @@ func flattenEndpoint(apiObject *awstypes.Endpoint) map[string]any {
 	}
 
 	tfMap := map[string]any{}
+
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = aws.ToString(v)
 	}
@@ -689,6 +798,7 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) map[string]any {
 	if v := apiObject.NetworkInterfaces; v != nil {
 		tfMap["network_interface"] = flattenNetworkInterfaces(v)
 	}
+
 	return tfMap
 }
 
@@ -724,5 +834,6 @@ func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any
 	if v := apiObject.SubnetId; v != nil {
 		tfMap[names.AttrSubnetID] = aws.ToString(v)
 	}
+
 	return tfMap
 }

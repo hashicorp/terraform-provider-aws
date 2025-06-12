@@ -20,12 +20,14 @@ data "aws_ec2_network_insights_analysis" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 

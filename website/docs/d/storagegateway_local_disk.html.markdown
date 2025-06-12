@@ -21,6 +21,8 @@ data "aws_storagegateway_local_disk" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `gateway_arn` - (Required) ARN of the gateway.
 * `disk_node` - (Optional) Device node of the local disk to retrieve. For example, `/dev/sdb`.
 * `disk_path` - (Optional) Device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.

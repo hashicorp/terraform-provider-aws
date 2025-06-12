@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -96,4 +96,4 @@ Using `terraform import`, import S3 Tables Namespace using the `tableBucketArn` 
 % terraform import aws_s3tables_namespace.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23fbca81594192465f6491ea4ab2110f75a60e3dac8626c1df32b18174d62609 -->
+<!-- cache-key: cdktf-0.20.8 input-8424ddd7d2c77e387a37808b8771add1c1aa5487452321926c21af3047936fc3 -->

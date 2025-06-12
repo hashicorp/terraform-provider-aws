@@ -47,7 +47,7 @@ resource "aws_cognito_identity_pool" "main" {
 
 ## Argument Reference
 
-The Cognito Identity Pool argument layout is a structure composed of several sub-resources - these resources are laid out below.
+This resource supports the following arguments:
 
 * `identity_pool_name` (Required) - The Cognito Identity Pool name.
 * `allow_unauthenticated_identities` (Required) - Whether the identity pool supports unauthenticated logins or not.

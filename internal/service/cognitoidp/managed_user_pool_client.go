@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -294,6 +295,26 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 						"user_data_shared": schema.BoolAttribute{
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"refresh_token_rotation": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[refreshTokenRotationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"feature": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.FeatureType](),
+							Required:   true,
+						},
+						"retry_grace_period_seconds": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(0, 60),
+							},
 						},
 					},
 				},
@@ -691,6 +712,7 @@ type resourceManagedUserPoolClientModel struct {
 	NamePrefix                               types.String                                                 `tfsdk:"name_prefix"`
 	PreventUserExistenceErrors               fwtypes.StringEnum[awstypes.PreventUserExistenceErrorTypes]  `tfsdk:"prevent_user_existence_errors" autoflex:",legacy"`
 	ReadAttributes                           types.Set                                                    `tfsdk:"read_attributes" autoflex:",legacy"`
+	RefreshTokenRotation                     fwtypes.ListNestedObjectValueOf[refreshTokenRotationModel]   `tfsdk:"refresh_token_rotation"`
 	RefreshTokenValidity                     types.Int64                                                  `tfsdk:"refresh_token_validity"`
 	SupportedIdentityProviders               types.Set                                                    `tfsdk:"supported_identity_providers" autoflex:",legacy"`
 	TokenValidityUnits                       fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel]     `tfsdk:"token_validity_units"`

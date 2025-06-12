@@ -355,8 +355,8 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -381,8 +381,8 @@ func resourceInstance() *schema.Resource {
 				Set: func(v any) int {
 					var buf bytes.Buffer
 					m := v.(map[string]any)
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},

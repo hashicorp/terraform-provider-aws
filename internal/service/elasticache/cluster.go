@@ -335,6 +335,12 @@ func resourceCluster() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(40 * time.Minute),
+			Update: schema.DefaultTimeout(80 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			clusterValidateAZMode,
 			customizeDiffValidateClusterEngineVersion,
@@ -471,10 +477,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(id)
 
-	const (
-		timeout = 40 * time.Minute
-	)
-	if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
+	if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) create: %s", d.Id(), err)
 	}
 
@@ -702,10 +705,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 			}
 
-			const (
-				timeout = 80 * time.Minute
-			)
-			if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), timeout); err != nil {
+			if _, err := waitCacheClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -729,11 +729,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 40 * time.Minute
-	)
-	_, err = waitCacheClusterDeleted(ctx, conn, d.Id(), timeout)
-
+	_, err = waitCacheClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) delete: %s", d.Id(), err)
 	}

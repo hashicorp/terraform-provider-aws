@@ -27,6 +27,13 @@ This resource supports the following arguments:
 
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `base_image` - (Required) The registry path of the container image on which this image version is based.
+* `horovod` - (Optional) Indicates Horovod compatibility.
+* `job_type` - (Optional) Indicates SageMaker AI job type compatibility. Valid values are: `TRAINING`, `INFERENCE`, and `NOTEBOOK_KERNEL`.
+* `ml_framework` - (Optional) The machine learning framework vended in the image version.
+* `processor` - (Optional) Indicates CPU or GPU compatibility. Valid values are: `CPU` and `GPU`.
+* `programming_lang` - (Optional) The supported programming language and its version.
+* `release_notes` - (Optional) The maintainer description of the image version.
+* `vendor_guidance` - (Optional) The stability of the image version, specified by the maintainer. Valid values are: `NOT_PROVIDED`, `STABLE`, `TO_BE_ARCHIVED`, and `ARCHIVED`.
 
 ## Attribute Reference
 
@@ -34,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the Image.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image Version.
-* `image_arn`- The Amazon Resource Name (ARN) of the image the version is based on.
+* `version`- The version of the image. If not specified, the latest version is described.
 * `container_image` - The registry path of the container image that contains this image version.
 
 ## Import

@@ -10,6 +10,11 @@ description: |-
 
 Provides a resource to manage a VPC peering connection.
 
+-> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
+can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
+Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
+more information.
+
 ~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
 both a standalone [VPC Peering Connection Options](vpc_peering_connection_options.html) and a VPC Peering Connection
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
@@ -97,11 +102,6 @@ resource "aws_vpc" "bar" {
 ```
 
 ## Argument Reference
-
--> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
-can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
-Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
-more information.
 
 This resource supports the following arguments:
 

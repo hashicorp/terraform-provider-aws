@@ -47,6 +47,7 @@ func TestAccGlueJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "0"),
 				),
 			},
 			{
@@ -873,6 +874,50 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 	})
 }
 
+func TestAccGlueJob_sourceControlDetails(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job awstypes.Job
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobConfig_sourceControlDetails(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.repository", rName),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.provider", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.branch", "test-branch"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.last_commit_id", "test-commit-id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobConfig_sourceControlDetails(rName, rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.repository", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.provider", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.branch", "test-branch"),
+					resource.TestCheckResourceAttr(resourceName, "source_control_details.0.last_commit_id", "test-commit-id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckJobExists(ctx context.Context, n string, v *awstypes.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1374,4 +1419,27 @@ resource "aws_glue_job" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, maxCapacity))
+}
+
+func testAccJobConfig_sourceControlDetails(rName, repo string) string {
+	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_job" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  source_control_details {
+    provider       = "GITHUB"
+    repository     = %[2]q
+    branch         = "test-branch"
+    owner          = "test-owner"
+    last_commit_id = "test-commit-id"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, repo))
 }

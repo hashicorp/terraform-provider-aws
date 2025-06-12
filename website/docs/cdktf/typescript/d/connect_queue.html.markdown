@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `queueId` is required.
-
 This data source supports the following arguments:
 
 * `queueId` - (Optional) Returns information on a specific Queue by Queue id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Queue by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `queueId` is required.
 
 ## Attribute Reference
 
@@ -90,4 +90,4 @@ A `outboundCallerConfig` block supports the following arguments:
 * `outboundCallerIdNumberId` - Specifies the caller ID number.
 * `outboundFlowId` - Outbound whisper flow to be used during an outbound call.
 
-<!-- cache-key: cdktf-0.20.8 input-9db96ad3ac2c9db5f37e952d8b9c483bb1fb1c5c9b12874371e60fca512258f2 -->
+<!-- cache-key: cdktf-0.20.8 input-32a348862678ed37e8489c6be50344bde20581d6815f89739f78ef787cbc28b6 -->

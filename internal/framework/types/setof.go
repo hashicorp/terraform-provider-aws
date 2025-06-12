@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -16,30 +17,32 @@ import (
 )
 
 var (
-	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
-	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
+	_ basetypes.SetTypable        = (*setTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.SetValuable       = (*SetValueOf[basetypes.StringValue])(nil)
+	_ xattr.ValidateableAttribute = (*SetValueOf[basetypes.StringValue])(nil)
 )
 
 // setTypeOf is the attribute type of a SetValueOf.
 type setTypeOf[T attr.Value] struct {
 	basetypes.SetType
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 var (
 	// SetOfStringType is a custom type used for defining a Set of strings.
-	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
+	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}, nil}
 
 	// SetOfARNType is a custom type used for defining a Set of ARNs.
-	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
+	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}, nil}
 )
 
 // TODO Replace with Go 1.24 generic type alias when available.
 func SetOfStringEnumType[T enum.Valueser[T]]() setTypeOf[StringEnum[T]] {
-	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}}
+	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
-	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}}
+	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}, nil}
 }
 
 func (t setTypeOf[T]) Equal(o attr.Type) bool {
@@ -73,7 +76,7 @@ func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	return SetValueOf[T]{SetValue: v}, diags
+	return SetValueOf[T]{SetValue: v, validateAttributeFunc: t.validateAttributeFunc}, diags
 }
 
 func (t setTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -105,6 +108,7 @@ func (t setTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 // SetValueOf represents a Terraform Plugin Framework Set value whose elements are of type `T`.
 type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
+	validateAttributeFunc validateAttributeFunc[T]
 }
 
 type (
@@ -124,6 +128,14 @@ func (v SetValueOf[T]) Equal(o attr.Value) bool {
 
 func (v SetValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewSetTypeOf[T](ctx)
+}
+
+func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() || v.validateAttributeFunc == nil {
+		return
+	}
+
+	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {

@@ -76,6 +76,10 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 			continue
 		}
 
+		if planFieldValue.IsUnknown() {
+			continue
+		}
+
 		if !planFieldValue.Equal(stateFieldValue) {
 			hasChanges = true
 		} else {

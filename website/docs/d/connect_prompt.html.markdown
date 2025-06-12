@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Prompt.
 
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_prompt" "example" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Beep.wav"

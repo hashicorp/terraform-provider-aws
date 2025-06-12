@@ -117,8 +117,8 @@ func listOfMap(tags tftags.KeyValueTags) []any {
 	})
 }
 
-// Tags returns autoscaling service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns autoscaling service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	var result []awstypes.Tag
 
 	for _, key := range tags.Keys() {
@@ -226,7 +226,7 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -254,7 +254,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 	removedTags = removedTags.IgnoreSystem(names.AutoScaling)
 	if len(removedTags) > 0 {
 		input := autoscaling.DeleteTagsInput{
-			Tags: Tags(removedTags),
+			Tags: svcTags(removedTags),
 		}
 
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
@@ -268,7 +268,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 	updatedTags = updatedTags.IgnoreSystem(names.AutoScaling)
 	if len(updatedTags) > 0 {
 		input := autoscaling.CreateOrUpdateTagsInput{
-			Tags: Tags(updatedTags),
+			Tags: svcTags(updatedTags),
 		}
 
 		_, err := conn.CreateOrUpdateTags(ctx, &input, optFns...)

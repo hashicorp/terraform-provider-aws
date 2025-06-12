@@ -684,15 +684,15 @@ const securityGroupRuleIDSeparator = "_"
 func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.IpPermission) (string, error) {
 	var buf bytes.Buffer
 
-	buf.WriteString(fmt.Sprintf("%s-", securityGroupID))
+	fmt.Fprintf(&buf, "%s-", securityGroupID)
 	if aws.ToInt32(ip.FromPort) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", *ip.FromPort))
+		fmt.Fprintf(&buf, "%d-", *ip.FromPort)
 	}
 	if aws.ToInt32(ip.ToPort) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", *ip.ToPort))
+		fmt.Fprintf(&buf, "%d-", *ip.ToPort)
 	}
-	buf.WriteString(fmt.Sprintf("%s-", *ip.IpProtocol))
-	buf.WriteString(fmt.Sprintf("%s-", ruleType))
+	fmt.Fprintf(&buf, "%s-", *ip.IpProtocol)
+	fmt.Fprintf(&buf, "%s-", ruleType)
 
 	// We need to make sure to sort the strings below so that we always
 	// generate the same hash code no matter what is in the set.
@@ -704,7 +704,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -716,7 +716,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -728,7 +728,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		slices.Sort(s)
 
 		for _, v := range s {
-			buf.WriteString(fmt.Sprintf("%s-", v))
+			fmt.Fprintf(&buf, "%s-", v)
 		}
 	}
 
@@ -749,12 +749,12 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		}
 		for _, pair := range ip.UserIdGroupPairs {
 			if pair.GroupId != nil {
-				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupId)))
+				fmt.Fprintf(&buf, "%s-", aws.ToString(pair.GroupId))
 			} else {
 				buf.WriteString("-")
 			}
 			if pair.GroupName != nil {
-				buf.WriteString(fmt.Sprintf("%s-", aws.ToString(pair.GroupName)))
+				fmt.Fprintf(&buf, "%s-", aws.ToString(pair.GroupName))
 			} else {
 				buf.WriteString("-")
 			}

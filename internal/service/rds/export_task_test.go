@@ -16,6 +16,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -33,7 +34,10 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_basic(rName),
@@ -67,7 +71,10 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExportTaskConfig_optional(rName, s3Prefix),
@@ -158,7 +165,9 @@ func isInDestroyedStatus(s string) bool {
 }
 
 func testAccExportTaskConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -233,7 +242,8 @@ resource "aws_db_instance" "test" {
   engine              = "mysql"
   instance_class      = "db.t3.micro"
   username            = "foo"
-  password            = "foobarbaz"
+  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version = 1
   skip_final_snapshot = true
 }
 
@@ -241,7 +251,7 @@ resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccExportTaskConfig_basic(rName string) string {

@@ -159,9 +159,7 @@ This resource supports the following arguments:
       Represented by either
       a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
       or a string such as `2160h`.
-* `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
-  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
-  or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block

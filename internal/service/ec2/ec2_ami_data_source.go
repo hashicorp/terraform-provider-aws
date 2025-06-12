@@ -128,6 +128,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -256,7 +260,6 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	diags = checkMostRecentAndMissingFilters(diags, &describeImagesInput, d.Get(names.AttrMostRecent).(bool))
 
 	images, err := findImages(ctx, conn, &describeImagesInput)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
@@ -321,6 +324,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
 	d.Set(names.AttrName, image.Name)
 	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform", image.Platform)
@@ -375,6 +379,7 @@ func flattenAMIBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping) []a
 				names.AttrIOPS:                flex.Int32ToStringValue(apiObject.Iops),
 				names.AttrSnapshotID:          aws.ToString(apiObject.SnapshotId),
 				names.AttrThroughput:          flex.Int32ToStringValue(apiObject.Throughput),
+				"volume_initialization_rate":  flex.Int32ToStringValue(apiObject.VolumeInitializationRate),
 				names.AttrVolumeSize:          flex.Int32ToStringValue(apiObject.VolumeSize),
 				names.AttrVolumeType:          apiObject.VolumeType,
 			}

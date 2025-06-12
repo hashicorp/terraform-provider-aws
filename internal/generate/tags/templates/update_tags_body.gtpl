@@ -61,8 +61,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
-
+	{{ if .RetryTagOps }}
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (any, error) {
+			return conn.{{ .TagOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
 	_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -103,8 +111,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
-
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
 		_, err := conn.{{ .UntagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -144,7 +160,16 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 		}
 
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .TagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
 		_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

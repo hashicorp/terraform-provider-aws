@@ -22,7 +22,16 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 		},
 	}
 
+	{{ if .RetryTagOps }}
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
 	output, err := conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	if err != nil {
 		return nil, err
