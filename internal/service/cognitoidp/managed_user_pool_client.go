@@ -473,7 +473,7 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 		const (
 			timeout = 2 * time.Minute
 		)
-		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 			return conn.UpdateUserPoolClient(ctx, &input)
 		})
 
@@ -482,11 +482,17 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 
 			return
 		}
-
-		upc = output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
 	}
 
 	// Set values for unknowns.
+	upc, err = findUserPoolClientByTwoPartKey(ctx, conn, userPoolID, id)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed User Pool Client (%s)", userPoolID), err.Error())
+
+		return
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
