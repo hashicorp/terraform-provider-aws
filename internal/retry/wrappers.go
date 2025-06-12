@@ -121,7 +121,7 @@ func (o operation[T]) UntilNotFound() operation[T] {
 
 // Run retries an operation until the timeout elapses or predicate indicates otherwise.
 func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
-	// We explictly don't set a deadline on the context here to maintain compatibility
+	// We explicitly don't set a deadline on the context here to maintain compatibility
 	// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
 	var l *backoff.Loop
 	for l = backoff.NewLoop(timeout); l.Continue(ctx); {
