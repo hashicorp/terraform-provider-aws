@@ -53,10 +53,15 @@ func globalARNIdentitySpec(attrs ...string) inttypes.Identity {
 
 type mockClient struct {
 	accountID string
+	region    string
 }
 
-func (c *mockClient) AccountID(_ context.Context) string {
+func (c mockClient) AccountID(_ context.Context) string {
 	return c.accountID
+}
+
+func (c mockClient) Region(_ context.Context) string {
+	return c.region
 }
 
 func TestGlobalARN(t *testing.T) {
@@ -133,6 +138,7 @@ func TestGlobalARN(t *testing.T) {
 
 			client := mockClient{
 				accountID: accountID,
+				region:    "a-region-1",
 			}
 
 			identitySpec := globalARNIdentitySpec(tc.duplicateAttrs...)
@@ -336,6 +342,7 @@ func TestRegionalARN(t *testing.T) {
 
 			client := mockClient{
 				accountID: accountID,
+				region:    region,
 			}
 
 			identitySpec := regionalARNIdentitySpec(tc.duplicateAttrs...)

@@ -38,11 +38,11 @@ type mockClient struct {
 	region    string
 }
 
-func (c mockClient) AccountID(ctx context.Context) string {
+func (c mockClient) AccountID(_ context.Context) string {
 	return c.accountID
 }
 
-func (c mockClient) Region(ctx context.Context) string {
+func (c mockClient) Region(_ context.Context) string {
 	return c.region
 }
 

@@ -140,6 +140,7 @@ func TestRegionalSingleton(t *testing.T) {
 
 			client := mockClient{
 				accountID: accountID,
+				region:    region,
 			}
 
 			identitySpec := regionalSingletonIdentitySpec(tc.duplicateAttrs...)
