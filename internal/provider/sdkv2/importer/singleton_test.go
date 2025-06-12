@@ -5,7 +5,6 @@ package importer_test
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strings"
 	"testing"
@@ -128,7 +127,7 @@ func TestRegionalSingleton(t *testing.T) {
 			inputAccountID:      "987654321098",
 			expectedRegion:      region,
 			expectError:         true,
-			expectedErrorPrefix: fmt.Sprintf("identity attribute \"account_id\": Provider configured with Account ID"),
+			expectedErrorPrefix: "identity attribute \"account_id\": Provider configured with Account ID",
 		},
 
 		"DuplicateAttrs_ImportID_Valid": {
@@ -276,7 +275,7 @@ func TestGlobalSingleton(t *testing.T) {
 			importMethod:        "Identity",
 			inputAccountID:      "987654321098",
 			expectError:         true,
-			expectedErrorPrefix: fmt.Sprintf("identity attribute \"account_id\": Provider configured with Account ID"),
+			expectedErrorPrefix: "identity attribute \"account_id\": Provider configured with Account ID",
 		},
 
 		"DuplicateAttrs_ImportID_Valid": {
