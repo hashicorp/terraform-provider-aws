@@ -5,7 +5,7 @@ package retry
 
 import (
 	"context"
-	"os"
+	"errors"
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
@@ -109,7 +109,7 @@ func (o operation[T]) UntilNotFound() operation[T] {
 	}
 
 	transform := func(err error) error {
-		if os.IsTimeout(err) {
+		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
 			return tfresource.ErrFoundResource
 		}
 
