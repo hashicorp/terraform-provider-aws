@@ -47,7 +47,7 @@ func RegionalSingleton(ctx context.Context, rd *schema.ResourceData, meta any) e
 			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
 		}
 		if accountID != client.AccountID(ctx) {
-			return fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+			return fmt.Errorf("identity attribute %q: Provider configured with Account ID %q cannot be used to import resources from account %q", names.AttrAccountID, client.AccountID(ctx), accountID)
 		}
 	}
 

@@ -5,12 +5,16 @@ package importer_test
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var regionalSingletonSchema = map[string]*schema.Schema{
@@ -42,189 +46,160 @@ func (c mockClient) Region(ctx context.Context) string {
 	return c.region
 }
 
-func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
-	t.Parallel()
-
-	region := "a-region-1"
-
-	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{
-		"region": "another-region-1",
-	})
-	rd.SetId(region)
-
-	err := importer.RegionalSingleton(context.Background(), rd, nil)
-	if err != nil {
-		if !strings.HasPrefix(err.Error(), "the region passed for import") {
-			t.Fatalf("Unexpected error: %s", err)
-		}
-	} else {
-		t.Fatal("Expected error, got none")
+func regionalSingletonIdentitySpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
 	}
+	return inttypes.RegionalSingletonIdentity(opts...)
 }
 
-func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
-	t.Parallel()
-
-	region := "a-region-1"
-
-	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{})
-	rd.SetId(region)
-
-	err := importer.RegionalSingleton(context.Background(), rd, nil)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-}
-
-func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
-	t.Parallel()
-
-	region := "a-region-1"
-
-	rd := schema.TestResourceDataRaw(t, regionalSingletonSchema, map[string]any{
-		"region": region,
-	})
-	rd.SetId(region)
-
-	err := importer.RegionalSingleton(context.Background(), rd, nil)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-}
-
-func TestRegionalSingleton_Identity_Invalid_WrongAccountID(t *testing.T) {
-	t.Parallel()
-
-	region := "a-region-1"
-	client := mockClient{
-		accountID: "123456789012",
-		region:    region,
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
-		"account_id": "123450054321",
-	})
-
-	err := importer.RegionalSingleton(context.Background(), rd, client)
-	if err != nil {
-		if !strings.Contains(err.Error(), "Provider configured with Account ID") {
-			t.Fatalf("Unexpected error: %s", err)
-		}
-	}
-}
-
-func TestRegionalSingleton_Identity_Valid_AttributesNotSet(t *testing.T) {
-	t.Parallel()
-
-	region := "a-region-1"
-	client := mockClient{
-		accountID: "123456789012",
-		region:    region,
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{})
-
-	err := importer.RegionalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-}
-
-func TestRegionalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
+func TestRegionalSingleton(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
 	region := "a-region-1"
-	client := mockClient{
-		accountID: accountID,
-		region:    region,
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
-		"account_id": accountID,
-	})
 
-	err := importer.RegionalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
+	testCases := map[string]struct {
+		importMethod        string // "ImportID" or "Identity"
+		inputRegion         string
+		inputAccountID      string
+		duplicateAttrs      []string
+		stateAttrs          map[string]any
+		expectedRegion      string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"ImportID_Valid_DefaultRegion": {
+			importMethod:   "ImportID",
+			inputRegion:    "",
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"ImportID_Valid_RegionOverride": {
+			importMethod: "ImportID",
+			inputRegion:  region,
+			stateAttrs: map[string]any{
+				"region": region,
+			},
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"ImportID_Invalid_WrongRegion": {
+			importMethod: "ImportID",
+			inputRegion:  region,
+			stateAttrs: map[string]any{
+				"region": "another-region-1",
+			},
+			expectError:         true,
+			expectedErrorPrefix: "the region passed for import",
+		},
+
+		"Identity_Valid_ExplicitRegion": {
+			importMethod:   "Identity",
+			inputRegion:    region,
+			inputAccountID: "",
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Valid_ExplicitAccountID": {
+			importMethod:   "Identity",
+			inputRegion:    "",
+			inputAccountID: accountID,
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Valid_ExplicitRegionAndAccountID": {
+			importMethod:   "Identity",
+			inputRegion:    region,
+			inputAccountID: accountID,
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Valid_NoExplicitAttributes": {
+			importMethod:   "Identity",
+			inputRegion:    "",
+			inputAccountID: "",
+			expectedRegion: region,
+			expectError:    false,
+		},
+		"Identity_Invalid_WrongAccountID": {
+			importMethod:        "Identity",
+			inputAccountID:      "987654321098",
+			expectedRegion:      region,
+			expectError:         true,
+			expectedErrorPrefix: fmt.Sprintf("identity attribute \"account_id\": Provider configured with Account ID"),
+		},
 	}
 
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
 
-func TestRegionalSingleton_Identity_Valid_RegionOverride(t *testing.T) {
-	t.Parallel()
+			client := mockClient{
+				accountID: accountID,
+				region:    region,
+			}
 
-	accountID := "123456789012"
-	region := "a-region-1"
-	client := mockClient{
-		accountID: accountID,
-		region:    "another-region-1",
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
-		"region": region,
-	})
+			var (
+				d   *schema.ResourceData
+				err error
+			)
+			switch tc.importMethod {
+			case "ImportID":
+				d = schema.TestResourceDataRaw(t, regionalSingletonSchema, tc.stateAttrs)
+				d.SetId(region)
 
-	err := importer.RegionalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
+				err = importer.RegionalSingleton(ctx, d, client)
 
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
-	}
-}
+			case "Identity":
+				identitySpec := regionalSingletonIdentitySpec(tc.duplicateAttrs...)
+				identitySchema := identity.NewIdentitySchema(identitySpec)
+				identityAttrs := make(map[string]string, 2)
+				if tc.inputRegion != "" {
+					identityAttrs["region"] = tc.inputRegion
+				}
+				if tc.inputAccountID != "" {
+					identityAttrs["account_id"] = tc.inputAccountID
+				}
+				d = schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, identitySchema, identityAttrs)
 
-func TestRegionalSingleton_Identity_Valid_AccountIDAndRegionSet(t *testing.T) {
-	t.Parallel()
+				err = importer.RegionalSingleton(ctx, d, client)
+			}
+			if tc.expectError {
+				if err == nil {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(err.Error(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", err.Error())
+				}
+				return
+			}
 
-	accountID := "123456789012"
-	region := "a-region-1"
-	client := mockClient{
-		accountID: accountID,
-		region:    "another-region-1",
-	}
-	rd := schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
-		"account_id": accountID,
-		"region":     region,
-	})
+			if err != nil {
+				t.Fatalf("Unexpected error: %s", err.Error())
+			}
 
-	err := importer.RegionalSingleton(context.Background(), rd, client)
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
+			// Check attr value
+			var expectedAttrValue string
+			if slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = tc.expectedRegion
+			}
+			if e, a := expectedAttrValue, getAttributeValue(t, d, "attr"); e != a {
+				t.Errorf("expected `attr` to be %q, got %q", e, a)
+			}
 
-	if e, a := region, rd.Id(); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
-	}
-	if e, a := region, rd.Get("region"); e != a {
-		t.Errorf("expected `region` to be %q, got %q", e, a)
+			// Check region value
+			if e, a := tc.expectedRegion, getAttributeValue(t, d, "region"); e != a {
+				t.Errorf("expected `region` to be %q, got %q", e, a)
+			}
+
+			// Check ID value
+			if e, a := tc.expectedRegion, getAttributeValue(t, d, "id"); e != a {
+				t.Errorf("expected `id` to be %q, got %q", e, a)
+			}
+		})
 	}
 }
 
@@ -326,4 +301,13 @@ func TestGlobalSingleton_Identity_Valid_AccountIDSet(t *testing.T) {
 	if e, a := accountID, rd.Id(); e != a {
 		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
+}
+
+func getAttributeValue(t *testing.T, d *schema.ResourceData, name string) string {
+	t.Helper()
+
+	if name == "id" {
+		return d.Id()
+	}
+	return d.Get(name).(string)
 }
