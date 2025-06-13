@@ -8,14 +8,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec *inttypes.Identity, client AWSClient) error {
+func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attrName string, client AWSClient) error {
 	if rd.Id() != "" {
 		importID := rd.Id()
-		if identitySpec.IdentityAttribute != "id" {
-			rd.Set(identitySpec.IdentityAttribute, importID)
+		if attrName != "id" {
+			rd.Set(attrName, importID)
 		}
 
 		return nil
@@ -30,17 +29,19 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, ide
 		return err
 	}
 
-	attr := identitySpec.Attributes[1]
-
-	valRaw, ok := identity.GetOk(attr.Name)
-	if attr.Required && !ok {
-		return fmt.Errorf("identity attribute %q is required", attr.Name)
+	valRaw, ok := identity.GetOk(attrName)
+	if !ok {
+		return fmt.Errorf("identity attribute %q is required", attrName)
 	}
 	val, ok := valRaw.(string)
 	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, valRaw)
 	}
-	setAttribute(rd, attr.Name, val)
+	setAttribute(rd, attrName, val)
+
+	if attrName != "id" {
+		rd.SetId(val)
+	}
 
 	return nil
 }

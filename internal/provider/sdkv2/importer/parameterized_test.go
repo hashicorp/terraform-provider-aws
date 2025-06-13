@@ -72,12 +72,10 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := globalSingleParameterizedIdentitySpec(tc.attrName)
-
 			d := schema.TestResourceDataRaw(t, globalParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalSingleParameterized(ctx, d, &identitySpec, client)
+			err := importer.GlobalSingleParameterized(ctx, d, tc.attrName, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -186,7 +184,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalSingleParameterized(ctx, d, &identitySpec, client)
+			err := importer.GlobalSingleParameterized(ctx, d, tc.attrName, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -201,6 +199,12 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 				t.Fatalf("Unexpected error: %s", err.Error())
 			}
 
+			// Check ID value
+			// ID must always be set for SDKv2 resources
+			if e, a := tc.identityAttrs[tc.attrName], getAttributeValue(t, d, "id"); e != a {
+				t.Errorf("expected `id` to be %q, got %q", e, a)
+			}
+
 			// Check name value
 			var expectedNameValue string
 			if tc.attrName == "name" {
@@ -208,15 +212,6 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			}
 			if e, a := expectedNameValue, getAttributeValue(t, d, "name"); e != a {
 				t.Errorf("expected `name` to be %q, got %q", e, a)
-			}
-
-			// Check ID value
-			var expectedIDValue string
-			if tc.attrName == "id" {
-				expectedIDValue = tc.identityAttrs["id"]
-			}
-			if e, a := expectedIDValue, getAttributeValue(t, d, "id"); e != a {
-				t.Errorf("expected `id` to be %q, got %q", e, a)
 			}
 		})
 	}
