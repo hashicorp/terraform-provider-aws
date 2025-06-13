@@ -178,7 +178,7 @@ func (r *Loop) Continue(ctx context.Context) bool {
 	r.sleep(ctx, r.config.delay(r.attempt))
 	r.attempt++
 
-	return ctx.Err() == nil
+	return context.Cause(ctx) == nil
 }
 
 // Reset resets a Loop to its initial state.
