@@ -205,6 +205,27 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
+func RegionalSingleParameterIdentity(name string) Identity {
+	return Identity{
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+			{
+				Name:     "region",
+				Required: false,
+			},
+			{
+				Name:     name,
+				Required: true,
+			},
+		},
+		IsSingleParameter: true,
+	}
+}
+
 func GlobalSingleParameterIdentity(name string) Identity {
 	return Identity{
 		IsGlobalResource:  true,

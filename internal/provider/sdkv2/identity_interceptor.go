@@ -94,15 +94,28 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 }
 
 func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.ResourceImporter {
-	if identitySpec.IsGlobalResource && identitySpec.IsSingleParameter {
-		return &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
-					return nil, err
-				}
+	if identitySpec.IsSingleParameter {
+		if identitySpec.IsGlobalResource {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+						return nil, err
+					}
 
-				return []*schema.ResourceData{rd}, nil
-			},
+					return []*schema.ResourceData{rd}, nil
+				},
+			}
+		} else {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+						return nil, err
+					}
+
+					return []*schema.ResourceData{rd}, nil
+				},
+			}
+
 		}
 	} else {
 		return &schema.ResourceImporter{
