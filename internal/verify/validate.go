@@ -153,6 +153,18 @@ func ValidAccountID(v any, k string) (ws []string, errors []error) {
 	return
 }
 
+func ValidDataCatalogID(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !inttypes.IsAWSDataCatalogID(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't look like Data Catalog ID (exactly 12 digits or s3tablescatalog/.+): %q",
+			k, value))
+	}
+
+	return
+}
+
 func ValidBase64String(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
