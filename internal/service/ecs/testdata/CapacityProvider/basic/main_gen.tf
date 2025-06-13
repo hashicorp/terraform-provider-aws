@@ -59,7 +59,7 @@ locals {
 
 # acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI
 
-# acctest.configLatestAmazonLinux2HVMEBSAMI
+# acctest.configLatestAmazonLinux2HVMEBSAMI("x86_64")
 
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-x86_64" {
   most_recent = true

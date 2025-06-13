@@ -36,7 +36,7 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude()
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
   region = var.region
