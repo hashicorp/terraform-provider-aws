@@ -68,6 +68,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `disable_session_tags` - (Optional) Disable the tags that are automatically added to role session by Amazon EKS.
+* `target_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be chained to the the IAM role specified as role_arn
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
