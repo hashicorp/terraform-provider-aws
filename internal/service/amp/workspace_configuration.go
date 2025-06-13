@@ -227,7 +227,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 }
 
 func (r *workspaceConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("workspace_id"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
 }
 
 func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.WorkspaceConfigurationDescription, error) {
