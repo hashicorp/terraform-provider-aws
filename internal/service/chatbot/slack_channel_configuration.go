@@ -435,3 +435,17 @@ func (loggingLevel) Values() []loggingLevel {
 		loggingLevelNone,
 	}
 }
+
+type slackChannelConfigurationState string
+
+const (
+	slackChannelConfigurationStateDisabled slackChannelConfigurationState = "DISABLED"
+	slackChannelConfigurationStateEnabled  slackChannelConfigurationState = "ENABLED"
+)
+
+func (slackChannelConfigurationState) Values() []slackChannelConfigurationState {
+	return []slackChannelConfigurationState{
+		slackChannelConfigurationStateDisabled,
+		slackChannelConfigurationStateEnabled,
+	}
+}
