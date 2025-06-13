@@ -272,10 +272,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- end -}}
 						),
 					{{- else }}
-						Identity: inttypes.RegionalParameterizedIdentity(
-							{{- range $value.IdentityAttributes }}
-								{{ template "IdentifierAttribute" . }}
-							{{- end }}
+						Identity: inttypes.RegionalSingleParameterIdentity(
+							{{- range $value.IdentityAttributes -}}
+								{{ .Name }}
+							{{- end -}}
 						),
 					{{- end }}
 				{{- else if $value.ARNIdentity }}
