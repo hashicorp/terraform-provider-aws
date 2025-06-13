@@ -18,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -131,31 +129,655 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
+			"transformer_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[transformerConfigModel](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeBetween(1, 20),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
+					Blocks: map[string]schema.Block{
+						"add_keys": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[addKeysModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Blocks: map[string]schema.Block{
+								"entries": schema.ListNestedBlock{
+									CustomType: fwtypes.NewObjectTypeOf[addKeyEntryModel](ctx),
+									Validators: []validator.List{
+										listvalidator.IsRequired(),
+										listvalidator.SizeBetween(1,5),
+									},
+									NestedObject: schema.NestedBlockObject{
+										Attributes: map[string]schema.Attribute{
+											names.AttrKey: schema.StringAttribute{
+												Required: true,
+												Validators: []validator.String{
+													stringvalidator.LengthBetween(1, 128),
+												},
+											},
+											"overwrite_if_exists": schema.BoolAttribute{
+												Optional: true,
+												Computed: true,
+											},
+											names.AttrValue: schema.StringAttribute{
+												Required: true,
+												Validators: []validator.String{
+													stringvalidator.LengthBetween(1, 256),
+												},
+											},
+										},
+									},
+								},
+							},
 						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+						"copy_value": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[copyValueModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Blocks: map[string]schema.Block{
+								"entries": schema.ListNestedBlock{
+									CustomType: fwtypes.NewObjectTypeOf[copyValueEntryModel](ctx),
+									Validators: []validator.List{
+										listvalidator.IsRequired(),
+										listvalidator.SizeBetween(1,5),
+									},
+									NestedObject: schema.NestedBlockObject{
+										Attributes: map[string]schema.Attribute{
+											"overwrite_if_exists": schema.BoolAttribute{
+												Optional: true,
+												Computed: true,
+											},
+											names.AttrSource: schema.StringAttribute{
+												Required: true,
+												Validators: []validator.String{
+													stringvalidator.LengthBetween(1, 128),
+												},
+											},
+											names.AttrTarget: schema.StringAttribute{
+												Required: true,
+												Validators: []validator.String{
+													stringvalidator.LengthBetween(1, 128),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"csv": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[csvModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(5),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"columns": schema.ListAttribute{
+										Optional: true,
+										Computed: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(100),
+											listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 128)),
+										},
+									},
+									"delimiter": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 2),
+										},
+									},
+									"quote_character": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 1),
+										},
+									},
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+								},
+							},
+						},
+						"date_time_converter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dateTimeConverterModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"locale": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(1),
+										},
+									},
+									"match_patterns": schema.ListAttribute{
+										Required: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 5),
+											listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+										},
+									},
+									names.AttrSource: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"source_timezone": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(1),
+										},
+									},
+									names.AttrTarget: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"target_format": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 64),
+										},
+									},
+									"target_timezone": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthAtLeast(1),
+										},
+									},
+								},
+							},
+						},
+						"delete_keys": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[deleteKeysModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"with_keys": schema.ListAttribute{
+										Required: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 5),
+											listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+										},
+									},
+								},
+							},
+						},
+						"grok": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[grokModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								"match": schema.StringAttribute{
+									Required: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 512),
+									},
+								},
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"list_to_map": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[listToMapModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"flatten": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+									},
+									"flattened_element": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.FlattenedElement](),
+										Optional: true,
+									},
+									names.AttrKey: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									names.AttrSource: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									names.AttrTarget: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"value_key": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+								},
+							},
+						},
+						"lower_case_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[lowerCaseStringModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"with_keys": schema.ListAttribute{
+										Required: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 10),
+											listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+										},
+									},
+								},
+							},
+						},
+						"move_keys": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[moveKeysModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[copyValueEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1,5),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"overwrite_if_exists": schema.BoolAttribute{
+													Optional: true,
+													Computed: true,
+												},
+												names.AttrSource: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												names.AttrTarget: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"parse_cloudfront": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[parseCloudfrontModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"parse_json": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseJSONModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(5),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrDestination: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+								},
+							},
+						},
+						"parse_key_value": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseKeyValueModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(5),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrDestination: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"field_delimiter": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"key_prefix": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"key_value_delimiter": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"non_match_value": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+									"overwrite_if_exists": schema.BoolAttribute{
+										Optional: true,
+										Computed: true,
+									},
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
+									},
+								},
+							},
+						},
+						"parse_postgres": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[parsePostgresModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"parse_route53": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[parseRoute53Model](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"parse_vpc": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[parseVPCModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"parse_waf": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[parseWAFModel](ctx),
+							Validators: []validator.Object{
+								// TBD
+							},
+							Attributes: map[string]schema.Attribute{
+								names.AttrSource: schema.StringAttribute{
+									Optional: true,
+									Computed: true,
+									Validators: []validator.String{
+										stringvalidator.LengthBetween(1, 128),
+									},
+								},
+							},
+						},
+						"rename_keys": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[renameKeysModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[renameKeysEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1,5),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKey: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												"overwrite_if_exists": schema.BoolAttribute{
+													Optional: true,
+													Computed: true,
+												},
+												"rename_to": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"split_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[splitStringModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[splitStringEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1,10),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"delimiter": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												names.AttrSource: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"substitute_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[substituteStringModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[substituteStringEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1,10),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"from": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												names.AttrSource: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												"to": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"trim_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[trimStringModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"with_keys": schema.ListAttribute{
+										Required: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 10),
+											listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+										},
+									},
+								},
+							},
+						},
+						"type_converter": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[typeConverterModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[typeConverterEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1,5),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKey: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												names.AttrType: schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.Type](),
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"upper_case_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[upperCaseStringModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(20),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"with_keys": schema.ListAttribute{
+										Required: true,
+										CustomType: fwtypes.ListOfStringType,
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 10),
+											listvalidator.ValueStringsAre(stringvalidator.LengthAtLeast(1)),
+										},
+									},
+								},
 							},
 						},
 					},
