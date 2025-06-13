@@ -3,7 +3,8 @@
 
 service "accessanalyzer" {
   sdk {
-    id = "AccessAnalyzer"
+    id          = "AccessAnalyzer"
+    arn_service = "access-analyzer"
   }
 
   names {
@@ -26,7 +27,8 @@ service "accessanalyzer" {
 
 service "account" {
   sdk {
-    id = "Account"
+    id          = "Account"
+    arn_service = "account"
   }
 
   names {
@@ -104,7 +106,8 @@ service "acmpca" {
 
 service "alexaforbusiness" {
   sdk {
-    id = "Alexa For Business"
+    id          = "Alexa For Business"
+    arn_service = "a4b"
   }
 
   names {
@@ -128,7 +131,8 @@ service "amp" {
   }
 
   sdk {
-    id = "amp"
+    id          = "amp"
+    arn_service = "aps"
   }
 
   names {
@@ -153,7 +157,8 @@ service "amp" {
 
 service "amplify" {
   sdk {
-    id = "Amplify"
+    id          = "Amplify"
+    arn_service = "amplify"
   }
 
   names {
@@ -176,7 +181,8 @@ service "amplify" {
 
 service "amplifybackend" {
   sdk {
-    id = "AmplifyBackend"
+    id          = "AmplifyBackend"
+    arn_service = "amplifybackend"
   }
 
   names {
@@ -196,7 +202,8 @@ service "amplifybackend" {
 
 service "amplifyuibuilder" {
   sdk {
-    id = "AmplifyUIBuilder"
+    id          = "AmplifyUIBuilder"
+    arn_service = "amplifyuibuilder"
   }
 
   names {
@@ -216,7 +223,8 @@ service "amplifyuibuilder" {
 
 service "apigateway" {
   sdk {
-    id = "API Gateway"
+    id          = "API Gateway"
+    arn_service = "apigateway"
   }
 
   names {
@@ -240,7 +248,8 @@ service "apigateway" {
 
 service "apigatewaymanagementapi" {
   sdk {
-    id = "ApiGatewayManagementApi"
+    id          = "ApiGatewayManagementApi"
+    arn_service = "apigateway"
   }
 
   names {
@@ -260,7 +269,8 @@ service "apigatewaymanagementapi" {
 
 service "apigatewayv2" {
   sdk {
-    id = "ApiGatewayV2"
+    id          = "ApiGatewayV2"
+    arn_service = "apigateway"
   }
 
   names {
@@ -283,7 +293,8 @@ service "apigatewayv2" {
 
 service "appfabric" {
   sdk {
-    id = "AppFabric"
+    id          = "AppFabric"
+    arn_service = "appfabric"
   }
 
   names {
@@ -306,7 +317,8 @@ service "appfabric" {
 
 service "appmesh" {
   sdk {
-    id = "App Mesh"
+    id          = "App Mesh"
+    arn_service = "appmesh"
   }
 
   names {
@@ -329,7 +341,8 @@ service "appmesh" {
 
 service "apprunner" {
   sdk {
-    id = "AppRunner"
+    id          = "AppRunner"
+    arn_service = "apprunner"
   }
 
   names {
@@ -352,7 +365,8 @@ service "apprunner" {
 
 service "appconfig" {
   sdk {
-    id = "AppConfig"
+    id          = "AppConfig"
+    arn_service = "appconfig"
   }
 
   names {
@@ -375,7 +389,8 @@ service "appconfig" {
 
 service "appconfigdata" {
   sdk {
-    id = "AppConfigData"
+    id          = "AppConfigData"
+    arn_service = "appconfig"
   }
 
   names {
@@ -395,8 +410,8 @@ service "appconfigdata" {
 
 service "appflow" {
   sdk {
-    id          = "Appflow"
-    arn_service = "appflow"
+    id                  = "Appflow"
+    arn_service         = "appflow"
 }
 
   names {
@@ -424,7 +439,8 @@ service "appintegrations" {
   }
 
   sdk {
-    id = "AppIntegrations"
+    id          = "AppIntegrations"
+    arn_service = "app-integrations"
   }
 
   names {
@@ -458,7 +474,8 @@ service "appautoscaling" {
   }
 
   sdk {
-    id = "Application Auto Scaling"
+    id          = "Application Auto Scaling"
+    arn_service = "application-autoscaling"
   }
 
   names {
@@ -483,7 +500,8 @@ service "appautoscaling" {
 
 service "applicationcostprofiler" {
   sdk {
-    id = "ApplicationCostProfiler"
+    id          = "ApplicationCostProfiler"
+    arn_service = "application-cost-profiler"
   }
 
   names {
@@ -508,7 +526,8 @@ service "applicationsignals" {
   }
 
   sdk {
-    id = "Application Signals"
+    id          = "Application Signals"
+    arn_service = "application-signals"
   }
 
   names {
@@ -536,7 +555,8 @@ service "discovery" {
   }
 
   sdk {
-    id = "Application Discovery Service"
+    id          = "Application Discovery Service"
+    arn_service = "discovery"
   }
 
   names {
@@ -557,7 +577,8 @@ service "discovery" {
 
 service "mgn" {
   sdk {
-    id = "mgn"
+    id          = "mgn"
+    arn_service = "mgn"
   }
 
   names {
@@ -580,7 +601,8 @@ service "mgn" {
 
 service "appstream" {
   sdk {
-    id = "AppStream"
+    id          = "AppStream"
+    arn_service = "appstream"
   }
 
   names {
@@ -604,7 +626,8 @@ service "appstream" {
 
 service "appsync" {
   sdk {
-    id = "AppSync"
+    id          = "AppSync"
+    arn_service = "appsync"
   }
 
   names {
@@ -627,7 +650,8 @@ service "appsync" {
 
 service "athena" {
   sdk {
-    id = "Athena"
+    id          = "Athena"
+    arn_service = "athena"
   }
 
   names {
@@ -650,7 +674,8 @@ service "athena" {
 
 service "auditmanager" {
   sdk {
-    id = "AuditManager"
+    id          = "AuditManager"
+    arn_service = "auditmanager"
   }
 
   names {
@@ -673,7 +698,8 @@ service "auditmanager" {
 
 service "autoscaling" {
   sdk {
-    id = "Auto Scaling"
+    id          = "Auto Scaling"
+    arn_service = "autoscaling"
   }
 
   names {
@@ -701,7 +727,8 @@ service "autoscalingplans" {
   }
 
   sdk {
-    id = "Auto Scaling Plans"
+    id          = "Auto Scaling Plans"
+    arn_service = "autoscaling-plans"
   }
 
   names {
@@ -723,7 +750,8 @@ service "autoscalingplans" {
 
 service "backup" {
   sdk {
-    id = "Backup"
+    id          = "Backup"
+    arn_service = "backup"
   }
 
   names {
@@ -751,7 +779,8 @@ service "backupgateway" {
   }
 
   sdk {
-    id = "Backup Gateway"
+    id          = "Backup Gateway"
+    arn_service = "backup-gateway"
   }
 
   names {
@@ -795,7 +824,8 @@ service "batch" {
 
 service "bedrock" {
   sdk {
-    id = "Bedrock"
+    id          = "Bedrock"
+    arn_service = "bedrock"
   }
 
   names {
@@ -823,7 +853,8 @@ service "bedrockagent" {
   }
 
   sdk {
-    id = "Bedrock Agent"
+    id          = "Bedrock Agent"
+    arn_service = "bedrock"
   }
 
   names {
@@ -846,7 +877,8 @@ service "bedrockagent" {
 
 service "bcmdataexports" {
   sdk {
-    id = "BCM Data Exports"
+    id          = "BCM Data Exports"
+    arn_service = "bcm-data-exports"
   }
 
   names {
@@ -871,7 +903,8 @@ service "bcmdataexports" {
 
 service "billing" {
   sdk {
-    id = "Billing"
+    id          = "Billing"
+    arn_service = "billing"
   }
 
   names {
@@ -904,7 +937,8 @@ service "billingconductor" {
   }
 
   sdk {
-    id = "billingconductor"
+    id          = "billingconductor"
+    arn_service = "billingconductor"
   }
 
   names {
@@ -924,7 +958,8 @@ service "billingconductor" {
 
 service "braket" {
   sdk {
-    id = "Braket"
+    id          = "Braket"
+    arn_service = "braket"
   }
 
   names {
@@ -949,7 +984,8 @@ service "ce" {
   }
 
   sdk {
-    id = "Cost Explorer"
+    id          = "Cost Explorer"
+    arn_service = "ce"
   }
 
   names {
@@ -975,7 +1011,8 @@ service "ce" {
 
 service "chatbot" {
   sdk {
-    id = "Chatbot"
+    id          = "Chatbot"
+    arn_service = "chatbot"
   }
 
   names {
@@ -998,7 +1035,8 @@ service "chatbot" {
 
 service "chime" {
   sdk {
-    id = "Chime"
+    id          = "Chime"
+    arn_service = "chime"
   }
 
   names {
@@ -1026,7 +1064,8 @@ service "chimesdkidentity" {
   }
 
   sdk {
-    id = "Chime SDK Identity"
+    id          = "Chime SDK Identity"
+    arn_service = "chime"
   }
 
   names {
@@ -1051,7 +1090,8 @@ service "chimesdkmediapipelines" {
   }
 
   sdk {
-    id = "Chime SDK Media Pipelines"
+    id          = "Chime SDK Media Pipelines"
+    arn_service = "chime"
   }
 
   names {
@@ -1079,7 +1119,8 @@ service "chimesdkmeetings" {
   }
 
   sdk {
-    id = "Chime SDK Meetings"
+    id          = "Chime SDK Meetings"
+    arn_service = "chime"
   }
 
   names {
@@ -1104,7 +1145,8 @@ service "chimesdkmessaging" {
   }
 
   sdk {
-    id = "Chime SDK Messaging"
+    id          = "Chime SDK Messaging"
+    arn_service = "chime"
   }
 
   names {
@@ -1129,7 +1171,8 @@ service "chimesdkvoice" {
   }
 
   sdk {
-    id = "Chime SDK Voice"
+    id          = "Chime SDK Voice"
+    arn_service = "chime"
   }
 
   names {
@@ -1152,7 +1195,8 @@ service "chimesdkvoice" {
 
 service "cleanrooms" {
   sdk {
-    id = "CleanRooms"
+    id          = "CleanRooms"
+    arn_service = "cleanrooms"
   }
 
   names {
@@ -1180,7 +1224,8 @@ service "cloudcontrol" {
   }
 
   sdk {
-    id = "CloudControl"
+    id          = "CloudControl"
+    arn_service = "cloudcontrol"
   }
 
   names {
@@ -1205,7 +1250,8 @@ service "cloudcontrol" {
 
 service "clouddirectory" {
   sdk {
-    id = "CloudDirectory"
+    id          = "CloudDirectory"
+    arn_service = "clouddirectory"
   }
 
   names {
@@ -1225,7 +1271,8 @@ service "clouddirectory" {
 
 service "servicediscovery" {
   sdk {
-    id = "ServiceDiscovery"
+    id          = "ServiceDiscovery"
+    arn_service = "servicediscovery"
   }
 
   names {
@@ -1249,7 +1296,8 @@ service "servicediscovery" {
 
 service "cloud9" {
   sdk {
-    id = "Cloud9"
+    id          = "Cloud9"
+    arn_service = "cloud9"
   }
 
   names {
@@ -1272,7 +1320,8 @@ service "cloud9" {
 
 service "cloudformation" {
   sdk {
-    id = "CloudFormation"
+    id          = "CloudFormation"
+    arn_service = "cloudformation"
   }
 
   names {
@@ -1332,7 +1381,8 @@ service "cloudfrontkeyvaluestore" {
   }
 
   sdk {
-    id = "CloudFront KeyValueStore"
+    id          = "CloudFront KeyValueStore"
+    arn_service = "cloudfront"
   }
 
   names {
@@ -1358,7 +1408,8 @@ service "cloudfrontkeyvaluestore" {
 
 service "cloudhsmv2" {
   sdk {
-    id = "CloudHSM V2"
+    id          = "CloudHSM V2"
+    arn_service = "cloudhsm"
   }
 
   names {
@@ -1383,7 +1434,8 @@ service "cloudhsmv2" {
 
 service "cloudsearch" {
   sdk {
-    id = "CloudSearch"
+    id          = "CloudSearch"
+    arn_service = "cloudsearch"
   }
 
   names {
@@ -1406,7 +1458,8 @@ service "cloudsearch" {
 
 service "cloudsearchdomain" {
   sdk {
-    id = "CloudSearch Domain"
+    id          = "CloudSearch Domain"
+    arn_service = "cloudsearch"
   }
 
   names {
@@ -1426,7 +1479,8 @@ service "cloudsearchdomain" {
 
 service "cloudtrail" {
   sdk {
-    id = "CloudTrail"
+    id          = "CloudTrail"
+    arn_service = "cloudtrail"
   }
 
   names {
@@ -1450,7 +1504,8 @@ service "cloudtrail" {
 
 service "cloudwatch" {
   sdk {
-    id = "CloudWatch"
+    id          = "CloudWatch"
+    arn_service = "cloudwatch"
   }
 
   names {
@@ -1479,7 +1534,8 @@ service "applicationinsights" {
   }
 
   sdk {
-    id = "Application Insights"
+    id          = "Application Insights"
+    arn_service = "applicationinsights"
   }
 
   names {
@@ -1507,7 +1563,8 @@ service "evidently" {
   }
 
   sdk {
-    id = "Evidently"
+    id          = "Evidently"
+    arn_service = "evidently"
   }
 
   names {
@@ -1531,7 +1588,8 @@ service "evidently" {
 
 service "internetmonitor" {
   sdk {
-    id = "InternetMonitor"
+    id          = "InternetMonitor"
+    arn_service = "internetmonitor"
   }
 
   names {
@@ -1559,7 +1617,8 @@ service "logs" {
   }
 
   sdk {
-    id = "CloudWatch Logs"
+    id          = "CloudWatch Logs"
+    arn_service = "logs"
   }
 
   names {
@@ -1584,7 +1643,8 @@ service "logs" {
 
 service "networkmonitor" {
   sdk {
-    id = "NetworkMonitor"
+    id          = "NetworkMonitor"
+    arn_service = "networkmonitor"
   }
 
   names {
@@ -1612,7 +1672,8 @@ service "rum" {
   }
 
   sdk {
-    id = "RUM"
+    id          = "RUM"
+    arn_service = "rum"
   }
 
   names {
@@ -1636,7 +1697,8 @@ service "rum" {
 
 service "synthetics" {
   sdk {
-    id = "synthetics"
+    id          = "synthetics"
+    arn_service = "synthetics"
   }
 
   names {
@@ -1707,7 +1769,8 @@ service "codebuild" {
 
 service "codecommit" {
   sdk {
-    id = "CodeCommit"
+    id          = "CodeCommit"
+    arn_service = "codecommit"
   }
 
   names {
@@ -1735,7 +1798,8 @@ service "codeconnections" {
   }
 
   sdk {
-    id = "CodeConnections"
+    id          = "CodeConnections"
+    arn_service = "codeconnections"
   }
 
   names {
@@ -1763,7 +1827,8 @@ service "deploy" {
   }
 
   sdk {
-    id = "CodeDeploy"
+    id          = "CodeDeploy"
+    arn_service = "codedeploy"
   }
 
   names {
@@ -1788,7 +1853,8 @@ service "deploy" {
 
 service "codeguruprofiler" {
   sdk {
-    id = "CodeGuruProfiler"
+    id          = "CodeGuruProfiler"
+    arn_service = "codeguru-profiler"
   }
 
   names {
@@ -1866,7 +1932,8 @@ service "codepipeline" {
 
 service "codestar" {
   sdk {
-    id = "CodeStar"
+    id          = "CodeStar"
+    arn_service = "codestar"
   }
 
   names {
@@ -1891,7 +1958,8 @@ service "codestarconnections" {
   }
 
   sdk {
-    id = "CodeStar connections"
+    id          = "CodeStar connections"
+    arn_service = "codestar-connections"
   }
 
   names {
@@ -1919,7 +1987,8 @@ service "codestarnotifications" {
   }
 
   sdk {
-    id = "codestar notifications"
+    id          = "codestar notifications"
+    arn_service = "codestar-notifications"
   }
 
   names {
@@ -1947,7 +2016,8 @@ service "cognitoidentity" {
   }
 
   sdk {
-    id = "Cognito Identity"
+    id          = "Cognito Identity"
+    arn_service = "cognito-identity"
   }
 
   names {
@@ -1982,7 +2052,8 @@ service "cognitoidp" {
   }
 
   sdk {
-    id = "Cognito Identity Provider"
+    id          = "Cognito Identity Provider"
+    arn_service = "cognito-idp"
   }
 
   names {
@@ -2013,7 +2084,8 @@ service "cognitosync" {
   }
 
   sdk {
-    id = "Cognito Sync"
+    id          = "Cognito Sync"
+    arn_service = "cognito-sync"
   }
 
   names {
@@ -2033,7 +2105,8 @@ service "cognitosync" {
 
 service "comprehend" {
   sdk {
-    id = "Comprehend"
+    id          = "Comprehend"
+    arn_service = "comprehend"
   }
 
   names {
@@ -2056,7 +2129,8 @@ service "comprehend" {
 
 service "comprehendmedical" {
   sdk {
-    id = "ComprehendMedical"
+    id          = "ComprehendMedical"
+    arn_service = "comprehendmedical"
   }
 
   names {
@@ -2081,7 +2155,8 @@ service "computeoptimizer" {
   }
 
   sdk {
-    id = "Compute Optimizer"
+    id          = "Compute Optimizer"
+    arn_service = "compute-optimizer"
   }
 
   names {
@@ -2104,7 +2179,8 @@ service "computeoptimizer" {
 
 service "configservice" {
   sdk {
-    id = "Config Service"
+    id          = "Config Service"
+    arn_service = "config"
   }
 
   names {
@@ -2129,7 +2205,8 @@ service "configservice" {
 
 service "connect" {
   sdk {
-    id = "Connect"
+    id          = "Connect"
+    arn_service = "connect"
   }
 
   names {
@@ -2152,7 +2229,8 @@ service "connect" {
 
 service "connectcases" {
   sdk {
-    id = "ConnectCases"
+    id          = "ConnectCases"
+    arn_service = "connect"
   }
 
   names {
@@ -2180,7 +2258,8 @@ service "connectcontactlens" {
   }
 
   sdk {
-    id = "Connect Contact Lens"
+    id          = "Connect Contact Lens"
+    arn_service = "connectcontactlens"
   }
 
   names {
@@ -2205,7 +2284,8 @@ service "customerprofiles" {
   }
 
   sdk {
-    id = "Customer Profiles"
+    id          = "Customer Profiles"
+    arn_service = "customerprofiles"
   }
 
   names {
@@ -2228,7 +2308,8 @@ service "customerprofiles" {
 
 service "connectparticipant" {
   sdk {
-    id = "ConnectParticipant"
+    id          = "ConnectParticipant"
+    arn_service = "connect"
   }
 
   names {
@@ -2253,7 +2334,8 @@ service "voiceid" {
   }
 
   sdk {
-    id = "Voice ID"
+    id          = "Voice ID"
+    arn_service = "voiceid"
   }
 
   names {
@@ -2278,7 +2360,8 @@ service "wisdom" {
   }
 
   sdk {
-    id = "Wisdom"
+    id          = "Wisdom"
+    arn_service = "wisdom"
   }
 
   names {
@@ -2299,7 +2382,8 @@ service "wisdom" {
 
 service "controltower" {
   sdk {
-    id = "ControlTower"
+    id          = "ControlTower"
+    arn_service = "controltower"
   }
 
   names {
@@ -2327,7 +2411,8 @@ service "costoptimizationhub" {
   }
 
   sdk {
-    id = "Cost Optimization Hub"
+    id          = "Cost Optimization Hub"
+    arn_service = "costoptimizationhub"
   }
 
   names {
@@ -2360,7 +2445,8 @@ service "cur" {
   }
 
   sdk {
-    id = "Cost and Usage Report Service"
+    id          = "Cost and Usage Report Service"
+    arn_service = "cur"
   }
 
   names {
@@ -2389,7 +2475,8 @@ service "cur" {
 
 service "dataexchange" {
   sdk {
-    id = "DataExchange"
+    id          = "DataExchange"
+    arn_service = "dataexchange"
   }
 
   names {
@@ -2412,7 +2499,8 @@ service "dataexchange" {
 
 service "datapipeline" {
   sdk {
-    id = "Data Pipeline"
+    id          = "Data Pipeline"
+    arn_service = "datapipeline"
   }
 
   names {
@@ -2435,7 +2523,8 @@ service "datapipeline" {
 
 service "datasync" {
   sdk {
-    id = "DataSync"
+    id          = "DataSync"
+    arn_service = "datasync"
   }
 
   names {
@@ -2458,7 +2547,8 @@ service "datasync" {
 
 service "datazone" {
   sdk {
-    id = "DataZone"
+    id          = "DataZone"
+    arn_service = "datazone"
   }
 
   names {
@@ -2481,7 +2571,8 @@ service "datazone" {
 
 service "detective" {
   sdk {
-    id = "Detective"
+    id          = "Detective"
+    arn_service = "detective"
   }
 
   names {
@@ -2504,7 +2595,8 @@ service "detective" {
 
 service "devicefarm" {
   sdk {
-    id = "Device Farm"
+    id          = "Device Farm"
+    arn_service = "devicefarm"
   }
 
   names {
@@ -2532,7 +2624,8 @@ service "devopsguru" {
   }
 
   sdk {
-    id = "DevOps Guru"
+    id          = "DevOps Guru"
+    arn_service = "devopsguru"
   }
 
   names {
@@ -2555,7 +2648,8 @@ service "devopsguru" {
 
 service "directconnect" {
   sdk {
-    id = "Direct Connect"
+    id          = "Direct Connect"
+    arn_service = "directconnect"
   }
 
   names {
@@ -2579,7 +2673,8 @@ service "directconnect" {
 
 service "dlm" {
   sdk {
-    id = "DLM"
+    id          = "DLM"
+    arn_service = "dlm"
   }
 
   names {
@@ -2607,7 +2702,8 @@ service "dms" {
   }
 
   sdk {
-    id = "Database Migration Service"
+    id          = "Database Migration Service"
+    arn_service = "dms"
   }
 
   names {
@@ -2631,7 +2727,8 @@ service "dms" {
 
 service "docdb" {
   sdk {
-    id = "DocDB"
+    id          = "DocDB"
+    arn_service = "rds"
   }
 
   names {
@@ -2659,7 +2756,8 @@ service "docdbelastic" {
   }
 
   sdk {
-    id = "DocDB Elastic"
+    id          = "DocDB Elastic"
+    arn_service = "docdbelastic"
   }
 
   names {
@@ -2682,7 +2780,8 @@ service "docdbelastic" {
 
 service "drs" {
   sdk {
-    id = "DRS"
+    id          = "DRS"
+    arn_service = "drs"
   }
 
   names {
@@ -2710,7 +2809,8 @@ service "ds" {
   }
 
   sdk {
-    id = "Directory Service"
+    id          = "Directory Service"
+    arn_service = "ds"
   }
 
   names {
@@ -2735,7 +2835,8 @@ service "ds" {
 
 service "dsql" {
   sdk {
-    id = "DSQL"
+    id          = "DSQL"
+    arn_service = "dsql"
   }
 
   names {
@@ -2758,7 +2859,8 @@ service "dsql" {
 
 service "dax" {
   sdk {
-    id = "DAX"
+    id          = "DAX"
+    arn_service = "dax"
   }
 
   names {
@@ -2781,7 +2883,8 @@ service "dax" {
 
 service "dynamodbstreams" {
   sdk {
-    id = "DynamoDB Streams"
+    id          = "DynamoDB Streams"
+    arn_service = "dynamodb"
   }
 
   names {
@@ -2801,7 +2904,8 @@ service "dynamodbstreams" {
 
 service "ebs" {
   sdk {
-    id = "EBS"
+    id          = "EBS"
+    arn_service = "ebs"
   }
 
   names {
@@ -2850,7 +2954,8 @@ service "ec2instanceconnect" {
   }
 
   sdk {
-    id = "EC2 Instance Connect"
+    id          = "EC2 Instance Connect"
+    arn_service = "ec2instanceconnect"
   }
 
   names {
@@ -2870,7 +2975,8 @@ service "ec2instanceconnect" {
 
 service "ecr" {
   sdk {
-    id = "ECR"
+    id          = "ECR"
+    arn_service = "ecr"
   }
 
   names {
@@ -2898,7 +3004,8 @@ service "ecrpublic" {
   }
 
   sdk {
-    id = "ECR PUBLIC"
+    id          = "ECR PUBLIC"
+    arn_service = "ecrpublic"
   }
 
   names {
@@ -2945,7 +3052,8 @@ service "ecs" {
 
 service "efs" {
   sdk {
-    id = "EFS"
+    id          = "EFS"
+    arn_service = "elasticfilesystem"
   }
 
   names {
@@ -2968,7 +3076,8 @@ service "efs" {
 
 service "eks" {
   sdk {
-    id = "EKS"
+    id          = "EKS"
+    arn_service = "eks"
   }
 
   names {
@@ -2991,7 +3100,8 @@ service "eks" {
 
 service "elasticbeanstalk" {
   sdk {
-    id = "Elastic Beanstalk"
+    id          = "Elastic Beanstalk"
+    arn_service = "elasticbeanstalk"
   }
 
   names {
@@ -3021,7 +3131,8 @@ service "elasticinference" {
   }
 
   sdk {
-    id = "Elastic Inference"
+    id          = "Elastic Inference"
+    arn_service = "elasticinference"
   }
 
   names {
@@ -3041,7 +3152,8 @@ service "elasticinference" {
 
 service "elastictranscoder" {
   sdk {
-    id = "Elastic Transcoder"
+    id          = "Elastic Transcoder"
+    arn_service = "elastictranscoder"
   }
 
   names {
@@ -3064,7 +3176,8 @@ service "elastictranscoder" {
 
 service "elasticache" {
   sdk {
-    id = "ElastiCache"
+    id          = "ElastiCache"
+    arn_service = "elasticache"
   }
 
   names {
@@ -3097,7 +3210,8 @@ service "elasticsearch" {
   }
 
   sdk {
-    id = "Elasticsearch Service"
+    id          = "Elasticsearch Service"
+    arn_service = "elasticsearch"
   }
 
   names {
@@ -3127,7 +3241,8 @@ service "elbv2" {
   }
 
   sdk {
-    id = "Elastic Load Balancing v2"
+    id          = "Elastic Load Balancing v2"
+    arn_service = "elbv2"
   }
 
   names {
@@ -3156,7 +3271,8 @@ service "elb" {
   }
 
   sdk {
-    id = "Elastic Load Balancing"
+    id          = "Elastic Load Balancing"
+    arn_service = "elb"
   }
 
   names {
@@ -3180,7 +3296,8 @@ service "elb" {
 
 service "invoicing" {
   sdk {
-    id = "Invoicing"
+    id          = "Invoicing"
+    arn_service = "invoicing"
   }
 
   names {
@@ -3203,7 +3320,8 @@ service "invoicing" {
 
 service "mediaconnect" {
   sdk {
-    id = "MediaConnect"
+    id          = "MediaConnect"
+    arn_service = "mediaconnect"
   }
 
   names {
@@ -3226,7 +3344,8 @@ service "mediaconnect" {
 
 service "mediaconvert" {
   sdk {
-    id = "MediaConvert"
+    id          = "MediaConvert"
+    arn_service = "mediaconvert"
   }
 
   names {
@@ -3249,7 +3368,8 @@ service "mediaconvert" {
 
 service "medialive" {
   sdk {
-    id = "MediaLive"
+    id          = "MediaLive"
+    arn_service = "medialive"
   }
 
   names {
@@ -3272,7 +3392,8 @@ service "medialive" {
 
 service "mediapackage" {
   sdk {
-    id = "MediaPackage"
+    id          = "MediaPackage"
+    arn_service = "mediapackage"
   }
 
   names {
@@ -3301,7 +3422,8 @@ service "mediapackagevod" {
   }
 
   sdk {
-    id = "MediaPackage Vod"
+    id          = "MediaPackage Vod"
+    arn_service = "mediapackagevod"
   }
 
   names {
@@ -3324,7 +3446,8 @@ service "mediapackagevod" {
 
 service "mediastore" {
   sdk {
-    id = "MediaStore"
+    id          = "MediaStore"
+    arn_service = "mediastore"
   }
 
   names {
@@ -3353,7 +3476,8 @@ service "mediastoredata" {
   }
 
   sdk {
-    id = "MediaStore Data"
+    id          = "MediaStore Data"
+    arn_service = "mediastoredata"
   }
 
   names {
@@ -3373,7 +3497,8 @@ service "mediastoredata" {
 
 service "mediatailor" {
   sdk {
-    id = "MediaTailor"
+    id          = "MediaTailor"
+    arn_service = "mediatailor"
   }
 
   names {
@@ -3393,7 +3518,8 @@ service "mediatailor" {
 
 service "emr" {
   sdk {
-    id = "EMR"
+    id          = "EMR"
+    arn_service = "elasticmapreduce"
   }
 
   names {
@@ -3421,7 +3547,8 @@ service "emrcontainers" {
   }
 
   sdk {
-    id = "EMR containers"
+    id          = "EMR containers"
+    arn_service = "emrcontainers"
   }
 
   names {
@@ -3449,7 +3576,8 @@ service "emrserverless" {
   }
 
   sdk {
-    id = "EMR Serverless"
+    id          = "EMR Serverless"
+    arn_service = "emrserverless"
   }
 
   names {
@@ -3477,7 +3605,8 @@ service "events" {
   }
 
   sdk {
-    id = "EventBridge"
+    id          = "EventBridge"
+    arn_service = "events"
   }
 
   names {
@@ -3502,7 +3631,8 @@ service "events" {
 
 service "schemas" {
   sdk {
-    id = "schemas"
+    id          = "schemas"
+    arn_service = "schemas"
   }
 
   names {
@@ -3525,7 +3655,8 @@ service "schemas" {
 
 service "fis" {
   sdk {
-    id = "fis"
+    id          = "fis"
+    arn_service = "fis"
   }
 
   names {
@@ -3548,7 +3679,8 @@ service "fis" {
 
 service "finspace" {
   sdk {
-    id = "finspace"
+    id          = "finspace"
+    arn_service = "finspace"
   }
 
   names {
@@ -3576,7 +3708,8 @@ service "finspacedata" {
   }
 
   sdk {
-    id = "finspace data"
+    id          = "finspace data"
+    arn_service = "finspacedata"
   }
 
   names {
@@ -3596,7 +3729,8 @@ service "finspacedata" {
 
 service "fms" {
   sdk {
-    id = "FMS"
+    id          = "FMS"
+    arn_service = "fms"
   }
 
   names {
@@ -3625,7 +3759,8 @@ service "forecast" {
   }
 
   sdk {
-    id = "forecast"
+    id          = "forecast"
+    arn_service = "forecast"
   }
 
   names {
@@ -3651,7 +3786,8 @@ service "forecastquery" {
   }
 
   sdk {
-    id = "forecastquery"
+    id          = "forecastquery"
+    arn_service = "forecastquery"
   }
 
   names {
@@ -3672,7 +3808,8 @@ service "forecastquery" {
 
 service "frauddetector" {
   sdk {
-    id = "FraudDetector"
+    id          = "FraudDetector"
+    arn_service = "frauddetector"
   }
 
   names {
@@ -3692,7 +3829,8 @@ service "frauddetector" {
 
 service "fsx" {
   sdk {
-    id = "FSx"
+    id          = "FSx"
+    arn_service = "fsx"
   }
 
   names {
@@ -3715,7 +3853,8 @@ service "fsx" {
 
 service "gamelift" {
   sdk {
-    id = "GameLift"
+    id          = "GameLift"
+    arn_service = "gamelift"
   }
 
   names {
@@ -3738,7 +3877,8 @@ service "gamelift" {
 
 service "globalaccelerator" {
   sdk {
-    id = "Global Accelerator"
+    id          = "Global Accelerator"
+    arn_service = "globalaccelerator"
   }
 
   names {
@@ -3766,7 +3906,8 @@ service "globalaccelerator" {
 
 service "glue" {
   sdk {
-    id = "Glue"
+    id          = "Glue"
+    arn_service = "glue"
   }
 
   names {
@@ -3789,7 +3930,8 @@ service "glue" {
 
 service "databrew" {
   sdk {
-    id = "DataBrew"
+    id          = "DataBrew"
+    arn_service = "databrew"
   }
 
   names {
@@ -3813,7 +3955,8 @@ service "databrew" {
 
 service "groundstation" {
   sdk {
-    id = "GroundStation"
+    id          = "GroundStation"
+    arn_service = "groundstation"
   }
 
   names {
@@ -3836,7 +3979,8 @@ service "groundstation" {
 
 service "guardduty" {
   sdk {
-    id = "GuardDuty"
+    id          = "GuardDuty"
+    arn_service = "guardduty"
   }
 
   names {
@@ -3859,7 +4003,8 @@ service "guardduty" {
 
 service "health" {
   sdk {
-    id = "Health"
+    id          = "Health"
+    arn_service = "health"
   }
 
   names {
@@ -3879,7 +4024,8 @@ service "health" {
 
 service "healthlake" {
   sdk {
-    id = "HealthLake"
+    id          = "HealthLake"
+    arn_service = "healthlake"
   }
 
   names {
@@ -3902,7 +4048,8 @@ service "healthlake" {
 
 service "honeycode" {
   sdk {
-    id = "Honeycode"
+    id          = "Honeycode"
+    arn_service = "honeycode"
   }
 
   names {
@@ -3922,7 +4069,8 @@ service "honeycode" {
 
 service "iam" {
   sdk {
-    id = "IAM"
+    id          = "IAM"
+    arn_service = "iam"
   }
 
   names {
@@ -3951,7 +4099,8 @@ service "iam" {
 
 service "inspector" {
   sdk {
-    id = "Inspector"
+    id          = "Inspector"
+    arn_service = "inspector"
   }
 
   names {
@@ -3974,7 +4123,8 @@ service "inspector" {
 
 service "inspector2" {
   sdk {
-    id = "Inspector2"
+    id          = "Inspector2"
+    arn_service = "inspector2"
   }
 
   names {
@@ -4007,7 +4157,8 @@ service "iot1clickdevices" {
   }
 
   sdk {
-    id = "IoT 1Click Devices Service"
+    id          = "IoT 1Click Devices Service"
+    arn_service = "iot1clickdevices"
   }
 
   names {
@@ -4033,7 +4184,8 @@ service "iot1clickprojects" {
   }
 
   sdk {
-    id = "IoT 1Click Projects"
+    id          = "IoT 1Click Projects"
+    arn_service = "iot1clickprojects"
   }
 
   names {
@@ -4053,7 +4205,8 @@ service "iot1clickprojects" {
 
 service "iotanalytics" {
   sdk {
-    id = "IoTAnalytics"
+    id          = "IoTAnalytics"
+    arn_service = "iotanalytics"
   }
 
   names {
@@ -4087,7 +4240,8 @@ service "iotdata" {
   }
 
   sdk {
-    id = "IoT Data Plane"
+    id          = "IoT Data Plane"
+    arn_service = "iotdata"
   }
 
   names {
@@ -4108,7 +4262,8 @@ service "iotdata" {
 
 service "iotdeviceadvisor" {
   sdk {
-    id = "IotDeviceAdvisor"
+    id          = "IotDeviceAdvisor"
+    arn_service = "iotdeviceadvisor"
   }
 
   names {
@@ -4128,7 +4283,8 @@ service "iotdeviceadvisor" {
 
 service "iotevents" {
   sdk {
-    id = "IoT Events"
+    id          = "IoT Events"
+    arn_service = "iotevents"
   }
 
   names {
@@ -4157,7 +4313,8 @@ service "ioteventsdata" {
   }
 
   sdk {
-    id = "IoT Events Data"
+    id          = "IoT Events Data"
+    arn_service = "iotevents"
   }
 
   names {
@@ -4177,7 +4334,8 @@ service "ioteventsdata" {
 
 service "iotfleethub" {
   sdk {
-    id = "IoTFleetHub"
+    id          = "IoTFleetHub"
+    arn_service = "iotfleethub"
   }
 
   names {
@@ -4197,7 +4355,8 @@ service "iotfleethub" {
 
 service "greengrass" {
   sdk {
-    id = "Greengrass"
+    id          = "Greengrass"
+    arn_service = "greengrass"
   }
 
   names {
@@ -4220,7 +4379,8 @@ service "greengrass" {
 
 service "greengrassv2" {
   sdk {
-    id = "GreengrassV2"
+    id          = "GreengrassV2"
+    arn_service = "greengrassv2"
   }
 
   names {
@@ -4250,7 +4410,8 @@ service "iotjobsdata" {
   }
 
   sdk {
-    id = "IoT Jobs Data Plane"
+    id          = "IoT Jobs Data Plane"
+    arn_service = "iotjobsdata"
   }
 
   names {
@@ -4271,7 +4432,8 @@ service "iotjobsdata" {
 
 service "iotsecuretunneling" {
   sdk {
-    id = "IoTSecureTunneling"
+    id          = "IoTSecureTunneling"
+    arn_service = "iotsecuretunneling"
   }
 
   names {
@@ -4291,7 +4453,8 @@ service "iotsecuretunneling" {
 
 service "iotsitewise" {
   sdk {
-    id = "IoTSiteWise"
+    id          = "IoTSiteWise"
+    arn_service = "iotsitewise"
   }
 
   names {
@@ -4311,7 +4474,8 @@ service "iotsitewise" {
 
 service "iotthingsgraph" {
   sdk {
-    id = "IoTThingsGraph"
+    id          = "IoTThingsGraph"
+    arn_service = "iotthingsgraph"
   }
 
   names {
@@ -4331,7 +4495,8 @@ service "iotthingsgraph" {
 
 service "iottwinmaker" {
   sdk {
-    id = "IoTTwinMaker"
+    id          = "IoTTwinMaker"
+    arn_service = "iottwinmaker"
   }
 
   names {
@@ -4351,7 +4516,8 @@ service "iottwinmaker" {
 
 service "iotwireless" {
   sdk {
-    id = "IoT Wireless"
+    id          = "IoT Wireless"
+    arn_service = "iotwireless"
   }
 
   names {
@@ -4371,7 +4537,8 @@ service "iotwireless" {
 
 service "ivs" {
   sdk {
-    id = "ivs"
+    id          = "ivs"
+    arn_service = "ivs"
   }
 
   names {
@@ -4394,7 +4561,8 @@ service "ivs" {
 
 service "ivschat" {
   sdk {
-    id = "ivschat"
+    id          = "ivschat"
+    arn_service = "ivschat"
   }
 
   names {
@@ -4417,7 +4585,8 @@ service "ivschat" {
 
 service "kendra" {
   sdk {
-    id = "kendra"
+    id          = "kendra"
+    arn_service = "kendra"
   }
 
   names {
@@ -4440,7 +4609,8 @@ service "kendra" {
 
 service "keyspaces" {
   sdk {
-    id = "Keyspaces"
+    id          = "Keyspaces"
+    arn_service = "keyspaces"
   }
 
   names {
@@ -4463,7 +4633,8 @@ service "keyspaces" {
 
 service "kinesis" {
   sdk {
-    id = "Kinesis"
+    id          = "Kinesis"
+    arn_service = "kinesis"
   }
 
   names {
@@ -4487,7 +4658,8 @@ service "kinesis" {
 
 service "kinesisanalytics" {
   sdk {
-    id = "Kinesis Analytics"
+    id          = "Kinesis Analytics"
+    arn_service = "kinesisanalytics"
   }
 
   names {
@@ -4511,7 +4683,8 @@ service "kinesisanalytics" {
 
 service "kinesisanalyticsv2" {
   sdk {
-    id = "Kinesis Analytics V2"
+    id          = "Kinesis Analytics V2"
+    arn_service = "kinesisanalyticsv2"
   }
 
   names {
@@ -4534,7 +4707,8 @@ service "kinesisanalyticsv2" {
 
 service "firehose" {
   sdk {
-    id = "Firehose"
+    id          = "Firehose"
+    arn_service = "firehose"
   }
 
   names {
@@ -4558,7 +4732,8 @@ service "firehose" {
 
 service "kinesisvideo" {
   sdk {
-    id = "Kinesis Video"
+    id          = "Kinesis Video"
+    arn_service = "kinesisvideo"
   }
 
   names {
@@ -4586,7 +4761,8 @@ service "kinesisvideoarchivedmedia" {
   }
 
   sdk {
-    id = "Kinesis Video Archived Media"
+    id          = "Kinesis Video Archived Media"
+    arn_service = "kinesisvideoarchivedmedia"
   }
 
   names {
@@ -4611,7 +4787,8 @@ service "kinesisvideomedia" {
   }
 
   sdk {
-    id = "Kinesis Video Media"
+    id          = "Kinesis Video Media"
+    arn_service = "kinesisvideomedia"
   }
 
   names {
@@ -4641,7 +4818,8 @@ service "kinesisvideosignaling" {
   }
 
   sdk {
-    id = "Kinesis Video Signaling"
+    id          = "Kinesis Video Signaling"
+    arn_service = "kinesisvideosignaling"
   }
 
   names {
@@ -4662,7 +4840,8 @@ service "kinesisvideosignaling" {
 
 service "kms" {
   sdk {
-    id = "KMS"
+    id          = "KMS"
+    arn_service = "kms"
   }
 
   names {
@@ -4685,7 +4864,8 @@ service "kms" {
 
 service "lakeformation" {
   sdk {
-    id = "LakeFormation"
+    id          = "LakeFormation"
+    arn_service = "lakeformation"
   }
 
   names {
@@ -4708,7 +4888,8 @@ service "lakeformation" {
 
 service "lambda" {
   sdk {
-    id = "Lambda"
+    id          = "Lambda"
+    arn_service = "lambda"
   }
 
   names {
@@ -4736,7 +4917,8 @@ service "launchwizard" {
   }
 
   sdk {
-    id = "Launch Wizard"
+    id          = "Launch Wizard"
+    arn_service = "launchwizard"
   }
 
   names {
@@ -4769,7 +4951,8 @@ service "lexmodels" {
   }
 
   sdk {
-    id = "Lex Model Building Service"
+    id          = "Lex Model Building Service"
+    arn_service = "lexmodels"
   }
 
   names {
@@ -4804,7 +4987,8 @@ service "lexv2models" {
   }
 
   sdk {
-    id = "Lex Models V2"
+    id          = "Lex Models V2"
+    arn_service = "lexv2models"
   }
 
   names {
@@ -4838,7 +5022,8 @@ service "lexruntime" {
   }
 
   sdk {
-    id = "Lex Runtime Service"
+    id          = "Lex Runtime Service"
+    arn_service = "lexruntime"
   }
 
   names {
@@ -4864,7 +5049,8 @@ service "lexruntimev2" {
   }
 
   sdk {
-    id = "Lex Runtime V2"
+    id          = "Lex Runtime V2"
+    arn_service = "lexruntimev2"
   }
 
   names {
@@ -4890,7 +5076,8 @@ service "licensemanager" {
   }
 
   sdk {
-    id = "License Manager"
+    id          = "License Manager"
+    arn_service = "licensemanager"
   }
 
   names {
@@ -4913,7 +5100,8 @@ service "licensemanager" {
 
 service "lightsail" {
   sdk {
-    id = "Lightsail"
+    id          = "Lightsail"
+    arn_service = "lightsail"
   }
 
   names {
@@ -4941,7 +5129,8 @@ service "location" {
   }
 
   sdk {
-    id = "Location"
+    id          = "Location"
+    arn_service = "location"
   }
 
   names {
@@ -4965,7 +5154,8 @@ service "location" {
 
 service "lookoutequipment" {
   sdk {
-    id = "LookoutEquipment"
+    id          = "LookoutEquipment"
+    arn_service = "lookoutequipment"
   }
 
   names {
@@ -4985,7 +5175,8 @@ service "lookoutequipment" {
 
 service "lookoutmetrics" {
   sdk {
-    id = "LookoutMetrics"
+    id          = "LookoutMetrics"
+    arn_service = "lookoutmetrics"
   }
 
   names {
@@ -5013,7 +5204,8 @@ service "lookoutvision" {
   }
 
   sdk {
-    id = "LookoutVision"
+    id          = "LookoutVision"
+    arn_service = "lookoutvision"
   }
 
   names {
@@ -5034,7 +5226,8 @@ service "lookoutvision" {
 
 service "machinelearning" {
   sdk {
-    id = "Machine Learning"
+    id          = "Machine Learning"
+    arn_service = "machinelearning"
   }
 
   names {
@@ -5054,7 +5247,8 @@ service "machinelearning" {
 
 service "macie2" {
   sdk {
-    id = "Macie2"
+    id          = "Macie2"
+    arn_service = "macie2"
   }
 
   names {
@@ -5077,7 +5271,8 @@ service "macie2" {
 
 service "macie" {
   sdk {
-    id = "Macie"
+    id          = "Macie"
+    arn_service = "macie"
   }
 
   names {
@@ -5097,7 +5292,8 @@ service "macie" {
 
 service "m2" {
   sdk {
-    id = "m2"
+    id          = "m2"
+    arn_service = "m2"
   }
 
   names {
@@ -5120,7 +5316,8 @@ service "m2" {
 
 service "managedblockchain" {
   sdk {
-    id = "ManagedBlockchain"
+    id          = "ManagedBlockchain"
+    arn_service = "managedblockchain"
   }
 
   names {
@@ -5145,7 +5342,8 @@ service "grafana" {
   }
 
   sdk {
-    id = "grafana"
+    id          = "grafana"
+    arn_service = "grafana"
   }
 
   names {
@@ -5169,7 +5367,8 @@ service "grafana" {
 
 service "kafka" {
   sdk {
-    id = "Kafka"
+    id          = "Kafka"
+    arn_service = "kafka"
   }
 
   names {
@@ -5194,7 +5393,8 @@ service "kafka" {
 
 service "kafkaconnect" {
   sdk {
-    id = "KafkaConnect"
+    id          = "KafkaConnect"
+    arn_service = "kafkaconnect"
   }
 
   names {
@@ -5223,7 +5423,8 @@ service "marketplacecatalog" {
   }
 
   sdk {
-    id = "Marketplace Catalog"
+    id          = "Marketplace Catalog"
+    arn_service = "marketplacecatalog"
   }
 
   names {
@@ -5243,7 +5444,8 @@ service "marketplacecatalog" {
 
 service "marketplacecommerceanalytics" {
   sdk {
-    id = "Marketplace Commerce Analytics"
+    id          = "Marketplace Commerce Analytics"
+    arn_service = "marketplacecommerceanalytics"
   }
 
   names {
@@ -5273,7 +5475,8 @@ service "marketplaceentitlement" {
   }
 
   sdk {
-    id = "Marketplace Entitlement Service"
+    id          = "Marketplace Entitlement Service"
+    arn_service = "marketplaceentitlement"
   }
 
   names {
@@ -5299,7 +5502,8 @@ service "marketplacemetering" {
   }
 
   sdk {
-    id = "Marketplace Metering"
+    id          = "Marketplace Metering"
+    arn_service = "marketplacemetering"
   }
 
   names {
@@ -5320,7 +5524,8 @@ service "marketplacemetering" {
 
 service "memorydb" {
   sdk {
-    id = "MemoryDB"
+    id          = "MemoryDB"
+    arn_service = "memorydb"
   }
 
   names {
@@ -5370,7 +5575,8 @@ service "mgh" {
   }
 
   sdk {
-    id = "Migration Hub"
+    id          = "Migration Hub"
+    arn_service = "mgh"
   }
 
   names {
@@ -5396,7 +5602,8 @@ service "migrationhubconfig" {
   }
 
   sdk {
-    id = "MigrationHub Config"
+    id          = "MigrationHub Config"
+    arn_service = "migrationhubconfig"
   }
 
   names {
@@ -5421,7 +5628,8 @@ service "migrationhubrefactorspaces" {
   }
 
   sdk {
-    id = "Migration Hub Refactor Spaces"
+    id          = "Migration Hub Refactor Spaces"
+    arn_service = "migrationhubrefactorspaces"
   }
 
   names {
@@ -5446,7 +5654,8 @@ service "migrationhubstrategy" {
   }
 
   sdk {
-    id = "MigrationHubStrategy"
+    id          = "MigrationHubStrategy"
+    arn_service = "migrationhubstrategy"
   }
 
   names {
@@ -5467,7 +5676,8 @@ service "migrationhubstrategy" {
 
 service "mobile" {
   sdk {
-    id = "Mobile"
+    id          = "Mobile"
+    arn_service = "mobile"
   }
 
   names {
@@ -5487,7 +5697,8 @@ service "mobile" {
 
 service "mq" {
   sdk {
-    id = "mq"
+    id          = "mq"
+    arn_service = "mq"
   }
 
   names {
@@ -5510,7 +5721,8 @@ service "mq" {
 
 service "mturk" {
   sdk {
-    id = "MTurk"
+    id          = "MTurk"
+    arn_service = "mturk"
   }
 
   names {
@@ -5530,7 +5742,8 @@ service "mturk" {
 
 service "mwaa" {
   sdk {
-    id = "MWAA"
+    id          = "MWAA"
+    arn_service = "mwaa"
   }
 
   names {
@@ -5553,7 +5766,8 @@ service "mwaa" {
 
 service "neptune" {
   sdk {
-    id = "Neptune"
+    id          = "Neptune"
+    arn_service = "rds"
   }
 
   names {
@@ -5586,7 +5800,8 @@ service "neptunegraph" {
   }
 
   sdk {
-    id = "Neptune Graph"
+    id          = "Neptune Graph"
+    arn_service = "neptunegraph"
   }
 
   names {
@@ -5638,7 +5853,8 @@ service "networkfirewall" {
 
 service "networkmanager" {
   sdk {
-    id = "NetworkManager"
+    id          = "NetworkManager"
+    arn_service = "networkmanager"
   }
 
   names {
@@ -5668,7 +5884,8 @@ service "nimble" {
   }
 
   sdk {
-    id = "nimble"
+    id          = "nimble"
+    arn_service = "nimble"
   }
 
   names {
@@ -5755,7 +5972,8 @@ service "notificationscontacts" {
 
 service "oam" {
   sdk {
-    id = "OAM"
+    id          = "OAM"
+    arn_service = "oam"
   }
 
   names {
@@ -5784,7 +6002,8 @@ service "opensearch" {
   }
 
   sdk {
-    id = "OpenSearch"
+    id          = "OpenSearch"
+    arn_service = "es"
   }
 
   names {
@@ -5808,7 +6027,8 @@ service "opensearch" {
 
 service "opensearchserverless" {
   sdk {
-    id = "OpenSearchServerless"
+    id          = "OpenSearchServerless"
+    arn_service = "opensearchserverless"
   }
 
   names {
@@ -5831,7 +6051,8 @@ service "opensearchserverless" {
 
 service "osis" {
   sdk {
-    id = "OSIS"
+    id          = "OSIS"
+    arn_service = "osis"
   }
 
   names {
@@ -5855,7 +6076,8 @@ service "osis" {
 
 service "opsworks" {
   sdk {
-    id = "OpsWorks"
+    id          = "OpsWorks"
+    arn_service = "opsworks"
   }
 
   names {
@@ -5884,7 +6106,8 @@ service "opsworkscm" {
   }
 
   sdk {
-    id = "OpsWorksCM"
+    id          = "OpsWorksCM"
+    arn_service = "opsworkscm"
   }
 
   names {
@@ -5904,7 +6127,8 @@ service "opsworkscm" {
 
 service "organizations" {
   sdk {
-    id = "Organizations"
+    id          = "Organizations"
+    arn_service = "organizations"
   }
 
   names {
@@ -5929,7 +6153,8 @@ service "organizations" {
 
 service "outposts" {
   sdk {
-    id = "Outposts"
+    id          = "Outposts"
+    arn_service = "outposts"
   }
 
   names {
@@ -5952,7 +6177,8 @@ service "outposts" {
 
 service "panorama" {
   sdk {
-    id = "Panorama"
+    id          = "Panorama"
+    arn_service = "panorama"
   }
 
   names {
@@ -5977,7 +6203,8 @@ service "paymentcryptography" {
   }
 
   sdk {
-    id = "PaymentCryptography"
+    id          = "PaymentCryptography"
+    arn_service = "paymentcryptography"
   }
 
   names {
@@ -6005,7 +6232,8 @@ service "pcaconnectorad" {
   }
 
   sdk {
-    id = "Pca Connector Ad"
+    id          = "Pca Connector Ad"
+    arn_service = "pcaconnectorad"
   }
 
   names {
@@ -6029,7 +6257,8 @@ service "pcaconnectorad" {
 service "pcs" {
 
   sdk {
-    id = "PCS"
+    id          = "PCS"
+    arn_service = "pcs"
   }
 
   names {
@@ -6052,7 +6281,8 @@ service "pcs" {
 
 service "personalize" {
   sdk {
-    id = "Personalize"
+    id          = "Personalize"
+    arn_service = "personalize"
   }
 
   names {
@@ -6077,7 +6307,8 @@ service "personalizeevents" {
   }
 
   sdk {
-    id = "Personalize Events"
+    id          = "Personalize Events"
+    arn_service = "personalizeevents"
   }
 
   names {
@@ -6102,7 +6333,8 @@ service "personalizeruntime" {
   }
 
   sdk {
-    id = "Personalize Runtime"
+    id          = "Personalize Runtime"
+    arn_service = "personalize"
   }
 
   names {
@@ -6122,7 +6354,8 @@ service "personalizeruntime" {
 
 service "pinpoint" {
   sdk {
-    id = "Pinpoint"
+    id          = "Pinpoint"
+    arn_service = "mobiletargeting"
   }
 
   names {
@@ -6150,7 +6383,8 @@ service "pinpointemail" {
   }
 
   sdk {
-    id = "Pinpoint Email"
+    id          = "Pinpoint Email"
+    arn_service = "ses"
   }
 
   names {
@@ -6175,7 +6409,8 @@ service "pinpointsmsvoice" {
   }
 
   sdk {
-    id = "Pinpoint SMS Voice"
+    id          = "Pinpoint SMS Voice"
+    arn_service = "pinpointsmsvoice"
   }
 
   names {
@@ -6200,7 +6435,8 @@ service "pinpointsmsvoicev2" {
   }
 
   sdk {
-    id = "Pinpoint SMS Voice v2"
+    id          = "Pinpoint SMS Voice v2"
+    arn_service = "pinpointsmsvoicev2"
   }
 
   names {
@@ -6223,7 +6459,8 @@ service "pinpointsmsvoicev2" {
 
 service "pipes" {
   sdk {
-    id = "Pipes"
+    id          = "Pipes"
+    arn_service = "pipes"
   }
 
   names {
@@ -6246,7 +6483,8 @@ service "pipes" {
 
 service "polly" {
   sdk {
-    id = "Polly"
+    id          = "Polly"
+    arn_service = "polly"
   }
 
   names {
@@ -6269,7 +6507,8 @@ service "polly" {
 
 service "pricing" {
   sdk {
-    id = "Pricing"
+    id          = "Pricing"
+    arn_service = "pricing"
   }
 
   names {
@@ -6294,7 +6533,8 @@ service "pricing" {
 
 service "proton" {
   sdk {
-    id = "Proton"
+    id          = "Proton"
+    arn_service = "proton"
   }
 
   names {
@@ -6314,7 +6554,8 @@ service "proton" {
 
 service "qbusiness" {
   sdk {
-    id = "QBusiness"
+    id          = "QBusiness"
+    arn_service = "qbusiness"
   }
 
   names {
@@ -6337,7 +6578,8 @@ service "qbusiness" {
 
 service "qldb" {
   sdk {
-    id = "QLDB"
+    id          = "QLDB"
+    arn_service = "qldb"
   }
 
   names {
@@ -6365,7 +6607,8 @@ service "qldbsession" {
   }
 
   sdk {
-    id = "QLDB Session"
+    id          = "QLDB Session"
+    arn_service = "qldbsession"
   }
 
   names {
@@ -6385,7 +6628,8 @@ service "qldbsession" {
 
 service "quicksight" {
   sdk {
-    id = "QuickSight"
+    id          = "QuickSight"
+    arn_service = "quicksight"
   }
 
   names {
@@ -6409,7 +6653,8 @@ service "quicksight" {
 
 service "ram" {
   sdk {
-    id = "RAM"
+    id          = "RAM"
+    arn_service = "ram"
   }
 
   names {
@@ -6432,7 +6677,8 @@ service "ram" {
 
 service "rds" {
   sdk {
-    id = "RDS"
+    id          = "RDS"
+    arn_service = "rds"
   }
 
   names {
@@ -6466,7 +6712,8 @@ service "rdsdata" {
   }
 
   sdk {
-    id = "RDS Data"
+    id          = "RDS Data"
+    arn_service = "rdsdata"
   }
 
   names {
@@ -6487,7 +6734,8 @@ service "rdsdata" {
 
 service "pi" {
   sdk {
-    id = "PI"
+    id          = "PI"
+    arn_service = "pi"
   }
 
   names {
@@ -6512,7 +6760,8 @@ service "rbin" {
   }
 
   sdk {
-    id = "rbin"
+    id          = "rbin"
+    arn_service = "rbin"
   }
 
   names {
@@ -6537,7 +6786,8 @@ service "rbin" {
 
 service "redshift" {
   sdk {
-    id = "Redshift"
+    id          = "Redshift"
+    arn_service = "redshift"
   }
 
   names {
@@ -6570,7 +6820,8 @@ service "redshiftdata" {
   }
 
   sdk {
-    id = "Redshift Data"
+    id          = "Redshift Data"
+    arn_service = "redshiftdata"
   }
 
   names {
@@ -6600,7 +6851,8 @@ service "redshiftserverless" {
   }
 
   sdk {
-    id = "Redshift Serverless"
+    id          = "Redshift Serverless"
+    arn_service = "redshiftserverless"
   }
 
   names {
@@ -6623,7 +6875,8 @@ service "redshiftserverless" {
 
 service "rekognition" {
   sdk {
-    id = "Rekognition"
+    id          = "Rekognition"
+    arn_service = "rekognition"
   }
 
   names {
@@ -6646,7 +6899,8 @@ service "rekognition" {
 
 service "resiliencehub" {
   sdk {
-    id = "resiliencehub"
+    id          = "resiliencehub"
+    arn_service = "resiliencehub"
   }
 
   names {
@@ -6674,7 +6928,8 @@ service "resourceexplorer2" {
   }
 
   sdk {
-    id = "Resource Explorer 2"
+    id          = "Resource Explorer 2"
+    arn_service = "resourceexplorer2"
   }
 
   names {
@@ -6703,7 +6958,8 @@ service "resourcegroups" {
   }
 
   sdk {
-    id = "Resource Groups"
+    id          = "Resource Groups"
+    arn_service = "resourcegroups"
   }
 
   names {
@@ -6726,7 +6982,8 @@ service "resourcegroups" {
 
 service "resourcegroupstaggingapi" {
   sdk {
-    id = "Resource Groups Tagging API"
+    id          = "Resource Groups Tagging API"
+    arn_service = "resourcegroupstaggingapi"
   }
 
   names {
@@ -6750,7 +7007,8 @@ service "resourcegroupstaggingapi" {
 
 service "robomaker" {
   sdk {
-    id = "RoboMaker"
+    id          = "RoboMaker"
+    arn_service = "robomaker"
   }
 
   names {
@@ -6770,7 +7028,8 @@ service "robomaker" {
 
 service "rolesanywhere" {
   sdk {
-    id = "RolesAnywhere"
+    id          = "RolesAnywhere"
+    arn_service = "rolesanywhere"
   }
 
   names {
@@ -6795,7 +7054,8 @@ service "rolesanywhere" {
 
 service "route53" {
   sdk {
-    id = "Route 53"
+    id          = "Route 53"
+    arn_service = "route53"
   }
 
   names {
@@ -6826,7 +7086,8 @@ service "route53" {
 
 service "route53domains" {
   sdk {
-    id = "Route 53 Domains"
+    id          = "Route 53 Domains"
+    arn_service = "route53domains"
   }
 
   names {
@@ -6854,7 +7115,8 @@ service "route53domains" {
 
 service "route53profiles" {
   sdk {
-    id = "Route 53 Profiles"
+    id          = "Route 53 Profiles"
+    arn_service = "route53profiles"
   }
 
   names {
@@ -6882,7 +7144,8 @@ service "route53recoverycluster" {
   }
 
   sdk {
-    id = "Route53 Recovery Cluster"
+    id          = "Route53 Recovery Cluster"
+    arn_service = "route53recoverycluster"
   }
 
   names {
@@ -6907,7 +7170,8 @@ service "route53recoverycontrolconfig" {
   }
 
   sdk {
-    id = "Route53 Recovery Control Config"
+    id          = "Route53 Recovery Control Config"
+    arn_service = "route53recoverycontrolconfig"
   }
 
   names {
@@ -6940,7 +7204,8 @@ service "route53recoveryreadiness" {
   }
 
   sdk {
-    id = "Route53 Recovery Readiness"
+    id          = "Route53 Recovery Readiness"
+    arn_service = "route53recoveryreadiness"
   }
 
   names {
@@ -6968,7 +7233,8 @@ service "route53recoveryreadiness" {
 
 service "route53resolver" {
   sdk {
-    id = "Route53Resolver"
+    id          = "Route53Resolver"
+    arn_service = "route53resolver"
   }
 
   names {
@@ -6997,7 +7263,8 @@ service "s3" {
   }
 
   sdk {
-    id = "S3"
+    id          = "S3"
+    arn_service = "s3"
   }
 
   names {
@@ -7026,7 +7293,8 @@ service "s3" {
 
 service "s3control" {
   sdk {
-    id = "S3 Control"
+    id          = "S3 Control"
+    arn_service = "s3"
   }
 
   names {
@@ -7050,7 +7318,8 @@ service "s3control" {
 
 service "s3tables" {
   sdk {
-    id = "S3Tables"
+    id          = "S3Tables"
+    arn_service = "s3tables"
   }
 
   names {
@@ -7072,7 +7341,8 @@ service "s3tables" {
 
 service "glacier" {
   sdk {
-    id = "Glacier"
+    id          = "Glacier"
+    arn_service = "glacier"
   }
 
   names {
@@ -7095,7 +7365,8 @@ service "glacier" {
 
 service "s3outposts" {
   sdk {
-    id = "S3Outposts"
+    id          = "S3Outposts"
+    arn_service = "s3-outposts"
   }
 
   names {
@@ -7118,7 +7389,8 @@ service "s3outposts" {
 
 service "sagemaker" {
   sdk {
-    id = "SageMaker"
+    id          = "SageMaker"
+    arn_service = "sagemaker"
   }
 
   names {
@@ -7151,7 +7423,8 @@ service "sagemakera2iruntime" {
   }
 
   sdk {
-    id = "SageMaker A2I Runtime"
+    id          = "SageMaker A2I Runtime"
+    arn_service = "sagemaker"
   }
 
   names {
@@ -7182,7 +7455,8 @@ service "sagemakeredge" {
   }
 
   sdk {
-    id = "Sagemaker Edge"
+    id          = "Sagemaker Edge"
+    arn_service = "sagemakeredge"
   }
 
   names {
@@ -7208,7 +7482,8 @@ service "sagemakerfeaturestoreruntime" {
   }
 
   sdk {
-    id = "SageMaker FeatureStore Runtime"
+    id          = "SageMaker FeatureStore Runtime"
+    arn_service = "sagemakerfeaturestoreruntime"
   }
 
   names {
@@ -7233,7 +7508,8 @@ service "sagemakerruntime" {
   }
 
   sdk {
-    id = "SageMaker Runtime"
+    id          = "SageMaker Runtime"
+    arn_service = "sagemakerruntime"
   }
 
   names {
@@ -7253,7 +7529,8 @@ service "sagemakerruntime" {
 
 service "savingsplans" {
   sdk {
-    id = "savingsplans"
+    id          = "savingsplans"
+    arn_service = "savingsplans"
   }
 
   names {
@@ -7315,7 +7592,8 @@ service "simpledb" {
 
 service "scheduler" {
   sdk {
-    id = "Scheduler"
+    id          = "Scheduler"
+    arn_service = "scheduler"
   }
 
   names {
@@ -7338,7 +7616,8 @@ service "scheduler" {
 
 service "secretsmanager" {
   sdk {
-    id = "Secrets Manager"
+    id          = "Secrets Manager"
+    arn_service = "secretsmanager"
   }
 
   names {
@@ -7361,7 +7640,8 @@ service "secretsmanager" {
 
 service "securityhub" {
   sdk {
-    id = "SecurityHub"
+    id          = "SecurityHub"
+    arn_service = "securityhub"
   }
 
   names {
@@ -7384,7 +7664,8 @@ service "securityhub" {
 
 service "securitylake" {
   sdk {
-    id = "SecurityLake"
+    id          = "SecurityLake"
+    arn_service = "securitylake"
   }
 
   names {
@@ -7412,7 +7693,8 @@ service "serverlessrepo" {
   }
 
   sdk {
-    id = "ServerlessApplicationRepository"
+    id          = "ServerlessApplicationRepository"
+    arn_service = "serverlessrepo"
   }
 
   names {
@@ -7437,7 +7719,8 @@ service "serverlessrepo" {
 
 service "servicecatalog" {
   sdk {
-    id = "Service Catalog"
+    id          = "Service Catalog"
+    arn_service = "servicecatalog"
   }
 
   names {
@@ -7470,7 +7753,8 @@ service "servicecatalogappregistry" {
   }
 
   sdk {
-    id = "Service Catalog AppRegistry"
+    id          = "Service Catalog AppRegistry"
+    arn_service = "servicecatalogappregistry"
   }
 
   names {
@@ -7499,7 +7783,8 @@ service "servicequotas" {
   }
 
   sdk {
-    id = "Service Quotas"
+    id          = "Service Quotas"
+    arn_service = "servicequotas"
   }
 
   names {
@@ -7521,7 +7806,8 @@ service "servicequotas" {
 
 service "ses" {
   sdk {
-    id = "SES"
+    id          = "SES"
+    arn_service = "ses"
   }
 
   names {
@@ -7544,7 +7830,8 @@ service "ses" {
 
 service "sesv2" {
   sdk {
-    id = "SESv2"
+    id          = "SESv2"
+    arn_service = "sesv2"
   }
 
   names {
@@ -7572,7 +7859,8 @@ service "sfn" {
   }
 
   sdk {
-    id = "SFN"
+    id          = "SFN"
+    arn_service = "states"
   }
 
   names {
@@ -7596,7 +7884,8 @@ service "sfn" {
 
 service "shield" {
   sdk {
-    id = "Shield"
+    id          = "Shield"
+    arn_service = "shield"
   }
 
   names {
@@ -7624,7 +7913,8 @@ service "shield" {
 
 service "signer" {
   sdk {
-    id = "signer"
+    id          = "signer"
+    arn_service = "signer"
   }
 
   names {
@@ -7647,7 +7937,8 @@ service "signer" {
 
 service "sms" {
   sdk {
-    id = "SMS"
+    id          = "SMS"
+    arn_service = "sms"
   }
 
   names {
@@ -7672,7 +7963,8 @@ service "snowdevicemanagement" {
   }
 
   sdk {
-    id = "Snow Device Management"
+    id          = "Snow Device Management"
+    arn_service = "snowdevicemanagement"
   }
 
   names {
@@ -7692,7 +7984,8 @@ service "snowdevicemanagement" {
 
 service "snowball" {
   sdk {
-    id = "Snowball"
+    id          = "Snowball"
+    arn_service = "snowball"
   }
 
   names {
@@ -7712,7 +8005,8 @@ service "snowball" {
 
 service "sns" {
   sdk {
-    id = "SNS"
+    id          = "SNS"
+    arn_service = "sns"
   }
 
   names {
@@ -7735,7 +8029,8 @@ service "sns" {
 
 service "sqs" {
   sdk {
-    id = "SQS"
+    id          = "SQS"
+    arn_service = "sqs"
   }
 
   names {
@@ -7758,7 +8053,8 @@ service "sqs" {
 
 service "ssm" {
   sdk {
-    id = "SSM"
+    id          = "SSM"
+    arn_service = "ssm"
   }
 
   names {
@@ -7786,7 +8082,8 @@ service "ssmcontacts" {
   }
 
   sdk {
-    id = "SSM Contacts"
+    id          = "SSM Contacts"
+    arn_service = "ssmcontacts"
   }
 
   names {
@@ -7814,7 +8111,8 @@ service "ssmincidents" {
   }
 
   sdk {
-    id = "SSM Incidents"
+    id          = "SSM Incidents"
+    arn_service = "ssmincidents"
   }
 
   names {
@@ -7842,7 +8140,8 @@ service "ssmsap" {
   }
 
   sdk {
-    id = "Ssm Sap"
+    id          = "Ssm Sap"
+    arn_service = "ssmsap"
   }
 
   names {
@@ -7870,7 +8169,8 @@ service "ssmquicksetup" {
   }
 
   sdk {
-    id = "SSM QuickSetup"
+    id          = "SSM QuickSetup"
+    arn_service = "ssmquicksetup"
   }
 
   names {
@@ -7893,7 +8193,8 @@ service "ssmquicksetup" {
 
 service "sso" {
   sdk {
-    id = "SSO"
+    id          = "SSO"
+    arn_service = "sso"
   }
 
   names {
@@ -7924,7 +8225,8 @@ service "ssoadmin" {
   }
 
   sdk {
-    id = "SSO Admin"
+    id          = "SSO Admin"
+    arn_service = "ssoadmin"
   }
 
   names {
@@ -7947,7 +8249,8 @@ service "ssoadmin" {
 
 service "identitystore" {
   sdk {
-    id = "identitystore"
+    id          = "identitystore"
+    arn_service = "identitystore"
   }
 
   names {
@@ -7976,7 +8279,8 @@ service "ssooidc" {
   }
 
   sdk {
-    id = "SSO OIDC"
+    id          = "SSO OIDC"
+    arn_service = "ssooidc"
   }
 
   names {
@@ -7996,7 +8300,8 @@ service "ssooidc" {
 
 service "storagegateway" {
   sdk {
-    id = "Storage Gateway"
+    id          = "Storage Gateway"
+    arn_service = "storagegateway"
   }
 
   names {
@@ -8019,7 +8324,8 @@ service "storagegateway" {
 
 service "sts" {
   sdk {
-    id = "STS"
+    id          = "STS"
+    arn_service = "sts"
   }
 
   names {
@@ -8050,7 +8356,8 @@ service "sts" {
 
 service "support" {
   sdk {
-    id = "Support"
+    id          = "Support"
+    arn_service = "support"
   }
 
   names {
@@ -8070,7 +8377,8 @@ service "support" {
 
 service "swf" {
   sdk {
-    id = "SWF"
+    id          = "SWF"
+    arn_service = "swf"
   }
 
   names {
@@ -8094,7 +8402,8 @@ service "swf" {
 
 service "taxsettings" {
   sdk {
-    id = "TaxSettings"
+    id          = "TaxSettings"
+    arn_service = "taxsettings"
   }
 
   names {
@@ -8117,7 +8426,8 @@ service "taxsettings" {
 
 service "textract" {
   sdk {
-    id = "Textract"
+    id          = "Textract"
+    arn_service = "textract"
   }
 
   names {
@@ -8142,7 +8452,8 @@ service "timestreaminfluxdb" {
   }
 
   sdk {
-    id = "Timestream InfluxDB"
+    id          = "Timestream InfluxDB"
+    arn_service = "timestreaminfluxdb"
   }
 
   names {
@@ -8170,7 +8481,8 @@ service "timestreamquery" {
   }
 
   sdk {
-    id = "Timestream Query"
+    id          = "Timestream Query"
+    arn_service = "timestreamquery"
   }
 
   names {
@@ -8198,7 +8510,8 @@ service "timestreamwrite" {
   }
 
   sdk {
-    id = "Timestream Write"
+    id          = "Timestream Write"
+    arn_service = "timestreamwrite"
   }
 
   names {
@@ -8226,7 +8539,8 @@ service "transcribe" {
   }
 
   sdk {
-    id = "Transcribe"
+    id          = "Transcribe"
+    arn_service = "transcribe"
   }
 
   names {
@@ -8255,7 +8569,8 @@ service "transcribestreaming" {
   }
 
   sdk {
-    id = "Transcribe Streaming"
+    id          = "Transcribe Streaming"
+    arn_service = "transcribestreaming"
   }
 
   names {
@@ -8276,7 +8591,8 @@ service "transcribestreaming" {
 
 service "transfer" {
   sdk {
-    id = "Transfer"
+    id          = "Transfer"
+    arn_service = "transfer"
   }
 
   names {
@@ -8300,7 +8616,8 @@ service "transfer" {
 
 service "translate" {
   sdk {
-    id = "Translate"
+    id          = "Translate"
+    arn_service = "translate"
   }
 
   names {
@@ -8325,7 +8642,8 @@ service "vpclattice" {
   }
 
   sdk {
-    id = "VPC Lattice"
+    id          = "VPC Lattice"
+    arn_service = "vpclattice"
   }
 
   names {
@@ -8348,7 +8666,8 @@ service "vpclattice" {
 
 service "wafv2" {
   sdk {
-    id = "WAFV2"
+    id          = "WAFV2"
+    arn_service = "wafv2"
   }
 
   names {
@@ -8372,7 +8691,8 @@ service "wafv2" {
 
 service "waf" {
   sdk {
-    id = "WAF"
+    id          = "WAF"
+    arn_service = "waf"
   }
 
   names {
@@ -8402,7 +8722,8 @@ service "wafregional" {
   }
 
   sdk {
-    id = "WAF Regional"
+    id          = "WAF Regional"
+    arn_service = "wafregional"
   }
 
   names {
@@ -8425,7 +8746,8 @@ service "wafregional" {
 
 service "budgets" {
   sdk {
-    id = "Budgets"
+    id          = "Budgets"
+    arn_service = "budgets"
   }
 
   names {
@@ -8451,7 +8773,8 @@ service "budgets" {
 
 service "wellarchitected" {
   sdk {
-    id = "WellArchitected"
+    id          = "WellArchitected"
+    arn_service = "wellarchitected"
   }
 
   names {
@@ -8474,7 +8797,8 @@ service "wellarchitected" {
 
 service "workdocs" {
   sdk {
-    id = "WorkDocs"
+    id          = "WorkDocs"
+    arn_service = "workdocs"
   }
 
   names {
@@ -8494,7 +8818,8 @@ service "workdocs" {
 
 service "worklink" {
   sdk {
-    id = "WorkLink"
+    id          = "WorkLink"
+    arn_service = "worklink"
   }
 
   names {
@@ -8518,7 +8843,8 @@ service "worklink" {
 
 service "workmail" {
   sdk {
-    id = "WorkMail"
+    id          = "WorkMail"
+    arn_service = "workmail"
   }
 
   names {
@@ -8538,7 +8864,8 @@ service "workmail" {
 
 service "workmailmessageflow" {
   sdk {
-    id = "WorkMailMessageFlow"
+    id          = "WorkMailMessageFlow"
+    arn_service = "workmailmessageflow"
   }
 
   names {
@@ -8558,7 +8885,8 @@ service "workmailmessageflow" {
 
 service "workspaces" {
   sdk {
-    id = "WorkSpaces"
+    id          = "WorkSpaces"
+    arn_service = "workspaces"
   }
 
   names {
@@ -8586,7 +8914,8 @@ service "workspacesweb" {
   }
 
   sdk {
-    id = "WorkSpaces Web"
+    id          = "WorkSpaces Web"
+    arn_service = "workspacesweb"
   }
 
   names {
@@ -8609,7 +8938,8 @@ service "workspacesweb" {
 
 service "xray" {
   sdk {
-    id = "XRay"
+    id          = "XRay"
+    arn_service = "xray"
   }
 
   names {
@@ -8632,7 +8962,8 @@ service "xray" {
 
 service "verifiedpermissions" {
   sdk {
-    id = "VerifiedPermissions"
+    id          = "VerifiedPermissions"
+    arn_service = "verifiedpermissions"
   }
 
   names {
@@ -8655,7 +8986,8 @@ service "verifiedpermissions" {
 
 service "codecatalyst" {
   sdk {
-    id = "CodeCatalyst"
+    id          = "CodeCatalyst"
+    arn_service = "codecatalyst"
   }
 
   names {
@@ -8678,7 +9010,8 @@ service "codecatalyst" {
 
 service "mediapackagev2" {
   sdk {
-    id = "MediaPackageV2"
+    id          = "MediaPackageV2"
+    arn_service = "mediapackagev2"
   }
 
   names {
@@ -8702,7 +9035,8 @@ service "mediapackagev2" {
 
 service "iot" {
   sdk {
-    id = "IoT"
+    id          = "IoT"
+    arn_service = "iot"
   }
 
   names {
@@ -8725,7 +9059,8 @@ service "iot" {
 
 service "dynamodb" {
   sdk {
-    id = "DynamoDB"
+    id          = "DynamoDB"
+    arn_service = "dynamodb"
   }
 
   names {
@@ -8753,7 +9088,8 @@ service "dynamodb" {
 
 service "ec2" {
   sdk {
-    id = "EC2"
+    id          = "EC2"
+    arn_service = "ec2"
   }
 
   names {
