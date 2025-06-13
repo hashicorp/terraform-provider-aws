@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Fixed an issue where persistent diffs appeared in log level arguments when `log_format` in `logging_config` was set to `JSON` and `publish = true`
+```
