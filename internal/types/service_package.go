@@ -103,6 +103,7 @@ type Identity struct {
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
+	IsSingleParameter      bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -202,6 +203,24 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	})
 
 	return identity
+}
+
+func GlobalSingleParameterIdentity(name string) Identity {
+	return Identity{
+		IsGlobalResource:  true,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			{
+				Name:     "account_id",
+				Required: false,
+			},
+			{
+				Name:     name,
+				Required: true,
+			},
+		},
+		IsSingleParameter: true,
+	}
 }
 
 func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
