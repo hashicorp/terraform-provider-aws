@@ -34,11 +34,38 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataProtectionSettingsResource,
+			TypeName: "aws_workspacesweb_data_protection_settings",
+			Name:     "Data Protection Settings",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "data_protection_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newIPAccessSettingsResource,
+			TypeName: "aws_workspacesweb_ip_access_settings",
+			Name:     "IP Access Settings",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "ip_access_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newNetworkSettingsResource,
 			TypeName: "aws_workspacesweb_network_settings",
 			Name:     "Network Settings",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "network_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newUserAccessLoggingSettingsResource,
+			TypeName: "aws_workspacesweb_user_access_logging_settings",
+			Name:     "User Access Logging Settings",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "user_access_logging_settings_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

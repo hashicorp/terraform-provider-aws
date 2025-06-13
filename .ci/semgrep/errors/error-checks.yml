@@ -76,6 +76,14 @@ rules:
             ...
           }
           if $ERR != nil { ... }
+      # e.g., internal/service/neptune/cluster.go
+      - pattern-not-inside: |
+          if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }
+          if $ERR != nil && ... { ... }
+          for ... = backoff.NewRetryLoop(...); ...; {
+            ...
+          }
+          if $ERR != nil { ... }
       # e.g. internal/service/quicksight/analysis.go
       - pattern-not-inside: |
           if !d.IsNewResource() && tfresource.NotFound($ERR) { ... }

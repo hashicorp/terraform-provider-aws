@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `max_batch_size` - (Optional) Maximum resource key values pairs that will update in a single API request. AWS has a default quota of 50 keys or a 3 MB payload, whichever is reached first. Defaults to `50`.
 * `resource_key_value_pair` - (Optional) A list of all resource key value pairs associated with the KeyValueStore.
 See [`resource_key_value_pair`](#resource_key_value_pair) below.
 

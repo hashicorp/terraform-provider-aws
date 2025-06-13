@@ -156,6 +156,45 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newVPCRouteServerResource,
+			TypeName: "aws_vpc_route_server",
+			Name:     "VPC Route Server",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newVPCRouteServerEndpointResource,
+			TypeName: "aws_vpc_route_server_endpoint",
+			Name:     "VPC Route Server Endpoint",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_endpoint_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newVPCRouteServerPeerResource,
+			TypeName: "aws_vpc_route_server_peer",
+			Name:     "VPC Route Server Peer",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_peer_id",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newVPCRouteServerPropagationResource,
+			TypeName: "aws_vpc_route_server_propagation",
+			Name:     "VPC Route Server Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newVPCRouteServerVPCAssociationResource,
+			TypeName: "aws_vpc_route_server_vpc_association",
+			Name:     "VPC Route Server VPC Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newSecurityGroupEgressRuleResource,
 			TypeName: "aws_vpc_security_group_egress_rule",
 			Name:     "Security Group Egress Rule",
