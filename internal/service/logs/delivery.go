@@ -98,11 +98,11 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 	}
 }
 
-var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{
+var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{
 	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
 }
 
-func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
+func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	oldValPtr, di := oldValue.ToPtr(ctx)
