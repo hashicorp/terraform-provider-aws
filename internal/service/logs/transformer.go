@@ -50,11 +50,6 @@ import (
 func newResourceTransformer(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTransformer{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -799,75 +794,52 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 }
 
 func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceTransformerModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input cloudwatchlogs.PutTransformerInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `TransformerId`
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Transformer"))...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.PutTransformer(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil || out.Transformer == nil {
+	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameTransformer, plan.LogGroupIdentifier.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitTransformerCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	transformer, err := waitTransformerCreated(ctx, conn, plan.LogGroupIdentifier.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForCreation, ResNameTransformer, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForCreation, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
+	// PutTransformer returns an empty body, so we propagate the state from the status call
+	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -1080,10 +1052,7 @@ func (r *resourceTransformer) ImportState(ctx context.Context, req resource.Impo
 // already have suitable constants. We prefer that you use the constants
 // provided in the service if available (e.g., awstypes.StatusInProgress).
 const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
 	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
 )
 
 // TIP: ==== WAITERS ====
@@ -1099,18 +1068,18 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitTransformerCreated(ctx context.Context, conn *logs.Client, id string, timeout time.Duration) (*awstypes.Transformer, error) {
+func waitTransformerCreated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusTransformer(ctx, conn, id),
+		Refresh:                   statusTransformer(ctx, conn, logGroupIdentifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*logs.Transformer); ok {
+	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
 		return out, err
 	}
 
@@ -1121,18 +1090,18 @@ func waitTransformerCreated(ctx context.Context, conn *logs.Client, id string, t
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitTransformerUpdated(ctx context.Context, conn *logs.Client, id string, timeout time.Duration) (*awstypes.Transformer, error) {
+func waitTransformerUpdated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusTransformer(ctx, conn, id),
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusTransformer(ctx, conn, logGroupIdentifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*logs.Transformer); ok {
+	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
 		return out, err
 	}
 
@@ -1141,16 +1110,16 @@ func waitTransformerUpdated(ctx context.Context, conn *logs.Client, id string, t
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitTransformerDeleted(ctx context.Context, conn *logs.Client, id string, timeout time.Duration) (*awstypes.Transformer, error) {
+func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: []string{},
 		Target:  []string{},
-		Refresh: statusTransformer(ctx, conn, id),
+		Refresh: statusTransformer(ctx, conn, logGroupIdentifier),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*logs.Transformer); ok {
+	if out, ok := outputRaw.(*cloudwatchlogs.GetTransformerOutput); ok {
 		return out, err
 	}
 
@@ -1164,9 +1133,9 @@ func waitTransformerDeleted(ctx context.Context, conn *logs.Client, id string, t
 //
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
-func statusTransformer(ctx context.Context, conn *logs.Client, id string) retry.StateRefreshFunc {
+func statusTransformer(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findTransformerByID(ctx, conn, id)
+		out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupIdentifier)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -1175,18 +1144,13 @@ func statusTransformer(ctx context.Context, conn *logs.Client, id string) retry.
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, statusNormal, nil
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findTransformerByID(ctx context.Context, conn *logs.Client, id string) (*awstypes.Transformer, error) {
-	input := logs.GetTransformerInput{
-		Id: aws.String(id),
+func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) (*cloudwatchlogs.GetTransformerOutput, error) {
+	input := cloudwatchlogs.GetTransformerInput{
+		LogGroupIdentifier: aws.String(logGroupIdentifier),
 	}
 
 	out, err := conn.GetTransformer(ctx, &input)
@@ -1201,11 +1165,11 @@ func findTransformerByID(ctx context.Context, conn *logs.Client, id string) (*aw
 		return nil, err
 	}
 
-	if out == nil || out.Transformer == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
-	return out.Transformer, nil
+	return out, nil
 }
 
 type resourceTransformerModel struct {
