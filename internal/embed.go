@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/YakDriver/smarterr"
-	"github.com/YakDriver/smarterr/filesystem"
 )
 
 //go:embed service/smarterr.hcl
@@ -16,6 +15,7 @@ var smarterrInitOnce sync.Once
 
 func init() {
 	smarterrInitOnce.Do(func() {
-		smarterr.SetFS(&filesystem.WrappedFS{FS: &SmarterrFS}, "internal")
+		smarterr.SetLogger(smarterr.TFLogLogger{})
+		smarterr.SetFS(&smarterr.WrappedFS{FS: &SmarterrFS}, "internal")
 	})
 }
