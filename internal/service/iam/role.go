@@ -45,7 +45,7 @@ const (
 // @IdentityAttribute("name")
 // @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
-// @Testing(identityTest=false)
+// @Testing(idAttrDuplicates="name")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
