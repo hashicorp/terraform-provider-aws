@@ -544,8 +544,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diags
 	}
 
-	if err != nil && !errs.IsA[*tfresource.EmptyResultError](err) {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
+	if err != nil {
+		if !errs.IsA[*tfresource.EmptyResultError](err) {
+			return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
+		}
 	}
 
 	// When upgrading, the Neptune Cluster may not be available immediately after creation.
