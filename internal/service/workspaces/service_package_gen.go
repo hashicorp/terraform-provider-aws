@@ -52,6 +52,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Image",
 		},
 		{
+			Factory:  dataSourcePool,
+			TypeName: "aws_workspaces_pool",
+			Name:     "Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  dataSourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
@@ -76,6 +84,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceIPGroup,
 			TypeName: "aws_workspaces_ip_group",
 			Name:     "IP Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  ResourcePool,
+			TypeName: "aws_workspaces_pool",
+			Name:     "Pool",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
