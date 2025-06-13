@@ -844,31 +844,15 @@ func (r *resourceTransformer) Create(ctx context.Context, req resource.CreateReq
 }
 
 func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTransformerModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findTransformerByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
+	out, err := findTransformerByLogGroupIdentifier(ctx, conn, state.LogGroupIdentifier.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -882,13 +866,11 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	// TIP: -- 5. Set the arguments and attributes
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
