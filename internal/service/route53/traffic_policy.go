@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,7 +68,7 @@ func resourceTrafficPolicy() *schema.Resource {
 			"document": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
 			},
 			names.AttrName: {
@@ -85,6 +86,7 @@ func resourceTrafficPolicy() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: updateComputedAttributesOnPublish,
 	}
 }
 
@@ -102,6 +104,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Comment = aws.String(v.(string))
 	}
 
+	log.Printf("[INFO] Creating Route53 Traffic Policy: %v", input)
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateTrafficPolicy(ctx, input)
 	})
@@ -141,20 +144,44 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	configChanged := hasConfigChanges(d)
+	if configChanged {
+		d.SetNewComputed(names.AttrVersion)
+	}
+
+	return nil
+}
+
+func hasConfigChanges(d sdkv2.ResourceDiffer) bool {
+	return d.HasChange("document")
+}
+
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
+	var err error
 
-	input := &route53.UpdateTrafficPolicyCommentInput{
-		Id:      aws.String(d.Id()),
-		Version: aws.Int32(int32(d.Get(names.AttrVersion).(int))),
+	if d.HasChange("document") {
+		input := &route53.CreateTrafficPolicyVersionInput{
+			Id:       aws.String(d.Id()),
+			Document: aws.String(d.Get("document").(string)),
+			Comment:  aws.String(d.Get(names.AttrComment).(string)),
+		}
+
+		log.Printf("[INFO] Creating Route53 Traffic Policy version: %v", input)
+		_, err = conn.CreateTrafficPolicyVersion(ctx, input)
+
+	} else if d.HasChange(names.AttrComment) {
+		input := &route53.UpdateTrafficPolicyCommentInput{
+			Id:      aws.String(d.Id()),
+			Version: aws.Int32(int32(d.Get(names.AttrVersion).(int))),
+			Comment: aws.String(d.Get(names.AttrComment).(string)),
+		}
+
+		log.Printf("[INFO] Updating Route53 Traffic Policy comment: %v", input)
+		_, err = conn.UpdateTrafficPolicyComment(ctx, input)
 	}
-
-	if d.HasChange(names.AttrComment) {
-		input.Comment = aws.String(d.Get(names.AttrComment).(string))
-	}
-
-	_, err := conn.UpdateTrafficPolicyComment(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Traffic Policy (%s) comment: %s", d.Id(), err)
