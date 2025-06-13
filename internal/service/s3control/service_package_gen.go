@@ -51,6 +51,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDirectoryBucketAccessPointScopeResource,
+			TypeName: "aws_s3control_directory_bucket_access_point_scope",
+			Name:     "Directory Bucket Access Point Scope",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

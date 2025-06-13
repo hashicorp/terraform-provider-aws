@@ -14,7 +14,7 @@ Provides a resource to manage an S3 Access Point.
 
 -> Advanced usage: To use a custom API endpoint for this Terraform resource, use the [`s3control` endpoint provider configuration](/docs/providers/aws/index.html#s3control), not the `s3` endpoint provider configuration.
 
--> This resource cannot be used with S3 directory buckets.
+-> This resource can be used with s3 directory buckets. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets.html) for more information.
 
 ## Example Usage
 
@@ -50,6 +50,26 @@ resource "aws_s3_access_point" "example" {
 
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
+}
+```
+
+### AWS Partition Directory Bucket
+
+```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_s3_directory_bucket" "example" {
+  bucket = "example--zoneId--x-s3"
+  location {
+    name = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+
+resource "aws_s3_access_point" "example" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = "example--zoneId--xa-s3"
 }
 ```
 

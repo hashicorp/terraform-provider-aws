@@ -15,8 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
@@ -496,6 +501,100 @@ func TestAccTimestreamInfluxDBDBInstance_deploymentType(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/42170.
+func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance timestreaminfluxdb.GetDbInstanceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.90.0",
+					},
+				},
+				Config: testAccDBInstanceConfig_basicV5_90_0(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("network_type")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDBInstanceConfig_basicV5_90_0(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDBInstanceConfig_basicV5_90_0(rName, rName+"-updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName + "-updated"),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
@@ -571,11 +670,16 @@ func testAccCheckDBInstanceNotRecreated(before, after *timestreaminfluxdb.GetDbI
 }
 
 func testAccDBInstanceConfig_base(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), `
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 // Minimal configuration.
@@ -813,4 +917,25 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_storage_type = %[2]q
 }
 `, rName, dbStorageType))
+}
+
+// Minimal configuration (v5.90.0).
+func testAccDBInstanceConfig_basicV5_90_0(rName, tagValue string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(rName, 1), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_instance" "test" {
+  name                   = %[1]q
+  allocated_storage      = 20
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_instance_type       = "db.influx.medium"
+  bucket                 = "initial"
+  organization           = "organization"
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, rName, tagValue))
 }

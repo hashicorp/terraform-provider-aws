@@ -59,6 +59,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
@@ -76,6 +77,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
@@ -236,6 +238,7 @@ func registerSweepers() {
 	docdb.RegisterSweepers()
 	docdbelastic.RegisterSweepers()
 	ds.RegisterSweepers()
+	dsql.RegisterSweepers()
 	dynamodb.RegisterSweepers()
 	ec2.RegisterSweepers()
 	ecr.RegisterSweepers()
@@ -253,6 +256,7 @@ func registerSweepers() {
 	emrserverless.RegisterSweepers()
 	events.RegisterSweepers()
 	evidently.RegisterSweepers()
+	evs.RegisterSweepers()
 	finspace.RegisterSweepers()
 	firehose.RegisterSweepers()
 	fis.RegisterSweepers()

@@ -42,8 +42,8 @@ resource "aws_lambda_code_signing_config" "example" {
 
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.prod.arn,
-      aws_signer_signing_profile.dev.arn,
+      aws_signer_signing_profile.prod.version_arn,
+      aws_signer_signing_profile.dev.version_arn,
     ]
   }
 
@@ -66,7 +66,7 @@ resource "aws_lambda_code_signing_config" "example" {
 
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.dev.arn,
+      aws_signer_signing_profile.dev.version_arn,
     ]
   }
 
@@ -90,7 +90,7 @@ resource "aws_lambda_code_signing_config" "prod" {
 
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.prod.arn,
+      aws_signer_signing_profile.prod.version_arn,
     ]
   }
 
@@ -110,8 +110,8 @@ resource "aws_lambda_code_signing_config" "dev" {
 
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.dev.arn,
-      aws_signer_signing_profile.test.arn,
+      aws_signer_signing_profile.dev.version_arn,
+      aws_signer_signing_profile.test.version_arn,
     ]
   }
 

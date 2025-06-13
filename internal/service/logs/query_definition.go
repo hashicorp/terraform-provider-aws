@@ -175,7 +175,7 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 }
 
 func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
-	output, err := findQueryDefinitions(ctx, conn, input, filter)
+	output, err := findQueryDefinitions(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -184,8 +184,9 @@ func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
+func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.QueryDefinition, error) {
 	var output []awstypes.QueryDefinition
+	opts := tfslices.NewFinderOptions(optFns)
 
 	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -195,6 +196,9 @@ func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		for _, v := range page.QueryDefinitions {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return false
+				}
 			}
 		}
 

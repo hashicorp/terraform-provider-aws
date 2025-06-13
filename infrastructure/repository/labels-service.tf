@@ -129,6 +129,7 @@ variable "service_labels" {
     "emrserverless",
     "events",
     "evidently",
+    "evs",
     "finspace",
     "finspacedata",
     "firehose",
