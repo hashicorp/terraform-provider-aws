@@ -129,7 +129,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- end }}
 					),
 				{{ else }}
-					Identity: inttypes.ParameterizedIdentity(
+					Identity: inttypes.RegionalParameterizedIdentity(
 						{{- range $value.IdentityAttributes }}
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
@@ -143,10 +143,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						Identity: inttypes.GlobalARNIdentity(
 					{{- end }}
 				{{- else }}
-					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+					{{- if $value.IsARNFormatGlobal }}
+						{{- if $value.HasARNAttribute }}
+							Identity: inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+						{{- else }}
+							Identity: inttypes.RegionalResourceWithGlobalARNFormat(
+						{{- end }}
 					{{- else }}
-						Identity: inttypes.RegionalARNIdentity(
+						{{- if $value.HasARNAttribute }}
+							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- else }}
+							Identity: inttypes.RegionalARNIdentity(
+						{{- end }}
 					{{- end }}
 				{{- end }}
 				{{- if .HasIdentityDuplicateAttrs -}}
@@ -239,7 +247,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- end }}
 					),
 				{{- else }}
-					Identity: inttypes.ParameterizedIdentity(
+					Identity: inttypes.RegionalParameterizedIdentity(
 						{{- range $value.IdentityAttributes }}
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}

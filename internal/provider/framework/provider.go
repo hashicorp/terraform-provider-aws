@@ -548,7 +548,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 				interceptors = append(interceptors, resourceSetRegionInState())
-				if res.Identity.Singleton || res.Identity.ARN {
+				if res.Identity.HasInherentRegion() {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
 					interceptors = append(interceptors, resourceImportRegion())
@@ -562,9 +562,6 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			if res.Import.WrappedImport {
 				if res.Identity.ARN {
 					switch v := inner.(type) {
-					case framework.ImportByARNAttributer:
-						v.SetARNAttributeName(res.Identity.IdentityAttribute, res.Identity.IdentityDuplicateAttrs)
-
 					case framework.ImportByIdentityer:
 						v.SetIdentitySpec(res.Identity)
 

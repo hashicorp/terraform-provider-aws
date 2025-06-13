@@ -33,6 +33,7 @@ import (
 // @FrameworkResource("aws_ssoadmin_application", name="Application")
 // @Tags
 // @ArnIdentity(identityDuplicateAttributes="id;application_arn")
+// @ArnFormat(global=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeApplicationOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -41,7 +42,7 @@ func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type applicationResource struct {
 	framework.ResourceWithModel[applicationResourceModel]
-	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
+	framework.WithImportByARN
 }
 
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

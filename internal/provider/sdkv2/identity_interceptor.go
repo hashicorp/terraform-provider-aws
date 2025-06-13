@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -87,29 +88,9 @@ func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptor
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
 		SchemaFunc: func() map[string]*schema.Schema {
-			return newIdentitySchema(v.Attributes)
+			return identity.NewIdentitySchema(v)
 		},
 	}
-}
-
-func newIdentitySchema(attributes []inttypes.IdentityAttribute) map[string]*schema.Schema {
-	identitySchema := make(map[string]*schema.Schema, len(attributes))
-	for _, attr := range attributes {
-		identitySchema[attr.Name] = newIdentityAttribute(attr)
-	}
-	return identitySchema
-}
-
-func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
-	attr := &schema.Schema{
-		Type: schema.TypeString,
-	}
-	if attribute.Required {
-		attr.RequiredForImport = true
-	} else {
-		attr.OptionalForImport = true
-	}
-	return attr
 }
 
 func newParameterizedIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {

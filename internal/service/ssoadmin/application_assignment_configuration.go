@@ -26,6 +26,7 @@ import (
 
 // @FrameworkResource("aws_ssoadmin_application_assignment_configuration", name="Application Assignment Configuration")
 // @ArnIdentity("application_arn", identityDuplicateAttributes="id")
+// @ArnFormat(global=true)
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
@@ -37,7 +38,7 @@ const (
 
 type applicationAssignmentConfigurationResource struct {
 	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
-	framework.WithImportByGlobalARN // This is a regional service, but the ARNs have no region
+	framework.WithImportByARN
 }
 
 func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
