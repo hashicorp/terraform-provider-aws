@@ -56,9 +56,8 @@ type userPoolClientResource struct {
 	framework.ResourceWithModel[userPoolClientResourceModel]
 }
 
-// Schema returns the schema for this resource.
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	s := schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
@@ -352,103 +351,103 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 			},
 		},
 	}
-
-	response.Schema = s
 }
 
 func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	var config userPoolClientResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var plan userPoolClientResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input cognitoidentityprovider.CreateUserPoolClientInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Client"))...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp, err := conn.CreateUserPoolClient(ctx, &input)
+	output, err := conn.CreateUserPoolClient(ctx, &input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf("creating Cognito User Pool Client (%s)", plan.Name.ValueString()),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Cognito User Pool Client (%s)", name), err.Error())
+
 		return
 	}
 
-	poolClient := resp.UserPoolClient
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
-	config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
+	// Set values for unknowns.
+	upc := output.UserPoolClient
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+	tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.TokenValidityUnits = tvu
 
-	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var state userPoolClientResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	poolClient, err := findUserPoolClientByTwoPartKey(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
+	upc, err := findUserPoolClientByTwoPartKey(ctx, conn, data.UserPoolID.ValueString(), data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", state.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	tokenValidityUnitsNull := state.TokenValidityUnits.IsNull()
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &state, fwflex.WithFieldNamePrefix("Client"))...)
-	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		state.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
-	} else {
-		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
-	}
+	// Set attributes for import.
+	tokenValidityUnitsNull := data.TokenValidityUnits.IsNull()
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &data, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+	if tokenValidityUnitsNull && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+		data.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+	} else {
+		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.TokenValidityUnits = tvu
+	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var config userPoolClientResourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var plan userPoolClientResourceModel
+	var state, plan, config userPoolClientResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	var state userPoolClientResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -476,55 +475,58 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito User Pool Client (%s)", plan.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	poolClient := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, poolClient, &config, fwflex.WithFieldNamePrefix("Client"))...)
-	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		config.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
-	} else {
-		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits, &response.Diagnostics)
-	}
+	upc := output.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient
+	response.Diagnostics.Append(fwflex.Flatten(ctx, upc, &plan, fwflex.WithFieldNamePrefix("Client"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+	if !state.TokenValidityUnits.IsNull() && config.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(upc.TokenValidityUnits) {
+		plan.TokenValidityUnits = fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+	} else {
+		tvu, diags := flattenTokenValidityUnits(ctx, upc.TokenValidityUnits)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		plan.TokenValidityUnits = tvu
+	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var state userPoolClientResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	params := state.deleteInput(ctx)
-
-	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]any{
-		names.AttrID:         state.ID.ValueString(),
-		names.AttrUserPoolID: state.UserPoolID.ValueString(),
-	})
-
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	_, err := conn.DeleteUserPoolClient(ctx, params)
+	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]any{
+		names.AttrID:         data.ID.ValueString(),
+		names.AttrUserPoolID: data.UserPoolID.ValueString(),
+	})
+	input := cognitoidentityprovider.DeleteUserPoolClientInput{
+		ClientId:   fwflex.StringFromFramework(ctx, data.ID),
+		UserPoolId: fwflex.StringFromFramework(ctx, data.UserPoolID),
+	}
+	_, err := conn.DeleteUserPoolClient(ctx, &input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			fmt.Sprintf("deleting Cognito User Pool Client (%s)", state.ID.ValueString()),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Cognito User Pool Client (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
@@ -532,13 +534,13 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID)))
+
 		return
 	}
-	userPoolId := parts[0]
-	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), parts[0])...)
 }
 
 func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -625,13 +627,6 @@ type userPoolClientResourceModel struct {
 	WriteAttributes                          fwtypes.SetOfString                                          `tfsdk:"write_attributes" autoflex:",legacy"`
 }
 
-func (data userPoolClientResourceModel) deleteInput(ctx context.Context) *cognitoidentityprovider.DeleteUserPoolClientInput {
-	return &cognitoidentityprovider.DeleteUserPoolClientInput{
-		ClientId:   fwflex.StringFromFramework(ctx, data.ID),
-		UserPoolId: fwflex.StringFromFramework(ctx, data.UserPoolID),
-	}
-}
-
 type analyticsConfigurationModel struct {
 	ApplicationARN fwtypes.ARN  `tfsdk:"application_arn"`
 	ApplicationID  types.String `tfsdk:"application_id"`
@@ -673,15 +668,20 @@ func resolveTokenValidityUnits(ctx context.Context, list fwtypes.ListNestedObjec
 	return nil
 }
 
-func flattenTokenValidityUnits(ctx context.Context, tvu *awstypes.TokenValidityUnitsType, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel] {
+func flattenTokenValidityUnits(ctx context.Context, tvu *awstypes.TokenValidityUnitsType) (fwtypes.ListNestedObjectValueOf[tokenValidityUnitsModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if tvu == nil || (tvu.AccessToken == "" && tvu.IdToken == "" && tvu.RefreshToken == "") {
-		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx)
+		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx), diags
 	}
 
 	var result tokenValidityUnitsModel
 	diags.Append(fwflex.Flatten(ctx, tvu, &result)...)
+	if diags.HasError() {
+		return fwtypes.NewListNestedObjectValueOfNull[tokenValidityUnitsModel](ctx), diags
+	}
 
-	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result)
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &result), diags
 }
 
 var _ resource.ConfigValidator = &resourceUserPoolClientAccessTokenValidityValidator{}
