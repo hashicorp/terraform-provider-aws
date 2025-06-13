@@ -125,6 +125,22 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.read_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
+			customdiff.ForceNewIfChange("warm_throughput.0.write_units_per_second", func(_ context.Context, old, new, meta any) bool {
+				// warm_throughput can only be increased, not decreased
+				if old, new := old.(int), new.(int); new != 0 && new < old {
+					return true
+				}
+
+				return false
+			}),
 			validateTTLCustomDiff,
 		),
 
@@ -198,6 +214,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"warm_throughput": warmThroughputSchema(),
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -211,6 +228,75 @@ func resourceTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"import_table": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_compression_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
+						},
+						"input_format": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
+						},
+						"input_format_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"csv": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delimiter": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"header_list": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3_bucket_source": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrBucket: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"bucket_owner": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"key_prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"local_secondary_index": {
 				Type:     schema.TypeSet,
@@ -326,75 +412,6 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"import_table": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_compression_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
-						},
-						"input_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
-						},
-						"input_format_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"csv": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"delimiter": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"header_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"s3_bucket_source": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"bucket_owner": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"restore_date_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -495,6 +512,7 @@ func resourceTable() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"warm_throughput": warmThroughputSchema(),
 			"write_capacity": {
 				Type:          schema.TypeInt,
 				Computed:      true,
@@ -527,6 +545,31 @@ func onDemandThroughputSchema() *schema.Schema {
 					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 						return old == "0" && new == "-1"
 					},
+				},
+			},
+		},
+	}
+}
+
+func warmThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"read_units_per_second": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(12000)),
+				},
+				"write_units_per_second": {
+					Type:             schema.TypeInt,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(4000)),
 				},
 			},
 		},
@@ -766,6 +809,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.TableClass = awstypes.TableClass(v.(string))
 		}
 
+		if v, ok := d.GetOk("warm_throughput"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.WarmThroughput = expandWarmThroughput(v.([]any)[0].(map[string]any))
+		}
+
 		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (any, error) {
 			return conn.CreateTable(ctx, input)
 		}, func(err error) (bool, error) {
@@ -793,6 +840,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var err error
 	if output, err = waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTable, d.Id(), err)
+	}
+	if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("global_secondary_index"); ok {
@@ -958,6 +1008,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "ttl", err)
 	}
 
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
+	}
+
 	return diags
 }
 
@@ -1084,7 +1138,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// Must update all indexes when switching BillingMode from PAY_PER_REQUEST to PROVISIONED
 	if newBillingMode == awstypes.BillingModeProvisioned {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update == nil {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput != nil) {
 				continue
 			}
 
@@ -1093,7 +1147,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST in Phase 2a
 	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
@@ -1116,6 +1170,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 		}
 
+		if err := waitTableWarmThroughputActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
+		}
+
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil {
 				continue
@@ -1126,6 +1184,35 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 			}
+
+			if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
+			}
+		}
+	}
+
+	// Phase 2b: update indexes in two steps when warm throughput is set
+	for _, gsiUpdate := range gsiUpdates {
+		if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.WarmThroughput == nil) {
+			continue
+		}
+
+		idxName := aws.ToString(gsiUpdate.Update.IndexName)
+		input := &dynamodb.UpdateTableInput{
+			GlobalSecondaryIndexUpdates: []awstypes.GlobalSecondaryIndexUpdate{gsiUpdate},
+			TableName:                   aws.String(d.Id()),
+		}
+
+		if _, err := conn.UpdateTable(ctx, input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("updating GSI for warm throughput (%s): %w", idxName, err))
+		}
+
+		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1149,6 +1236,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if _, err := waitGSIActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
+		}
+
+		if err := waitGSIWarmThroughputActive(ctx, conn, d.Id(), idxName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", idxName, err))
 		}
 	}
 
@@ -1262,6 +1353,12 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChange("point_in_time_recovery") {
 		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), aws.Int32(int32(d.Get("point_in_time_recovery.0.recovery_period_in_days").(int))), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+		}
+	}
+
+	if d.HasChange("warm_throughput") {
+		if err := updateWarmThroughput(ctx, conn, d.Get("warm_throughput").([]any), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1659,6 +1756,33 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 	return nil
 }
 
+func updateWarmThroughput(ctx context.Context, conn *dynamodb.Client, warmList []any, tableName string, timeout time.Duration) error {
+	if len(warmList) < 1 && warmList[0] == nil {
+		return nil
+	}
+
+	warmMap := warmList[0].(map[string]any)
+
+	input := &dynamodb.UpdateTableInput{
+		TableName:      aws.String(tableName),
+		WarmThroughput: expandWarmThroughput(warmMap),
+	}
+
+	if _, err := conn.UpdateTable(ctx, input); err != nil {
+		return err
+	}
+
+	if _, err := waitTableActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
+	}
+
+	if err := waitTableWarmThroughputActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for warm throughput: %s", err)
+	}
+
+	return nil
+}
+
 func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]awstypes.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]any)
@@ -1697,6 +1821,10 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
 
+			if v, ok := m["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 				Create: &c,
 			})
@@ -1730,6 +1858,27 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 				onDemandThroughputChanged = true
 			}
 
+			var oldWarmThroughput *awstypes.WarmThroughput
+			var newWarmThroughput *awstypes.WarmThroughput
+			if v, ok := oldMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newWarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+			}
+
+			var warmThroughputChanged bool
+			if !reflect.DeepEqual(oldWarmThroughput, newWarmThroughput) {
+				warmThroughputChanged = true
+			}
+
+			var warmThroughPutDecreased bool
+			if warmThroughputChanged && newWarmThroughput != nil && oldWarmThroughput != nil {
+				warmThroughPutDecreased = (aws.ToInt64(newWarmThroughput.ReadUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.ReadUnitsPerSecond) ||
+					aws.ToInt64(newWarmThroughput.WriteUnitsPerSecond) < aws.ToInt64(oldWarmThroughput.WriteUnitsPerSecond))
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1746,6 +1895,10 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripWarmThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
@@ -1758,9 +1911,14 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			if err != nil {
 				return ops, err
 			}
-			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
+			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
 
-			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
+			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
+			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
@@ -1768,7 +1926,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					},
 				}
 				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
+			} else if onDemandThroughputChanged && !gsiNeedsRecreate && billingMode == awstypes.BillingModePayPerRequest {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:          aws.String(idxName),
@@ -1776,7 +1934,7 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					},
 				}
 				ops = append(ops, update)
-			} else if otherAttributesChanged {
+			} else if gsiNeedsRecreate {
 				// Other attributes cannot be updated
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
@@ -1790,8 +1948,19 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 						KeySchema:             expandKeySchema(newMap),
 						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
 						Projection:            expandProjection(newMap),
+						WarmThroughput:        newWarmThroughput,
 					},
 				})
+			}
+			// Separating the WarmThroughput updates from the others
+			if !gsiNeedsRecreate && warmThroughputChanged {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:      aws.String(idxName),
+						WarmThroughput: newWarmThroughput,
+					},
+				}
+				ops = append(ops, update)
 			}
 		} else {
 			idxName := oldName
@@ -2167,6 +2336,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
 		}
 
+		if g.WarmThroughput != nil {
+			gsi["warm_throughput"] = flattenGSIWarmThroughput(g.WarmThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2211,6 +2384,42 @@ func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []any {
 
 	if v := apiObject.MaxWriteRequestUnits; v != nil {
 		m["max_write_request_units"] = aws.ToInt64(v)
+	}
+
+	return []any{m}
+}
+
+func flattenTableWarmThroughput(apiObject *awstypes.TableWarmThroughputDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
+	}
+
+	return []any{m}
+}
+
+func flattenGSIWarmThroughput(apiObject *awstypes.GlobalSecondaryIndexWarmThroughputDescription) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	m := map[string]any{}
+
+	if v := apiObject.ReadUnitsPerSecond; v != nil {
+		m["read_units_per_second"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.WriteUnitsPerSecond; v != nil {
+		m["write_units_per_second"] = aws.ToInt64(v)
 	}
 
 	return []any{m}
@@ -2345,6 +2554,10 @@ func expandGlobalSecondaryIndex(data map[string]any, billingMode awstypes.Billin
 		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 	}
 
+	if v, ok := data["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.WarmThroughput = expandWarmThroughput(v[0].(map[string]any))
+	}
+
 	return &output
 }
 
@@ -2467,6 +2680,24 @@ func expandOnDemandThroughput(tfMap map[string]any) *awstypes.OnDemandThroughput
 
 	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandWarmThroughput(tfMap map[string]any) *awstypes.WarmThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.WarmThroughput{}
+
+	if v, ok := tfMap["read_units_per_second"].(int); ok && v != 0 {
+		apiObject.ReadUnitsPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["write_units_per_second"].(int); ok && v != 0 {
+		apiObject.WriteUnitsPerSecond = aws.Int64(int64(v))
 	}
 
 	return apiObject
