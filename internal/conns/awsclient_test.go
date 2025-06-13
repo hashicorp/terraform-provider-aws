@@ -231,6 +231,12 @@ func TestAWSClientValidateInContextRegionInPartition(t *testing.T) { // nosemgre
 			Region:   endpoints.CnNorth1RegionID,
 			Expected: true,
 		},
+		{
+			Name:      "Empty partition, valid",
+			AWSClient: &AWSClient{},
+			Region:    "ash",
+			Expected:  true,
+		},
 	}
 
 	for _, testCase := range testCases {

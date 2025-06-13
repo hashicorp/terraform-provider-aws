@@ -100,8 +100,8 @@ func (c *AWSClient) Partition(context.Context) string {
 // that value is returned, otherwise the configured Region is returned.
 func (c *AWSClient) Region(ctx context.Context) string {
 	if inContext, ok := FromContext(ctx); ok {
-		if v := inContext.OverrideRegion(); v != "" {
-			return v
+		if r := inContext.OverrideRegion(); r != "" {
+			return r
 		}
 	}
 
@@ -311,9 +311,9 @@ func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string
 // ValidateInContextRegionInPartition verifies that the value of the top-level `region` attribute is in the configured AWS partition.
 func (c *AWSClient) ValidateInContextRegionInPartition(ctx context.Context) error {
 	if inContext, ok := FromContext(ctx); ok {
-		if v := inContext.OverrideRegion(); v != "" {
-			if got, want := names.PartitionForRegion(v).ID(), c.Partition(ctx); got != want {
-				return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, v, want)
+		if r, p := inContext.OverrideRegion(), c.Partition(ctx); r != "" && p != "" {
+			if got, want := names.PartitionForRegion(r).ID(), p; got != want {
+				return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, r, want)
 			}
 		}
 	}
