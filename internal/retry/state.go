@@ -151,7 +151,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		}
 	}
 
-	return t, ctx.Err()
+	return t, context.Cause(ctx)
 }
 
 func (conf *StateChangeConfOf[T, S]) refreshWithTimeout(ctx context.Context, timeout time.Duration) (T, S, error) {
