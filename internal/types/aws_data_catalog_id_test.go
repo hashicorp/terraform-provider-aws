@@ -6,11 +6,7 @@ func TestIsAWSDataCatalogID(t *testing.T) {
 	// Test cases for IsAWSDataCatalogID function
 	// The function checks for a valid AWS Data Catalog ID format, which is either:
 	// 1. A 12-digit account ID (e.g., "123456789012")
-	// 2. A string in the format "123456789012:s3tablescatalog/my-catalog"
-	// The regex used in the function checks for these formats and ensures that the account ID is exactly 12 digits.
-	// The second part after the colon must start with "s3tablescatalog/" followed by a valid catalog name.
-	// The catalog name can contain alphanumeric characters and hyphens, but must not be empty.
-	// The function returns true for valid IDs and false for invalid ones.
+	// 2. A string in the format "s3tablescatalog/my-catalog"
 
 	t.Parallel()
 
