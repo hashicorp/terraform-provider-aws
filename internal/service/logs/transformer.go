@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -117,8 +118,13 @@ type resourceTransformer struct {
 func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+			names.AttrCreationTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"last_modified_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"log_group_identifier": schema.StringAttribute{
 				Required: true,
@@ -144,7 +150,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							Blocks: map[string]schema.Block{
 								"entries": schema.ListNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[addKeyEntryModel](ctx),
+									CustomType: fwtypes.NewListNestedObjectTypeOf[addKeysEntryModel](ctx),
 									Validators: []validator.List{
 										listvalidator.IsRequired(),
 										listvalidator.SizeBetween(1,5),
@@ -179,7 +185,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							},
 							Blocks: map[string]schema.Block{
 								"entries": schema.ListNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[copyValueEntryModel](ctx),
+									CustomType: fwtypes.NewListNestedObjectTypeOf[copyValueEntryModel](ctx),
 									Validators: []validator.List{
 										listvalidator.IsRequired(),
 										listvalidator.SizeBetween(1,5),
@@ -418,7 +424,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"entries": schema.ListNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[copyValueEntryModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[moveKeysEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1,5),
@@ -610,7 +616,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"entries": schema.ListNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[renameKeysEntryModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[renameKeysEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1,5),
@@ -647,7 +653,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"entries": schema.ListNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[splitStringEntryModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[splitStringEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1,10),
@@ -680,7 +686,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"entries": schema.ListNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[substituteStringEntryModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[substituteStringEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1,10),
@@ -738,7 +744,7 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									"entries": schema.ListNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[typeConverterEntryModel](ctx),
+										CustomType: fwtypes.NewListNestedObjectTypeOf[typeConverterEntryModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1,5),
@@ -1202,31 +1208,187 @@ func findTransformerByID(ctx context.Context, conn *logs.Client, id string) (*aw
 	return out.Transformer, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTransformerModel struct {
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
+	CreationTime timetypes.RFC3339Type                                          `tfsdk:"creation_time"`
+	LastModifiedTime timetypes.RFC3339Type                                          `tfsdk:"last_modified_time"`
+	LogGroupIdentifier     types.String                                          `tfsdk:"log_group_identifier"`
+	TransformerConfig              fwtypes.ListNestedObjectValueOf[transformerConfigModel]                                         `tfsdk:"transformer_config"`
 	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
 }
 
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+type transformerConfigModel struct {
+	AddKeys fwtypes.ObjectValueOf[addKeysModel] `tfsdk:"add_keys"`
+	CopyValue fwtypes.ObjectValueOf[copyValueModel] `tfsdk:"copy_value"`
+	CSV fwtypes.ListNestedObjectValueOf[csvModel] `tfsdk:"csv"`
+	DateTimeConverter fwtypes.ListNestedObjectValueOf[dateTimeConverterModel] `tfsdk:"date_time_converter"`
+	DeleteKeys fwtypes.ListNestedObjectValueOf[deleteKeysModel] `tfsdk:"delete_keys"`
+	Grok fwtypes.ObjectValueOf[grokModel] `tfsdk:"grok"`
+	ListToMap fwtypes.ListNestedObjectValueOf[listToMapModel] `tfsdk:"list_to_map"`
+	LowerCaseString fwtypes.ListNestedObjectValueOf[lowerCaseStringModel] `tfsdk:"lower_case_string"`
+	MoveKeys fwtypes.ListNestedObjectValueOf[moveKeysModel] `tfsdk:"move_keys"`
+	ParseCloudfront fwtypes.ObjectValueOf[parseCloudfrontModel] `tfsdk:"parse_cloudfront"`
+	ParseJSON fwtypes.ListNestedObjectValueOf[parseJSONModel] `tfsdk:"parse_json"`
+	ParseKeyValue fwtypes.ListNestedObjectValueOf[parseKeyValueModel] `tfsdk:"parse_key_value"`
+	ParsePostgres fwtypes.ObjectValueOf[parsePostgresModel] `tfsdk:"parse_postgres"`
+	ParseRoute53 fwtypes.ObjectValueOf[parseRoute53Model] `tfsdk:"parse_route53"`
+	ParseVPC fwtypes.ObjectValueOf[parseVPCModel] `tfsdk:"parse_vpc"`
+	ParseWAF fwtypes.ObjectValueOf[parseWAFModel] `tfsdk:"parse_waf"`
+	RenameEntries fwtypes.ListNestedObjectValueOf[renameKeysModel] `tfsdk:"rename_entries"`
+	SplitString fwtypes.ListNestedObjectValueOf[splitStringModel] `tfsdk:"split_string"`
+	SubstituteString fwtypes.ListNestedObjectValueOf[substituteStringModel] `tfsdk:"substitute_string"`
+	TrimString fwtypes.ListNestedObjectValueOf[trimStringModel] `tfsdk:"trim_string"`
+	TypeConverter fwtypes.ListNestedObjectValueOf[typeConverterModel] `tfsdk:"type_converter"`
+	UpperCaseString fwtypes.ListNestedObjectValueOf[upperCaseStringModel] `tfsdk:"upper_case_string"`
+}
+
+type addKeysModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[addKeysEntryModel] `tfsdk:"entries"`
+}
+
+type addKeysEntryModel struct {
+	Key types.String `tfsdk:"key"`
+	OverwriteIfExists types.Bool `tfsdk:"overwrite_if_exists"`
+	Value types.String `tfsdk:"value"`
+}
+
+type copyValueModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[copyValueEntryModel] `tfsdk:"entries"`
+}
+
+type copyValueEntryModel struct {
+	OverwriteIfExists types.Bool `tfsdk:"overwrite_if_exists"`
+	Source types.String `tfsdk:"source"`
+	Target types.String `tfsdk:"target"`
+}
+
+type csvModel struct {
+	Columns types.List `tfsdk:"columns"`
+	Delimiter types.String `tfsdk:"delimiter"`
+	QuoteCharacter types.String `tfsdk:"quote_character"`
+	Source types.String `tfsdk:"source"`
+}
+
+type dateTimeConverterModel struct {
+	Locale types.String `tfsdk:"locale"`
+	MatchPatterns types.List `tfsdk:"match_patterns"`
+	Source types.String `tfsdk:"source"`
+	SourceTimezone types.String `tfsdk:"source_timezone"`
+	Target types.String `tfsdk:"target"`
+	TargetFormat types.String `tfsdk:"target_format"`
+	TargetTimezone types.String `tfsdk:"target_timezone"`
+}
+
+type deleteKeysModel struct {
+	WithKeys types.List `tfsdk:"with_keys"`
+}
+
+type grokModel struct {
+	Match types.String `tfsdk:"match"`
+	Source types.String `tfsdk:"source"`
+}
+
+type listToMapModel struct {
+	Flatten types.Bool `tfsdk:"flatten"`
+	FlattenedElement fwtypes.StringEnum[awstypes.FlattenedElement] `tfsdk:"flattened_element"`
+	Key types.String `tfsdk:"key"`
+	Source types.String `tfsdk:"source"`
+	Target types.String `tfsdk:"target"`
+	ValueKey types.String `tfsdk:"value_key"`
+}
+
+type lowerCaseStringModel struct {
+	WithKeys types.List `tfsdk:"with_keys"`
+}
+
+type moveKeysModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[moveKeysEntryModel] `tfsdk:"entries"`
+}
+
+type moveKeysEntryModel struct {
+	OverwriteIfExists types.Bool `tfsdk:"overwrite_if_exists"`
+	Source types.String `tfsdk:"source"`
+	Target types.String `tfsdk:"target"`
+}
+
+type parseCloudfrontModel struct {
+	Source types.String `tfsdk:"source"`
+}
+
+type parseJSONModel struct {
+	Destination types.String `tfsdk:"destination"`
+	Source types.String `tfsdk:"source"`
+}
+
+type parseKeyValueModel struct {
+	Destination types.String `tfsdk:"destination"`
+	FieldDelimiter types.String `tfsdk:"field_delimiter"`
+	KeyPrefix types.String `tfsdk:"key_prefix"`
+	KeyValueDelimiter types.String `tfsdk:"key_value_delimiter"`
+	NonMatchValue types.String `tfsdk:"non_match_value"`
+	OverwriteIfExists types.Bool `tfsdk:"overwrite_if_exists"`
+	Source types.String `tfsdk:"source"`
+}
+
+type parsePostgresModel struct {
+	Source types.String `tfsdk:"source"`
+}
+
+type parseRoute53Model struct {
+	Source types.String `tfsdk:"source"`
+}
+
+type parseVPCModel struct {
+	Source types.String `tfsdk:"source"`
+}
+
+type parseWAFModel struct {
+	Source types.String `tfsdk:"source"`
+}
+
+type renameKeysModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[renameKeysEntryModel] `tfsdk:"entries"`
+}
+
+type renameKeysEntryModel struct {
+	Key types.String `tfsdk:"key"`
+	OverwriteIfExists types.Bool `tfsdk:"overwrite_if_exists"`
+	RenameTo types.String `tfsdk:"rename_to"`
+}
+
+type splitStringModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[splitStringEntryModel] `tfsdk:"entries"`
+}
+
+type splitStringEntryModel struct {
+	Delimiter types.String `tfsdk:"delimiter"`
+	Source types.String `tfsdk:"source"`
+}
+
+type substituteStringModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[substituteStringEntryModel] `tfsdk:"entries"`
+}
+
+type substituteStringEntryModel struct {
+	From types.String `tfsdk:"from"`
+	Source types.String `tfsdk:"source"`
+	To types.String `tfsdk:"to"`
+}
+
+type trimStringModel struct {
+	WithKeys types.List `tfsdk:"with_keys"`
+}
+
+type typeConverterModel struct {
+	Entries fwtypes.ListNestedObjectValueOf[typeConverterEntryModel] `tfsdk:"entries"`
+}
+
+type typeConverterEntryModel struct {
+	Key types.String `tfsdk:"key"`
+	Type fwtypes.StringEnum[awstypes.Type] `tfsdk:"type"`
+}
+
+type upperCaseStringModel struct {
+	WithKeys types.List `tfsdk:"with_keys"`
 }
 
 // TIP: ==== SWEEPERS ====
