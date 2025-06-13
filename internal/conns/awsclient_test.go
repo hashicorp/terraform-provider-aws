@@ -4,7 +4,6 @@
 package conns
 
 import (
-	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,7 +18,7 @@ var (
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -60,7 +59,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -107,7 +106,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -154,7 +153,7 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -193,6 +192,62 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientValidateInContextRegionInPartition(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Region    string
+		Expected  bool
+	}{
+		{
+			Name: "AWS Commercial, valid",
+			AWSClient: &AWSClient{
+				partition: standardPartition,
+			},
+			Region:   endpoints.ApNortheast1RegionID,
+			Expected: true,
+		},
+		{
+			Name: "AWS Commercial, invalid",
+			AWSClient: &AWSClient{
+				partition: standardPartition,
+			},
+			Region:   endpoints.UsGovWest1RegionID,
+			Expected: false,
+		},
+		{
+			Name: "AWS China, valid",
+			AWSClient: &AWSClient{
+				partition: chinaPartition,
+			},
+			Region:   endpoints.CnNorth1RegionID,
+			Expected: true,
+		},
+		{
+			Name:      "Empty partition, valid",
+			AWSClient: &AWSClient{},
+			Region:    "ash",
+			Expected:  true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx = NewResourceContext(ctx, "test", "Test", testCase.Region)
+			err := testCase.AWSClient.ValidateInContextRegionInPartition(ctx)
+
+			if got := err == nil; got != testCase.Expected {
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
 			}
 		})
 	}
