@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,20 +38,9 @@ func RegionalSingleton(ctx context.Context, client AWSClient, request resource.I
 			}
 		}
 	} else if identity := request.Identity; identity != nil {
-		var accountIDAttr types.String
-		response.Diagnostics.Append(identity.GetAttribute(ctx, accountIDPath, &accountIDAttr)...)
+		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
 		if response.Diagnostics.HasError() {
 			return
-		}
-		if !accountIDAttr.IsNull() {
-			if accountIDAttr.ValueString() != client.AccountID(ctx) {
-				response.Diagnostics.AddAttributeError(
-					accountIDPath,
-					InvalidResourceImportIDValue,
-					fmt.Sprintf("Provider configured with Account ID %q cannot be used to import resources from account %q", client.AccountID(ctx), accountIDAttr.ValueString()),
-				)
-				return
-			}
 		}
 
 		var regionAttr types.String
@@ -75,4 +66,24 @@ func RegionalSingleton(ctx context.Context, client AWSClient, request resource.I
 		response.Diagnostics.Append(identity.SetAttribute(ctx, accountIDPath, accountID)...)
 		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
 	}
+}
+
+func validateAccountID(ctx context.Context, identity *tfsdk.ResourceIdentity, expected string) (diags diag.Diagnostics) {
+	accountIDPath := path.Root(names.AttrAccountID)
+	var accountIDAttr types.String
+	diags.Append(identity.GetAttribute(ctx, accountIDPath, &accountIDAttr)...)
+	if diags.HasError() {
+		return
+	}
+	if !accountIDAttr.IsNull() {
+		if accountIDAttr.ValueString() != expected {
+			diags.AddAttributeError(
+				accountIDPath,
+				InvalidResourceImportIDValue,
+				fmt.Sprintf("Provider configured with Account ID %q cannot be used to import resources from account %q", expected, accountIDAttr.ValueString()),
+			)
+			return
+		}
+	}
+	return
 }
