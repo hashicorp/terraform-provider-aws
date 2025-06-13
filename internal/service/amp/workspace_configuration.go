@@ -48,7 +48,7 @@ func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWith
 }
 
 type workspaceConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceConfigurationResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
@@ -290,6 +290,7 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 }
 
 type workspaceConfigurationResourceModel struct {
+	framework.WithRegionModel
 	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
 	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
 	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`

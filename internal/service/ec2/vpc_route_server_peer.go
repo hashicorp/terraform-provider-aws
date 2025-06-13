@@ -268,6 +268,7 @@ func (r *vpcRouteServerPeerResource) routeServerPeerARN(ctx context.Context, id 
 }
 
 type vpcRouteServerPeerResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String                                                `tfsdk:"arn"`
 	BGPOptions            fwtypes.ListNestedObjectValueOf[routeServerBGPOptionsModel] `tfsdk:"bgp_options"`
 	EndpointEniAddress    types.String                                                `tfsdk:"endpoint_eni_address"`

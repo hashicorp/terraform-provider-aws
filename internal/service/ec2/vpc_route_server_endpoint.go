@@ -219,6 +219,7 @@ func (r *vpcRouteServerEndpointResource) routeServerEndpointARN(ctx context.Cont
 }
 
 type vpcRouteServerEndpointResourceModel struct {
+	framework.WithRegionModel
 	ARN                   types.String   `tfsdk:"arn"`
 	EniAddress            types.String   `tfsdk:"eni_address"`
 	EniID                 types.String   `tfsdk:"eni_id"`
