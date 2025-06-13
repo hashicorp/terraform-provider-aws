@@ -5912,6 +5912,7 @@ service "notifications" {
   sdk {
     id             = "notifications"
     client_version = 2
+    arn_service    = "notifications"
   }
 
   names {
@@ -5945,6 +5946,7 @@ service "notificationscontacts" {
   sdk {
     id             = "notificationscontacts"
     client_version = 2
+    arn_service    = "notifications-contacts"
   }
 
   names {
@@ -7562,6 +7564,7 @@ service "simpledb" {
   sdk {
     id             = "SimpleDB"
     client_version = 1
+    arn_service    = "sdb"
   }
 
   names {
