@@ -38,10 +38,13 @@ func ResourcePermissions() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				ValidateFunc: func(v any, k string) ([]string, []error) {
+					fmt.Printf("[DEBUG] Validating database.catalog_id: %v\n", v)
+					return verify.ValidAccountID(v, k)
+				},
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -114,7 +117,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidDataCatalogID,
 						},
 					},
 				},
@@ -138,11 +141,14 @@ func ResourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Computed:     true,
-							ForceNew:     true,
-							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Computed: true,
+							ForceNew: true,
+							Optional: true,
+							ValidateFunc: func(v any, k string) ([]string, []error) {
+								fmt.Printf("[DEBUG] Validating database.catalog_id: %v\n", v)
+								return verify.ValidDataCatalogID(v, k)
+							},
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -217,7 +223,7 @@ func ResourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidDataCatalogID,
 						},
 						names.AttrExpression: {
 							Type:     schema.TypeSet,
@@ -302,7 +308,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidDataCatalogID,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -355,7 +361,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidDataCatalogID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
@@ -418,6 +424,7 @@ func ResourcePermissions() *schema.Resource {
 // returns.
 
 func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	fmt.Print("resourcePermissionsCreate() called\n")
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -513,6 +520,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	fmt.Print("resourcePermissionsRead() called\n")
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -737,6 +745,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	fmt.Print("resourcePermissionsDelete() called\n")
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

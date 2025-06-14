@@ -10,7 +10,7 @@ import (
 
 var (
 	accountIDRe      = regexp.MustCompile(`^\d{12}$`)
-	s3CatalogRe      = regexp.MustCompile(`s3tablescatalog/([a-z0-9][a-z0-9-]{1,61}[a-z0-9])$`)
+	s3CatalogRe      = regexp.MustCompile(`^\d{12}:s3tablescatalog/([a-z0-9][a-z0-9-]{1,61}[a-z0-9])$`)
 	reservedPrefixes = []string{"xn--", "sthree-", "amzn-s3-demo-"}
 	reservedSuffixes = []string{"-s3alias", "--ol-s3", "--x-s3", "--table-s3"}
 )

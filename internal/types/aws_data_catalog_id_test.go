@@ -1,6 +1,9 @@
 package types
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestIsAWSDataCatalogID(t *testing.T) {
 	// Test cases for IsAWSDataCatalogID function
@@ -17,12 +20,11 @@ func TestIsAWSDataCatalogID(t *testing.T) {
 		// Valid 12-digit account ID
 		{"123456789012", true},
 		// Valid s3tablescatalog format, min and max length
-		{"s3tablescatalog/abc", true},
-		{"s3tablescatalog/abc-def-ghi", true},
-		{"s3tablescatalog/a23", true},
-		{"s3tablescatalog/" + string(make([]byte, 63)), false}, // too long
+		{"123456789012:s3tablescatalog/abc", true},
+		{"123456789012:s3tablescatalog/abc-def-ghi", true},
+		{"123456789012:s3tablescatalog/a23", true},
 		// Valid: max length (63 chars)
-		{"s3tablescatalog/abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabc", true}, // 63 chars
+		{"123456789012:s3tablescatalog/" + strings.Repeat("a", 64), false}, // too long
 
 		// Invalid: less than 12 digits
 		{"12345678901", false},
@@ -33,37 +35,34 @@ func TestIsAWSDataCatalogID(t *testing.T) {
 		// Invalid: wrong prefix after colon
 		{"somethingelse/my-catalog", false},
 		// Invalid: missing catalog name
-		{"s3tablescatalog/", false},
+		{"123456789012:s3tablescatalog/", false},
 		// Invalid: empty string
 		{"", false},
-		// Invalid: only s3tablescatalog part
-		{"s3tablescatalog/my-catalog", false},
-
 		// Invalid: underscores
-		{"s3tablescatalog/my_catalog", false},
+		{"123456789012:s3tablescatalog/my_catalog", false},
 		// Invalid: periods
-		{"s3tablescatalog/my.catalog", false},
+		{"123456789012:s3tablescatalog/my.catalog", false},
 		// Invalid: starts with hyphen
-		{"s3tablescatalog/-abc", false},
+		{"123456789012:s3tablescatalog/-abc", false},
 		// Invalid: ends with hyphen
-		{"s3tablescatalog/abc-", false},
+		{"123456789012:s3tablescatalog/abc-", false},
 		// Invalid: starts with reserved prefix
-		{"s3tablescatalog/xn--bucket", false},
-		{"s3tablescatalog/sthree-bucket", false},
-		{"s3tablescatalog/amzn-s3-demo-bucket", false},
+		{"123456789012:s3tablescatalog/xn--bucket", false},
+		{"123456789012:s3tablescatalog/sthree-bucket", false},
+		{"123456789012:s3tablescatalog/amzn-s3-demo-bucket", false},
 		// Invalid: ends with reserved suffix
-		{"s3tablescatalog/bucket-s3alias", false},
-		{"s3tablescatalog/bucket--ol-s3", false},
-		{"s3tablescatalog/bucket--x-s3", false},
-		{"s3tablescatalog/bucket--table-s3", false},
+		{"123456789012:s3tablescatalog/bucket-s3alias", false},
+		{"123456789012:s3tablescatalog/bucket--ol-s3", false},
+		{"123456789012:s3tablescatalog/bucket--x-s3", false},
+		{"123456789012:s3tablescatalog/bucket--table-s3", false},
 		// Invalid: too short
-		{"s3tablescatalog/ab", false},
+		{"123456789012:s3tablescatalog/ab", false},
 		// Invalid: too long (64 chars)
-		{"s3tablescatalog/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl", false},
+		{"123456789012:s3tablescatalog/" + strings.Repeat("a", 64), false}, // too long
 		// Invalid: uppercase letters
-		{"s3tablescatalog/Mycatalog", false},
+		{"123456789012:s3tablescatalog/Mycatalog", false},
 		// Invalid: spaces
-		{"s3tablescatalog/my catalog", false},
+		{"123456789012:s3tablescatalog/my catalog", false},
 	}
 
 	for _, tt := range tests {

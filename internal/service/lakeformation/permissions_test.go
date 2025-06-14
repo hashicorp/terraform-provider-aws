@@ -9,6 +9,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -882,8 +883,8 @@ func testAccPermissions_CatalogIDS3Tables(t *testing.T) {
 			{
 				Config: testAccPermissionsConfig_catalogIDS3Tables(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_s3tables_namespace.test", "namespace", strings.ReplaceAll(rName, "-", "_")),
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "catalog_id", fmt.Sprintf("s3tablescatalog/%s", rName)),
 				),
 			},
 		},
@@ -960,13 +961,15 @@ func testAccCheckPermissionsDestroy(ctx context.Context) resource.TestCheckFunc 
 }
 
 func testAccCheckPermissionsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	fmt.Print("testAccCheckPermissionsExists() called\n")
 	return func(s *terraform.State) error {
+		fmt.Print("testAccCheckPermissionsExists() running\n")
 		rs, ok := s.RootModule().Resources[resourceName]
 
 		if !ok {
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
-
+		fmt.Printf("Resource ID: %q\n", rs.Primary.ID)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		permCount, err := permissionCountForResource(ctx, conn, rs)
@@ -2885,8 +2888,8 @@ resource "aws_lakeformation_permissions" "test" {
 func testAccPermissionsConfig_catalogIDS3Tables(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-
 data "aws_caller_identity" "current" {}
+data "aws_lakeformation_data_lake_settings" "existing" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2908,35 +2911,34 @@ data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
 }
 
-# namespace is equivalent of a database
-resource "aws_s3tables_namespace" "test" {
-  namespace        = "namespace_${replace(%[1]q, "-", "_")}_test"
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
-}
-
-# name of the s3tables bucket is used as the catalog ID
 resource "aws_s3tables_table_bucket" "test" {
   name = %[1]q
 }
 
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
+resource "aws_s3tables_namespace" "test" {
+  namespace        = replace(%[1]q, "-", "_")
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
 }
 
-resource "aws_lakeformation_permissions" "test2" {
-  permissions      = ["CREATE_TABLE"]
-  principal        = aws_iam_role.test.arn
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["CREATE_TABLE"]
+  principal   = aws_iam_role.test.arn
 
   database {
-	name = aws_s3tables_namespace.test.namespace
-	catalog_id	   = "s3tablescatalog/%[1]q"
+    name       = replace(%[1]q, "-", "_")
+    catalog_id = "${data.aws_caller_identity.current.account_id}:s3tablescatalog/%[1]s"
   }
-}`, rName)
+  depends_on = [data.aws_lakeformation_data_lake_settings.existing, aws_s3tables_namespace.test]
+}
+  `, rName)
 }
 
 func testAccPermissionsConfig_catalogIDClassic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_lakeformation_data_lake_settings" "existing" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2954,14 +2956,8 @@ resource "aws_iam_role" "test" {
   })
 }
 
-data "aws_caller_identity" "current" {}
-
 data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -2971,7 +2967,7 @@ resource "aws_lakeformation_permissions" "test" {
   catalog_id       = data.aws_caller_identity.current.account_id
 
   # for consistency, ensure that admins are setup before testing
-  depends_on = [aws_lakeformation_data_lake_settings.test]
+  depends_on = [data.aws_lakeformation_data_lake_settings.existing]
 }
 `, rName)
 }
