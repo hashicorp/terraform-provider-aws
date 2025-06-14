@@ -80,7 +80,9 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 				ImportStateKind:   resource.ImportBlockWithID,
 				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{},
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
+					},
 				},
 			},
 
@@ -94,7 +96,9 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 				ImportState:     true,
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{},
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.NotNull()),
+					},
 				},
 			},
 		},
