@@ -345,6 +345,10 @@ func resourceNetworkInterface() *schema.Resource {
 					return diff.HasChange("ipv6_addresses") || diff.HasChange("ipv6_address_count") || diff.HasChange("ipv6_address_list")
 				}
 			}),
+			customdiff.ComputedIf("public_dns_names_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				// This condition is enough, because it's computed _after_ ipv6_addresses in the sequence.
+				return diff.HasChange("ipv6_addresses")
+			}),
 		),
 	}
 }
