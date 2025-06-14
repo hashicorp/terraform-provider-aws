@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,6 +24,29 @@ func (w *WithImportByParameterizedIdentity) SetIdentitySpec(identity inttypes.Id
 }
 
 func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	client := importer.Client(ctx)
+	if client == nil {
+		response.Diagnostics.AddError(
+			"Unexpected Error",
+			"An unexpected error occurred while importing a resource. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Importer context was nil.",
+		)
+		return
+	}
+
+	if w.identity.IsSingleParameter {
+		if w.identity.IsGlobalResource {
+			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, response)
+		} else {
+			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, response)
+
+		}
+
+		return
+	}
+
 	if request.ID != "" {
 		if w.identity.IDAttrShadowsAttr != names.AttrID {
 			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.identity.IDAttrShadowsAttr), request.ID)...)
@@ -37,17 +61,6 @@ func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, req
 		for _, attr := range w.identity.Attributes {
 			switch attr.Name {
 			case names.AttrAccountID:
-				// accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-				// if ok {
-				// 	accountID, ok := accountIDRaw.(string)
-				// 	if !ok {
-				// 		return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-				// 	}
-				// 	client := meta.(*conns.AWSClient)
-				// 	if accountID != client.AccountID(ctx) {
-				// 		return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-				// 	}
-				// }
 
 			case names.AttrRegion:
 				regionPath := path.Root(names.AttrRegion)
