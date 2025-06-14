@@ -252,7 +252,7 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: /*testAccParameterConfig_basic(rName, "SecureString", "test") + */ fmt.Sprintf(`
+				Config: fmt.Sprintf(`
 resource "aws_ssm_parameter" "prereq" {
   name  = "%[1]s-prereq"
   type  = %[2]q
@@ -274,7 +274,7 @@ resource "aws_ssm_parameter" "test" {
 				),
 			},
 			{
-				Config: /*testAccParameterConfig_writeOnly(rName, "testUpdated", rVersion) + */ fmt.Sprintf(`
+				Config: fmt.Sprintf(`
 resource "aws_ssm_parameter" "prereq" {
   name  = "%[1]s-prereq"
   type  = %[2]q
@@ -286,8 +286,8 @@ data "aws_ssm_parameter" "prereq" {
 }
 
 resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
-  type  = %[2]q
+  name             = %[1]q
+  type             = %[2]q
   value_wo         = data.aws_ssm_parameter.prereq.value
   value_wo_version = data.aws_ssm_parameter.prereq.version
 }
@@ -378,8 +378,8 @@ resource "aws_ssm_parameter" "test" {
 						),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("insecure_value")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("value")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("version")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrValue)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrVersion)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
