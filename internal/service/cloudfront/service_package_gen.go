@@ -42,9 +42,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalParameterizedIdentity(
-				inttypes.StringIdentityAttribute(names.AttrName, true),
-			),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newVPCOriginResource,

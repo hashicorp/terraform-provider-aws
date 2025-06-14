@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -34,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 // @IdentityAttribute("name")
+// @WrappedImport
+// @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
 // @Testing(importStateIdAttribute="name")
 func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, error) {
@@ -47,7 +48,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 type keyValueStoreResource struct {
 	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
-	// framework.WithImportByParameterizedIdentity
+	framework.WithImportByParameterizedIdentity
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -310,22 +311,4 @@ type keyValueStoreResourceModel struct {
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
-}
-
-func (r *keyValueStoreResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	// Import-by-id case
-	if request.ID != "" {
-		resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-		return
-	}
-
-	if identity := request.Identity; identity != nil {
-		var name string
-		response.Diagnostics.Append(identity.GetAttribute(ctx, path.Root(names.AttrName), &name)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), name)...)
-	}
 }
