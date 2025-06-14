@@ -65,3 +65,35 @@ func RegionalSingleParameterized(ctx context.Context, client AWSClient, request 
 	}
 
 }
+
+func GlobalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+	attrPath := path.Root(identitySpec.IdentityAttribute)
+
+	var (
+		parameterVal string
+	)
+	if parameterVal = request.ID; parameterVal != "" {
+	} else if identity := request.Identity; identity != nil {
+		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		var parameterAttr types.String
+		response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		parameterVal = parameterAttr.ValueString()
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
+
+	accountID := client.AccountID(ctx)
+
+	if identity := response.Identity; identity != nil {
+		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), accountID)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
+	}
+
+}
