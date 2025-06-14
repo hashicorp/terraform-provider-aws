@@ -7170,7 +7170,6 @@ resource "aws_instance" "test" {
 	)
 }
 
-
 func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
