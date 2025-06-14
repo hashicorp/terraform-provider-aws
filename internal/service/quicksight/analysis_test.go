@@ -293,6 +293,41 @@ func TestAccQuickSightAnalysis_theme(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightAnalysis_pieChartVisualArcThickness(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var analysis awstypes.Analysis
+	resourceName := "aws_quicksight_analysis.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalysisConfig_pieChartVisualArcThickness(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
+					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.pie_chart_visual.0.chart_configuration.0.donut_options.0.arc_options.0.arc_thickness", string(awstypes.ArcThicknessWhole)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
@@ -821,4 +856,58 @@ resource "aws_quicksight_analysis" "test" {
   theme_arn = %[3]q
 }
 `, rId, rName, themeArn))
+}
+
+func testAccAnalysisConfig_pieChartVisualArcThickness(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccAnalysisConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_analysis" "test" {
+  analysis_id = %[1]q
+  name        = %[2]q
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        pie_chart_visual {
+          visual_id = "PieChart"
+          title {
+            format_text {
+              plain_text = "Pie Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              pie_chart_aggregated_field_wells {}
+            }
+            category_label_options {
+              sort_icon_visibility = "HIDDEN"
+              visibility           = "HIDDEN"
+            }
+            data_labels {
+              category_label_visibility = "VISIBLE"
+              label_color               = null
+              label_content             = null
+              measure_label_visibility  = "VISIBLE"
+              overlap                   = "DISABLE_OVERLAP"
+              position                  = null
+              visibility                = "VISIBLE"
+            }
+            donut_options {
+              arc_options {
+                arc_thickness = "WHOLE"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rId, rName))
 }

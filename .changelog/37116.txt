@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Add `WHOLE` as a valid value to `definition.*.sheets.*.visuals.*.pie_chart_visual.*.chart_configuration.*.donut_options.*.arc_options.*.arc_thickness`
+```
+
+```release-note:bug
+resource/aws_quicksight_dashboard: Add `WHOLE` as a valid value to `definition.*.sheets.*.visuals.*.pie_chart_visual.*.chart_configuration.*.donut_options.*.arc_options.*.arc_thickness`
+```
