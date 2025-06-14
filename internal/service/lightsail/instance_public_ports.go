@@ -66,7 +66,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IntBetween(-1, 65535),
 						},
 						"ipv6_cidrs": {
 							Type:     schema.TypeSet,
@@ -88,7 +88,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IntBetween(-1, 65535),
 						},
 					},
 				},
