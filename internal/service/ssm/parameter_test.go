@@ -377,7 +377,7 @@ resource "aws_ssm_parameter" "test" {
 							knownvalue.Null(),
 						),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("value_wo"), knownvalue.Null()),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("insecure_value")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("insecure_value"), knownvalue.Null()),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrValue)),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrVersion)),
 					},
