@@ -648,6 +648,11 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 					Required: true,
 				},
+				"os_release_label": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
 				"placement_group_config": {
 					Type:       schema.TypeList,
 					ForceNew:   true,
@@ -922,6 +927,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		Name:         aws.String(name),
 		Applications: expandApplications(applications),
 
+		OSReleaseLabel:    aws.String(d.Get("os_release_label").(string)),
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
@@ -1118,6 +1124,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrServiceRole, cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
+	d.Set("os_release_label", cluster.OSReleaseLabel)
 	d.Set("release_label", cluster.ReleaseLabel)
 	d.Set("log_encryption_kms_key_id", cluster.LogEncryptionKmsKeyId)
 	d.Set("log_uri", cluster.LogUri)
