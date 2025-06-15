@@ -47,7 +47,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"lfTag":                 testAccPermissions_lfTag,
 			"lfTagPolicy":           testAccPermissions_lfTagPolicy,
 			"lfTagPolicyMultiple":   testAccPermissions_lfTagPolicyMultiple,
-			"dataCatalogId":         testAccPermissions_CatalogIDAWSAccount,
+			"dataCatalogId":         testAccPermissions_CatalogDefault,
 			"dataCatalogS3Tables":   testAccPermissions_CatalogIDS3Tables,
 		},
 		"PermissionsDataSource": {
@@ -59,7 +59,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"lfTagPolicy":         testAccPermissionsDataSource_lfTagPolicy,
 			"table":               testAccPermissionsDataSource_table,
 			"tableWithColumns":    testAccPermissionsDataSource_tableWithColumns,
-			"dataCatalogId":       testAccPermissionsDataSourceConfig_CatalogIDAWSAccount,
+			"dataCatalogId":       testAccPermissionsDataSourceConfig_CatalogDefault,
 			"dataCatalogS3Tables": testAccPermissionsDataSource_CatalogIDS3Tables,
 		},
 		"PermissionsTable": {

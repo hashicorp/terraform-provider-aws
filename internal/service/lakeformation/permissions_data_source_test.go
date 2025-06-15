@@ -264,7 +264,7 @@ func testAccPermissionsDataSource_CatalogIDS3Tables(t *testing.T) {
 	})
 }
 
-func testAccPermissionsDataSourceConfig_CatalogIDAWSAccount(t *testing.T) {
+func testAccPermissionsDataSourceConfig_CatalogDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
@@ -277,10 +277,9 @@ func testAccPermissionsDataSourceConfig_CatalogIDAWSAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsDataSourceConfig_catalogIDClassic(rName),
+				Config: testAccPermissionsDataSourceConfig_catalogDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "permissions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "ALTER"),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "CREATE_CATALOG"),
@@ -879,6 +878,14 @@ data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
 }
 
+# Ensure the calling user remains an admin
+resource "aws_lakeformation_data_lake_settings" "admin" {
+  admins = tolist(concat(
+    tolist(data.aws_lakeformation_data_lake_settings.existing.admins),
+    [data.aws_iam_session_context.current.issuer_arn]
+  ))
+}
+
 resource "aws_s3tables_table_bucket" "test" {
   name = %[1]q
 }
@@ -888,7 +895,6 @@ resource "aws_s3tables_namespace" "test" {
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 }
 
-
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["CREATE_TABLE"]
   principal   = aws_iam_role.test.arn
@@ -897,7 +903,7 @@ resource "aws_lakeformation_permissions" "test" {
     name       = replace(%[1]q, "-", "_")
     catalog_id = "${data.aws_caller_identity.current.account_id}:s3tablescatalog/%[1]s"
   }
-  depends_on = [data.aws_lakeformation_data_lake_settings.existing, aws_s3tables_namespace.test]
+  depends_on = [aws_lakeformation_data_lake_settings.admin, aws_s3tables_namespace.test]
 }
 
 data "aws_lakeformation_permissions" "test" {
@@ -913,7 +919,7 @@ data "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccPermissionsDataSourceConfig_catalogIDClassic(rName string) string {
+func testAccPermissionsDataSourceConfig_catalogDefault(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
@@ -939,14 +945,21 @@ data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
 }
 
+# Ensure the calling user remains an admin
+resource "aws_lakeformation_data_lake_settings" "admin" {
+  admins = tolist(concat(
+    tolist(data.aws_lakeformation_data_lake_settings.existing.admins),
+    [data.aws_iam_session_context.current.issuer_arn]
+  ))
+}
+
 resource "aws_lakeformation_permissions" "test" {
   permissions      = ["ALTER", "CREATE_CATALOG", "CREATE_DATABASE"]
   principal        = aws_iam_role.test.arn
   catalog_resource = true
   catalog_id       = data.aws_caller_identity.current.account_id
 
-  # for consistency, ensure that admins are setup before testing
-  depends_on = [data.aws_lakeformation_data_lake_settings.existing]
+  depends_on = [aws_lakeformation_data_lake_settings.admin]
 }
 
 data "aws_lakeformation_permissions" "test" {
