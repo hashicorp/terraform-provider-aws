@@ -157,7 +157,7 @@ func ValidDataCatalogID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !inttypes.IsAWSDataCatalogID(value) {
 		errors = append(errors, fmt.Errorf(
-			"%s must be a valid Data Catalog ID: either a 12-digit AWS account ID or a valid S3TablesCatalog ID (e.g., s3tablescatalog/bucket-name)", k))
+			"%s must be a valid Data Catalog ID: either a 12-digit AWS account ID or a valid S3TablesCatalog ID (e.g., AWSAccountID:s3tablescatalog/bucket-name)", k))
 	}
 
 	return
