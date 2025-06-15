@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_lakeformation_permissions: Extended validation of catalog ID enabling granting permissions on S3 tables bucket.
+data_source/aws_lakeformation_permissions: Extended validation of catalog ID enabling granting permissions on S3 tables bucket.
+```

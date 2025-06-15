@@ -964,15 +964,12 @@ func testAccCheckPermissionsDestroy(ctx context.Context) resource.TestCheckFunc 
 }
 
 func testAccCheckPermissionsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	fmt.Print("testAccCheckPermissionsExists() called\n")
 	return func(s *terraform.State) error {
-		fmt.Print("testAccCheckPermissionsExists() running\n")
 		rs, ok := s.RootModule().Resources[resourceName]
 
 		if !ok {
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
-		fmt.Printf("Resource ID: %q\n", rs.Primary.ID)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		permCount, err := permissionCountForResource(ctx, conn, rs)
