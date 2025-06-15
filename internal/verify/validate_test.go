@@ -174,6 +174,48 @@ func TestValidAccountID(t *testing.T) {
 	}
 }
 
+func TestValidDataCatalogID(t *testing.T) {
+	t.Parallel()
+
+	validIDs := []string{
+		"123456789012", // Valid AWS account ID
+		"123456789012:s3tablescatalog/my-catalog",                                                 // Typical valid S3 catalog
+		"123456789012:s3tablescatalog/a-valid-bucket-name",                                        // Hyphenated, lowercase
+		"123456789012:s3tablescatalog/abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabcdeabc", // 63-char max
+	}
+
+	for _, v := range validIDs {
+		_, errors := ValidDataCatalogID(v, "catalog_id")
+		if len(errors) != 0 {
+			t.Errorf("Expected valid catalog ID %q, but got errors: %v", v, errors)
+		}
+	}
+
+	invalidIDs := []string{
+		"12345678901",                                    // Too short
+		"1234567890123",                                  // Too long
+		"invalid",                                        // Non-numeric, non-prefix
+		"123456789012:s3tablescatalog/",                  // Missing catalog name
+		"123456789012:s3tablescatalog/MyCatalog",         // Uppercase
+		"123456789012:s3tablescatalog/invalid_bucket",    // Underscore
+		"123456789012:s3tablescatalog/.hidden",           // Invalid start
+		"123456789012:s3tablescatalog/-starts-with-dash", // Starts with dash
+		"123456789012:s3tablescatalog/ends-with-dash-",   // Ends with dash
+		"123456789012:s3tablescatalog/abc.",              // Period not allowed
+		"123456789012:s3tablescatalog/abc--ol-s3",        // Reserved suffix
+		"123456789012:s3tablescatalog/xn--weirdprefix",   // Reserved prefix
+		"123456789012:s3tablescatalog/abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl", // 64-char bucket name
+		"", // Empty
+	}
+
+	for _, v := range invalidIDs {
+		_, errors := ValidDataCatalogID(v, "catalog_id")
+		if len(errors) == 0 {
+			t.Errorf("Expected invalid catalog ID %q, but got no errors", v)
+		}
+	}
+}
+
 func TestValidRegionName(t *testing.T) {
 	t.Parallel()
 
