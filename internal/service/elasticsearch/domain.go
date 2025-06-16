@@ -814,7 +814,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		name := d.Get(names.AttrDomainName).(string)
-		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		}
 
@@ -836,6 +836,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
+		}
+
+		if d.HasChange("cognito_options") {
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
@@ -871,6 +875,27 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 		}
 
+		if d.HasChange("log_publishing_options") {
+			o, n := d.GetChange("log_publishing_options")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+
+			input.LogPublishingOptions = expandLogPublishingOptions(ns)
+
+			// Explicitly disable removed log types.
+			oldTypes := tfslices.ApplyToAll(os.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			for _, logType := range remove {
+				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
+					Enabled: aws.Bool(false),
+				}
+			}
+		}
+
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -896,22 +921,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.VPCOptions = expandVPCOptions(v[0].(map[string]any))
 		}
 
-		if d.HasChange("cognito_options") {
-			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]any))
-		}
-
-		if d.HasChange("log_publishing_options") {
-			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
-
-			// Explicitly disable removed log types
-			for _, logType := range getRemovedLogPublishingOptionTypes(d.GetChange("log_publishing_options")) {
-				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
-					Enabled: aws.Bool(false),
-				}
-			}
-		}
-
-		_, err := conn.UpdateElasticsearchDomainConfig(ctx, input)
+		_, err := conn.UpdateElasticsearchDomainConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
@@ -1446,26 +1456,4 @@ func ebsVolumeTypePermitsIopsInput(volumeType string) bool {
 func ebsVolumeTypePermitsThroughputInput(volumeType string) bool {
 	permittedTypes := enum.Slice(awstypes.VolumeTypeGp3)
 	return slices.Contains(permittedTypes, volumeType)
-}
-
-// getRemovedLogPublishingOptionTypes returns log types which removed
-//
-// The arguments for this function should be populated with the output of
-// d.GetChange("log_publishing_options").
-func getRemovedLogPublishingOptionTypes(o, n any) []string {
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	var oldTypes, newTypes []string
-	for _, o := range os.List() {
-		tfMap := o.(map[string]any)
-		oldTypes = append(oldTypes, tfMap["log_type"].(string))
-	}
-	for _, n := range ns.List() {
-		tfMap := n.(map[string]any)
-		newTypes = append(newTypes, tfMap["log_type"].(string))
-	}
-
-	_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
-	return remove
 }

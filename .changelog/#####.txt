@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticsearch_domain: Disable publishing for `log_publishing_options` removed on Update. This prevents a perpetual diff 
+```
