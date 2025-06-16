@@ -63,44 +63,6 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkInt32ValueSet(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    []int32
-		expected types.Set
-	}
-	tests := map[string]testCase{
-		"two elements": {
-			input: []int32{1, -1},
-			expected: types.SetValueMust(types.Int64Type, []attr.Value{
-				types.Int64Value(1),
-				types.Int64Value(-1),
-			}),
-		},
-		"zero elements": {
-			input:    []int32{},
-			expected: types.SetNull(types.Int64Type),
-		},
-		"nil array": {
-			input:    nil,
-			expected: types.SetNull(types.Int64Type),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.FlattenFrameworkInt32ValueSet(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestFlattenFrameworkInt64Set(t *testing.T) {
 	t.Parallel()
 
