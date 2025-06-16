@@ -13,14 +13,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func ExpandFrameworkInt32List(ctx context.Context, v basetypes.ListValuable) []*int32 {
-	var output []*int32
-
-	must(Expand(ctx, v, &output))
-
-	return output
-}
-
 func ExpandFrameworkInt32ValueList(ctx context.Context, v basetypes.ListValuable) []int32 {
 	var output []int32
 
