@@ -164,10 +164,11 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 		return
 	}
 
-	if resource := resourceARN.Resource; strings.HasPrefix(resource, "vpc/") {
-		data.VPCID = types.StringValue(strings.TrimPrefix(resource, "vpc/"))
-	} else if strings.HasPrefix(resource, "subnet/") {
-		data.SubnetID = types.StringValue(strings.TrimPrefix(resource, "subnet/"))
+	resource := resourceARN.Resource
+	if trimmed, ok := strings.CutPrefix(resource, "vpc/"); ok {
+		data.VPCID = types.StringValue(trimmed)
+	} else if trimmed, ok := strings.CutPrefix(resource, "subnet/"); ok {
+		data.SubnetID = types.StringValue(trimmed)
 	} else {
 		response.Diagnostics.AddError("parsing Resource_ARN", fmt.Sprintf("unknown resource type: %s", resource))
 
