@@ -22,15 +22,6 @@ func Float64FromFramework(ctx context.Context, v basetypes.Float64Valuable) *flo
 	return val.ValueFloat64Pointer()
 }
 
-// Float32ToFrameworkFloat64 converts a float32 pointer to a Framework Float64 value.
-// A nil float32 pointer is converted to a null Float64.
-func Float32ToFrameworkFloat64(_ context.Context, v *float32) types.Float64 {
-	if v == nil {
-		return types.Float64Null()
-	}
-	return types.Float64Value(float64(aws.ToFloat32(v)))
-}
-
 // Float32ToFrameworkFloat64Legacy converts a float32 pointer to a Framework Float64 value.
 // A nil float32 pointer is converted to a zero float64.
 func Float32ToFrameworkFloat64Legacy(_ context.Context, v *float32) types.Float64 {

@@ -13,52 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-func TestFloat32ToFrameworkFloat64(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    *float32
-		expected types.Float64
-	}
-	tests := map[string]testCase{
-		"valid float32": {
-			input:    aws.Float32(42.0),
-			expected: types.Float64Value(42.0),
-		},
-		"zero float32": {
-			input:    aws.Float32(0),
-			expected: types.Float64Value(0),
-		},
-		"nil float32": {
-			input:    nil,
-			expected: types.Float64Null(),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.Float32ToFrameworkFloat64(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func BenchmarkFloat32ToFrameworkFloat64(b *testing.B) {
-	ctx := context.Background()
-	input := aws.Float32(42.1)
-	for b.Loop() {
-		r := flex.Float32ToFrameworkFloat64(ctx, input)
-		if r.IsNull() {
-			b.Fatal("should never see this")
-		}
-	}
-}
-
 func TestFloat32ToFrameworkFloat64Legacy(t *testing.T) {
 	t.Parallel()
 
