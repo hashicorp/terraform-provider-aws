@@ -534,7 +534,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "Elasticsearch Domain (%s) already exists", name)
 	}
 
-	input := &elasticsearch.CreateElasticsearchDomainInput{
+	input := elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
 		TagList:              getTagsIn(ctx),
@@ -639,7 +639,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (any, error) {
-			return conn.CreateElasticsearchDomain(ctx, input)
+			return conn.CreateElasticsearchDomain(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidTypeException](err, "Error setting policy") ||
@@ -649,7 +649,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role has not propagated yet") ||
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Authentication error") ||
 				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Unauthorized Operation: Elasticsearch must be authorised to describe") ||
-				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon Elasticsearch to describe") {
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon Elasticsearch to describe") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The Resource Access Policy specified for the CloudWatch Logs log group") {
 				return true, err
 			}
 
