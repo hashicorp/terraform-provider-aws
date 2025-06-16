@@ -68,6 +68,7 @@ The following arguments are optional:
 
 * `expression` - (Required) Rate expression or cron expression that defines how often the canary is to run. For rate expression, the syntax is `rate(number unit)`. _unit_ can be `minute`, `minutes`, or `hour`. For cron expression, the syntax is `cron(expression)`. For more information about the syntax for cron expressions, see [Scheduling canary runs using cron](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_cron.html).
 * `duration_in_seconds` - (Optional) Duration in seconds, for the canary to continue making regular runs according to the schedule in the Expression value.
+* `retry_config` - (Optional) The retry policy for the canary in case of failure.
 
 ### run_config
 
@@ -82,6 +83,10 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+
+### retry_config
+
+* `max_retries` - (Required) The maximum number of retries. The value must be less than or equal to 2.
 
 ## Attribute Reference
 
