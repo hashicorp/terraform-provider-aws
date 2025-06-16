@@ -33,7 +33,6 @@ import (
 
 // @FrameworkResource("aws_cloudfront_key_value_store", name="Key Value Store")
 // @IdentityAttribute("name")
-// @WrappedImport
 // @ArnFormat("key-value-store/{id}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.KeyValueStore")
 // @Testing(importStateIdAttribute="name")

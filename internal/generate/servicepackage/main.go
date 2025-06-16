@@ -369,6 +369,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "IdentityAttribute":
+				d.WrappedImport = true
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -390,8 +391,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 			case "WrappedImport":
-				if len(args.Positional) == 0 {
-					d.WrappedImport = true
+				if len(args.Positional) != 1 {
+					v.errs = append(v.errs, fmt.Errorf("WrappedImport missing required parameter: at %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					attr := args.Positional[0]
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -585,9 +586,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags":
+			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
 				// Handled above.
-			case "ArnFormat", "Testing", "WrappedImport":
+			case "ArnFormat", "NoImport", "Testing":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)
