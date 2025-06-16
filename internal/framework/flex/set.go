@@ -14,14 +14,6 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
-	var output []*string
-
-	must(Expand(ctx, v, &output))
-
-	return output
-}
-
 func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) inttypes.Set[string] {
 	var output []string
 
