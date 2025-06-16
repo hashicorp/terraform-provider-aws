@@ -31,7 +31,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	switch d, when, why := opts.d, opts.when, opts.why; when {
 	case After:
 		switch why {
-		case Create:
+		case Create, Read:
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
