@@ -41,7 +41,6 @@ func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, req
 			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, response)
 		} else {
 			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, response)
-
 		}
 
 		return

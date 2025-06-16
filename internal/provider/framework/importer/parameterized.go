@@ -63,17 +63,14 @@ func RegionalSingleParameterized(ctx context.Context, client AWSClient, request 
 		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
 		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
 	}
-
 }
 
 func GlobalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
 	attrPath := path.Root(identitySpec.IdentityAttribute)
 
-	var (
-		parameterVal string
-	)
-	if parameterVal = request.ID; parameterVal != "" {
-	} else if identity := request.Identity; identity != nil {
+	parameterVal := request.ID
+
+	if identity := request.Identity; request.ID == "" && identity != nil {
 		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
 		if response.Diagnostics.HasError() {
 			return
@@ -95,5 +92,4 @@ func GlobalSingleParameterized(ctx context.Context, client AWSClient, request re
 		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), accountID)...)
 		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
 	}
-
 }
