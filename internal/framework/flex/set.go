@@ -14,14 +14,6 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func ExpandFrameworkInt32ValueSet(ctx context.Context, v basetypes.SetValuable) []int32 {
-	var output []int32
-
-	must(Expand(ctx, v, &output))
-
-	return output
-}
-
 func ExpandFrameworkInt64Set(ctx context.Context, v basetypes.SetValuable) []*int64 {
 	var output []*int64
 
