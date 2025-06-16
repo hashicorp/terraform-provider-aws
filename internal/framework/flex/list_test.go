@@ -14,54 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-func TestExpandFrameworkStringList(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    types.List
-		expected []*string
-	}
-	tests := map[string]testCase{
-		"null": {
-			input:    types.ListNull(types.StringType),
-			expected: nil,
-		},
-		"unknown": {
-			input:    types.ListUnknown(types.StringType),
-			expected: nil,
-		},
-		"two elements": {
-			input: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-				types.StringValue("HEAD"),
-			}),
-			expected: []*string{aws.String("GET"), aws.String("HEAD")},
-		},
-		"zero elements": {
-			input:    types.ListValueMust(types.StringType, []attr.Value{}),
-			expected: []*string{},
-		},
-		"invalid element type": {
-			input: types.ListValueMust(types.Int64Type, []attr.Value{
-				types.Int64Value(42),
-			}),
-			expected: nil,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.ExpandFrameworkStringList(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestExpandFrameworkStringValueList(t *testing.T) {
 	t.Parallel()
 
