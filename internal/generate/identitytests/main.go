@@ -109,7 +109,7 @@ func main() {
 		}
 		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
-		resource.ARNService = svc.ARNService()
+		resource.ARNNamespace = svc.ARNNamespace()
 
 		if svc.primary.IsGlobal() {
 			resource.IsGlobal = true
@@ -279,8 +279,8 @@ func (sr serviceRecords) PackageProviderNameUpper() string {
 	return sr.primary.ProviderNameUpper()
 }
 
-func (sr serviceRecords) ARNService() string {
-	return sr.primary.ARNService()
+func (sr serviceRecords) ARNNamespace() string {
+	return sr.primary.ARNNamespace()
 }
 
 type implementation string
@@ -346,7 +346,7 @@ type ResourceDatum struct {
 	CheckDestroyNoop            bool
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
-	ARNService                  string
+	ARNNamespace                string
 	ARNFormat                   string
 	arnAttribute                string
 	ArnIdentity                 bool
