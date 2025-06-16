@@ -48,7 +48,6 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							// Default:  []string{"0.0.0.0/0"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -72,7 +71,6 @@ func ResourceInstancePublicPorts() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							// Default:  []string{"::/0"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -189,10 +187,6 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 func expandPortInfo(tfMap map[string]any) types.PortInfo {
-	// if tfMap == nil {
-	// 	return nil
-	// }
-
 	apiObject := types.PortInfo{
 		FromPort: int32(tfMap["from_port"].(int)),
 		ToPort:   int32(tfMap["to_port"].(int)),
@@ -237,10 +231,6 @@ func expandPortInfos(tfList []any) []types.PortInfo {
 }
 
 func flattenInstancePortState(apiObject types.InstancePortState) map[string]any {
-	// if apiObject == (types.InstancePortState{}) {
-	// 	return nil
-	// }
-
 	tfMap := map[string]any{}
 
 	tfMap["from_port"] = int(apiObject.FromPort)
@@ -270,10 +260,6 @@ func flattenInstancePortStates(apiObjects []types.InstancePortState) []any {
 	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		// if apiObject == nil {
-		// 	continue
-		// }
-
 		tfList = append(tfList, flattenInstancePortState(apiObject))
 	}
 
