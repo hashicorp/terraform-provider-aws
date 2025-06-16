@@ -62,44 +62,6 @@ func TestExpandFrameworkStringValueList(t *testing.T) {
 	}
 }
 
-func TestFlattenFrameworkStringList(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    []*string
-		expected types.List
-	}
-	tests := map[string]testCase{
-		"two elements": {
-			input: []*string{aws.String("GET"), aws.String("HEAD")},
-			expected: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-				types.StringValue("HEAD"),
-			}),
-		},
-		"zero elements": {
-			input:    []*string{},
-			expected: types.ListNull(types.StringType),
-		},
-		"nil array": {
-			input:    nil,
-			expected: types.ListNull(types.StringType),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.FlattenFrameworkStringList(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 	t.Parallel()
 

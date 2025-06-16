@@ -21,22 +21,6 @@ func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuabl
 	return output
 }
 
-// FlattenFrameworkStringList converts a slice of string pointers to a framework List value.
-//
-// A nil slice is converted to a null List.
-// An empty slice is converted to a null List.
-func FlattenFrameworkStringList(ctx context.Context, v []*string) types.List {
-	if len(v) == 0 {
-		return types.ListNull(types.StringType)
-	}
-
-	var output types.List
-
-	must(Flatten(ctx, v, &output))
-
-	return output
-}
-
 // FlattenFrameworkStringListLegacy is the Plugin Framework variant of FlattenStringList.
 // A nil slice is converted to an empty (non-null) List.
 func FlattenFrameworkStringListLegacy(_ context.Context, vs []*string) types.List {
