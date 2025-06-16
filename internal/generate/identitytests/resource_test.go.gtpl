@@ -181,7 +181,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.Region())),
 		{{ else if .IsGlobalSingleton -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -218,7 +218,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ if .IsRegionalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
-			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -329,7 +329,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ else if .IsGlobalSingleton -}}
-						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					{{ end -}}
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -343,7 +343,10 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						{{ end -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 					{{ else if .IsRegionalSingleton -}}
-						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),
@@ -456,7 +459,10 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						{{ end -}}
 						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 					{{ else if .IsRegionalSingleton -}}
-						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrRegion)),
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
 					{{ else -}}
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							names.AttrAccountID: tfknownvalue.AccountID(),

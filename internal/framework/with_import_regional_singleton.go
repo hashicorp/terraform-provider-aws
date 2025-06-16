@@ -5,53 +5,33 @@ package framework
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // WithImportRegionalSingleton is intended to be embedded in resources which import state via the "region" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
-type WithImportRegionalSingleton struct{}
+type WithImportRegionalSingleton struct {
+	identity inttypes.Identity
+}
+
+func (w *WithImportRegionalSingleton) SetIdentitySpec(identity inttypes.Identity) {
+	w.identity = identity
+}
 
 func (w *WithImportRegionalSingleton) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	regionPath := path.Root(names.AttrRegion)
-
-	if request.ID != "" {
-		var region types.String
-		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &region)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		if !region.IsNull() {
-			if region.ValueString() != request.ID {
-				response.Diagnostics.AddError(
-					"Invalid Resource Import ID Value",
-					fmt.Sprintf("The region passed for import, %q, does not match the region %q in the ID", region.ValueString(), request.ID),
-				)
-				return
-			}
-		} else {
-			response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, request.ID)...)
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
-
+	client := importer.Client(ctx)
+	if client == nil {
+		response.Diagnostics.AddError(
+			"Unexpected Error",
+			"An unexpected error occurred while importing a resource. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"Importer context was nil.",
+		)
 		return
 	}
-
-	if identity := request.Identity; identity != nil {
-		var regionVal string
-		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, regionVal)...)
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), regionVal)...)
-	}
+	importer.RegionalSingleton(ctx, client, request, &w.identity, response)
 }

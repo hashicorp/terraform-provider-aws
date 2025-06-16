@@ -64,10 +64,15 @@ func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.Wi
 
 type mockClient struct {
 	accountID string
+	region    string
 }
 
-func (c *mockClient) AccountID(_ context.Context) string {
+func (c mockClient) AccountID(_ context.Context) string {
 	return c.accountID
+}
+
+func (c mockClient) Region(_ context.Context) string {
+	return c.region
 }
 
 func TestImportByARN_GlobalARN_ImportID_Valid(t *testing.T) {

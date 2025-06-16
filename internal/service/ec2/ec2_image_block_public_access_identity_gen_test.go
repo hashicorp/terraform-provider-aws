@@ -44,7 +44,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ImageBlockPublicAccess/basic/"),
 				ConfigVariables: config.Variables{},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 					}),

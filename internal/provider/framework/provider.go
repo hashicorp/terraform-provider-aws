@@ -560,22 +560,13 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 
 			if res.Import.WrappedImport {
-				if res.Identity.ARN {
-					switch v := inner.(type) {
-					case framework.ImportByIdentityer:
-						v.SetIdentitySpec(res.Identity)
+				switch v := inner.(type) {
+				case framework.ImportByIdentityer:
+					v.SetIdentitySpec(res.Identity)
 
-					default:
-						errs = append(errs, fmt.Errorf("resource type %s: defines ARN Identity, but cannot configure importer", typeName))
-						continue
-					}
-				} else if !res.Identity.Singleton {
-					identity, ok := inner.(framework.ImportByIdentityer)
-					if !ok {
-						errs = append(errs, fmt.Errorf("resource type %s: defines Parameterized Identity, but cannot set Identity attributes", typeName))
-						continue
-					}
-					identity.SetIdentitySpec(res.Identity)
+				default:
+					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))
+					continue
 				}
 			}
 

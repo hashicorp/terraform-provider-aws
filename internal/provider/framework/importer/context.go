@@ -13,6 +13,7 @@ var awsClientKey contextKey = 1 // nosemgrep:ci.aws-in-var-name
 
 type AWSClient interface {
 	AccountID(context.Context) string
+	Region(ctx context.Context) string
 }
 
 func Context(ctx context.Context, client AWSClient) context.Context {

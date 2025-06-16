@@ -201,12 +201,12 @@ func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImp
 	}
 }
 
-func singletonIdentityResourceImporter(isGlobal bool) *schema.ResourceImporter {
-	if isGlobal {
+func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
+	if identity.IsGlobalResource {
 		// Historically, we haven't validated *any* Import ID value for Global Singletons
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleton(ctx, rd, meta); err != nil {
+				if err := importer.GlobalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -216,7 +216,7 @@ func singletonIdentityResourceImporter(isGlobal bool) *schema.ResourceImporter {
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleton(ctx, rd, meta); err != nil {
+				if err := importer.RegionalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 

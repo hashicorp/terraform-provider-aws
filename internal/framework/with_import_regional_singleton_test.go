@@ -9,26 +9,24 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var regionalSingletonSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
-		"id":     framework.IDAttributeDeprecatedNoReplacement(),
 		"region": resourceattribute.Region(),
 	},
 }
 
-var regionalSingletonIdentitySchema = identityschema.Schema{
-	Attributes: map[string]identityschema.Attribute{
-		"region": identityschema.StringAttribute{
-			OptionalForImport: true,
-		},
-	},
+func regionalSingletonImporter(identitySpec inttypes.Identity) (importer framework.WithImportRegionalSingleton) {
+	importer.SetIdentitySpec(identitySpec)
+	return
 }
 
 func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
@@ -37,11 +35,20 @@ func TestRegionalSingleton_ImportID_Invalid_WrongRegion(t *testing.T) {
 
 	region := "a-region-1"
 
-	importer := framework.WithImportRegionalSingleton{}
+	client := mockClient{
+		accountID: "123456789012",
+	}
+	ctx = importer.Context(ctx, &client)
 
-	response := importByIDWithState(ctx, &importer, regionalSingletonSchema, region, map[string]string{
+	identitySpec := inttypes.RegionalSingletonIdentity()
+
+	resImporter := regionalSingletonImporter(identitySpec)
+
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	response := importByIDWithState(ctx, &resImporter, regionalSingletonSchema, region, map[string]string{
 		"region": "another-region-1",
-	}, regionalSingletonIdentitySchema)
+	}, identitySchema)
 	if response.Diagnostics.HasError() {
 		if !strings.HasPrefix(response.Diagnostics[0].Detail(), "The region passed for import,") {
 			t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
@@ -57,15 +64,20 @@ func TestRegionalSingleton_ImportID_Valid_DefaultRegion(t *testing.T) {
 
 	region := "a-region-1"
 
-	importer := framework.WithImportRegionalSingleton{}
+	client := mockClient{
+		accountID: "123456789012",
+	}
+	ctx = importer.Context(ctx, &client)
 
-	response := importByID(ctx, &importer, regionalSingletonSchema, region, regionalSingletonIdentitySchema)
+	identitySpec := inttypes.RegionalSingletonIdentity()
+
+	resImporter := regionalSingletonImporter(identitySpec)
+
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	response := importByID(ctx, &resImporter, regionalSingletonSchema, region, identitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
 
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
@@ -79,17 +91,22 @@ func TestRegionalSingleton_ImportID_Valid_RegionOverride(t *testing.T) {
 
 	region := "a-region-1"
 
-	importer := framework.WithImportRegionalSingleton{}
+	client := mockClient{
+		accountID: "123456789012",
+	}
+	ctx = importer.Context(ctx, &client)
 
-	response := importByIDWithState(ctx, &importer, regionalSingletonSchema, region, map[string]string{
+	identitySpec := inttypes.RegionalSingletonIdentity()
+
+	resImporter := regionalSingletonImporter(identitySpec)
+
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	response := importByIDWithState(ctx, &resImporter, regionalSingletonSchema, region, map[string]string{
 		"region": region,
-	}, regionalSingletonIdentitySchema)
+	}, identitySchema)
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
 
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {
@@ -103,17 +120,22 @@ func TestRegionalSingleton_Identity_Valid(t *testing.T) {
 
 	region := "a-region-1"
 
-	importer := framework.WithImportRegionalSingleton{}
+	client := mockClient{
+		accountID: "123456789012",
+	}
+	ctx = importer.Context(ctx, &client)
 
-	response := importByIdentity(ctx, &importer, regionalSingletonSchema, regionalSingletonIdentitySchema, map[string]string{
+	identitySpec := inttypes.RegionalSingletonIdentity()
+
+	resImporter := regionalSingletonImporter(identitySpec)
+
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	response := importByIdentity(ctx, &resImporter, regionalSingletonSchema, identitySchema, map[string]string{
 		"region": region,
 	})
 	if response.Diagnostics.HasError() {
 		t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
-	}
-
-	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
-		t.Errorf("expected `id` to be %q, got %q", e, a)
 	}
 
 	if e, a := region, getAttributeValue(ctx, t, response.State, path.Root("region")); e != a {

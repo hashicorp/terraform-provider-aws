@@ -45,7 +45,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/SerialConsoleAccess/basic/"),
 				ConfigVariables: config.Variables{},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 					}),
@@ -71,7 +71,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					},
 				},
 			},
@@ -85,7 +85,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AccountID(ctx))),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 					},
 				},
 			},
