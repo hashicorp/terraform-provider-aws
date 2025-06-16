@@ -7,7 +7,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,44 +54,6 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 			t.Parallel()
 
 			got := flex.ExpandFrameworkStringValueSet(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestFlattenFrameworkStringSet(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    []*string
-		expected types.Set
-	}
-	tests := map[string]testCase{
-		"two elements": {
-			input: []*string{aws.String("GET"), aws.String("HEAD")},
-			expected: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-				types.StringValue("HEAD"),
-			}),
-		},
-		"zero elements": {
-			input:    []*string{},
-			expected: types.SetNull(types.StringType),
-		},
-		"nil array": {
-			input:    nil,
-			expected: types.SetNull(types.StringType),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.FlattenFrameworkStringSet(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

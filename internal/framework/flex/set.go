@@ -21,22 +21,6 @@ func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable)
 	return output
 }
 
-// FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
-//
-// A nil slice is converted to a null Set.
-// An empty slice is converted to a null Set.
-func FlattenFrameworkStringSet(ctx context.Context, v []*string) types.Set {
-	if len(v) == 0 {
-		return types.SetNull(types.StringType)
-	}
-
-	var output types.Set
-
-	must(Flatten(ctx, v, &output))
-
-	return output
-}
-
 // FlattenFrameworkStringValueSet converts a slice of string values to a framework Set value.
 //
 // A nil slice is converted to a null Set.
