@@ -96,19 +96,6 @@ func Int32FromFramework(ctx context.Context, v basetypes.Int32Valuable) *int32 {
 	return val.ValueInt32Pointer()
 }
 
-func Int32FromFrameworkLegacy(_ context.Context, v types.Int32) *int32 {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	i := v.ValueInt32()
-	if i == 0 {
-		return nil
-	}
-
-	return aws.Int32(i)
-}
-
 func ZeroInt32AsNull(v types.Int32) types.Int32 {
 	if v.IsNull() || v.IsUnknown() {
 		return v
