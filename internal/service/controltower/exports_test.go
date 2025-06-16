@@ -7,6 +7,7 @@ package controltower
 var (
 	ResourceControl     = resourceControl
 	ResourceLandingZone = resourceLandingZone
+	ResourceBaseline    = newResourceBaseline
 
 	FindEnabledControlByTwoPartKey = findEnabledControlByTwoPartKey
 	FindLandingZoneByID            = findLandingZoneByID
