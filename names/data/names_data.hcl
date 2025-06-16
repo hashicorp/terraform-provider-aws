@@ -9421,7 +9421,8 @@ service "ec2" {
 
 service "evs" {
   sdk {
-    id = "EVS"
+    id          = "EVS"
+    arn_service = "evs"
   }
 
   names {
