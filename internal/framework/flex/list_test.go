@@ -7,7 +7,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -54,44 +53,6 @@ func TestExpandFrameworkStringValueList(t *testing.T) {
 			t.Parallel()
 
 			got := flex.ExpandFrameworkStringValueList(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestFlattenFrameworkStringListLegacy(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    []*string
-		expected types.List
-	}
-	tests := map[string]testCase{
-		"two elements": {
-			input: []*string{aws.String("GET"), aws.String("HEAD")},
-			expected: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-				types.StringValue("HEAD"),
-			}),
-		},
-		"zero elements": {
-			input:    []*string{},
-			expected: types.ListValueMust(types.StringType, []attr.Value{}),
-		},
-		"nil array": {
-			input:    nil,
-			expected: types.ListValueMust(types.StringType, []attr.Value{}),
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.FlattenFrameworkStringListLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
