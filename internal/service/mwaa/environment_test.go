@@ -1051,7 +1051,7 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-  airflow_version = %[2]q
+  airflow_version   = %[2]q
 }
 `, rName, airflowVersion))
 }
@@ -1059,18 +1059,17 @@ resource "aws_mwaa_environment" "test" {
 func testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_object.dags.key
-  execution_role_arn = aws_iam_role.test.arn
-  name               = %[1]q
-
-	worker_replacement_strategy = "GRACEFUL"
+  dag_s3_path                 = aws_s3_object.dags.key
+  execution_role_arn          = aws_iam_role.test.arn
+  name                        = %[1]q
+  worker_replacement_strategy = "GRACEFUL"
   network_configuration {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = aws_subnet.private[*].id
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-  airflow_version = "2.4.3"
+  airflow_version   = "2.4.3"
 }
 `, rName))
 }
