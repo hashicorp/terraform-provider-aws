@@ -163,8 +163,8 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, SDKID is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ARNService() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, ARNService is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		if l.ARNNamespace() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, ARNNamespace is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {

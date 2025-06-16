@@ -213,9 +213,9 @@ func (sr ServiceRecord) SDKID() string {
 	return ""
 }
 
-func (sr ServiceRecord) ARNService() string {
+func (sr ServiceRecord) ARNNamespace() string {
 	if sr.service.ServiceSDK != nil {
-		return sr.service.ServiceSDK.ARNService
+		return sr.service.ServiceSDK.ARNNamespace
 	}
 	return ""
 }
@@ -301,9 +301,9 @@ type ResourcePrefix struct {
 }
 
 type SDK struct {
-	ID         string `hcl:"id,optional"`
-	Version    int    `hcl:"client_version,optional"`
-	ARNService string `hcl:"arn_service,optional"`
+	ID           string `hcl:"id,optional"`
+	Version      int    `hcl:"client_version,optional"`
+	ARNNamespace string `hcl:"arn_namespace,optional"`
 }
 
 type Names struct {

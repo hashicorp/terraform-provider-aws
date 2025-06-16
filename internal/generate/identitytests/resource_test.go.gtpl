@@ -317,9 +317,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
-							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
 						{{ else -}}
-							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 					{{ if .HasIdentityDuplicateAttrs -}}
@@ -428,9 +428,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
-							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
 						{{ else -}}
-							tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNService }}", "{{ .ARNFormat }}"),
+							tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
 						{{ end -}}
 					{{ end -}}
 					{{ if .HasIdentityDuplicateAttrs -}}
