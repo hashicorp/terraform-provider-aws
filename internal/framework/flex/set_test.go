@@ -15,54 +15,6 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-func TestExpandFrameworkInt64ValueSet(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    types.Set
-		expected []int64
-	}
-	tests := map[string]testCase{
-		"null": {
-			input:    types.SetNull(types.Int64Type),
-			expected: nil,
-		},
-		"unknown": {
-			input:    types.SetUnknown(types.Int64Type),
-			expected: nil,
-		},
-		"two elements": {
-			input: types.SetValueMust(types.Int64Type, []attr.Value{
-				types.Int64Value(1),
-				types.Int64Value(-1),
-			}),
-			expected: []int64{1, -1},
-		},
-		"zero elements": {
-			input:    types.SetValueMust(types.Int64Type, []attr.Value{}),
-			expected: []int64{},
-		},
-		"invalid element type": {
-			input: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-			}),
-			expected: nil,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.ExpandFrameworkInt64ValueSet(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestExpandFrameworkStringSet(t *testing.T) {
 	t.Parallel()
 
