@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -20,14 +19,6 @@ func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable)
 	must(Expand(ctx, v, &output))
 
 	return output
-}
-
-func ExpandFrameworkStringyValueSet[T ~string](ctx context.Context, v basetypes.SetValuable) inttypes.Set[T] {
-	vs := ExpandFrameworkStringValueSet(ctx, v)
-	if vs == nil {
-		return nil
-	}
-	return tfslices.ApplyToAll(vs, func(s string) T { return T(s) })
 }
 
 // FlattenFrameworkInt64Set converts a slice of int32 pointers to a framework Set value.
