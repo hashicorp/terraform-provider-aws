@@ -22,11 +22,6 @@ func Int64FromFramework(ctx context.Context, v basetypes.Int64Valuable) *int64 {
 	return val.ValueInt64Pointer()
 }
 
-func Int64ValueFromFramework(ctx context.Context, v basetypes.Int64Valuable) int64 {
-	val := fwdiag.Must(v.ToInt64Value(ctx))
-	return val.ValueInt64()
-}
-
 func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
