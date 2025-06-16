@@ -98,13 +98,27 @@ type Identity struct {
 	IsGlobalResource       bool   // All
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
+	IsGlobalARNFormat      bool   // ARN
 	IdentityAttribute      string // ARN
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 }
 
-func ParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func (i Identity) HasInherentRegion() bool {
+	if i.IsGlobalResource {
+		return false
+	}
+	if i.Singleton {
+		return true
+	}
+	if i.ARN && !i.IsGlobalARNFormat {
+		return true
+	}
+	return false
+}
+
+func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -157,6 +171,7 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 	identity := Identity{
 		IsGlobalResource:  isGlobalResource,
 		ARN:               true,
+		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
@@ -169,6 +184,22 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 	for _, opt := range opts {
 		opt(&identity)
 	}
+
+	return identity
+}
+
+func RegionalResourceWithGlobalARNFormat(opts ...IdentityOptsFunc) Identity {
+	return RegionalResourceWithGlobalARNFormatNamed(names.AttrARN, opts...)
+}
+
+func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsFunc) Identity {
+	identity := RegionalARNIdentityNamed(name, opts...)
+
+	identity.IsGlobalARNFormat = true
+	identity.Attributes = slices.Insert(identity.Attributes, 0, IdentityAttribute{
+		Name:     "region",
+		Required: false,
+	})
 
 	return identity
 }

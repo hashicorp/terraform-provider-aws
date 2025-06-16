@@ -115,6 +115,16 @@ func main() {
 			resource.IsGlobal = true
 		}
 
+		if resource.IsGlobal {
+			if resource.isARNFormatGlobal == triBooleanUnset {
+				if resource.IsGlobal {
+					resource.isARNFormatGlobal = triBooleanTrue
+				} else {
+					resource.isARNFormatGlobal = triBooleanFalse
+				}
+			}
+		}
+
 		filename := fmt.Sprintf("%s_identity_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
@@ -314,6 +324,14 @@ func (i importAction) String() string {
 	}
 }
 
+type triBoolean uint
+
+const (
+	triBooleanUnset triBoolean = iota
+	triBooleanTrue
+	triBooleanFalse
+)
+
 type ResourceDatum struct {
 	ProviderPackage             string
 	ResourceProviderNameUpper   string
@@ -349,6 +367,7 @@ type ResourceDatum struct {
 	ARNNamespace                string
 	ARNFormat                   string
 	arnAttribute                string
+	isARNFormatGlobal           triBoolean
 	ArnIdentity                 bool
 	MutableIdentity             bool
 	IsGlobal                    bool
@@ -429,6 +448,10 @@ func (d ResourceDatum) IdentityAttribute() string {
 
 func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 	return len(r.IdentityDuplicateAttrs) > 0
+}
+
+func (r ResourceDatum) IsARNFormatGlobal() bool {
+	return r.isARNFormatGlobal == triBooleanTrue
 }
 
 type goImport struct {
@@ -609,8 +632,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "ArnFormat":
 				args := common.ParseArgs(m[3])
-				d.ARNFormat = args.Positional[0]
-				d.arnAttribute = "arn"
+				if len(args.Positional) > 0 {
+					d.ARNFormat = args.Positional[0]
+				}
+
+				if attr, ok := args.Keyword["attribute"]; ok {
+					d.arnAttribute = attr
+				}
+
+				if attr, ok := args.Keyword["global"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						if b {
+							d.isARNFormatGlobal = triBooleanTrue
+						} else {
+							d.isARNFormatGlobal = triBooleanFalse
+						}
+					}
+				}
 
 			case "MutableIdentity":
 				d.MutableIdentity = true

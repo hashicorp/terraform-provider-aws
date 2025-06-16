@@ -695,7 +695,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					why:         CustomizeDiff,
 					interceptor: forceNewIfRegionChanges(),
 				})
-				if resource.Identity.Singleton || resource.Identity.ARN {
+				if resource.Identity.HasInherentRegion() {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
 					interceptors = append(interceptors, resourceImportRegion())

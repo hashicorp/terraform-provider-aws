@@ -47,6 +47,10 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrRegion:  knownvalue.StringExact(acctest.Region()),
+						"application_arn": knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("application_arn")),
 				},
 			},
@@ -130,6 +134,10 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_RegionOverride(t
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("application_arn"), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrRegion:  knownvalue.StringExact(acctest.AlternateRegion()),
+						"application_arn": knownvalue.NotNull(),
+					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("application_arn")),
 				},
 			},

@@ -75,6 +75,18 @@ func main() {
 			g.Fatalf("%s", err.Error())
 		}
 
+		for _, resource := range v.frameworkResources {
+			if resource.IsGlobal {
+				if resource.isARNFormatGlobal == arnFormatStateUnset {
+					if resource.IsGlobal {
+						resource.isARNFormatGlobal = arnFormatStateGlobal
+					} else {
+						resource.isARNFormatGlobal = arnFormatStateRegional
+					}
+				}
+			}
+		}
+
 		s := ServiceDatum{
 			GenerateClient:          l.GenerateClient(),
 			IsGlobal:                l.IsGlobal(),
@@ -145,6 +157,14 @@ func main() {
 	}
 }
 
+type arnFormatState uint
+
+const (
+	arnFormatStateUnset arnFormatState = iota
+	arnFormatStateGlobal
+	arnFormatStateRegional
+)
+
 type ResourceDatum struct {
 	FactoryName                       string
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
@@ -157,11 +177,16 @@ type ResourceDatum struct {
 	IdentityAttributes                []identityAttribute
 	ARNIdentity                       bool
 	arnAttribute                      string
+	isARNFormatGlobal                 arnFormatState
 	SingletonIdentity                 bool
 	MutableIdentity                   bool
 	WrappedImport                     bool
 	goImports                         []goImport
 	IdentityDuplicateAttrs            []string
+}
+
+func (r ResourceDatum) IsARNFormatGlobal() bool {
+	return r.isARNFormatGlobal == arnFormatStateGlobal
 }
 
 type identityAttribute struct {
@@ -392,6 +417,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
 						return namesgen.ConstOrQuote(s)
 					})
+				}
+
+			case "ArnFormat":
+				args := common.ParseArgs(m[3])
+
+				if attr, ok := args.Keyword["global"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						if b {
+							d.isARNFormatGlobal = arnFormatStateGlobal
+						} else {
+							d.isARNFormatGlobal = arnFormatStateRegional
+						}
+					}
 				}
 
 			case "MutableIdentity":
