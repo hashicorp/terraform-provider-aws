@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -161,7 +162,7 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	var errs []error
+	var closeErrs []error
 
 	var portInfos []types.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -169,17 +170,21 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	for _, portInfo := range portInfos {
-		_, portError := conn.CloseInstancePublicPorts(ctx, &lightsail.CloseInstancePublicPortsInput{
+		_, err := conn.CloseInstancePublicPorts(ctx, &lightsail.CloseInstancePublicPortsInput{
 			InstanceName: aws.String(d.Get("instance_name").(string)),
 			PortInfo:     &portInfo,
 		})
 
-		if portError != nil {
-			errs = append(errs, portError)
+		if errs.IsA[*types.NotFoundException](err) {
+			continue
+		}
+
+		if err != nil {
+			closeErrs = append(closeErrs, err)
 		}
 	}
 
-	if err := errors.Join(errs...); err != nil {
+	if err := errors.Join(closeErrs...); err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to close public ports for instance %s: %s", d.Get("instance_name").(string), err)
 	}
 
