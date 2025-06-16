@@ -115,11 +115,11 @@ func main() {
 		}
 
 		if resource.IsGlobal {
-			if resource.isARNFormatGlobal == arnFormatStateUnset {
+			if resource.isARNFormatGlobal == triBooleanUnset {
 				if resource.IsGlobal {
-					resource.isARNFormatGlobal = arnFormatStateGlobal
+					resource.isARNFormatGlobal = triBooleanTrue
 				} else {
-					resource.isARNFormatGlobal = arnFormatStateRegional
+					resource.isARNFormatGlobal = triBooleanFalse
 				}
 			}
 		}
@@ -323,12 +323,12 @@ func (i importAction) String() string {
 	}
 }
 
-type arnFormatState uint
+type triBoolean uint
 
 const (
-	arnFormatStateUnset arnFormatState = iota
-	arnFormatStateGlobal
-	arnFormatStateRegional
+	triBooleanUnset triBoolean = iota
+	triBooleanTrue
+	triBooleanFalse
 )
 
 type ResourceDatum struct {
@@ -366,7 +366,7 @@ type ResourceDatum struct {
 	ARNService                  string
 	ARNFormat                   string
 	arnAttribute                string
-	isARNFormatGlobal           arnFormatState
+	isARNFormatGlobal           triBoolean
 	ArnIdentity                 bool
 	MutableIdentity             bool
 	IsGlobal                    bool
@@ -450,7 +450,7 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == arnFormatStateGlobal
+	return r.isARNFormatGlobal == triBooleanTrue
 }
 
 type goImport struct {
@@ -648,9 +648,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						if b {
-							d.isARNFormatGlobal = arnFormatStateGlobal
+							d.isARNFormatGlobal = triBooleanTrue
 						} else {
-							d.isARNFormatGlobal = arnFormatStateRegional
+							d.isARNFormatGlobal = triBooleanFalse
 						}
 					}
 				}
