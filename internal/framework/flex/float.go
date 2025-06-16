@@ -22,12 +22,6 @@ func Float64FromFramework(ctx context.Context, v basetypes.Float64Valuable) *flo
 	return val.ValueFloat64Pointer()
 }
 
-// Float64ToFramework converts a float64 pointer to a Framework Float64 value.
-// A nil float64 pointer is converted to a null Float64.
-func Float64ToFramework(ctx context.Context, v *float64) types.Float64 {
-	return types.Float64PointerValue(v)
-}
-
 // Float64ToFrameworkLegacy converts a float64 pointer to a Framework Float64 value.
 // A nil float64 pointer is converted to a zero float64.
 func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
