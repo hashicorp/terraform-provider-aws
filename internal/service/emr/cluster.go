@@ -922,12 +922,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	name := d.Get(names.AttrName).(string)
-	input := &emr.RunJobFlowInput{
-		Instances:    instanceConfig,
-		Name:         aws.String(name),
-		Applications: expandApplications(applications),
-
-		OSReleaseLabel:    aws.String(d.Get("os_release_label").(string)),
+	input := emr.RunJobFlowInput{
+		Applications:      expandApplications(applications),
+		Instances:         instanceConfig,
+		Name:              aws.String(name),
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
@@ -942,48 +940,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.AdditionalInfo = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("log_encryption_kms_key_id"); ok {
-		input.LogEncryptionKmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("log_uri"); ok {
-		input.LogUri = aws.String(v.(string))
+	if v, ok := d.GetOk("auto_termination_policy"); ok && len(v.([]any)) > 0 {
+		input.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]any))
 	}
 
 	if v, ok := d.GetOk("autoscaling_role"); ok {
 		input.AutoScalingRole = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("scale_down_behavior"); ok {
-		input.ScaleDownBehavior = awstypes.ScaleDownBehavior(v.(string))
-	}
-
-	if v, ok := d.GetOk("security_configuration"); ok {
-		input.SecurityConfiguration = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ebs_root_volume_size"); ok {
-		input.EbsRootVolumeSize = aws.Int32(int32(v.(int)))
-	}
-
-	if v, ok := d.GetOk("custom_ami_id"); ok {
-		input.CustomAmiId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("step_concurrency_level"); ok {
-		input.StepConcurrencyLevel = aws.Int32(int32(v.(int)))
-	}
-
-	if instanceProfile != "" {
-		input.JobFlowRole = aws.String(instanceProfile)
-	}
-
 	if v, ok := d.GetOk("bootstrap_action"); ok {
 		input.BootstrapActions = expandBootstrapActions(v.([]any))
 	}
-	if v, ok := d.GetOk("step"); ok {
-		input.Steps = expandStepConfigs(v.([]any))
-	}
+
 	if v, ok := d.GetOk("configurations"); ok {
 		input.Configurations = expandConfigures(v.(string))
 	}
@@ -999,20 +967,57 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if v, ok := d.GetOk("custom_ami_id"); ok {
+		input.CustomAmiId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ebs_root_volume_size"); ok {
+		input.EbsRootVolumeSize = aws.Int32(int32(v.(int)))
+	}
+
+	if instanceProfile != "" {
+		input.JobFlowRole = aws.String(instanceProfile)
+	}
+
 	if v, ok := d.GetOk("kerberos_attributes"); ok {
 		input.KerberosAttributes = expandKerberosAttributes(v.([]any)[0].(map[string]any))
 	}
-	if v, ok := d.GetOk("auto_termination_policy"); ok && len(v.([]any)) > 0 {
-		input.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]any))
+
+	if v, ok := d.GetOk("log_encryption_kms_key_id"); ok {
+		input.LogEncryptionKmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_uri"); ok {
+		input.LogUri = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("os_release_label"); ok {
+		input.OSReleaseLabel = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("placement_group_config"); ok {
 		input.PlacementGroupConfigs = expandPlacementGroupConfigs(v.([]any))
 	}
 
+	if v, ok := d.GetOk("scale_down_behavior"); ok {
+		input.ScaleDownBehavior = awstypes.ScaleDownBehavior(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_configuration"); ok {
+		input.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("step"); ok {
+		input.Steps = expandStepConfigs(v.([]any))
+	}
+
+	if v, ok := d.GetOk("step_concurrency_level"); ok {
+		input.StepConcurrencyLevel = aws.Int32(int32(v.(int)))
+	}
+
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (any, error) {
-			return conn.RunJobFlow(ctx, input)
+			return conn.RunJobFlow(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeValidationException, "Invalid InstanceProfile:") {
