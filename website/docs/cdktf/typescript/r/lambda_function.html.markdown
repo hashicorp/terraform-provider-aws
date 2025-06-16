@@ -409,7 +409,7 @@ Advanced logging settings. See [Configuring advanced logging controls for your L
 * `applicationLogLevel` - (Optional) for JSON structured logs, choose the detail level of the logs your application sends to CloudWatch when using supported logging libraries.
 * `logFormat` - (Required) select between `Text` and structured `JSON` format for your function's logs.
 * `logGroup` - (Optional) the CloudWatch log group your function sends logs to.
-* `systemLogLevel` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `ERROR`, `DEBUG`, or `INFO`.
+* `systemLogLevel` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `WARN`, `DEBUG`, or `INFO`.
 
 ### snap_start
 
@@ -504,4 +504,4 @@ Using `terraform import`, import Lambda Functions using the `functionName`. For 
 % terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a03cf76a78a763f2c44348889b2839584b713e3178d842ddf172b74722a8f949 -->
+<!-- cache-key: cdktf-0.20.8 input-6c64920faa15b546f4653f833238bd615ad06b9292e3a32f04e294aa0e91b811 -->
