@@ -10,7 +10,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 //
@@ -63,8 +66,18 @@ type StateChangeConf = StateChangeConfOf[any, string]
 // reach the target state.
 //
 // Cancellation of the passed in context will cancel the refresh loop.
-
+//
+// When VCR testing is enabled in replay mode, the Delay and PollInterval fields are
+// overridden to allow interactions to be replayed with no observable delay between
+// state change refreshes.
 func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T, error) {
+	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
+			conf.Delay = time.Microsecond * 1
+			conf.PollInterval = time.Microsecond * 1
+		}
+	}
+
 	// Set a default for times to check for not found.
 	if conf.NotFoundChecks == 0 {
 		conf.NotFoundChecks = 20
