@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_lightsail_instance_public_ports: Add `-1` to valid range for `from_port` and `to_port` to support ICMP and ICMPv6
+resource/aws_lightsail_instance_public_ports: `-1` is now a valid value for `port_options.from_port` and `port_options.to_port`
 ```
