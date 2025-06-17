@@ -191,3 +191,15 @@ rules:
     paths:
       include:
         - "**/*.go"
+
+  - id: internal-retry-notfound
+    languages: [go]
+    message: "Use retry.NotFound to ensure both internal and Plugin SDK V2 NotFound errors are checked"
+    severity: WARNING
+    pattern: |
+      tfresource.NotFound($ERR)
+    fix: |
+      retry.NotFound($ERR)
+    paths:
+      include:
+        - "**/*.go"
