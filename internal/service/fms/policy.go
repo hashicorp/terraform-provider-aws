@@ -210,7 +210,7 @@ func resourcePolicy() *schema.Resource {
 				"resource_tag_logical_operator": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Default:          awstypes.ResourceTagLogicalOperatorAnd,
+					Computed:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.ResourceTagLogicalOperator](),
 				},
 				"resource_type_list": {
