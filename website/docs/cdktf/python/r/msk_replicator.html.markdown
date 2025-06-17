@@ -76,7 +76,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `replicator_name` - (Required) The name of the replicator.
 * `kafka_cluster` - (Required) A list of Kafka clusters which are targets of the replicator.
@@ -172,4 +172,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-188791203cf58a70818d2d67aac18cc2a2f3b88923b3665788cd3c802c3db811 -->
+<!-- cache-key: cdktf-0.20.8 input-b9419599ff5f56e96bc6396e41ee9e9aba5b531e357b9b95ed71c220dbb363a2 -->

@@ -1197,7 +1197,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 		}
 
@@ -1849,7 +1849,7 @@ func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType
 
 	apiObject := &awstypes.UserPoolAddOnsType{}
 
-	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
 	}
 

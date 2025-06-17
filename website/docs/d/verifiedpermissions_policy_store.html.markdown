@@ -33,4 +33,5 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - The ARN of the Policy Store.
 * `created_date` - The date the Policy Store was created.
 * `last_updated_date` - The date the Policy Store was last updated.
+* `tags` - Map of key-value pairs associated with the policy store.
 * `validation_settings` - Validation settings for the policy store.

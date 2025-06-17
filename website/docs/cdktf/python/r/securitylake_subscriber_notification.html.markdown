@@ -66,7 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `subscriber_id` - (Required) The subscriber ID for the notification subscription.
 * `configuration` - (Required) Specify the configuration using which you want to create the subscriber notification..
@@ -103,4 +103,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-ed0e58bfd100a3606d95276a920ac381134d5f06cfc392d2a37d7e4a9e8735c7 -->
+<!-- cache-key: cdktf-0.20.8 input-7298ff2bab2210e59dc020ec624999f19039f3562b8d25030a203c214e73f2cd -->

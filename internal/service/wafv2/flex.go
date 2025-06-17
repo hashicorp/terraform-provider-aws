@@ -460,6 +460,10 @@ func expandStatement(m map[string]any) *awstypes.Statement {
 		statement.AndStatement = expandAndStatement(v.([]any))
 	}
 
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
+	}
+
 	if v, ok := m["byte_match_statement"]; ok {
 		statement.ByteMatchStatement = expandByteMatchStatement(v.([]any))
 	}
@@ -521,6 +525,24 @@ func expandAndStatement(l []any) *awstypes.AndStatement {
 	return &awstypes.AndStatement{
 		Statements: expandStatements(m["statement"].([]any)),
 	}
+}
+
+func expandASNMatchStatement(l []any) *awstypes.AsnMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	statement := &awstypes.AsnMatchStatement{
+		AsnList: flex.ExpandInt64ValueList(m["asn_list"].([]any)),
+	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		statement.ForwardedIPConfig = expandForwardedIPConfig(v.([]any))
+	}
+
+	return statement
 }
 
 func expandByteMatchStatement(l []any) *awstypes.ByteMatchStatement {
@@ -1196,6 +1218,10 @@ func expandWebACLStatement(m map[string]any) *awstypes.Statement {
 
 	if v, ok := m["and_statement"]; ok {
 		statement.AndStatement = expandAndStatement(v.([]any))
+	}
+
+	if v, ok := m["asn_match_statement"]; ok {
+		statement.AsnMatchStatement = expandASNMatchStatement(v.([]any))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
@@ -2141,6 +2167,10 @@ func flattenStatement(s *awstypes.Statement) map[string]any {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
 	}
 
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
+	}
+
 	if s.ByteMatchStatement != nil {
 		m["byte_match_statement"] = flattenByteMatchStatement(s.ByteMatchStatement)
 	}
@@ -2199,6 +2229,19 @@ func flattenAndStatement(a *awstypes.AndStatement) any {
 
 	m := map[string]any{
 		"statement": flattenStatements(a.Statements),
+	}
+
+	return []any{m}
+}
+
+func flattenASNMatchStatement(a *awstypes.AsnMatchStatement) any {
+	if a == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"asn_list":            a.AsnList,
+		"forwarded_ip_config": flattenForwardedIPConfig(a.ForwardedIPConfig),
 	}
 
 	return []any{m}
@@ -2670,6 +2713,10 @@ func flattenWebACLStatement(s *awstypes.Statement) map[string]any {
 
 	if s.AndStatement != nil {
 		m["and_statement"] = flattenAndStatement(s.AndStatement)
+	}
+
+	if s.AsnMatchStatement != nil {
+		m["asn_match_statement"] = flattenASNMatchStatement(s.AsnMatchStatement)
 	}
 
 	if s.ByteMatchStatement != nil {

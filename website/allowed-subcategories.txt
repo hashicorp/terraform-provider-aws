@@ -107,6 +107,7 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert

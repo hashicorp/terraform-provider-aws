@@ -34,38 +34,48 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"config_version": schema.StringAttribute{
-				Computed: true,
+				Description: "The version of the security configuration.",
+				Computed:    true,
 			},
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "The date the configuration was created.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "The description of the security configuration.",
+				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Required: true,
+				Description: "The unique identifier of the security configuration.",
+				Required:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "The date the configuration was last modified.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
+				Description: "The type of security configuration.",
+				Computed:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"saml_options": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
 				Attributes: map[string]schema.Attribute{
 					"group_attribute": schema.StringAttribute{
-						Computed: true,
+						Description: "Group attribute for this SAML integration.",
+						Computed:    true,
 					},
 					"metadata": schema.StringAttribute{
-						Computed: true,
+						Description: "The XML IdP metadata file generated from your identity provider.",
+						Computed:    true,
 					},
 					"session_timeout": schema.Int64Attribute{
-						Computed: true,
+						Description: "Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.",
+						Computed:    true,
 					},
 					"user_attribute": schema.StringAttribute{
-						Computed: true,
+						Description: "User attribute for this SAML integration.",
+						Computed:    true,
 					},
 				},
 			},

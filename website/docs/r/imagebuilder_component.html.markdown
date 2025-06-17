@@ -55,7 +55,7 @@ The following arguments are required:
 * `platform` - (Required) Platform of the component.
 * `version` - (Required) Version of the component.
 
-The following attributes are optional:
+The following arguments are optional:
 
 * `change_description` - (Optional) Change description of the component.
 * `data` - (Optional) Inline YAML string with data of the component. Exactly one of `data` and `uri` can be specified. Terraform will only perform drift detection of its value when present in a configuration.

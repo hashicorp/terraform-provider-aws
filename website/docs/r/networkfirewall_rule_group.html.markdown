@@ -257,6 +257,49 @@ resource "aws_networkfirewall_rule_group" "example" {
 }
 ```
 
+### Example with S3 as source for the suricata rules
+
+```terraform
+
+data "aws_s3_object" "suricata_rules" {
+  bucket = aws_s3_bucket.suricata_rules.id
+  key    = "rules/custom.rules"
+}
+
+resource "aws_networkfirewall_rule_group" "s3_rules_example" {
+  capacity = 1000
+  name     = "my-terraform-s3-rules"
+  type     = "STATEFUL"
+
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "HOME_NET"
+        ip_set {
+          definition = ["10.0.0.0/16", "192.168.0.0/16", "172.16.0.0/12"]
+        }
+      }
+      port_sets {
+        key = "HTTP_PORTS"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
+
+    rules_source {
+      rules_string = data.aws_s3_object.suricata_rules.body
+    }
+  }
+
+  tags = {
+    ManagedBy = "terraform"
+  }
+
+}
+
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -354,7 +397,7 @@ The `rules_source` block supports the following arguments:
 
 * `rules_source_list` - (Optional) A configuration block containing **stateful** inspection criteria for a domain list rule group. See [Rules Source List](#rules-source-list) below for details.
 
-* `rules_string` - (Optional) The fully qualified name of a file in an S3 bucket that contains Suricata compatible intrusion preventions system (IPS) rules or the Suricata rules as a string. These rules contain **stateful** inspection criteria and the action to take for traffic that matches the criteria.
+* `rules_string` - (Optional) Stateful inspection criteria, provided in Suricata compatible rules. These rules contain the inspection criteria and the action to take for traffic that matches the criteria, so this type of rule group doesn’t have a separate action setting.
 
 * `stateful_rule` - (Optional) Set of configuration blocks containing **stateful** inspection criteria for 5-tuple rules to be used together in a rule group. See [Stateful Rule](#stateful-rule) below for details.
 

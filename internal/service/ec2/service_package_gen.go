@@ -132,6 +132,40 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:     "VPC Endpoint Service Private DNS Verification",
 		},
 		{
+			Factory:  newVPCRouteServerResource,
+			TypeName: "aws_vpc_route_server",
+			Name:     "VPC Route Server",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerEndpointResource,
+			TypeName: "aws_vpc_route_server_endpoint",
+			Name:     "VPC Route Server Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_endpoint_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerPeerResource,
+			TypeName: "aws_vpc_route_server_peer",
+			Name:     "VPC Route Server Peer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "route_server_peer_id",
+			},
+		},
+		{
+			Factory:  newVPCRouteServerPropagationResource,
+			TypeName: "aws_vpc_route_server_propagation",
+			Name:     "VPC Route Server Propagation",
+		},
+		{
+			Factory:  newVPCRouteServerVPCAssociationResource,
+			TypeName: "aws_vpc_route_server_vpc_association",
+			Name:     "VPC Route Server VPC Association",
+		},
+		{
 			Factory:  newSecurityGroupEgressRuleResource,
 			TypeName: "aws_vpc_security_group_egress_rule",
 			Name:     "Security Group Egress Rule",

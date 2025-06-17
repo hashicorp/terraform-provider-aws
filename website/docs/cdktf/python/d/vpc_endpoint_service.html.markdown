@@ -88,8 +88,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoint services.
-The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
@@ -131,4 +130,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-cab12df260f773a8c2d1885e24368dc15d34f3e5c3a8483cfb1a5e37cc12aeab -->
+<!-- cache-key: cdktf-0.20.8 input-49d8520420046b50542135a761b6dfd6c876f31bced9c89641990ccb43b3e5e1 -->
