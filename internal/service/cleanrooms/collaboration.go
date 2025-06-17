@@ -209,11 +209,9 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameCollaboration, d.Id(), err)
 	}
-
 	collaboration := out.Collaboration
 	d.Set(names.AttrARN, collaboration.Arn)
 	d.Set(names.AttrName, collaboration.Name)
@@ -358,7 +356,7 @@ func expandQueryLogStatus(status string) (types.CollaborationQueryLogStatus, err
 	case "DISABLED":
 		return types.CollaborationQueryLogStatusDisabled, nil
 	default:
-		return types.CollaborationQueryLogStatusDisabled, fmt.Errorf("Invalid query log status type: %s", status)
+		return types.CollaborationQueryLogStatusDisabled, fmt.Errorf("invalid query log status type: %s", status)
 	}
 }
 
