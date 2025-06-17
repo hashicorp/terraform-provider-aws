@@ -36,7 +36,7 @@ func testAccPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, rName),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
@@ -74,7 +74,7 @@ func testAccPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, rName),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourcePolicy(), resourceName),
@@ -171,7 +171,7 @@ func testAccPolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName1, rName1),
+				Config: testAccPolicyConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
@@ -179,7 +179,11 @@ func testAccPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyConfig_updated(rName2, rName1),
+				Config: testAccPolicyConfig_updated(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+				),
 			},
 		},
 	})
@@ -203,7 +207,7 @@ func testAccPolicy_policyOption(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_policyOption(rName, rName),
+				Config: testAccPolicyConfig_policyOption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
@@ -385,7 +389,7 @@ func testAccPolicy_rscSet(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_rscSet(rName, rName),
+				Config: testAccPolicyConfig_rscSet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -485,7 +489,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 	}
 }
 
-func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_basic(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
@@ -493,23 +497,18 @@ resource "aws_fms_policy" "test" {
   description           = "test description"
   remediation_enabled   = false
   resource_set_ids      = [aws_fms_resource_set.test.id]
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
 }
 
 resource "aws_fms_resource_set" "test" {
@@ -519,24 +518,24 @@ resource "aws_fms_resource_set" "test" {
     resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 }
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
-func testAccPolicyConfig_policyOption(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_policyOption(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
 
     policy_option {
       network_firewall_policy {
@@ -551,12 +550,7 @@ resource "aws_fms_policy" "test" {
 
   depends_on = [aws_fms_admin_account.test]
 }
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
-}
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
 func testAccPolicyConfig_cloudFrontDistribution(rName string) string {
@@ -636,21 +630,21 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccPolicyConfig_updated(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_updated(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = true
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"ALLOW\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   lifecycle {
@@ -659,12 +653,7 @@ resource "aws_fms_policy" "test" {
 
   depends_on = [aws_fms_admin_account.test]
 }
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
-}
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
 func testAccPolicyConfig_include(rName string) string {
@@ -673,23 +662,18 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   include_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName))
 }
@@ -700,11 +684,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tags = {
@@ -712,11 +696,6 @@ resource "aws_fms_policy" "test" {
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -727,11 +706,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tags = {
@@ -740,11 +719,6 @@ resource "aws_fms_policy" "test" {
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -755,11 +729,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tags = {
@@ -767,11 +741,6 @@ resource "aws_fms_policy" "test" {
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -782,11 +751,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tag_logical_operator = "AND"
@@ -797,11 +766,6 @@ resource "aws_fms_policy" "test" {
 
   depends_on = [aws_fms_admin_account.test]
 }
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
-}
 `, rName, tagKey1, tagValue1))
 }
 
@@ -811,11 +775,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tag_logical_operator = "OR"
@@ -825,11 +789,6 @@ resource "aws_fms_policy" "test" {
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -964,7 +923,7 @@ resource "aws_fms_policy" "test" {
 `, rName))
 }
 
-func testAccPolicyConfig_rscSet(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_rscSet(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
@@ -972,23 +931,18 @@ resource "aws_fms_policy" "test" {
   description           = "test description"
   remediation_enabled   = false
   resource_set_ids      = [aws_fms_resource_set.test.id]
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
 }
 
 resource "aws_fms_resource_set" "test" {
@@ -998,7 +952,7 @@ resource "aws_fms_resource_set" "test" {
     resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 }
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
 func testAccPolicyConfig_nacl(policyName, ruleGroupName string) string {
