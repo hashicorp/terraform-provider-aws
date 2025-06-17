@@ -169,8 +169,7 @@ func TestRegionalSingleton(t *testing.T) {
 
 			var identitySchema *identityschema.Schema
 			if !tc.noIdentity {
-				x := identity.NewIdentitySchema(identitySpec)
-				identitySchema = &x
+				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
 			}
 
 			schema := regionalSingletonSchema

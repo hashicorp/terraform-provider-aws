@@ -374,7 +374,7 @@ type ResourceDatum struct {
 	isSingleton                 bool
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
-	IdentityAttributes          []string
+	identityAttributes          []string
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
@@ -452,6 +452,12 @@ func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == triBooleanTrue
+}
+
+func (r ResourceDatum) IdentityAttributes() []string {
+	return tfslices.ApplyToAll(r.identityAttributes, func(s string) string {
+		return namesgen.ConstOrQuote(s)
+	})
 }
 
 type goImport struct {
@@ -623,7 +629,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
-				d.IdentityAttributes = append(d.IdentityAttributes, namesgen.ConstOrQuote(args.Positional[0]))
+				d.identityAttributes = append(d.identityAttributes, args.Positional[0])
 
 			case "SingletonIdentity":
 				hasIdentity = true
@@ -961,6 +967,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if d.IsGlobal {
 		d.HasRegionOverrideTest = false
+	}
+
+	if len(d.identityAttributes) == 1 {
+		d.identityAttribute = d.identityAttributes[0]
 	}
 
 	if hasIdentity {

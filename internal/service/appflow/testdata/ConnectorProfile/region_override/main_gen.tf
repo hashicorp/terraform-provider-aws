@@ -122,7 +122,7 @@ resource "aws_redshift_cluster" "test" {
 
   publicly_accessible = false
 
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
   encrypted           = true
 }

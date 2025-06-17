@@ -29,10 +29,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cloudfrontkeyvaluestore_key",
 			Name:     "Key",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalParameterizedIdentity(
-				inttypes.StringIdentityAttribute("key_value_store_arn", true),
-				inttypes.StringIdentityAttribute(names.AttrKey, true),
-			),
+			// Parameterized Identity with more than one attribute not supported
+			/*
+				Identity: inttypes.GlobalParameterizedIdentity(
+						inttypes.StringIdentityAttribute("key_value_store_arn",true),
+						inttypes.StringIdentityAttribute(names.AttrKey,true),
+				),*/
 		},
 		{
 			Factory:  newKeysExclusiveResource,

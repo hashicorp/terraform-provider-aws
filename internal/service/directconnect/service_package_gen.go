@@ -95,9 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_dx_gateway",
 			Name:     "Gateway",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalParameterizedIdentity(
-				inttypes.StringIdentityAttribute(names.AttrID, true),
-			),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 			Import: inttypes.Import{
 				WrappedImport: true,
 			},

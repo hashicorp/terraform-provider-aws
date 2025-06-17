@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,8 +43,9 @@ const (
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
 // @IdentityAttribute("name")
+// @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
-// @Testing(identityTest=false)
+// @Testing(idAttrDuplicates="name")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -53,31 +55,13 @@ func resourceRole() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if rd.Id() != "" {
-					rd.Set(names.AttrName, rd.Id())
-					return resourceRoleImport(rd)
-				}
-
-				identity, err := rd.Identity()
-				if err != nil {
+				if err := importer.GlobalSingleParameterized(ctx, rd, names.AttrName, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
-				nameRaw, ok := identity.GetOk(names.AttrName)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
-				}
+				rd.Set("force_detach_policies", false)
 
-				name, ok := nameRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
-				}
-
-				rd.Set(names.AttrName, name)
-				rd.SetId(name)
-
-				return resourceRoleImport(rd)
+				return []*schema.ResourceData{rd}, nil
 			},
 		},
 
@@ -538,11 +522,6 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	return diags
-}
-
-func resourceRoleImport(d *schema.ResourceData) ([]*schema.ResourceData, error) {
-	d.Set("force_detach_policies", false)
-	return []*schema.ResourceData{d}, nil
 }
 
 func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {

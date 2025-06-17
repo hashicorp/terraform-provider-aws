@@ -66,6 +66,44 @@ func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions
 
 func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics {
 	var diags diag.Diagnostics
+	awsClient := opts.c
+
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		identity := response.Identity
+		if identity == nil {
+			break
+		}
+
+		for _, attrName := range r.attributes {
+			switch attrName {
+			case names.AttrAccountID:
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.AccountID(ctx))...)
+				if diags.HasError() {
+					return diags
+				}
+
+			case names.AttrRegion:
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.Region(ctx))...)
+				if diags.HasError() {
+					return diags
+				}
+
+			default:
+				var attrVal attr.Value
+				diags.Append(response.State.GetAttribute(ctx, path.Root(attrName), &attrVal)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), attrVal)...)
+				if diags.HasError() {
+					return diags
+				}
+			}
+		}
+	}
+
 	return diags
 }
 

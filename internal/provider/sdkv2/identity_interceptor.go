@@ -31,7 +31,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	switch d, when, why := opts.d, opts.when, opts.why; when {
 	case After:
 		switch why {
-		case Create:
+		case Create, Read:
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -93,80 +93,91 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newParameterizedIdentityImporter(v inttypes.Identity) *schema.ResourceImporter {
-	// if v.Singleton {
-	// 	if v.Global {
-	// 		return &schema.ResourceImporter{
-	// 			StateContext: globalSingletonImporter,
-	// 		}
-	// 	} else {
-	// 		return &schema.ResourceImporter{
-	// 			StateContext: regionalSingletonImporter,
-	// 		}
-	// 	}
-	// }
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.ResourceImporter {
+	if identitySpec.IsSingleParameter {
+		if identitySpec.IsGlobalResource {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+						return nil, err
+					}
 
-	importer := &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-			if rd.Id() != "" {
-				if v.IDAttrShadowsAttr != "id" {
-					rd.Set(v.IDAttrShadowsAttr, rd.Id())
+					return []*schema.ResourceData{rd}, nil
+				},
+			}
+		} else {
+			return &schema.ResourceImporter{
+				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+						return nil, err
+					}
+
+					return []*schema.ResourceData{rd}, nil
+				},
+			}
+		}
+	} else {
+		return &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if rd.Id() != "" {
+					if identitySpec.IDAttrShadowsAttr != "id" {
+						rd.Set(identitySpec.IDAttrShadowsAttr, rd.Id())
+					}
+					return []*schema.ResourceData{rd}, nil
 				}
+
+				identity, err := rd.Identity()
+				if err != nil {
+					return nil, err
+				}
+
+				for _, attr := range identitySpec.Attributes {
+					var val string
+					switch attr.Name {
+					case names.AttrAccountID:
+						accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
+						if ok {
+							accountID, ok := accountIDRaw.(string)
+							if !ok {
+								return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
+							}
+							client := meta.(*conns.AWSClient)
+							if accountID != client.AccountID(ctx) {
+								return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
+							}
+						}
+
+					case names.AttrRegion:
+						regionRaw, ok := identity.GetOk(names.AttrRegion)
+						if ok {
+							val, ok = regionRaw.(string)
+							if !ok {
+								return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
+							}
+							rd.Set(names.AttrRegion, val)
+						}
+
+					default:
+						valRaw, ok := identity.GetOk(attr.Name)
+						if attr.Required && !ok {
+							return nil, fmt.Errorf("identity attribute %q is required", attr.Name)
+						}
+						val, ok = valRaw.(string)
+						if !ok {
+							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+						}
+						setAttribute(rd, attr.Name, val)
+					}
+
+					if attr.Name == identitySpec.IDAttrShadowsAttr {
+						rd.SetId(val)
+					}
+				}
+
 				return []*schema.ResourceData{rd}, nil
-			}
-
-			identity, err := rd.Identity()
-			if err != nil {
-				return nil, err
-			}
-
-			for _, attr := range v.Attributes {
-				var val string
-				switch attr.Name {
-				case names.AttrAccountID:
-					accountIDRaw, ok := identity.GetOk(names.AttrAccountID)
-					if ok {
-						accountID, ok := accountIDRaw.(string)
-						if !ok {
-							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrAccountID, accountIDRaw)
-						}
-						client := meta.(*conns.AWSClient)
-						if accountID != client.AccountID(ctx) {
-							return nil, fmt.Errorf("Unable to import\n\nidentity attribute %q: Provider configured with Account ID %q, got %q", names.AttrAccountID, client.AccountID(ctx), accountID)
-						}
-					}
-
-				case names.AttrRegion:
-					regionRaw, ok := identity.GetOk(names.AttrRegion)
-					if ok {
-						val, ok = regionRaw.(string)
-						if !ok {
-							return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
-						}
-						rd.Set(names.AttrRegion, val)
-					}
-
-				default:
-					valRaw, ok := identity.GetOk(attr.Name)
-					if attr.Required && !ok {
-						return nil, fmt.Errorf("identity attribute %q is required", attr.Name)
-					}
-					val, ok = valRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
-					}
-					setAttribute(rd, attr.Name, val)
-				}
-
-				if attr.Name == v.IDAttrShadowsAttr {
-					rd.SetId(val)
-				}
-			}
-
-			return []*schema.ResourceData{rd}, nil
-		},
+			},
+		}
 	}
-	return importer
 }
 
 func setAttribute(d *schema.ResourceData, name, value string) {
