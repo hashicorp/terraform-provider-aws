@@ -775,6 +775,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 `, rName, tagKey1, tagValue1))
 }
+
 func testAccPolicyConfig_resourceTagLogicalOperator_withAnd(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
