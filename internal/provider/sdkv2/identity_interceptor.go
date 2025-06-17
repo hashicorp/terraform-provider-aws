@@ -115,7 +115,6 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity) *schema.Re
 					return []*schema.ResourceData{rd}, nil
 				},
 			}
-
 		}
 	} else {
 		return &schema.ResourceImporter{

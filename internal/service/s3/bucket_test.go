@@ -2816,16 +2816,6 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_regionOverride(bucketName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  region = %[2]q
-
-  bucket = %[1]q
-}
-`, bucketName, acctest.AlternateRegion())
-}
-
 func testAccBucketConfig_acceleration(bucketName, acceleration string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
