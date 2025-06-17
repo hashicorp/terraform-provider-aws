@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -765,6 +766,25 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
+	// Remove any disabled log types that aren't in state.
+	var inStateLogTypes []string
+	if v := d.GetRawState(); !v.IsNull() {
+		if v := v.GetAttr("log_publishing_options"); !v.IsNull() {
+			for _, v := range v.AsValueSet().Values() {
+				if !v.IsNull() {
+					for k, v := range v.AsValueMap() {
+						if k == "log_type" && !v.IsNull() {
+							inStateLogTypes = append(inStateLogTypes, v.AsString())
+						}
+					}
+				}
+			}
+		}
+	}
+	maps.DeleteFunc(ds.LogPublishingOptions, func(k string, v awstypes.LogPublishingOption) bool {
+		return !aws.ToBool(v.Enabled) && !slices.Contains(inStateLogTypes, k)
+	})
+
 	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
