@@ -599,8 +599,8 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+	if v, ok := d.GetOk("log_publishing_options"); ok && v.(*schema.Set).Len() > 0 {
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -870,7 +870,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			o, n := d.GetChange("log_publishing_options")
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			input.LogPublishingOptions = expandLogPublishingOptions(ns)
+			input.LogPublishingOptions = expandLogPublishingOptions(ns.List())
 
 			// Explicitly disable removed log types.
 			oldTypes := tfslices.ApplyToAll(os.List(), func(v any) string {
