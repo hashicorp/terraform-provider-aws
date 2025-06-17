@@ -18,6 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
+var (
+	servicePackageRoot = flag.String("ServicePackageRoot", "", "path to service package root directory")
+)
+
 func main() {
 	filename := `service_packages_gen.go`
 
@@ -47,7 +51,7 @@ func main() {
 		// See internal/generate/namesconsts/main.go.
 		p := l.ProviderPackage()
 
-		spdFile := fmt.Sprintf("../service/%s/service_package_gen.go", p)
+		spdFile := fmt.Sprintf("%s/%s/service_package_gen.go", *servicePackageRoot, p)
 
 		if _, err := os.Stat(spdFile); err != nil {
 			continue

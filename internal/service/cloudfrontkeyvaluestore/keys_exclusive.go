@@ -41,16 +41,16 @@ const (
 )
 
 // @FrameworkResource("aws_cloudfrontkeyvaluestore_keys_exclusive", name="Keys  Exclusive")
-func newResourceKeysExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceKeysExclusive{}, nil
+func newKeysExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &keysExclusiveResource{}, nil
 }
 
-type resourceKeysExclusive struct {
-	framework.ResourceWithConfigure
+type keysExclusiveResource struct {
+	framework.ResourceWithModel[keysExclusiveResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceKeysExclusive) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *keysExclusiveResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"key_value_store_arn": schema.StringAttribute{
@@ -98,7 +98,7 @@ func (r *resourceKeysExclusive) Schema(ctx context.Context, request resource.Sch
 	}
 }
 
-func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *resourceKeysExclusiveModel) diag.Diagnostics {
+func (r *keysExclusiveResource) syncKeyValuePairs(ctx context.Context, plan *keysExclusiveResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
 	kvsARN := plan.KvsARN.ValueString()
@@ -177,8 +177,8 @@ func (r *resourceKeysExclusive) syncKeyValuePairs(ctx context.Context, plan *res
 	return diags
 }
 
-func (r *resourceKeysExclusive) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var plan resourceKeysExclusiveModel
+func (r *keysExclusiveResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var plan keysExclusiveResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -192,8 +192,8 @@ func (r *resourceKeysExclusive) Create(ctx context.Context, request resource.Cre
 	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceKeysExclusive) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceKeysExclusiveModel
+func (r *keysExclusiveResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data keysExclusiveResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -231,8 +231,8 @@ func (r *resourceKeysExclusive) Read(ctx context.Context, request resource.ReadR
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceKeysExclusive) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan resourceKeysExclusiveModel
+func (r *keysExclusiveResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan keysExclusiveResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -246,7 +246,7 @@ func (r *resourceKeysExclusive) Update(ctx context.Context, request resource.Upd
 	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceKeysExclusive) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *keysExclusiveResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("key_value_store_arn"), request, response)
 }
 
@@ -335,7 +335,7 @@ type resourceKeyValuePairModel struct {
 	Value types.String `tfsdk:"value"`
 }
 
-type resourceKeysExclusiveModel struct {
+type keysExclusiveResourceModel struct {
 	ResourceKeyValuePair fwtypes.SetNestedObjectValueOf[resourceKeyValuePairModel] `tfsdk:"resource_key_value_pair"`
 	KvsARN               fwtypes.ARN                                               `tfsdk:"key_value_store_arn"`
 	MaximumBatchSize     types.Int64                                               `tfsdk:"max_batch_size"`

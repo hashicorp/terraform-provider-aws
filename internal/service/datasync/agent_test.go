@@ -323,11 +323,14 @@ resource "aws_security_group" "test" {
 resource "aws_instance" "test" {
   depends_on = [aws_internet_gateway.test]
 
-  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  ami                    = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids = [aws_security_group.test.id]
+  subnet_id              = aws_subnet.test[0].id
+
+  # The Instance must have a public IP address because the aws_datasync_agent retrieves
+  # the activation key by making an HTTP request to the instance
   associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q

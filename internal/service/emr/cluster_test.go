@@ -3164,6 +3164,7 @@ EOF
 resource "aws_kms_key" "test" {
   description             = "Terraform %[1]s"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -3667,9 +3668,10 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-
-  policy = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2763,43 +2764,6 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dbInstance, sourceDbInstance types.DBInstance
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceResourceName := "aws_db_instance.source"
-	resourceName := "aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_11_0),
-		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
-				),
 			},
 		},
 	})
@@ -7038,7 +7002,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				PreConfig: func() {
 					meta := acctest.Provider.Meta().(*conns.AWSClient)
 					conn := meta.RDSClient(ctx)
-					deadline := tfresource.NewDeadline(40 * time.Minute)
+					deadline := inttypes.NewDeadline(40 * time.Minute)
 
 					orchestrator := tfrds.NewBlueGreenOrchestrator(conn)
 					defer orchestrator.CleanUp(ctx)
@@ -8314,7 +8278,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -8717,8 +8683,6 @@ resource "aws_db_instance" "test" {
   password_wo_version        = 1
   username                   = "tfacctest"
   backup_retention_period    = 0
-
-  character_set_name = "WE8ISO8859P15"
 
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
   skip_final_snapshot  = true
@@ -9422,7 +9386,9 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_kms_key" "example" {
-  description = "Terraform acc test %[1]s"
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -10290,7 +10256,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "example" {
-  description = "Terraform acc test %[1]s"
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -11904,41 +11872,6 @@ resource "aws_db_instance" "source" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassOracleEnterprise(),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  identifier          = %[1]q
-  replicate_source_db = aws_db_instance.source.identifier
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  skip_final_snapshot = true
-  apply_immediately   = true
-
-  character_set_name = "NE8ISO8859P10"
-}
-
-resource "aws_db_instance" "source" {
-  identifier              = "%[1]s-source"
-  allocated_storage       = 20
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
-  db_name                 = "MAINDB"
-  username                = "oadmin"
-  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version     = 1
-  skip_final_snapshot     = true
-  apply_immediately       = true
-  backup_retention_period = 1
-
-  character_set_name = "WE8ISO8859P15"
-}
-`, rName))
-}
-
 func testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, replicaMode string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
@@ -12295,7 +12228,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "example" {
-  description = "Terraform acc test %[1]s"
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -13460,6 +13395,7 @@ func testAccInstanceConfig_performanceInsightsKMSKeyIdDisabled(rName string) str
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_rds_engine_version" "default" {
@@ -13497,6 +13433,7 @@ func testAccInstanceConfig_performanceInsightsKMSKeyID(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_rds_engine_version" "default" {
@@ -13574,7 +13511,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test"
+  description             = "Terraform acc test"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -13641,7 +13580,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test"
+  description             = "Terraform acc test"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

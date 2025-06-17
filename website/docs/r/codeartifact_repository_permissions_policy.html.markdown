@@ -51,6 +51,7 @@ resource "aws_codeartifact_repository_permissions_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.

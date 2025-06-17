@@ -6,10 +6,11 @@ package retry
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type Op[T any] interface {
@@ -108,8 +109,8 @@ func (o operation[T]) UntilNotFound() operation[T] {
 	}
 
 	transform := func(err error) error {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("found resource: %w", err)
+		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+			return tfresource.ErrFoundResource
 		}
 
 		return err
@@ -120,10 +121,10 @@ func (o operation[T]) UntilNotFound() operation[T] {
 
 // Run retries an operation until the timeout elapses or predicate indicates otherwise.
 func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	for r := Begin(); r.Continue(ctx); {
+	// We explicitly don't set a deadline on the context here to maintain compatibility
+	// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
+	var l *backoff.Loop
+	for l = backoff.NewLoop(timeout); l.Continue(ctx); {
 		t, err := o.op.Invoke(ctx)
 
 		if retry, err := o.predicate.Invoke(t, err); !retry {
@@ -131,6 +132,13 @@ func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error)
 		}
 	}
 
-	var t T
-	return t, o.transformRunError(ctx.Err())
+	var err error
+	if l.TimedOut() {
+		err = inttypes.ErrDeadlineExceeded
+	} else {
+		err = context.Cause(ctx)
+	}
+
+	var zero T
+	return zero, o.transformRunError(err)
 }

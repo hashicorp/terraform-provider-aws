@@ -532,9 +532,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy,
-				},
 			},
 			// Test removal
 			{

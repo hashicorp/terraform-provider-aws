@@ -522,11 +522,6 @@ func resourceDomain() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.IPAddressType](),
 			},
-			"kibana_endpoint": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "kibana_endpoint is deprecated. Use dashboard_endpoint instead.",
-			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -972,7 +967,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		d.Set(names.AttrEndpoint, endpoints["vpc"])
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-		d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		if endpoints["vpcv2"] != nil {
 			d.Set("endpoint_v2", endpoints["vpcv2"])
 			d.Set("dashboard_endpoint_v2", getDashboardEndpoint(d.Get("endpoint_v2").(string)))
@@ -987,7 +981,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if ds.Endpoint != nil {
 			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d.Get(names.AttrEndpoint).(string)))
-			d.Set("kibana_endpoint", getKibanaEndpoint(d.Get(names.AttrEndpoint).(string)))
 		}
 		if ds.EndpointV2 != nil {
 			d.Set("endpoint_v2", ds.EndpointV2)
@@ -1259,10 +1252,6 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 
 func getDashboardEndpoint(endpoint string) string {
 	return endpoint + "/_dashboards"
-}
-
-func getKibanaEndpoint(endpoint string) string {
-	return endpoint + "/_plugin/kibana/"
 }
 
 func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {

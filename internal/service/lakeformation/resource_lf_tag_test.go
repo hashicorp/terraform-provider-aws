@@ -157,7 +157,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 }
 
 func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	var lfdata tflakeformation.ResourceResourceLFTagData
+	var lfdata tflakeformation.ResourceLFTagResourceModel
 	var lt tflakeformation.LFTag
 
 	if v, ok := is.Attributes[names.AttrCatalogID]; ok {

@@ -254,273 +254,6 @@ func TestAccDMSEndpoint_AuroraPostgreSQL_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_S3_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_s3(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", names.AttrBucketName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
-				),
-			},
-			{
-				Config:   testAccEndpointConfig_s3(rName),
-				PlanOnly: true,
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPassword},
-			},
-			{
-				Config: testAccEndpointConfig_s3Update(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", acctest.CtFalse),
-				),
-			},
-			{
-				Config:   testAccEndpointConfig_s3Update(rName),
-				PlanOnly: true,
-			},
-		},
-	})
-}
-
-func TestAccDMSEndpoint_S3_detachTargetOnLobLookupFailureParquet(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.include_op_for_full_load", acctest.CtTrue),
-				),
-			},
-			{
-				Config:             testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=false;"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=false"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-				),
-			},
-			{
-				Config: testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=true"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`detachTargetOnLobLookupFailureParquet=true`)),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", "."),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", "new-bucket_folder"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "new-bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "GZIP"),
-				),
-			},
-			{
-				Config:   testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName, "detachTargetOnLobLookupFailureParquet=true"),
-				PlanOnly: true,
-			},
-		},
-	})
-}
-
-func TestAccDMSEndpoint_S3_key(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccEndpointConfig_s3ConnParamKey(rName),
-				ExpectError: regexache.MustCompile(`kms_key_arn must not be set when engine is "s3". Use s3_settings.server_side_encryption_kms_key_id instead`),
-			},
-		},
-	})
-}
-
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8009
-func TestAccDMSEndpoint_S3_extraConnectionAttributes(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "", ","),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.TestNoMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`dataFormat=parquet;`)),
-				),
-			},
-			{
-				// settings-only change should trigger diff
-				Config:             testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "", "."),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				// inconsequential eca change should not trigger diff
-				Config:   testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "csv_delimiter=,", ","),
-				PlanOnly: true,
-			},
-			{
-				// eca-only change should trigger diff
-				Config:             testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "dataFormat=parquet;", ","),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccEndpointConfig_s3ExtraConnectionAttributes(rName, "dataFormat=parquet;", "."),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexache.MustCompile(`dataFormat=parquet;`)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPassword},
-			},
-		},
-	})
-}
-
-func TestAccDMSEndpoint_S3_SSEKMSKeyARN(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_s3ConnSSEKMSKeyARN(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccDMSEndpoint_S3_SSEKMSKeyId(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_s3ConnSSEKMSKeyId(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccDMSEndpoint_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -2700,562 +2433,6 @@ EOF
 `, rName)
 }
 
-func testAccEndpointConfig_s3(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  s3_settings {
-    service_access_role_arn = aws_iam_role.iam_role.arn
-    bucket_name             = "bucket_name"
-    cdc_path                = "cdc/path"
-    date_partition_enabled  = true
-    date_partition_sequence = "yyyymmddhh"
-    timestamp_column_name   = "tx_commit_time"
-  }
-
-  depends_on = [aws_iam_role_policy.dms_s3_access]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:CreateBucket",
-				"s3:ListBucket",
-				"s3:DeleteBucket",
-				"s3:GetBucketLocation",
-				"s3:GetObject",
-				"s3:PutObject",
-				"s3:DeleteObject",
-				"s3:GetObjectVersion",
-				"s3:GetBucketPolicy",
-				"s3:PutBucketPolicy",
-				"s3:DeleteBucketPolicy"
-			],
-			"Resource": "*"
-		}
-	]
-}
-EOF
-}
-`, rName)
-}
-
-func testAccEndpointConfig_s3ConnParamKey(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id   = %[1]q
-  endpoint_type = "target"
-  engine_name   = "s3"
-  ssl_mode      = "none"
-  kms_key_arn   = aws_kms_key.test.arn
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  s3_settings {
-    service_access_role_arn = aws_iam_role.iam_role.arn
-    bucket_name             = "bucket_name"
-    cdc_path                = "cdc/path"
-    date_partition_enabled  = true
-    date_partition_sequence = "yyyymmddhh"
-    timestamp_column_name   = "tx_commit_time"
-    encryption_mode         = "SSE_S3"
-  }
-
-  depends_on = [aws_iam_role_policy.dms_s3_access]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "dms.${data.aws_partition.current.dns_suffix}"
-      }
-      Effect = "Allow"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "s3:CreateBucket",
-        "s3:ListBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketPolicy",
-        "s3:PutBucketPolicy",
-        "s3:DeleteBucketPolicy"
-      ]
-      Resource = "*"
-    }]
-  })
-}
-`, rName)
-}
-
-func testAccEndpointConfig_s3ExtraConnectionAttributes(rName, eca, csvDelimiter string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = %[2]q
-
-  s3_settings {
-    service_access_role_arn = aws_iam_role.iam_role.arn
-    bucket_name             = "bucket_name"
-    bucket_folder           = "bucket_folder"
-    compression_type        = "GZIP"
-    csv_delimiter           = %[3]q
-  }
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  depends_on = [aws_iam_role_policy.dms_s3_access]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:CreateBucket",
-				"s3:ListBucket",
-				"s3:DeleteBucket",
-				"s3:GetBucketLocation",
-				"s3:GetObject",
-				"s3:PutObject",
-				"s3:DeleteObject",
-				"s3:GetObjectVersion",
-				"s3:GetBucketPolicy",
-				"s3:PutBucketPolicy",
-				"s3:DeleteBucketPolicy"
-			],
-			"Resource": "*"
-		}
-	]
-}
-EOF
-}
-`, rName, eca, csvDelimiter)
-}
-
-func testAccEndpointConfig_s3ConnSSEKMSKeyARN(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  s3_settings {
-    service_access_role_arn           = aws_iam_role.iam_role.arn
-    bucket_name                       = "bucket_name"
-    cdc_path                          = "cdc/path"
-    date_partition_enabled            = true
-    date_partition_sequence           = "yyyymmddhh"
-    timestamp_column_name             = "tx_commit_time"
-    encryption_mode                   = "SSE_KMS"
-    server_side_encryption_kms_key_id = aws_kms_key.test.arn
-  }
-
-  depends_on = [aws_iam_role_policy.dms_s3_access]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "dms.${data.aws_partition.current.dns_suffix}"
-      }
-      Effect = "Allow"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "s3:CreateBucket",
-        "s3:ListBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketPolicy",
-        "s3:PutBucketPolicy",
-        "s3:DeleteBucketPolicy"
-      ]
-      Resource = "*"
-    }]
-  })
-}
-`, rName)
-}
-
-func testAccEndpointConfig_s3ConnSSEKMSKeyId(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
-  tags = {
-    Name   = %[1]q
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  s3_settings {
-    service_access_role_arn           = aws_iam_role.iam_role.arn
-    bucket_name                       = "bucket_name"
-    cdc_path                          = "cdc/path"
-    date_partition_enabled            = true
-    date_partition_sequence           = "yyyymmddhh"
-    timestamp_column_name             = "tx_commit_time"
-    encryption_mode                   = "SSE_KMS"
-    server_side_encryption_kms_key_id = aws_kms_key.test.key_id
-  }
-
-  depends_on = [aws_iam_role_policy.dms_s3_access]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "dms.${data.aws_partition.current.dns_suffix}"
-      }
-      Effect = "Allow"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "s3:CreateBucket",
-        "s3:ListBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketPolicy",
-        "s3:PutBucketPolicy",
-        "s3:DeleteBucketPolicy"
-      ]
-      Resource = "*"
-    }]
-  })
-}
-`, rName)
-}
-
-func testAccEndpointConfig_s3Update(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-
-  tags = {
-    Name   = %[1]q
-    Update = "updated"
-    Add    = "added"
-  }
-
-  s3_settings {
-    service_access_role_arn   = aws_iam_role.iam_role.arn
-    external_table_definition = "new-external_table_definition"
-    csv_row_delimiter         = "\\r"
-    csv_delimiter             = "."
-    bucket_folder             = "new-bucket_folder"
-    bucket_name               = "new-bucket_name"
-    compression_type          = "GZIP"
-    glue_catalog_generation   = false
-  }
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:CreateBucket",
-				"s3:ListBucket",
-				"s3:DeleteBucket",
-				"s3:GetBucketLocation",
-				"s3:GetObject",
-				"s3:PutObject",
-				"s3:DeleteObject",
-				"s3:GetObjectVersion",
-				"s3:GetBucketPolicy",
-				"s3:PutBucketPolicy",
-				"s3:DeleteBucketPolicy"
-			],
-			"Resource": "*"
-		}
-	]
-}
-EOF
-}
-`, rName)
-}
-
-func testAccEndpointConfig_s3DetachTargetOnLobLookupFailureParquet(rName string, eca string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = %[2]q
-
-  tags = {
-    Name   = %[1]q
-    Update = "updated"
-    Add    = "added"
-  }
-
-  s3_settings {
-    service_access_role_arn   = aws_iam_role.iam_role.arn
-    external_table_definition = "new-external_table_definition"
-    csv_row_delimiter         = "\\r"
-    csv_delimiter             = "."
-    bucket_folder             = "new-bucket_folder"
-    bucket_name               = "new-bucket_name"
-    compression_type          = "GZIP"
-    glue_catalog_generation   = true
-    include_op_for_full_load  = true
-  }
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "dms.${data.aws_partition.current.dns_suffix}"
-			},
-			"Effect": "Allow"
-		}
-	]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "dms_s3_access" {
-  name = %[1]q
-  role = aws_iam_role.iam_role.name
-
-  policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Action": [
-				"s3:CreateBucket",
-				"s3:ListBucket",
-				"s3:DeleteBucket",
-				"s3:GetBucketLocation",
-				"s3:GetObject",
-				"s3:PutObject",
-				"s3:DeleteObject",
-				"s3:GetObjectVersion",
-				"s3:GetBucketPolicy",
-				"s3:PutBucketPolicy",
-				"s3:DeleteBucketPolicy"
-			],
-			"Resource": "*"
-		}
-	]
-}
-EOF
-}
-`, rName, eca)
-}
-
 func testAccEndpointConfig_openSearchBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -4349,6 +3526,7 @@ func testAccEndpointConfig_postgresKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -4376,6 +3554,7 @@ func testAccEndpointConfig_sqlserverKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -4403,6 +3582,7 @@ func testAccEndpointConfig_sybaseKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_endpoint" "test" {
@@ -4461,15 +3641,15 @@ resource "aws_dms_endpoint" "test" {
 }
 
 func testAccEndpointConfig_redshiftBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
   cluster_identifier = %[1]q
-  availability_zone  = data.aws_availability_zones.available.names[0]
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
   node_type          = "dc2.large"
   cluster_type       = "single-node"
+  encrypted          = true
 
   automated_snapshot_retention_period = 0
   skip_final_snapshot                 = true
@@ -4517,7 +3697,7 @@ data "aws_iam_policy_document" "test" {
     resources = ["*"]
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccEndpointConfig_redshift(rName string) string {
@@ -4615,6 +3795,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -4647,6 +3828,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -4679,6 +3861,7 @@ resource "aws_dms_endpoint" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -4718,7 +3901,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_dms_replication_instance" "test" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.c4.large"
+  replication_instance_class   = "dms.c5.large"
   replication_instance_id      = %[1]q
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false

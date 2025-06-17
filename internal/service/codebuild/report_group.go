@@ -26,16 +26,16 @@ import (
 
 // @SDKResource("aws_codebuild_report_group", name="Report Group")
 // @Tags
+// @ArnIdentity
+// @ArnFormat("report-group/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
+// @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")
 func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
 		ReadWithoutTimeout:   resourceReportGroupRead,
 		UpdateWithoutTimeout: resourceReportGroupUpdate,
 		DeleteWithoutTimeout: resourceReportGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

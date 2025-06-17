@@ -757,8 +757,16 @@ resource "aws_iam_role" "for_sfn" {
 EOF
 }
 
-resource "aws_kms_key" "kms_key_for_sfn_1" {}
-resource "aws_kms_key" "kms_key_for_sfn_2" {}
+resource "aws_kms_key" "kms_key_for_sfn_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "kms_key_for_sfn_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
 
 `, rName)
 }

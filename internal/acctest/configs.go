@@ -308,6 +308,27 @@ data "aws_availability_zones" "available" {
 `, strings.Join(excludeZoneIds, "\", \""))
 }
 
+func ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region string) string {
+	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+	return ConfigAvailableAZsNoOptInExclude_RegionOverride(region, "usw2-az4", "usgw1-az2")
+}
+
+func ConfigAvailableAZsNoOptInExclude_RegionOverride(region string, excludeZoneIds ...string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  region = %[2]q
+
+  exclude_zone_ids = ["%[1]s"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, strings.Join(excludeZoneIds, "\", \""), region)
+}
+
 // AvailableEC2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
 // the first available EC2 instance type offering in the specified availability zone from a list of preferred instance types.
 // The first argument is either an Availability Zone name or Terraform configuration reference to one, e.g.
@@ -562,6 +583,29 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, subnetCount),
+	)
+}
+
+func ConfigVPCWithSubnets_RegionOverride(rName string, subnetCount int, region string) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude_RegionOverride(region),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  region = %[3]q
+
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  region = %[3]q
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, rName, subnetCount, region),
 	)
 }
 

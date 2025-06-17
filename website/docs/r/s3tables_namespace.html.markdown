@@ -27,8 +27,9 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespace` - (Required, Forces new resource) Name of the namespace.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.

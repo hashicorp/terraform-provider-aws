@@ -18,62 +18,35 @@ import (
 )
 
 // @FrameworkDataSource("aws_devopsguru_resource_collection", name="Resource Collection")
-func newDataSourceResourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceResourceCollection{}, nil
+func newResourceCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &resourceCollectionDataSource{}, nil
 }
 
 const (
 	DSNameResourceCollection = "Resource Collection Data Source"
 )
 
-type dataSourceResourceCollection struct {
-	framework.DataSourceWithConfigure
+type resourceCollectionDataSource struct {
+	framework.DataSourceWithModel[resourceCollectionDataSourceModel]
 }
 
-func (d *dataSourceResourceCollection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *resourceCollectionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"cloudformation": framework.DataSourceComputedListOfObjectAttribute[cloudformationData](ctx),
+			names.AttrID:     framework.IDAttribute(),
+			names.AttrTags:   framework.DataSourceComputedListOfObjectAttribute[tagsData](ctx),
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceCollectionType](),
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"cloudformation": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudformationData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"stack_names": schema.ListAttribute{
-							Computed:    true,
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-						},
-					},
-				},
-			},
-			names.AttrTags: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[tagsData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"app_boundary_key": schema.StringAttribute{
-							Computed: true,
-						},
-						"tag_values": schema.ListAttribute{
-							Computed:    true,
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-						},
-					},
-				},
-			},
-		},
 	}
 }
-func (d *dataSourceResourceCollection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *resourceCollectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().DevOpsGuruClient(ctx)
 
-	var data dataSourceResourceCollectionData
+	var data resourceCollectionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,7 +80,8 @@ func (d *dataSourceResourceCollection) Read(ctx context.Context, req datasource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceResourceCollectionData struct {
+type resourceCollectionDataSourceModel struct {
+	framework.WithRegionModel
 	CloudFormation fwtypes.ListNestedObjectValueOf[cloudformationData] `tfsdk:"cloudformation"`
 	ID             types.String                                        `tfsdk:"id"`
 	Tags           fwtypes.ListNestedObjectValueOf[tagsData]           `tfsdk:"tags"`

@@ -139,9 +139,7 @@ IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
 Invoicing
-IoT Analytics
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -176,7 +174,6 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
-OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
@@ -211,7 +208,6 @@ S3 Control
 S3 Glacier
 S3 Tables
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
@@ -259,7 +255,6 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
 WorkSpaces
 WorkSpaces Web
 X-Ray

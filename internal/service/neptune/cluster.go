@@ -470,7 +470,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var err error
 
 	if restoreDBClusterFromSnapshot {
-		for r := backoff.NewRetryLoop(propagationTimeout); r.Continue(ctx); {
+		for l := backoff.NewLoop(propagationTimeout); l.Continue(ctx); {
 			_, err = conn.RestoreDBClusterFromSnapshot(ctx, inputR)
 
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid") {
@@ -482,7 +482,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if !restoreDBClusterFromSnapshot {
-		for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutCreate)); r.Continue(ctx); {
+		for l := backoff.NewLoop(d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
 			_, err = conn.CreateDBCluster(ctx, inputC)
 
 			if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {
@@ -544,12 +544,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diags
 	}
 
-	if err != nil && !errs.IsA[*tfresource.EmptyResultError](err) {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
+	if err != nil {
+		if !errs.IsA[*tfresource.EmptyResultError](err) {
+			return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
+		}
 	}
 
 	// When upgrading, the Neptune Cluster may not be available immediately after creation.
-	for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutRead)); err != nil && r.Continue(ctx); {
+	for l := backoff.NewLoop(d.Timeout(schema.TimeoutRead)); err != nil && l.Continue(ctx); {
 		dbc, err = findDBClusterByID(ctx, conn, d.Id())
 
 		if errs.IsA[*tfresource.EmptyResultError](err) {

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -47,12 +48,12 @@ func testAccCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "job_arn", "bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),
@@ -329,13 +330,13 @@ resource "aws_s3_bucket" "output" {
 }
 
 resource "aws_s3_object" "training" {
-  bucket = aws_s3_bucket.training.id
+  bucket = aws_s3_bucket.training.bucket
   key    = "data/train.jsonl"
   source = "test-fixtures/train.jsonl"
 }
 
 resource "aws_s3_object" "validation" {
-  bucket = aws_s3_bucket.validation.id
+  bucket = aws_s3_bucket.validation.bucket
   key    = "data/validate.jsonl"
   source = "test-fixtures/validate.jsonl"
 }
@@ -440,11 +441,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
@@ -455,6 +456,7 @@ func testAccCustomModelConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_bedrock_custom_model" "test" {
@@ -474,11 +476,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
@@ -500,16 +502,16 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   validation_data_config {
     validator {
-      s3_uri = "s3://${aws_s3_bucket.validation.id}/data/validate.jsonl"
+      s3_uri = "s3://${aws_s3_bucket.validation.bucket}/data/validate.jsonl"
     }
   }
 }
@@ -570,11 +572,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   vpc_config {
