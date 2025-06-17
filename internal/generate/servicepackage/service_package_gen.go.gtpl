@@ -121,65 +121,67 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 0 }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: inttypes.GlobalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{ else }}
-					Identity: inttypes.RegionalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				{{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
-					{{- else }}
-						Identity: inttypes.GlobalARNIdentity(
+			{{- if not $value.MutableIdentity }}
+				{{- if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: inttypes.GlobalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
+					{{ else }}
+						Identity: inttypes.RegionalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.IsARNFormatGlobal }}
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
 						{{- else }}
-							Identity: inttypes.RegionalResourceWithGlobalARNFormat(
+							Identity: inttypes.GlobalARNIdentity(
 						{{- end }}
 					{{- else }}
-						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+						{{- if $value.IsARNFormatGlobal }}
+							{{- if $value.HasARNAttribute }}
+								Identity: inttypes.RegionalResourceWithGlobalARNFormatNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								Identity: inttypes.RegionalResourceWithGlobalARNFormat(
+							{{- end }}
 						{{- else }}
-							Identity: inttypes.RegionalARNIdentity(
+							{{- if $value.HasARNAttribute }}
+								Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+							{{- else }}
+								Identity: inttypes.RegionalARNIdentity(
+							{{- end }}
 						{{- end }}
 					{{- end }}
-				{{- end }}
-				{{- if .HasIdentityDuplicateAttrs -}}
-					inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
-				{{- end -}}
-				),
-			{{- else if $value.SingletonIdentity }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: inttypes.GlobalSingletonIdentity(
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 						{{- end -}}
-					),
-				{{ else }}
-					Identity: inttypes.RegionalSingletonIdentity(
-						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
-						{{- end -}}
-					),
+						),
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: inttypes.GlobalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+							{{- end -}}
+						),
+					{{ else }}
+						Identity: inttypes.RegionalSingletonIdentity(
+							{{- if .HasIdentityDuplicateAttrs -}}
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+							{{- end -}}
+						),
+					{{- end }}
 				{{- end }}
-			{{- end }}
-			{{- if $value.WrappedImport }}
-				Import: inttypes.Import{
-					WrappedImport: true,
-				},
+				{{- if $value.WrappedImport }}
+					Import: inttypes.Import{
+						WrappedImport: true,
+					},
+				{{- end }}
 			{{- end }}
 		},
 {{- end }}
@@ -247,45 +249,47 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
 			}),
 	{{- end }}
-			{{- if gt (len $value.IdentityAttributes) 0 }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: inttypes.GlobalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{- else }}
-					Identity: inttypes.RegionalParameterizedIdentity(
-						{{- range $value.IdentityAttributes }}
-							{{ template "IdentifierAttribute" . }}
-						{{- end }}
-					),
-				{{- end }}
-			{{- else if $value.ARNIdentity }}
-				{{- if $.IsGlobal }}
-					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			{{- if not $value.MutableIdentity }}
+				{{- if gt (len $value.IdentityAttributes) 0 }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: inttypes.GlobalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
 					{{- else }}
-						Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						Identity: inttypes.RegionalParameterizedIdentity(
+							{{- range $value.IdentityAttributes }}
+								{{ template "IdentifierAttribute" . }}
+							{{- end }}
+						),
 					{{- end }}
-				{{- else }}
-					{{- if $value.HasARNAttribute }}
-						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				{{- else if $value.ARNIdentity }}
+					{{- if $.IsGlobal }}
+						{{- if $value.HasARNAttribute }}
+							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						{{- else }}
+							Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						{{- end }}
 					{{- else }}
-						Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						{{- if $value.HasARNAttribute }}
+							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						{{- else }}
+							Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+						{{- end }}
+					{{- end }}
+				{{- else if $value.SingletonIdentity }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						Identity: inttypes.GlobalSingletonIdentity(),
+					{{- else }}
+						Identity: inttypes.RegionalSingletonIdentity(),
 					{{- end }}
 				{{- end }}
-			{{- else if $value.SingletonIdentity }}
-				{{- if or $.IsGlobal $value.IsGlobal }}
-					Identity: inttypes.GlobalSingletonIdentity(),
-				{{- else }}
-					Identity: inttypes.RegionalSingletonIdentity(),
+				{{- if $value.WrappedImport }}
+					Import: inttypes.Import{
+						WrappedImport: true,
+					},
 				{{- end }}
-			{{- end }}
-			{{- if $value.WrappedImport }}
-				Import: inttypes.Import{
-					WrappedImport: true,
-				},
 			{{- end }}
 		},
 {{- end }}
