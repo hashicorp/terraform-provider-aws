@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,8 +25,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	s3PrefixUpdated := "testUpdated"
 
@@ -36,16 +36,16 @@ func testAccReportDefinition_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_basic(reportName, s3BucketName, s3Prefix),
+				Config: testAccReportDefinitionConfig_basic(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					//workaround for region being based on s3 bucket region
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", reportName)),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
@@ -57,16 +57,16 @@ func testAccReportDefinition_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportDefinitionConfig_basic(reportName, s3BucketName, s3PrefixUpdated),
+				Config: testAccReportDefinitionConfig_basic(rName, s3PrefixUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					//workaround for region being based on s3 bucket region
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", reportName)),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "cur", fmt.Sprintf("definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3PrefixUpdated),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
@@ -79,8 +79,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 func testAccReportDefinition_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +89,7 @@ func testAccReportDefinition_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_tags1(rName, s3BucketName, s3Prefix, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReportDefinitionConfig_tags1(rName, s3Prefix, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -106,7 +105,7 @@ func testAccReportDefinition_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccReportDefinitionConfig_tags2(rName, s3BucketName, s3Prefix, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccReportDefinitionConfig_tags2(rName, s3Prefix, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -115,7 +114,7 @@ func testAccReportDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReportDefinitionConfig_tags1(rName, s3BucketName, s3Prefix, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccReportDefinitionConfig_tags1(rName, s3Prefix, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -130,8 +129,7 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -146,15 +144,15 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_additional(reportName, s3BucketName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
+				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
@@ -175,8 +173,7 @@ func testAccReportDefinition_parquet(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "Parquet"
 	compression := "Parquet"
@@ -191,15 +188,15 @@ func testAccReportDefinition_parquet(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_additional(reportName, s3BucketName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
+				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", acctest.CtFalse),
@@ -219,8 +216,7 @@ func testAccReportDefinition_athena(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "Parquet"
 	compression := "Parquet"
@@ -235,15 +231,15 @@ func testAccReportDefinition_athena(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_additional(reportName, s3BucketName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
+				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
@@ -264,8 +260,7 @@ func testAccReportDefinition_refresh(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -280,15 +275,15 @@ func testAccReportDefinition_refresh(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_additional(reportName, s3BucketName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
+				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
@@ -309,8 +304,7 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 	format := "textORcsv"
 	compression := "GZIP"
@@ -325,15 +319,15 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_additional(reportName, s3BucketName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
+				Config: testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFormat, format),
 					resource.TestCheckResourceAttr(resourceName, "compression", compression),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, s3BucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
@@ -353,8 +347,7 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 func testAccReportDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	s3Prefix := "test"
 
 	resource.Test(t, resource.TestCase{
@@ -364,12 +357,17 @@ func testAccReportDefinition_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionConfig_basic(reportName, s3BucketName, s3Prefix),
+				Config: testAccReportDefinitionConfig_basic(rName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcur.ResourceReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -415,10 +413,10 @@ func testAccCheckReportDefinitionExists(ctx context.Context, n string) resource.
 	}
 }
 
-func testAccReportDefinitionConfig_basic(reportName, s3BucketName, s3Prefix string) string {
+func testAccReportDefinitionConfig_basic(rName, s3Prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -467,14 +465,14 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, reportName, s3BucketName, s3Prefix)
+`, rName, s3Prefix)
 }
 
-func testAccReportDefinitionConfig_additional(reportName string, s3BucketName string, s3Prefix string, format string, compression string, additionalArtifacts []string, refreshClosedReports bool, reportVersioning string) string {
+func testAccReportDefinitionConfig_additional(rName, s3Prefix, format, compression string, additionalArtifacts []string, refreshClosedReports bool, reportVersioning string) string {
 	artifactsStr := strings.Join(additionalArtifacts, "\", \"")
 
 	if len(additionalArtifacts) > 0 {
@@ -485,7 +483,7 @@ func testAccReportDefinitionConfig_additional(reportName string, s3BucketName st
 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -530,23 +528,23 @@ resource "aws_cur_report_definition" "test" {
 
   report_name                = %[1]q
   time_unit                  = "DAILY"
-  format                     = %[4]q
-  compression                = %[5]q
+  format                     = %[3]q
+  compression                = %[4]q
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
-	%[6]s
-  refresh_closed_reports = %[7]t
-  report_versioning      = %[8]q
+	%[5]s
+  refresh_closed_reports = %[6]t
+  report_versioning      = %[7]q
 }
-`, reportName, s3BucketName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
+`, rName, s3Prefix, format, compression, artifactsStr, refreshClosedReports, reportVersioning)
 }
 
-func testAccReportDefinitionConfig_tags1(reportName, s3BucketName, s3Prefix, tagKey1, tagValue1 string) string {
+func testAccReportDefinitionConfig_tags1(rName, s3Prefix, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -595,21 +593,21 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 
   tags = {
-    %[4]q = %[5]q
+    %[3]q = %[4]q
   }
 }
-`, reportName, s3BucketName, s3Prefix, tagKey1, tagValue1)
+`, rName, s3Prefix, tagKey1, tagValue1)
 }
 
-func testAccReportDefinitionConfig_tags2(reportName, s3BucketName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccReportDefinitionConfig_tags2(rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[2]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -658,16 +656,16 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = %[3]q
+  s3_prefix                  = %[2]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 
   tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, reportName, s3BucketName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {
