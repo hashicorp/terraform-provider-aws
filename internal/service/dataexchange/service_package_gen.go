@@ -39,6 +39,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_dataexchange_job",
+			Name:     "Job",
+		},
 	}
 }
 
