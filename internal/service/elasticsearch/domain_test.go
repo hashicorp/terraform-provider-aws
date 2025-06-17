@@ -963,6 +963,20 @@ func TestAccElasticsearchDomain_LogPublishingOptions_disable(t *testing.T) {
 					})),
 				},
 			},
+			{
+				Config: testAccDomainConfig_noLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(0)),
+				},
+			},
 		},
 	})
 }
