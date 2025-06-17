@@ -88,7 +88,7 @@ require (
 	github.com/ckaznocha/intrange v0.3.1 // indirect
 	github.com/cli/go-gh/v2 v2.12.1 // indirect
 	github.com/cli/safeexec v1.0.1 // indirect
-	github.com/cloudflare/circl v1.6.0 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42 // indirect
 	github.com/curioswitch/go-reassign v0.3.0 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467 // indirect
