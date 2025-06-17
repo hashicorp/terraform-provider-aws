@@ -4,6 +4,8 @@ BREAKING CHANGES:
 
 * resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured ([#42753](https://github.com/hashicorp/terraform-provider-aws/issues/42753))
 
+## 5.100.0 (June 12, 2025)
+
 NOTES:
 
 * resource/aws_route53_vpc_association_authorization: Because we cannot easily replicate the highly concurrent environments in which these errors have been observed, this fix is best effort and we ask for community help in verifying the reported issues are resolved by this change ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
