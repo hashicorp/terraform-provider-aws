@@ -636,6 +636,7 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = true
+  resource_set_ids      = [aws_fms_resource_set.test.id]
   resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
@@ -647,11 +648,15 @@ resource "aws_fms_policy" "test" {
     managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
-  lifecycle {
-    create_before_destroy = false
-  }
-
   depends_on = [aws_fms_admin_account.test]
+}
+
+resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
+  resource_set {
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
 }
 `, policyName))
 }
