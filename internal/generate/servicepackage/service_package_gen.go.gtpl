@@ -123,7 +123,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
+					// Parameterized Identity with more than one attribute not supported
+					/*{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -135,7 +136,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{- end }}
+					{{- end }}*/
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
@@ -265,7 +266,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					{{- if or $.IsGlobal $value.IsGlobal }}
+					// Parameterized Identity with more than one attribute not supported
+					/*{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -277,7 +279,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{- end }}
+					{{- end }}*/
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(

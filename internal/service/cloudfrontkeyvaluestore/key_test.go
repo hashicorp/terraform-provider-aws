@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
@@ -79,6 +78,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
+			// Step 1: Setup
 			{
 				Config: testAccKeyConfig_basic(rName, value),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -86,21 +86,25 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{key_value_store_arn},{key}"),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID:   tfknownvalue.AccountID(),
-						"key_value_store_arn": knownvalue.NotNull(),
-						names.AttrKey:         knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("key_value_store_arn")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
+					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+					// 	names.AttrAccountID:   tfknownvalue.AccountID(),
+					// 	"key_value_store_arn": knownvalue.NotNull(),
+					// 	names.AttrKey:         knownvalue.NotNull(),
+					// }),
+					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("key_value_store_arn")),
+					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
 				},
 			},
+
+			// Step 2: Import command
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
+
+			// Step 3: Import block with Import ID
 			{
 				ResourceName:    resourceName,
 				ImportState:     true,
@@ -113,18 +117,20 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 					},
 				},
 			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
-					},
-				},
-			},
+
+			// // Step 4: Import block with Resource Identity
+			// {
+			// 	ResourceName:    resourceName,
+			// 	ImportState:     true,
+			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
+			// 	ImportPlanChecks: resource.ImportPlanChecks{
+			// 		PreApply: []plancheck.PlanCheck{
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
+			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
+			// 		},
+			// 	},
+			// },
 		},
 	})
 }
