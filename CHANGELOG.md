@@ -4,57 +4,6 @@ BREAKING CHANGES:
 
 * resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured ([#42753](https://github.com/hashicorp/terraform-provider-aws/issues/42753))
 
-NOTES:
-
-* resource/aws_route53_vpc_association_authorization: Because we cannot easily replicate the highly concurrent environments in which these errors have been observed, this fix is best effort and we ask for community help in verifying the reported issues are resolved by this change ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
-
-FEATURES:
-
-* **New Resource:** `aws_dsql_cluster` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
-* **New Resource:** `aws_dsql_cluster_peering` ([#41868](https://github.com/hashicorp/terraform-provider-aws/issues/41868))
-* **New Resource:** `aws_prometheus_workspace_configuration` ([#42478](https://github.com/hashicorp/terraform-provider-aws/issues/42478))
-* **New Resource:** `aws_s3control_directory_bucket_access_point_scope` ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
-* **New Resource:** `aws_vpc_route_server` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
-* **New Resource:** `aws_vpc_route_server_endpoint` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
-* **New Resource:** `aws_vpc_route_server_peer` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
-* **New Resource:** `aws_vpc_route_server_propagation` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
-* **New Resource:** `aws_vpc_route_server_vpc_association` ([#42392](https://github.com/hashicorp/terraform-provider-aws/issues/42392))
-* **New Resource:** `aws_workspacesweb_data_protection_settings` ([#42852](https://github.com/hashicorp/terraform-provider-aws/issues/42852))
-* **New Resource:** `aws_workspacesweb_ip_access_settings` ([#42863](https://github.com/hashicorp/terraform-provider-aws/issues/42863))
-* **New Resource:** `aws_workspacesweb_user_access_logging_settings` ([#42868](https://github.com/hashicorp/terraform-provider-aws/issues/42868))
-
-ENHANCEMENTS:
-
-* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
-* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
-* data-source/aws_neptune_engine_version: Add several arguments and attributes to support dynamic selection of versions including `latest`, `has_major_target`, `preferred_major_targets`, and `preferred_upgrade_targets` ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
-* data-source/aws_s3_bucket: Add hosted zone ID for `ap-east-2` AWS Region ([#42915](https://github.com/hashicorp/terraform-provider-aws/issues/42915))
-* provider: Support `ap-east-2` as a valid AWS Region ([#42906](https://github.com/hashicorp/terraform-provider-aws/issues/42906))
-* resource/aws_fsx_lustre_file_system: Add `data_read_cache_configuration` and `throughput_capacity` arguments in support of the [Intelligent-Tiering storage class](https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-fsx-lustre.html#how-INT-tiering-works) ([#42839](https://github.com/hashicorp/terraform-provider-aws/issues/42839))
-* resource/aws_pinpointsmsvoicev2_phone_number: Add `two_way_channel_role` argument ([#42950](https://github.com/hashicorp/terraform-provider-aws/issues/42950))
-* resource/aws_route53_vpc_association_authorization: Add configurable timeouts for create, read, and delete ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
-* resource/aws_s3_access_point: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
-* resource/aws_s3control_access_point_policy: Add support for S3 Directory Buckets ([#42338](https://github.com/hashicorp/terraform-provider-aws/issues/42338))
-* resource/aws_vpn_connection: Add `preshared_key_storage` argument and `preshared_key_arn` attribute ([#42819](https://github.com/hashicorp/terraform-provider-aws/issues/42819))
-* resource/aws_wafv2_rule_group: Add `statement.asn_match_statement` configuration block ([#42965](https://github.com/hashicorp/terraform-provider-aws/issues/42965))
-* resource/aws_wafv2_web_acl: Add `statement.asn_match_statement` configuration block ([#42965](https://github.com/hashicorp/terraform-provider-aws/issues/42965))
-
-BUG FIXES:
-
-* resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Batch update operations to stay under the Key Value Store Service Quota. The `max_batch_size` argument can be used to override the default value of `50` items. ([#42795](https://github.com/hashicorp/terraform-provider-aws/issues/42795))
-* resource/aws_cloudwatch_log_destination: Fix to return the first matched destination name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_cloudwatch_log_group: Fix to return the first matched group name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_cloudwatch_log_metric_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_cloudwatch_log_query_definition: Fix to return the first matched query definition ID during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_cloudwatch_log_resource_policy: Fix to return the first matched policy name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_cloudwatch_log_subscription_filter: Fix to return the first matched filter name during the read operation. This fixes a regression introduced in [v5.83.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5830-january--9-2025) ([#42896](https://github.com/hashicorp/terraform-provider-aws/issues/42896))
-* resource/aws_dynamodb_table: Set new computed value for `stream_arn` attribute when changing `stream_view_type` ([#42561](https://github.com/hashicorp/terraform-provider-aws/issues/42561))
-* resource/aws_neptune_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
-* resource/aws_neptune_global_cluster: Enable minor and major version upgrades by fixing various issues preventing them ([#42854](https://github.com/hashicorp/terraform-provider-aws/issues/42854))
-* resource/aws_route53_vpc_association_authorization: Retry `InvalidPaginationToken` errors on read ([#42948](https://github.com/hashicorp/terraform-provider-aws/issues/42948))
-* resource/aws_verifiedaccess_endpoint: Fix `InvalidParameterValue: The value of loadBalancerOptions.port you provided is not valid` errors when creating TCP load balancer endpoints ([#42736](https://github.com/hashicorp/terraform-provider-aws/issues/42736))
-* resource/aws_vpc_endpoint_subnet_association: Fix `OperationInProgress: VpcEndpoint modify operation in progress` errors when deleting multiple associations in parallel ([#42884](https://github.com/hashicorp/terraform-provider-aws/issues/42884))
-
 ## 6.0.0-beta3 (June  5, 2025)
 
 ENHANCEMENTS:
