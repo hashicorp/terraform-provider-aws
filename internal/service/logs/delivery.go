@@ -91,7 +91,7 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:              tftags.TagsAttribute(),
 			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},

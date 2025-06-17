@@ -152,10 +152,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ipAddressType`. You can only change to `dualstack` `ipAddressType` if the selected subnets are IPv6 enabled.
-
-~> **NOTE:** Please note that one of either `subnets` or `subnetMapping` is required.
-
 This resource supports the following arguments:
 
 * `accessLogs` - (Optional) Access Logs block. See below.
@@ -178,6 +174,7 @@ This resource supports the following arguments:
 * `ipAddressType` - (Optional) Type of IP addresses used by the subnets for your load balancer. The possible values depend upon the load balancer type: `ipv4` (all load balancer types), `dualstack` (all load balancer types), and `dualstack-without-public-ipv4` (type `application` only).
 * `ipamPools` (Optional). The IPAM pools to use with the load balancer.  Only valid for Load Balancers of type `application`. See [ipam_pools](#ipam_pools) for more information.
 * `loadBalancerType` - (Optional) Type of load balancer to create. Possible values are `application`, `gateway`, or `network`. The default value is `application`.
+* `minimum_load_balancer_capacity` - (Optional) Minimum capacity for a load balancer. Only valid for Load Balancers of type `application` or `network`.
 * `name` - (Optional) Name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified, Terraform will autogenerate a name beginning with `tf-lb`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `securityGroups` - (Optional) List of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
@@ -186,6 +183,10 @@ This resource supports the following arguments:
 * `subnets` - (Optional) List of subnet IDs to attach to the LB. For Load Balancers of type `network` subnets can only be added (see [Availability Zones](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#availability-zones)), deleting a subnet for load balancers of type `network` will force a recreation of the resource.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xffHeaderProcessingMode` - (Optional) Determines how the load balancer modifies the `X-Forwarded-For` header in the HTTP request before sending the request to the target. The possible values are `append`, `preserve`, and `remove`. Only valid for Load Balancers of type `application`. The default is `append`.
+
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the `ipAddressType`. You can only change to `dualstack` `ipAddressType` if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnetMapping` is required.
 
 ### access_logs
 
@@ -202,6 +203,10 @@ This resource supports the following arguments:
 ### ipam_pools
 
 * `ipv4IpamPoolId` - (Required) The ID of the IPv4 IPAM pool.
+
+### minimum_load_balancer_capacity
+
+* `capacityUnits` - (Required) The number of capacity units.
 
 ### subnet_mapping
 
@@ -262,4 +267,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-64b470489d8da264aa59172ace8f0bd132c644e4a3ef3893d27a3cec2d5e6a48 -->
+<!-- cache-key: cdktf-0.20.8 input-fcf28913d94f27b7f44046bd94fc20f4207b09457b72e03217397ea864332702 -->

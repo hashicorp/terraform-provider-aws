@@ -267,7 +267,7 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 }
 
 func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
-	output, err := findLogGroups(ctx, conn, input, filter)
+	output, err := findLogGroups(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -276,8 +276,9 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
+func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogGroup, error) {
 	var output []awstypes.LogGroup
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -290,6 +291,9 @@ func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 		for _, v := range page.LogGroups {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}

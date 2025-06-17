@@ -58,7 +58,7 @@ The following arguments are required:
 * `target_repository` (Required) The destination repository for the container image. Detailed below.
 * `version` (Required) Version of the container recipe.
 
-The following attributes are optional:
+The following arguments are optional:
 
 * `description` - (Optional) The description of the container recipe.
 * `dockerfile_template_data` - (Optional) The Dockerfile template used to build the image as an inline data blob.

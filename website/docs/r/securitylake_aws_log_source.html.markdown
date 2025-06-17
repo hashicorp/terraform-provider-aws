@@ -32,7 +32,7 @@ resource "aws_securitylake_aws_log_source" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `source` - (Required) Specify the natively-supported AWS service to add as a source in Security Lake.
 

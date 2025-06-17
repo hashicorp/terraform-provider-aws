@@ -18,8 +18,8 @@ For information about Lambda code signing configurations and how to use them, se
 resource "aws_lambda_code_signing_config" "new_csc" {
   allowed_publishers {
     signing_profile_version_arns = [
-      aws_signer_signing_profile.example1.arn,
-      aws_signer_signing_profile.example2.arn,
+      aws_signer_signing_profile.example1.version_arn,
+      aws_signer_signing_profile.example2.version_arn,
     ]
   }
 
@@ -36,6 +36,8 @@ resource "aws_lambda_code_signing_config" "new_csc" {
 ```
 
 ## Argument Reference
+
+This resource supports the following arguments:
 
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.

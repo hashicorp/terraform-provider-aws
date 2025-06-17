@@ -22,7 +22,7 @@ resource "aws_s3tables_table_bucket" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.

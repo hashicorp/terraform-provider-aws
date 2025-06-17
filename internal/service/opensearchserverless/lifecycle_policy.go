@@ -48,14 +48,16 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the policy.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -64,18 +66,21 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-				Required:   true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
 				},
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
-				Required:   true,
+				Description: "Type of lifecycle policy. Must be `retention`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
