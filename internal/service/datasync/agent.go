@@ -27,16 +27,18 @@ import (
 )
 
 // @SDKResource("aws_datasync_agent", name="Agent")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeAgentOutput")
+// @Testing(importIgnore="activation_key;ip_address", plannableImportAction="Replace")
+// @Testing(preCheck="testAccPreCheck")
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
 		ReadWithoutTimeout:   resourceAgentRead,
 		UpdateWithoutTimeout: resourceAgentUpdate,
 		DeleteWithoutTimeout: resourceAgentDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},

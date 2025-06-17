@@ -1,4 +1,5 @@
 resource "aws_ssmcontacts_rotation" "test" {
+{{- template "region" }}
   contact_ids = aws_ssmcontacts_contact.test[*].arn
 
   name = var.rName
@@ -22,6 +23,7 @@ resource "aws_ssmcontacts_rotation" "test" {
 # testAccRotationConfig_base(rName, 1)
 
 resource "aws_ssmcontacts_contact" "test" {
+{{- template "region" }}
   count = 1
   alias = "${var.rName}-${count.index}"
   type  = "PERSONAL"
@@ -37,4 +39,6 @@ resource "aws_ssmincidents_replication_set" "test" {
   }
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" -}}
+}

@@ -1,4 +1,5 @@
 resource "aws_dms_replication_config" "test" {
+{{- template "region" }}
   replication_config_identifier = var.rName
   replication_type              = "cdc"
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
@@ -17,6 +18,7 @@ resource "aws_dms_replication_config" "test" {
 # testAccReplicationConfigConfig_base_DummyDatabase
 
 resource "aws_dms_replication_subnet_group" "test" {
+{{- template "region" }}
   replication_subnet_group_id          = var.rName
   replication_subnet_group_description = "terraform test"
   subnet_ids                           = aws_subnet.test[*].id
@@ -25,9 +27,12 @@ resource "aws_dms_replication_subnet_group" "test" {
 # testAccReplicationEndpointConfig_dummyDatabase
 
 data "aws_partition" "current" {}
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" -}}
+}
 
 resource "aws_dms_endpoint" "source" {
+{{- template "region" }}
   database_name = var.rName
   endpoint_id   = "${var.rName}-source"
   endpoint_type = "source"
@@ -39,6 +44,7 @@ resource "aws_dms_endpoint" "source" {
 }
 
 resource "aws_dms_endpoint" "target" {
+{{- template "region" }}
   database_name = var.rName
   endpoint_id   = "${var.rName}-target"
   endpoint_type = "target"
@@ -49,32 +55,4 @@ resource "aws_dms_endpoint" "target" {
   password      = "tftest"
 }
 
-# acctest.ConfigVPCWithSubnets(rName, 2)
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude
-
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = local.default_exclude_zone_ids
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-locals {
-  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-}
+{{ template "acctest.ConfigVPCWithSubnets" 2 }}

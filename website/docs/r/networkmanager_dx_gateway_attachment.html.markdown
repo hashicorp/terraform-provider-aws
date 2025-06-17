@@ -3,11 +3,13 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_dx_gateway_attachment"
 description: |-
-  Terraform resource for managing an AWS Network Manager Direct Connect Gateway Attachment.
+  Manages a Network Manager Direct Connect Gateway Attachment.
 ---
 # Resource: aws_networkmanager_dx_gateway_attachment
 
-Terraform resource for managing an AWS Network Manager Direct Connect (DX) Gateway Attachment.
+Manages a Network Manager Direct Connect Gateway Attachment.
+
+Use this resource to create and manage a Direct Connect Gateway attachment to a Cloud WAN core network.
 
 ## Example Usage
 
@@ -37,14 +39,15 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the attachment.
 * `attachment_policy_rule_number` - Policy rule number associated with the attachment.
 * `attachment_type` - Type of attachment.
 * `core_network_arn` - ARN of the core network for the attachment.
-* `id` - The ID of the attachment.
+* `id` - ID of the attachment.
 * `owner_account_id` - ID of the attachment account owner.
 * `segment_name` - Name of the segment attachment.
 * `state` - State of the attachment.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

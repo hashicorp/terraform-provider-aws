@@ -21,19 +21,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_cloudwatch_contributor_managed_insight_rules", name="Contributor Managed Insight Rules")
-func newDataSourceContributorManagedInsightRules(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceContributorManagedInsightRules{}, nil
+func newContributorManagedInsightRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &contributorManagedInsightRulesDataSource{}, nil
 }
 
 const (
 	DSNameContributorManagedInsightRules = "Contributor Managed Insight Rules Data Source"
 )
 
-type dataSourceContributorManagedInsightRules struct {
-	framework.DataSourceWithConfigure
+type contributorManagedInsightRulesDataSource struct {
+	framework.DataSourceWithModel[contributorManagedInsightRulesDataSourceModel]
 }
 
-func (d *dataSourceContributorManagedInsightRules) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *contributorManagedInsightRulesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: schema.StringAttribute{
@@ -44,10 +44,10 @@ func (d *dataSourceContributorManagedInsightRules) Schema(ctx context.Context, r
 	}
 }
 
-func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().CloudWatchClient(ctx)
 
-	var data dataSourceContributorManagedInsightRulesData
+	var data contributorManagedInsightRulesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -83,7 +83,8 @@ func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceContributorManagedInsightRulesData struct {
+type contributorManagedInsightRulesDataSourceModel struct {
+	framework.WithRegionModel
 	ResourceARN  types.String                                            `tfsdk:"resource_arn"`
 	ManagedRules fwtypes.ListNestedObjectValueOf[managedRuleDescription] `tfsdk:"managed_rules"`
 }

@@ -26,17 +26,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_smb", name="Location SMB")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationSmbOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importIgnore="password")
 func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
 		ReadWithoutTimeout:   resourceLocationSMBRead,
 		UpdateWithoutTimeout: resourceLocationSMBUpdate,
 		DeleteWithoutTimeout: resourceLocationSMBDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"agent_arns": {

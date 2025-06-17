@@ -150,25 +150,6 @@ func resourceTaskDefinition() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
 				),
 			},
-			"inference_accelerator": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"device_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
 			"ipc_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -580,10 +561,6 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
-	}
-
 	if v, ok := d.GetOk("ipc_mode"); ok {
 		input.IpcMode = awstypes.IpcMode(v.(string))
 	}
@@ -694,9 +671,6 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
-	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting inference accelerators: %s", err)
-	}
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
@@ -889,36 +863,6 @@ func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []any {
 	return []any{
 		tfMap,
 	}
-}
-
-func flattenInferenceAccelerators(apiObjects []awstypes.InferenceAccelerator) []any {
-	tfList := make([]any, 0, len(apiObjects))
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			names.AttrDeviceName: aws.ToString(apiObject.DeviceName),
-			"device_type":        aws.ToString(apiObject.DeviceType),
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func expandInferenceAccelerators(tfList []any) []awstypes.InferenceAccelerator {
-	apiObjects := make([]awstypes.InferenceAccelerator, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]any)
-		apiObject := awstypes.InferenceAccelerator{
-			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
-			DeviceType: aws.String(tfMap["device_type"].(string)),
-		}
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
 }
 
 func expandTaskDefinitionPlacementConstraints(tfList []any) ([]awstypes.TaskDefinitionPlacementConstraint, error) {

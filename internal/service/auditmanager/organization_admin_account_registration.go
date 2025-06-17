@@ -5,38 +5,46 @@ package auditmanager
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_auditmanager_organization_admin_account_registration", name="Organization Admin Account Registration")
-func newResourceOrganizationAdminAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceOrganizationAdminAccountRegistration{}, nil
+func newOrganizationAdminAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &organizationAdminAccountRegistrationResource{}, nil
 }
 
-const (
-	ResNameOrganizationAdminAccountRegistration = "OrganizationAdminAccountRegistration"
-)
-
-type resourceOrganizationAdminAccountRegistration struct {
-	framework.ResourceWithConfigure
+type organizationAdminAccountRegistrationResource struct {
+	framework.ResourceWithModel[organizationAdminAccountRegistrationResourceModel]
+	framework.WithImportByID
+	framework.WithNoUpdate
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *organizationAdminAccountRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"admin_account_id": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					fwvalidators.AWSAccountID(),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -49,92 +57,117 @@ func (r *resourceOrganizationAdminAccountRegistration) Schema(ctx context.Contex
 	}
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *organizationAdminAccountRegistrationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data organizationAdminAccountRegistrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceOrganizationAdminAccountRegistrationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	adminAccountID := fwflex.StringValueFromFramework(ctx, data.AdminAccountID)
+	input := auditmanager.RegisterOrganizationAdminAccountInput{
+		AdminAccountId: aws.String(adminAccountID),
 	}
+	output, err := conn.RegisterOrganizationAdminAccount(ctx, &input)
 
-	in := auditmanager.RegisterOrganizationAdminAccountInput{
-		AdminAccountId: plan.AdminAccountID.ValueStringPointer(),
-	}
-	out, err := conn.RegisterOrganizationAdminAccount(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameOrganizationAdminAccountRegistration, plan.AdminAccountID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("registering Audit Manager Organization Admin Account (%s)", adminAccountID), err.Error())
+
 		return
 	}
 
-	state := plan
-	state.AdminAccountID = flex.StringToFramework(ctx, out.AdminAccountId)
-	state.ID = flex.StringToFramework(ctx, out.AdminAccountId)
-	state.OrganizationID = flex.StringToFramework(ctx, out.OrganizationId)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, output.AdminAccountId)
+	data.OrganizationID = fwflex.StringToFramework(ctx, output.OrganizationId)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *organizationAdminAccountRegistrationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data organizationAdminAccountRegistrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceOrganizationAdminAccountRegistrationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	output, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := conn.GetOrganizationAdminAccount(ctx, &auditmanager.GetOrganizationAdminAccountInput{})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameOrganizationAdminAccountRegistration, state.ID.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out.AdminAccountId == nil {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Organization Admin Account (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.AdminAccountID = flex.StringToFramework(ctx, out.AdminAccountId)
-	state.ID = flex.StringToFramework(ctx, out.AdminAccountId)
-	state.OrganizationID = flex.StringToFramework(ctx, out.OrganizationId)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	data.AdminAccountID = fwflex.StringToFramework(ctx, output.AdminAccountId)
+	data.OrganizationID = fwflex.StringToFramework(ctx, output.OrganizationId)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// Update is a no-op. Changing admin accounts requires the existing admin to
-// be deregisterd first (destroy and replace).
-func (r *resourceOrganizationAdminAccountRegistration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
+func (r *organizationAdminAccountRegistrationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data organizationAdminAccountRegistrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func (r *resourceOrganizationAdminAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var state resourceOrganizationAdminAccountRegistrationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	input := auditmanager.DeregisterOrganizationAdminAccountInput{
+		AdminAccountId: fwflex.StringFromFramework(ctx, data.ID),
+	}
+	_, err := conn.DeregisterOrganizationAdminAccount(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	_, err := conn.DeregisterOrganizationAdminAccount(ctx, &auditmanager.DeregisterOrganizationAdminAccountInput{
-		AdminAccountId: state.AdminAccountID.ValueStringPointer(),
-	})
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Tenant is not in expected state") {
+		return
+	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameOrganizationAdminAccountRegistration, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deregistering Audit Manager Organization Admin Account (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 }
 
-func (r *resourceOrganizationAdminAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func findOrganizationAdminAccount(ctx context.Context, conn *auditmanager.Client) (*auditmanager.GetOrganizationAdminAccountOutput, error) {
+	input := auditmanager.GetOrganizationAdminAccountInput{}
+	output, err := conn.GetOrganizationAdminAccount(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AdminAccountId == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-type resourceOrganizationAdminAccountRegistrationData struct {
+type organizationAdminAccountRegistrationResourceModel struct {
+	framework.WithRegionModel
 	AdminAccountID types.String `tfsdk:"admin_account_id"`
 	ID             types.String `tfsdk:"id"`
 	OrganizationID types.String `tfsdk:"organization_id"`

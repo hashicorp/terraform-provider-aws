@@ -46,6 +46,7 @@ resource "aws_sesv2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Required) The name of the configuration set.
 * `delivery_options` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
 * `reputation_options` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputation_options` Block](#reputation_options-block) for details.

@@ -35,8 +35,8 @@ import (
 )
 
 // @FrameworkResource("aws_medialive_multiplex_program", name="Multiplex Program")
-func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := multiplexProgram{}
+func newMultiplexProgramResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := multiplexProgramResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
 
 	return &r, nil
@@ -46,13 +46,13 @@ const (
 	ResNameMultiplexProgram = "Multiplex Program"
 )
 
-type multiplexProgram struct {
-	framework.ResourceWithConfigure
+type multiplexProgramResource struct {
+	framework.ResourceWithModel[multiplexProgramResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (m *multiplexProgramResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -163,10 +163,10 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (m *multiplexProgramResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var plan resourceMultiplexProgramData
+	var plan multiplexProgramResourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -217,10 +217,10 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (m *multiplexProgramResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var state resourceMultiplexProgramData
+	var state multiplexProgramResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -260,10 +260,10 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (m *multiplexProgramResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var plan, state resourceMultiplexProgramData
+	var plan, state multiplexProgramResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -326,10 +326,10 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (m *multiplexProgramResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := m.Meta().MediaLiveClient(ctx)
 
-	var state resourceMultiplexProgramData
+	var state multiplexProgramResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -403,7 +403,8 @@ func parseMultiplexProgramID(id string) (programName string, multiplexId string,
 	return programName, multiplexId, err
 }
 
-type resourceMultiplexProgramData struct {
+type multiplexProgramResourceModel struct {
+	framework.WithRegionModel
 	ID                       types.String                                              `tfsdk:"id"`
 	MultiplexID              types.String                                              `tfsdk:"multiplex_id"`
 	MultiplexProgramSettings fwtypes.ListNestedObjectValueOf[multiplexProgramSettings] `tfsdk:"multiplex_program_settings"`

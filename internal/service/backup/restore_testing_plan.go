@@ -47,7 +47,7 @@ func newRestoreTestingPlanResource(_ context.Context) (resource.ResourceWithConf
 }
 
 type restoreTestingPlanResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[restoreTestingPlanResourceModel]
 }
 
 func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -298,7 +298,7 @@ func (r *restoreTestingPlanResource) Delete(ctx context.Context, request resourc
 }
 
 func (r *restoreTestingPlanResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrName), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findRestoreTestingPlanByName(ctx context.Context, conn *backup.Client, name string) (*awstypes.RestoreTestingPlanForGet, error) {
@@ -331,6 +331,7 @@ func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *bac
 }
 
 type restoreTestingPlanResourceModel struct {
+	framework.WithRegionModel
 	RecoveryPointSelection     fwtypes.ListNestedObjectValueOf[restoreRecoveryPointSelectionModel] `tfsdk:"recovery_point_selection"`
 	RestoreTestingPlanARN      types.String                                                        `tfsdk:"arn"`
 	RestoreTestingPlanName     types.String                                                        `tfsdk:"name"`

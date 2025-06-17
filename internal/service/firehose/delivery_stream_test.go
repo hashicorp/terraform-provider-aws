@@ -3778,7 +3778,9 @@ func testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName string) string {
 		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

@@ -26,7 +26,7 @@ func newFoundationModelsDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type foundationModelsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[foundationModelsDataSourceModel]
 }
 
 func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -90,6 +90,7 @@ func (d *foundationModelsDataSource) Read(ctx context.Context, request datasourc
 }
 
 type foundationModelsDataSourceModel struct {
+	framework.WithRegionModel
 	ByCustomizationType fwtypes.StringEnum[awstypes.ModelCustomization]              `tfsdk:"by_customization_type"`
 	ByInferenceType     fwtypes.StringEnum[awstypes.InferenceType]                   `tfsdk:"by_inference_type"`
 	ByOutputModality    fwtypes.StringEnum[awstypes.ModelModality]                   `tfsdk:"by_output_modality"`
