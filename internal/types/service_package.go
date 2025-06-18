@@ -99,7 +99,7 @@ type Identity struct {
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
+	IdentityAttribute      string // ARN, Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
@@ -253,7 +253,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
-		Attributes: append(baseAttributes, attributes...),
+		IsGlobalResource: true,
+		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
