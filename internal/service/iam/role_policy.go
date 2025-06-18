@@ -108,7 +108,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
 
 		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
-			return FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 
 		if err != nil {
@@ -123,12 +123,12 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyDocument, err := FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+	policyDocument, err := findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy %s not found, removing from state", d.Id())
@@ -162,7 +162,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -184,7 +184,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
+func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
 	input := &iam.GetRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
@@ -210,7 +210,7 @@ func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	return aws.ToString(output.PolicyDocument), nil
 }
 
-func RolePolicyParseID(id string) (roleName, policyName string, err error) {
+func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("role_policy id must be of the form <role name>:<policy name>")
