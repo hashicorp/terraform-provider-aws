@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,6 +89,50 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 
 	if attrName != names.AttrID {
 		rd.SetId(val)
+	}
+
+	return nil
+}
+
+func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
+	if rd.Id() != "" {
+		parts, err := importSpec.ImportID.Parse(rd.Id())
+		if err != nil {
+			return err
+		}
+
+		for attr, val := range parts {
+			rd.Set(attr, val)
+		}
+	} else {
+		identity, err := rd.Identity()
+		if err != nil {
+			return err
+		}
+
+		if err := validateAccountID(identity, client.AccountID(ctx)); err != nil {
+			return err
+		}
+
+		for _, attr := range attrs {
+			switch attr.Name {
+			case names.AttrAccountID:
+				// Do nothing
+
+			default:
+				valRaw, ok := identity.GetOk(attr.Name)
+				if attr.Required && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				}
+				val, ok := valRaw.(string)
+				if !ok {
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+				}
+				setAttribute(rd, attr.Name, val)
+			}
+		}
+
+		rd.SetId(importSpec.ImportID.Create(rd))
 	}
 
 	return nil
