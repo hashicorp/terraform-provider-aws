@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,7 +47,21 @@ func resourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceDomainImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
+
+				name := d.Id()
+				ds, err := findDomainByName(ctx, conn, name)
+
+				if err != nil {
+					return nil, fmt.Errorf("reading OpenSearch Domain (%s): %w", name, err)
+				}
+
+				d.SetId(aws.ToString(ds.ARN))
+				d.Set(names.AttrDomainName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -669,12 +685,6 @@ func resourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainImport(ctx context.Context,
-	d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	d.Set(names.AttrDomainName, d.Id())
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
@@ -683,7 +693,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state.
 	name := d.Get(names.AttrDomainName).(string)
-	_, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	_, err := findDomainByName(ctx, conn, name)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain (%s) already exists", name)
@@ -866,7 +876,8 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	name := d.Get(names.AttrDomainName).(string)
+	ds, err := findDomainByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
@@ -878,86 +889,101 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	outDescribeDomainConfig, err := conn.DescribeDomainConfig(ctx, &opensearch.DescribeDomainConfigInput{
-		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+	output, err := conn.DescribeDomainConfig(ctx, &opensearch.DescribeDomainConfigInput{
+		DomainName: aws.String(name),
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s) Config: %s", d.Id(), err)
 	}
 
-	dc := outDescribeDomainConfig.DomainConfig
+	dc := output.DomainConfig
 
-	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
-		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.ToString(ds.AccessPolicies))
-
+	if v := aws.ToString(ds.AccessPolicies); v != "" {
+		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		d.Set("access_policies", policies)
 	}
-
-	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]any), flex.FlattenStringValueMap(ds.AdvancedOptions))
-	if err = d.Set("advanced_options", options); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting advanced_options %v: %s", options, err)
+	if err = d.Set("advanced_options", advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]any), flex.FlattenStringValueMap(ds.AdvancedOptions))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
-
-	d.SetId(aws.ToString(ds.ARN))
-	d.Set(names.AttrARN, ds.ARN)
-	d.Set("domain_endpoint_v2_hosted_zone_id", ds.DomainEndpointV2HostedZoneId)
-	d.Set("domain_id", ds.DomainId)
-	d.Set(names.AttrDomainName, ds.DomainName)
-	d.Set(names.AttrEngineVersion, ds.EngineVersion)
-	d.Set(names.AttrIPAddressType, ds.IPAddressType)
-
-	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
-	}
-
-	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
-	}
-
-	if err := d.Set("cluster_config", flattenClusterConfig(ds.ClusterConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
-	}
-
-	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
-	}
-
-	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
-	}
-
 	// Populate AdvancedSecurityOptions with values returned from
 	// DescribeDomainConfig, if enabled, else use
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
-	if ds.AdvancedSecurityOptions != nil && aws.ToBool(ds.AdvancedSecurityOptions.Enabled) {
-		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
+	if v := ds.AdvancedSecurityOptions; v != nil && aws.ToBool(v.Enabled) {
+		advSecOpts := flattenAdvancedSecurityOptions(v)
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
 	}
-
+	d.Set(names.AttrARN, ds.ARN)
 	if v := dc.AutoTuneOptions; v != nil {
-		err = d.Set("auto_tune_options", []any{flattenAutoTuneOptions(v.Options)})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s): setting auto_tune_options: %s", d.Id(), err)
+		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(v.Options)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
-
+	if err := d.Set("cluster_config", flattenClusterConfig(ds.ClusterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
+	}
+	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
+	}
+	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
+	}
+	d.Set("domain_endpoint_v2_hosted_zone_id", ds.DomainEndpointV2HostedZoneId)
+	d.Set("domain_id", ds.DomainId)
+	d.Set(names.AttrDomainName, ds.DomainName)
+	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
+	}
+	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
+	}
+	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	d.Set(names.AttrIPAddressType, ds.IPAddressType)
+	// Remove any disabled log types that aren't in state.
+	var inStateLogTypes []string
+	if v := d.GetRawState(); !v.IsNull() {
+		if v := v.GetAttr("log_publishing_options"); !v.IsNull() {
+			for _, v := range v.AsValueSet().Values() {
+				if !v.IsNull() {
+					for k, v := range v.AsValueMap() {
+						if k == "log_type" && !v.IsNull() {
+							inStateLogTypes = append(inStateLogTypes, v.AsString())
+						}
+					}
+				}
+			}
+		}
+	}
+	maps.DeleteFunc(ds.LogPublishingOptions, func(k string, v awstypes.LogPublishingOption) bool {
+		return !aws.ToBool(v.Enabled) && !slices.Contains(inStateLogTypes, k)
+	})
+	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
+	}
+	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
+	}
+	if ds.OffPeakWindowOptions != nil {
+		if err := d.Set("off_peak_window_options", []any{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
+		}
+	} else {
+		d.Set("off_peak_window_options", nil)
+	}
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
-
 	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
 	}
-
 	if ds.VPCOptions != nil {
 		if err := d.Set("vpc_options", []any{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
@@ -990,22 +1016,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		if ds.Endpoints != nil {
 			return sdkdiag.AppendErrorf(diags, "%q: OpenSearch Domain not in VPC expected to have null Endpoints value", d.Id())
 		}
-	}
-
-	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
-	}
-
-	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
-	}
-
-	if ds.OffPeakWindowOptions != nil {
-		if err := d.Set("off_peak_window_options", []any{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
-		}
-	} else {
-		d.Set("off_peak_window_options", nil)
 	}
 
 	return diags
@@ -1105,7 +1115,24 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if d.HasChange("log_publishing_options") {
-			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set).List())
+			o, n := d.GetChange("log_publishing_options")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+
+			input.LogPublishingOptions = expandLogPublishingOptions(ns.List())
+
+			// Explicitly disable removed log types.
+			oldTypes := tfslices.ApplyToAll(os.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			newTypes := tfslices.ApplyToAll(ns.List(), func(v any) string {
+				return v.(map[string]any)["log_type"].(string)
+			})
+			_, remove, _ := flex.DiffSlices(oldTypes, newTypes, func(s1, s2 string) bool { return s1 == s2 })
+			for _, logType := range remove {
+				input.LogPublishingOptions[logType] = awstypes.LogPublishingOption{
+					Enabled: aws.Bool(false),
+				}
+			}
 		}
 
 		if d.HasChange("node_to_node_encryption") {

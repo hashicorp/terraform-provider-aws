@@ -47,7 +47,21 @@ func resourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceDomainImport,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
+
+				name := d.Id()
+				ds, err := findDomainByName(ctx, conn, name)
+
+				if err != nil {
+					return nil, fmt.Errorf("reading Elasticsearch Domain (%s): %w", name, err)
+				}
+
+				d.SetId(aws.ToString(ds.ARN))
+				d.Set(names.AttrDomainName, name)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -711,7 +725,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) config: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) Config: %s", d.Id(), err)
 	}
 
 	dc := output.DomainConfig
@@ -731,9 +745,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	// DescribeElasticsearchDomainConfig, if enabled, else use
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
-	if ds.AdvancedSecurityOptions != nil {
-		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-		if !aws.ToBool(ds.AdvancedSecurityOptions.Enabled) {
+	if v := ds.AdvancedSecurityOptions; v != nil {
+		advSecOpts := flattenAdvancedSecurityOptions(v)
+		if !aws.ToBool(v.Enabled) {
 			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
 		}
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
@@ -784,7 +798,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	maps.DeleteFunc(ds.LogPublishingOptions, func(k string, v awstypes.LogPublishingOption) bool {
 		return !aws.ToBool(v.Enabled) && !slices.Contains(inStateLogTypes, k)
 	})
-
 	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
@@ -801,10 +814,9 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		d.Set(names.AttrEndpoint, endpoints["vpc"])
-
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch Domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
@@ -987,22 +999,6 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
-}
-
-func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
-
-	d.Set(names.AttrDomainName, d.Id())
-
-	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
-
-	if err != nil {
-		return nil, err
-	}
-
-	d.SetId(aws.ToString(ds.ARN))
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainStatus, error) {
