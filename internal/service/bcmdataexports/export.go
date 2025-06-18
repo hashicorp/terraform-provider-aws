@@ -37,7 +37,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
-// @Testing(preCheckRegion="us-east-1")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
