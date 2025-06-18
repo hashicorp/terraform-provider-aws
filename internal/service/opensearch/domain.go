@@ -681,30 +681,23 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
-	// and might cause duplicate domain to appear in state
-	resp, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	// and might cause duplicate domain to appear in state.
+	name := d.Get(names.AttrDomainName).(string)
+	_, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+
 	if err == nil {
-		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.ToString(resp.DomainName))
+		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain (%s) already exists", name)
 	}
 
-	input := &opensearch.CreateDomainInput{
-		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+	input := opensearch.CreateDomainInput{
+		DomainName: aws.String(name),
 		TagList:    getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
-		input.EngineVersion = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
-		input.IPAddressType = awstypes.IPAddressType(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.AccessPolicies = aws.String(policy)
@@ -720,6 +713,26 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
 		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("cluster_config"); ok {
+		config := v.([]any)
+
+		if len(config) == 1 {
+			if config[0] == nil {
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
+			}
+			m := config[0].(map[string]any)
+			input.ClusterConfig = expandClusterConfig(m)
+		}
+	}
+
+	if v, ok := d.GetOk("cognito_options"); ok {
+		input.CognitoOptions = expandCognitoOptions(v.([]any))
+	}
+
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -745,16 +758,16 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
-	if v, ok := d.GetOk("cluster_config"); ok {
-		config := v.([]any)
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+		input.EngineVersion = aws.String(v.(string))
+	}
 
-		if len(config) == 1 {
-			if config[0] == nil {
-				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
-			}
-			m := config[0].(map[string]any)
-			input.ClusterConfig = expandClusterConfig(m)
-		}
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IPAddressType = awstypes.IPAddressType(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_publishing_options"); ok && v.(*schema.Set).Len() > 0 {
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -762,6 +775,16 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		s := options[0].(map[string]any)
 		input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
+	}
+
+	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]any)) > 0 {
+		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]any)[0].(map[string]any))
+
+		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
+		// An off-peak window is required for a domain and cannot be disabled.
+		if input.OffPeakWindowOptions != nil {
+			input.OffPeakWindowOptions.Enabled = aws.Bool(true)
+		}
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
@@ -796,63 +819,42 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.VPCOptions = expandVPCOptions(s)
 	}
 
-	if v, ok := d.GetOk("log_publishing_options"); ok {
-		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]any))
-	}
-
-	if v, ok := d.GetOk("cognito_options"); ok {
-		input.CognitoOptions = expandCognitoOptions(v.([]any))
-	}
-
-	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]any)) > 0 {
-		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]any)[0].(map[string]any))
-
-		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
-		// An off-peak window is required for a domain and cannot be disabled.
-		if input.OffPeakWindowOptions != nil {
-			input.OffPeakWindowOptions.Enabled = aws.Bool(true)
-		}
-	}
-
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-		return conn.CreateDomain(ctx, input)
-	},
-		domainErrorRetryable)
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (any, error) {
+			return conn.CreateDomain(ctx, &input)
+		},
+		domainErrorRetryable,
+	)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain: %s", err)
-	}
-	out := outputRaw.(*opensearch.CreateDomainOutput)
-
-	d.SetId(aws.ToString(out.DomainStatus.ARN))
-
-	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be created", d.Id())
-	if err := waitForDomainCreation(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
+	d.SetId(aws.ToString(outputRaw.(*opensearch.CreateDomainOutput).DomainStatus.ARN))
+
+	if err := waitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) create: %s", d.Id(), err)
+	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
-		input := &opensearch.UpdateDomainConfigInput{
-			DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
+		input := opensearch.UpdateDomainConfigInput{
 			AutoTuneOptions: expandAutoTuneOptions(v.([]any)[0].(map[string]any)),
+			DomainName:      aws.String(name),
 		}
 
-		log.Printf("[DEBUG] Updating OpenSearch Domain config: %#v", input)
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-			return conn.UpdateDomainConfig(ctx, input)
-		},
-			domainErrorRetryable)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (any, error) {
+				return conn.UpdateDomainConfig(ctx, &input)
+			},
+			domainErrorRetryable,
+		)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1014,8 +1016,9 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		name := d.Get(names.AttrDomainName).(string)
 		input := opensearch.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+			DomainName: aws.String(name),
 		}
 
 		if d.HasChange("access_policies") {
@@ -1048,10 +1051,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("domain_endpoint_options") {
 			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]any))
-		}
-
-		if d.HasChange(names.AttrIPAddressType) {
-			input.IPAddressType = awstypes.IPAddressType(d.Get(names.AttrIPAddressType).(string))
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
@@ -1101,8 +1100,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 		}
 
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IPAddressType = awstypes.IPAddressType(d.Get(names.AttrIPAddressType).(string))
+		}
+
 		if d.HasChange("log_publishing_options") {
-			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
+			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set).List())
 		}
 
 		if d.HasChange("node_to_node_encryption") {
@@ -1143,31 +1146,35 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.VPCOptions = expandVPCOptions(s)
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-			return conn.UpdateDomainConfig(ctx, &input)
-		},
-			domainErrorRetryable)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (any, error) {
+				return conn.UpdateDomainConfig(ctx, &input)
+			},
+			domainErrorRetryable,
+		)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) Config update: %s", d.Id(), err)
 		}
 
 		if d.HasChange(names.AttrEngineVersion) {
-			upgradeInput := opensearch.UpgradeDomainInput{
-				DomainName:    aws.String(d.Get(names.AttrDomainName).(string)),
+			input := opensearch.UpgradeDomainInput{
+				DomainName:    aws.String(name),
 				TargetVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			}
 
-			_, err := conn.UpgradeDomain(ctx, &upgradeInput)
+			_, err := conn.UpgradeDomain(ctx, &input)
+
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "upgrading OpenSearch Domain (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): upgrading: waiting for completion: %s", d.Id(), err)
+			if _, err := waitUpgradeSucceeded(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) upgrade: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1178,22 +1185,25 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
-	domainName := d.Get(names.AttrDomainName).(string)
 
-	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
-	_, err := conn.DeleteDomain(ctx, &opensearch.DeleteDomainInput{
-		DomainName: aws.String(domainName),
-	})
+	log.Printf("[DEBUG] Deleting OpenSearch Domain: %s", d.Id())
+	name := d.Get(names.AttrDomainName).(string)
+	input := opensearch.DeleteDomainInput{
+		DomainName: aws.String(name),
+	}
+
+	_, err := conn.DeleteDomain(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting for OpenSearch Domain %q to be deleted", domainName)
-	if err := waitForDomainDelete(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Domain (%s): waiting for completion: %s", d.Id(), err)
+	if err := waitForDomainDelete(ctx, conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1600,7 +1610,8 @@ func domainErrorRetryable(err error) (bool, error) {
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Authentication error"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
 		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The passed role must authorize Amazon OpenSearch Service to describe"),
-		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "A change/update is in progress. Please wait for it to complete before requesting another change."):
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "A change/update is in progress. Please wait for it to complete before requesting another change."),
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The Resource Access Policy specified for the CloudWatch Logs log group"):
 		return true, err
 
 	default:

@@ -670,12 +670,12 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
-		input := &elasticsearch.UpdateElasticsearchDomainConfigInput{
+		input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 			AutoTuneOptions: expandAutoTuneOptions(v.([]any)[0].(map[string]any)),
 			DomainName:      aws.String(name),
 		}
 
-		_, err = conn.UpdateElasticsearchDomainConfig(ctx, input)
+		_, err = conn.UpdateElasticsearchDomainConfig(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) Config: %s", d.Id(), err)
@@ -943,12 +943,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if d.HasChange("elasticsearch_version") {
-			input := &elasticsearch.UpgradeElasticsearchDomainInput{
+			input := elasticsearch.UpgradeElasticsearchDomainInput{
 				DomainName:    aws.String(name),
 				TargetVersion: aws.String(d.Get("elasticsearch_version").(string)),
 			}
 
-			_, err := conn.UpgradeElasticsearchDomain(ctx, input)
+			_, err := conn.UpgradeElasticsearchDomain(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "upgrading Elasticsearch Domain (%s): %s", d.Id(), err)
@@ -967,12 +967,12 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
-	name := d.Get(names.AttrDomainName).(string)
-
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
-	_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+	name := d.Get(names.AttrDomainName).(string)
+	input := elasticsearch.DeleteElasticsearchDomainInput{
 		DomainName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteElasticsearchDomain(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
