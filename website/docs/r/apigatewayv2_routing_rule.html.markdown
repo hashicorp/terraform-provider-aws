@@ -48,6 +48,12 @@ The following arguments are required:
 * `conditions` - (Required) Conditions configuration. See below.
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 
+The following arguments are optional:
+
+* `domain_name_id` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `priority` - (Optional) The order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### `actions`
 
 * `invoke_api` - (Required) Configuration to invoke a stage of a target API. Only REST APIs are supported. See below.
@@ -75,11 +81,6 @@ The following arguments are required:
 * `api_id` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
 * `stage` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
 * `strip_base_path` - (Required) Action to invoke a stage of a target API. Only REST APIs are supported.
-
-The following arguments are optional:
-
-* `domain_name_id` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `priority` - (Optional) The order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 
 ## Attribute Reference
 
