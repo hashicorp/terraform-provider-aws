@@ -390,6 +390,7 @@ func parseRoutingRuleARN(v string) (string, string, error) {
 }
 
 type resourceRoutingRuleModel struct {
+	framework.WithRegionModel
 	ARN          types.String                                     `tfsdk:"arn"`
 	Actions      fwtypes.ListNestedObjectValueOf[actionsModel]    `tfsdk:"actions"`
 	Conditions   fwtypes.ListNestedObjectValueOf[conditionsModel] `tfsdk:"conditions"`
