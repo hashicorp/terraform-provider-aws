@@ -32,16 +32,17 @@ const (
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
+// @IdentityAttribute("role")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{role}:{name}")
+// @ImportIDHandler("rolePolicyImportID")
+// @Testing(existsType="string")
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
 		ReadWithoutTimeout:   resourceRolePolicyRead,
 		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -105,7 +106,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+		d.SetId(createRolePolicyImportID(roleName, policyName))
 
 		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
@@ -210,6 +211,10 @@ func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	return aws.ToString(output.PolicyDocument), nil
 }
 
+func createRolePolicyImportID(roleName, policyName string) string {
+	return fmt.Sprintf("%s:%s", roleName, policyName)
+}
+
 func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
@@ -220,4 +225,23 @@ func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	roleName = parts[0]
 	policyName = parts[1]
 	return
+}
+
+type rolePolicyImportID struct{}
+
+func (_ rolePolicyImportID) Create(d *schema.ResourceData) string {
+	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
+}
+
+func (_ rolePolicyImportID) Parse(id string) (map[string]string, error) {
+	roleName, policyName, err := rolePolicyParseID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	result := map[string]string{
+		names.AttrRole: roleName,
+		names.AttrName: policyName,
+	}
+	return result, nil
 }
