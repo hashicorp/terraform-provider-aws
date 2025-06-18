@@ -5,8 +5,6 @@ package macie2
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
@@ -20,6 +18,9 @@ import (
 )
 
 // @SDKResource("aws_macie2_classification_export_configuration", name="Classification Export Configuration")
+// @SingletonIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
+// @Testing(generator=false)
 func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,
@@ -27,16 +28,11 @@ func resourceClassificationExportConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"s3_destination": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				AtLeastOneOf: []string{"s3_destination"},
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrBucketName: {
@@ -76,20 +72,17 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 	}
 
 	input := macie2.PutClassificationExportConfigurationInput{
-		Configuration: &awstypes.ClassificationExportConfiguration{},
+		Configuration: &awstypes.ClassificationExportConfiguration{
+			S3Destination: expandClassificationExportConfiguration(d.Get("s3_destination").([]any)[0].(map[string]any)),
+		},
 	}
-
-	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]any)[0].(map[string]any))
-	}
-
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie classification export configuration failed: %s", err)
 	}
+
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceClassificationExportConfigurationRead(ctx, d, meta)...)
 }
@@ -108,8 +101,6 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 	} else {
 		input.Configuration.S3Destination = nil
 	}
-
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 
@@ -139,7 +130,6 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 				return sdkdiag.AppendErrorf(diags, "setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
-		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID(ctx), meta.(*conns.AWSClient).Region(ctx)))
 	}
 
 	return diags
@@ -153,8 +143,6 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 	input := macie2.PutClassificationExportConfigurationInput{
 		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
-
-	log.Printf("[DEBUG] deleting Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 

@@ -2868,7 +2868,9 @@ func testAccFunctionConfig_encryptedEnvVariablesKey1(rName string) string {
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test1" {
-  description = "%[1]s-1"
+  description             = "%[1]s-1"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -2890,7 +2892,9 @@ POLICY
 }
 
 resource "aws_kms_key" "test2" {
-  description = "%[1]s-2"
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -2935,7 +2939,9 @@ func testAccFunctionConfig_encryptedEnvVariablesKey2(rName string) string {
 # Delete aws_kms_key.test1.
 
 resource "aws_kms_key" "test2" {
-  description = "%[1]s-2"
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -3502,6 +3508,7 @@ func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string 
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

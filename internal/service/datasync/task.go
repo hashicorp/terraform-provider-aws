@@ -28,16 +28,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_task", name="Task")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeTaskOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
 		ReadWithoutTimeout:   resourceTaskRead,
 		UpdateWithoutTimeout: resourceTaskUpdate,
 		DeleteWithoutTimeout: resourceTaskDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},

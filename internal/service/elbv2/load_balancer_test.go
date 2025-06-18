@@ -2348,12 +2348,13 @@ func testAccCheckLoadBalancerAttribute(ctx context.Context, n, key, value string
 
 func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
 				continue
 			}
+
+			ctx = conns.NewResourceContext(ctx, "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 			_, err := tfelbv2.FindLoadBalancerByARN(ctx, conn, rs.Primary.ID)
 
@@ -2401,7 +2402,9 @@ func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 }
 
 func testAccLoadBalancerConfig_baseInternal(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, subnetCount),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id

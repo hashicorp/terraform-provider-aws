@@ -1503,10 +1503,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1579,10 +1581,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1693,10 +1697,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1769,10 +1775,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }

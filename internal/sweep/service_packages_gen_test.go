@@ -132,8 +132,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iotanalytics"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iotevents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ivschat"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -179,7 +177,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
@@ -233,7 +230,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -259,7 +255,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -392,8 +387,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		internetmonitor.ServicePackage(ctx),
 		invoicing.ServicePackage(ctx),
 		iot.ServicePackage(ctx),
-		iotanalytics.ServicePackage(ctx),
-		iotevents.ServicePackage(ctx),
 		ivs.ServicePackage(ctx),
 		ivschat.ServicePackage(ctx),
 		kafka.ServicePackage(ctx),
@@ -439,7 +432,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		oam.ServicePackage(ctx),
 		opensearch.ServicePackage(ctx),
 		opensearchserverless.ServicePackage(ctx),
-		opsworks.ServicePackage(ctx),
 		organizations.ServicePackage(ctx),
 		osis.ServicePackage(ctx),
 		outposts.ServicePackage(ctx),
@@ -493,7 +485,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		sfn.ServicePackage(ctx),
 		shield.ServicePackage(ctx),
 		signer.ServicePackage(ctx),
-		simpledb.ServicePackage(ctx),
 		sns.ServicePackage(ctx),
 		sqs.ServicePackage(ctx),
 		ssm.ServicePackage(ctx),
@@ -519,7 +510,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
 		wellarchitected.ServicePackage(ctx),
-		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),

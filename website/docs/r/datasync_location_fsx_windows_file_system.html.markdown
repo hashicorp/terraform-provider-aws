@@ -25,6 +25,7 @@ resource "aws_datasync_location_fsx_windows_file_system" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for Windows file system.
 * `password` - (Required) The password of the user who has the permissions to access files and folders in the FSx for Windows file system.
 * `user` - (Required) The user who has the permissions to access files and folders in the FSx for Windows file system.

@@ -30,6 +30,7 @@ func testAccAWSLogSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,6 +79,7 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -133,6 +135,7 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -168,6 +171,7 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -196,6 +200,7 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -273,8 +278,7 @@ func testAccCheckAWSLogSourceExists(ctx context.Context, n string, v *types.AwsL
 }
 
 func testAccAWSLogSourceConfig_basic() string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), `
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
@@ -289,8 +293,7 @@ data "aws_region" "current" {}
 }
 
 func testAccAWSLogSourceConfig_sourceVersion(version string) string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.current.account_id]
@@ -306,9 +309,7 @@ data "aws_region" "current" {}
 }
 
 func testAccAWSLogSourceConfig_multiRegion(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		testAccDataLakeConfig_replication(rName), `
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), testAccDataLakeConfig_replication(rName), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
@@ -328,8 +329,7 @@ data "aws_region" "alternate" {
 }
 
 func testAccAWSLogSourceConfig_multiple() string {
-	return acctest.ConfigCompose(
-		testAccDataLakeConfig_basic(), `
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]

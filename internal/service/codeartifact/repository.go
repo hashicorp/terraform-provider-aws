@@ -27,16 +27,15 @@ import (
 
 // @SDKResource("aws_codeartifact_repository", name="Repository")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("repository/{domain}/{repository}")
+// @Testing(serialize=true)
 func resourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
 		ReadWithoutTimeout:   resourceRepositoryRead,
 		UpdateWithoutTimeout: resourceRepositoryUpdate,
 		DeleteWithoutTimeout: resourceRepositoryDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"administrator_account": {

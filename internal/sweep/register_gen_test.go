@@ -159,7 +159,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -339,7 +338,6 @@ func registerSweepers() {
 	sfn.RegisterSweepers()
 	shield.RegisterSweepers()
 	signer.RegisterSweepers()
-	simpledb.RegisterSweepers()
 	sns.RegisterSweepers()
 	sqs.RegisterSweepers()
 	ssm.RegisterSweepers()

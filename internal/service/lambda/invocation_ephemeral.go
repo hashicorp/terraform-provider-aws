@@ -23,19 +23,19 @@ import (
 )
 
 // @EphemeralResource("aws_lambda_invocation", name="Invocation")
-func newEphemeralInvocation(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralInvocation{}, nil
+func newInvocationEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &invocationEphemeralResource{}, nil
 }
 
 const (
 	ResNameInvocation = "Invocation"
 )
 
-type ephemeralInvocation struct {
-	framework.EphemeralResourceWithConfigure
+type invocationEphemeralResource struct {
+	framework.EphemeralResourceWithModel[invocationEphemeralResourceModel]
 }
 
-func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+func (e *invocationEphemeralResource) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"client_context": schema.StringAttribute{
@@ -76,9 +76,9 @@ func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequ
 	}
 }
 
-func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
+func (e *invocationEphemeralResource) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
 	conn := e.Meta().LambdaClient(ctx)
-	data := epInvocationData{}
+	data := invocationEphemeralResourceModel{}
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -121,7 +121,8 @@ func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenReques
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 
-type epInvocationData struct {
+type invocationEphemeralResourceModel struct {
+	framework.WithRegionModel
 	ClientContext   types.String                         `tfsdk:"client_context"`
 	ExecutedVersion types.String                         `tfsdk:"executed_version"`
 	FunctionError   types.String                         `tfsdk:"function_error"`

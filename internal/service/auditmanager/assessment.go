@@ -5,7 +5,6 @@ package auditmanager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -14,21 +13,19 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,20 +35,17 @@ const iamPropagationTimeout = 2 * time.Minute
 
 // @FrameworkResource("aws_auditmanager_assessment", name="Assessment")
 // @Tags(identifierAttribute="arn")
-func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAssessment{}, nil
+func newAssessmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &assessmentResource{}, nil
 }
 
-const (
-	ResNameAssessment = "Assessment"
-)
-
-type resourceAssessment struct {
-	framework.ResourceWithConfigure
+type assessmentResource struct {
+	framework.ResourceWithModel[assessmentResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *assessmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
@@ -74,19 +68,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 			// the response output). "roles" stores the items specifically added by the practitioner,
 			// while "roles_all" will track everything with access to the assessment.
 			//
-			// Both attributes are defined as schema.SetAttribute's here rather than in the Blocks
-			// section to allow for Required/Computed to be set explicitly.
-			"roles": schema.SetAttribute{
-				Required:    true,
-				ElementType: types.ObjectType{AttrTypes: assessmentRolesAttrTypes},
-			},
-			"roles_all": schema.SetAttribute{
-				Computed:    true,
-				ElementType: types.ObjectType{AttrTypes: assessmentRolesAttrTypes},
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"roles_all": framework.ResourceComputedListOfObjectsAttribute[roleModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
@@ -95,6 +77,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"assessment_reports_destination": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[assessmentReportsDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -105,15 +88,33 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							Required: true,
 						},
 						"destination_type": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.AssessmentReportDestinationType](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.AssessmentReportDestinationType](),
+							Required:   true,
+						},
+					},
+				},
+			},
+			"roles": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[roleModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.IsRequired(),
+					setvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrRoleARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+						},
+						"role_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.RoleType](),
+							Required:   true,
 						},
 					},
 				},
 			},
 			names.AttrScope: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[scopeModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -121,6 +122,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"aws_accounts": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[awsAccountModel](ctx),
 							Validators: []validator.Set{
 								setvalidator.SizeAtLeast(1),
 							},
@@ -133,6 +135,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 						},
 						"aws_services": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[awsServiceModel](ctx),
 							Validators: []validator.Set{
 								setvalidator.SizeAtLeast(1),
 							},
@@ -151,520 +154,228 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assessmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data assessmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceAssessmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input auditmanager.CreateAssessmentInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var reportsDestination []assessmentReportsDestinationData
-	resp.Diagnostics.Append(plan.AssessmentReportsDestination.ElementsAs(ctx, &reportsDestination, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var roles []assessmentRolesData
-	resp.Diagnostics.Append(plan.Roles.ElementsAs(ctx, &roles, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	var scope []assessmentScopeData
-	resp.Diagnostics.Append(plan.Scope.ElementsAs(ctx, &scope, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	scopeInput, d := expandAssessmentScope(ctx, scope)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := auditmanager.CreateAssessmentInput{
-		AssessmentReportsDestination: expandAssessmentReportsDestination(reportsDestination),
-		FrameworkId:                  plan.FrameworkID.ValueStringPointer(),
-		Name:                         plan.Name.ValueStringPointer(),
-		Roles:                        expandAssessmentRoles(roles),
-		Scope:                        scopeInput,
-		Tags:                         getTagsIn(ctx),
-	}
-
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
-	}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	// Include retry handling to allow for IAM propagation
 	//
 	// Example:
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
-	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
-		var err error
-		out, err = conn.CreateAssessment(ctx, &in)
-		if err != nil {
-			var nfe *awstypes.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, iamPropagationTimeout, func() (any, error) {
+		return conn.CreateAssessment(ctx, &input)
 	})
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameAssessment, plan.Name.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Assessment == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameAssessment, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Audit Manager Assessment (%s)", name), err.Error())
+
 		return
 	}
 
-	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Assessment)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	assessment := outputRaw.(*auditmanager.CreateAssessmentOutput).Assessment
+	data.ARN = fwflex.StringToFramework(ctx, assessment.Arn)
+	data.ID = fwflex.StringToFramework(ctx, assessment.Metadata.Id)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, assessment.Metadata.Roles, &data.RolesAll)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Status = fwflex.StringValueToFramework(ctx, assessment.Metadata.Status)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceAssessment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceAssessmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *assessmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data assessmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindAssessmentByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	output, err := findAssessmentByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.AddWarning(
-			"AWS Resource Not Found During Refresh",
-			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
-		)
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameAssessment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Assessment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	save := data.Roles
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Metadata, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
+	if output.Framework != nil {
+		data.FrameworkID = fwflex.StringToFramework(ctx, output.Framework.Id)
+	}
+	data.Roles = save
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Metadata.Roles, &data.RolesAll)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAssessment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var plan, state resourceAssessmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *assessmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old assessmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.AssessmentReportsDestination.Equal(state.AssessmentReportsDestination) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.Roles.Equal(state.Roles) ||
-		!plan.Scope.Equal(state.Scope) {
-		var reportsDestination []assessmentReportsDestinationData
-		resp.Diagnostics.Append(plan.AssessmentReportsDestination.ElementsAs(ctx, &reportsDestination, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		var roles []assessmentRolesData
-		resp.Diagnostics.Append(plan.Roles.ElementsAs(ctx, &roles, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		var scope []assessmentScopeData
-		resp.Diagnostics.Append(plan.Scope.ElementsAs(ctx, &scope, false)...)
-		if resp.Diagnostics.HasError() {
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	if !new.AssessmentReportsDestination.Equal(old.AssessmentReportsDestination) ||
+		!new.Description.Equal(old.Description) ||
+		!new.Name.Equal(old.Name) ||
+		!new.Roles.Equal(old.Roles) ||
+		!new.Scope.Equal(old.Scope) {
+		var input auditmanager.UpdateAssessmentInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		scopeInput, d := expandAssessmentScope(ctx, scope)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		// Additional fields.
+		input.AssessmentDescription = fwflex.StringFromFramework(ctx, new.Description)
+		input.AssessmentId = fwflex.StringFromFramework(ctx, new.ID)
+		input.AssessmentName = fwflex.StringFromFramework(ctx, new.Name)
 
-		in := &auditmanager.UpdateAssessmentInput{
-			AssessmentId:                 plan.ID.ValueStringPointer(),
-			AssessmentName:               plan.Name.ValueStringPointer(),
-			AssessmentReportsDestination: expandAssessmentReportsDestination(reportsDestination),
-			Roles:                        expandAssessmentRoles(roles),
-			Scope:                        scopeInput,
-		}
+		output, err := conn.UpdateAssessment(ctx, &input)
 
-		if !plan.Description.IsNull() {
-			in.AssessmentDescription = plan.Description.ValueStringPointer()
-		}
-
-		out, err := conn.UpdateAssessment(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameAssessment, plan.ID.String(), nil),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Audit Manager Assessment (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
-		if out == nil || out.Assessment == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameAssessment, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-		resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Assessment)...)
-		plan.Status = flex.StringValueToFramework(ctx, out.Assessment.Metadata.Status)
+
+		new.Status = fwflex.StringValueToFramework(ctx, output.Assessment.Metadata.Status)
 	} else {
-		plan.Status = state.Status
+		new.Status = old.Status
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceAssessmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *assessmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data assessmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.DeleteAssessment(ctx, &auditmanager.DeleteAssessmentInput{
-		AssessmentId: state.ID.ValueStringPointer(),
-	})
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	input := auditmanager.DeleteAssessmentInput{
+		AssessmentId: fwflex.StringFromFramework(ctx, data.ID),
+	}
+	_, err := conn.DeleteAssessment(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameAssessment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Audit Manager Assessment (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 }
 
-func (r *resourceAssessment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Assessment, error) {
-	in := &auditmanager.GetAssessmentInput{
+func findAssessmentByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Assessment, error) {
+	input := auditmanager.GetAssessmentInput{
 		AssessmentId: aws.String(id),
 	}
-	out, err := conn.GetAssessment(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetAssessment(ctx, &input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Assessment == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Assessment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Assessment, nil
+	return output.Assessment, nil
 }
 
-var (
-	assessmentReportsDestinationAttrTypes = map[string]attr.Type{
-		names.AttrDestination: types.StringType,
-		"destination_type":    types.StringType,
-	}
-
-	assessmentRolesAttrTypes = map[string]attr.Type{
-		names.AttrRoleARN: types.StringType,
-		"role_type":       types.StringType,
-	}
-
-	assessmentScopeAttrTypes = map[string]attr.Type{
-		"aws_accounts": types.SetType{ElemType: types.ObjectType{AttrTypes: assessmentScopeAWSAccountsAttrTypes}},
-		"aws_services": types.SetType{ElemType: types.ObjectType{AttrTypes: assessmentScopeAWSServicesAttrTypes}},
-	}
-
-	assessmentScopeAWSAccountsAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		names.AttrID: types.StringType,
-	}
-
-	assessmentScopeAWSServicesAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		names.AttrServiceName: types.StringType,
-	}
-)
-
-type resourceAssessmentData struct {
-	ARN                          types.String `tfsdk:"arn"`
-	AssessmentReportsDestination types.List   `tfsdk:"assessment_reports_destination"`
-	Description                  types.String `tfsdk:"description"`
-	ID                           types.String `tfsdk:"id"`
-	FrameworkID                  types.String `tfsdk:"framework_id"`
-	Name                         types.String `tfsdk:"name"`
-	Roles                        types.Set    `tfsdk:"roles"`
-	RolesAll                     types.Set    `tfsdk:"roles_all"`
-	Scope                        types.List   `tfsdk:"scope"`
-	Status                       types.String `tfsdk:"status"`
-	Tags                         tftags.Map   `tfsdk:"tags"`
-	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
+type assessmentResourceModel struct {
+	framework.WithRegionModel
+	ARN                          types.String                                                       `tfsdk:"arn"`
+	AssessmentReportsDestination fwtypes.ListNestedObjectValueOf[assessmentReportsDestinationModel] `tfsdk:"assessment_reports_destination"`
+	Description                  types.String                                                       `tfsdk:"description"`
+	ID                           types.String                                                       `tfsdk:"id"`
+	FrameworkID                  types.String                                                       `tfsdk:"framework_id"`
+	Name                         types.String                                                       `tfsdk:"name"`
+	Roles                        fwtypes.SetNestedObjectValueOf[roleModel]                          `tfsdk:"roles"`
+	RolesAll                     fwtypes.ListNestedObjectValueOf[roleModel]                         `tfsdk:"roles_all"`
+	Scope                        fwtypes.ListNestedObjectValueOf[scopeModel]                        `tfsdk:"scope"`
+	Status                       types.String                                                       `tfsdk:"status"`
+	Tags                         tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                         `tfsdk:"tags_all"`
 }
 
-type assessmentReportsDestinationData struct {
-	Destination     types.String `tfsdk:"destination"`
-	DestinationType types.String `tfsdk:"destination_type"`
+type assessmentReportsDestinationModel struct {
+	Destination     types.String                                                 `tfsdk:"destination"`
+	DestinationType fwtypes.StringEnum[awstypes.AssessmentReportDestinationType] `tfsdk:"destination_type"`
 }
 
-type assessmentRolesData struct {
-	RoleARN  types.String `tfsdk:"role_arn"`
-	RoleType types.String `tfsdk:"role_type"`
+type roleModel struct {
+	RoleARN  fwtypes.ARN                           `tfsdk:"role_arn"`
+	RoleType fwtypes.StringEnum[awstypes.RoleType] `tfsdk:"role_type"`
 }
 
-type assessmentScopeData struct {
-	AWSAccounts types.Set `tfsdk:"aws_accounts"`
-	AWSServices types.Set `tfsdk:"aws_services"`
+type scopeModel struct {
+	AWSAccounts fwtypes.SetNestedObjectValueOf[awsAccountModel] `tfsdk:"aws_accounts"`
+	AWSServices fwtypes.SetNestedObjectValueOf[awsServiceModel] `tfsdk:"aws_services"`
 }
 
-type assessmentScopeAWSAccountsData struct {
+type awsAccountModel struct {
 	ID types.String `tfsdk:"id"`
 }
 
-type assessmentScopeAWSServicesData struct {
+type awsServiceModel struct {
 	ServiceName types.String `tfsdk:"service_name"`
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, out *awstypes.Assessment) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil || out.Metadata == nil {
-		return diags
-	}
-	metadata := out.Metadata
-
-	rd.ARN = flex.StringToFramework(ctx, out.Arn)
-	rd.Description = flex.StringToFramework(ctx, metadata.Description)
-	if out.Framework != nil {
-		rd.FrameworkID = flex.StringToFramework(ctx, out.Framework.Id)
-	}
-	rd.ID = flex.StringToFramework(ctx, metadata.Id)
-	rd.Name = flex.StringToFramework(ctx, metadata.Name)
-	rd.Status = flex.StringValueToFramework(ctx, metadata.Status)
-
-	reportsDestination, d := flattenAssessmentReportsDestination(ctx, metadata.AssessmentReportsDestination)
-	diags.Append(d...)
-	rd.AssessmentReportsDestination = reportsDestination
-	roles, d := flattenAssessmentRoles(ctx, metadata.Roles)
-	diags.Append(d...)
-	rd.RolesAll = roles
-	scope, d := flattenAssessmentScope(ctx, metadata.Scope)
-	diags.Append(d...)
-	rd.Scope = scope
-
-	setTagsOut(ctx, out.Tags)
-
-	return diags
-}
-
-func expandAssessmentReportsDestination(tfList []assessmentReportsDestinationData) *awstypes.AssessmentReportsDestination {
-	if len(tfList) == 0 {
-		return nil
-	}
-	rd := tfList[0]
-	return &awstypes.AssessmentReportsDestination{
-		Destination:     rd.Destination.ValueStringPointer(),
-		DestinationType: awstypes.AssessmentReportDestinationType(rd.DestinationType.ValueString()),
-	}
-}
-
-func expandAssessmentRoles(tfList []assessmentRolesData) []awstypes.Role {
-	var roles []awstypes.Role
-	for _, item := range tfList {
-		new := awstypes.Role{
-			RoleArn:  item.RoleARN.ValueStringPointer(),
-			RoleType: awstypes.RoleType(item.RoleType.ValueString()),
-		}
-		roles = append(roles, new)
-	}
-	return roles
-}
-
-func expandAssessmentScope(ctx context.Context, tfList []assessmentScopeData) (*awstypes.Scope, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-	scope := tfList[0]
-
-	var accounts []assessmentScopeAWSAccountsData
-	diags.Append(scope.AWSAccounts.ElementsAs(ctx, &accounts, false)...)
-	var services []assessmentScopeAWSServicesData
-	diags.Append(scope.AWSServices.ElementsAs(ctx, &services, false)...)
-
-	return &awstypes.Scope{
-		AwsAccounts: expandAssessmentScopeAWSAccounts(accounts),
-		AwsServices: expandAssessmentScopeAWSServices(services),
-	}, diags
-}
-
-func expandAssessmentScopeAWSAccounts(tfList []assessmentScopeAWSAccountsData) []awstypes.AWSAccount { // nosemgrep:ci.aws-in-func-name
-	var accounts []awstypes.AWSAccount
-	for _, item := range tfList {
-		new := awstypes.AWSAccount{
-			Id: item.ID.ValueStringPointer(),
-		}
-		accounts = append(accounts, new)
-	}
-	return accounts
-}
-
-func expandAssessmentScopeAWSServices(tfList []assessmentScopeAWSServicesData) []awstypes.AWSService { // nosemgrep:ci.aws-in-func-name
-	var services []awstypes.AWSService
-	for _, item := range tfList {
-		new := awstypes.AWSService{
-			ServiceName: item.ServiceName.ValueStringPointer(),
-		}
-		services = append(services, new)
-	}
-	return services
-}
-
-func flattenAssessmentReportsDestination(ctx context.Context, apiObject *awstypes.AssessmentReportsDestination) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: assessmentReportsDestinationAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
-
-	obj := map[string]attr.Value{
-		names.AttrDestination: flex.StringToFramework(ctx, apiObject.Destination),
-		"destination_type":    flex.StringValueToFramework(ctx, apiObject.DestinationType),
-	}
-	objVal, d := types.ObjectValue(assessmentReportsDestinationAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func flattenAssessmentRoles(ctx context.Context, apiObject []awstypes.Role) (types.Set, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: assessmentRolesAttrTypes}
-
-	if len(apiObject) == 0 {
-		return types.SetValueMust(elemType, []attr.Value{}), diags
-	}
-
-	elems := []attr.Value{}
-	for _, role := range apiObject {
-		obj := map[string]attr.Value{
-			names.AttrRoleARN: flex.StringToFramework(ctx, role.RoleArn),
-			"role_type":       flex.StringValueToFramework(ctx, role.RoleType),
-		}
-		objVal, d := types.ObjectValue(assessmentRolesAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
-}
-
-func flattenAssessmentScope(ctx context.Context, apiObject *awstypes.Scope) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: assessmentScopeAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
-
-	accounts, d := flattenAssessmentScopeAWSAccounts(ctx, apiObject.AwsAccounts)
-	diags.Append(d...)
-	services, d := flattenAssessmentScopeAWSServices(ctx, apiObject.AwsServices)
-	diags.Append(d...)
-
-	obj := map[string]attr.Value{
-		"aws_accounts": accounts,
-		"aws_services": services,
-	}
-	objVal, d := types.ObjectValue(assessmentScopeAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func flattenAssessmentScopeAWSAccounts(ctx context.Context, apiObject []awstypes.AWSAccount) (types.Set, diag.Diagnostics) { // nosemgrep:ci.aws-in-func-name
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: assessmentScopeAWSAccountsAttrTypes}
-
-	if apiObject == nil {
-		return types.SetValueMust(elemType, []attr.Value{}), diags
-	}
-
-	elems := []attr.Value{}
-	for _, account := range apiObject {
-		obj := map[string]attr.Value{
-			names.AttrID: flex.StringToFramework(ctx, account.Id),
-		}
-		objVal, d := types.ObjectValue(assessmentScopeAWSAccountsAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
-}
-
-func flattenAssessmentScopeAWSServices(ctx context.Context, apiObject []awstypes.AWSService) (types.Set, diag.Diagnostics) { // nosemgrep:ci.aws-in-func-name
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: assessmentScopeAWSServicesAttrTypes}
-
-	if apiObject == nil {
-		return types.SetValueMust(elemType, []attr.Value{}), diags
-	}
-
-	elems := []attr.Value{}
-	for _, service := range apiObject {
-		obj := map[string]attr.Value{
-			names.AttrServiceName: flex.StringToFramework(ctx, service.ServiceName),
-		}
-		objVal, d := types.ObjectValue(assessmentScopeAWSServicesAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
 }

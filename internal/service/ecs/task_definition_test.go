@@ -1177,36 +1177,6 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
-	ctx := acctest.Context(t)
-	var def awstypes.TaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
-			},
-		},
-	})
-}
-
 func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3200,48 +3170,6 @@ DEFINITION
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
-}
-
-func testAccTaskDefinitionConfig_inferenceAccelerator(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
-[
-	{
-		"cpu": 10,
-		"command": ["sleep", "10"],
-		"entryPoint": ["/"],
-		"environment": [
-			{"name": "VARNAME", "value": "VARVAL"}
-		],
-		"essential": true,
-		"image": "jenkins",
-		"memory": 128,
-		"name": "jenkins",
-		"portMappings": [
-			{
-				"containerPort": 80,
-				"hostPort": 8080
-			}
-		],
-        "resourceRequirements":[
-            {
-                "type":"InferenceAccelerator",
-                "value":"device_1"
-            }
-        ]
-	}
-]
-TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
-}
-`, rName)
 }
 
 func testAccTaskDefinitionConfig_fsxVolume(domain, rName string) string {
