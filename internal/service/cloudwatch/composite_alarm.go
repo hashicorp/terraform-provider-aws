@@ -5,8 +5,10 @@ package cloudwatch
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -120,6 +122,11 @@ func resourceCompositeAlarm() *schema.Resource {
 func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
+
+	if 1 == 1 {
+		testCtx := context.WithValue(ctx, "resource_name", "Composite Alarm")
+		return smarterr.AppendSDK(testCtx, diags, fmt.Errorf("operation error CloudWatch: ModifyServerlessCache, https response error StatusCode: 400, RequestID: 9c9c8b2c-d71b-4717-b62a-68cfa4b18aa9, InvalidParameterCombination: No"), "id", "r-1234567890")
+	}
 
 	name := d.Get("alarm_name").(string)
 	input := expandPutCompositeAlarmInput(ctx, d)

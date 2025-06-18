@@ -1,0 +1,3 @@
+parameter "service" {
+  value = "CloudTrail"
+}
