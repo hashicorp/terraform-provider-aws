@@ -323,6 +323,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				),
 				{{ end -}}
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .IDAttrFormat "" -}}
+						tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{{ .IDAttrFormat }}"),
+					{{ end -}}
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
 							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
