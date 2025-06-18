@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,6 +43,7 @@ func resourceDomain() *schema.Resource {
 		ReadWithoutTimeout:   resourceDomainRead,
 		UpdateWithoutTimeout: resourceDomainUpdate,
 		DeleteWithoutTimeout: resourceDomainDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceDomainImport,
 		},
@@ -100,17 +102,7 @@ func resourceDomain() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"access_policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"access_policies": sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Optional: true,
