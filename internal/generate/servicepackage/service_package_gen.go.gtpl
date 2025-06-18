@@ -266,20 +266,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					// Parameterized Identity with more than one attribute not supported
-					/*{{- if or $.IsGlobal $value.IsGlobal }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
 					{{- else }}
-						Identity: inttypes.RegionalParameterizedIdentity(
+						// Regional Parameterized Identity with more than one attribute not supported
+						/*Identity: inttypes.RegionalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),
-					{{- end }}*/
+						),*/
+					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
@@ -318,6 +318,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- if $value.WrappedImport }}
 					Import: inttypes.Import{
 						WrappedImport: true,
+						{{- if ne $value.ImportIDHandler "" }}
+							ImportID: {{ $value.ImportIDHandler }}{},
+						{{- end }}
 					},
 				{{- end }}
 			{{- end }}
