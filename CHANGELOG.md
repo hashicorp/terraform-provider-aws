@@ -2,6 +2,7 @@
 
 BREAKING CHANGES:
 
+* resource/aws_cur_report_definition: The `s3_prefix` argument is now required ([#38446](https://github.com/hashicorp/terraform-provider-aws/issues/38446))
 * resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured ([#42753](https://github.com/hashicorp/terraform-provider-aws/issues/42753))
 
 ## 6.0.0-beta3 (June  5, 2025)
