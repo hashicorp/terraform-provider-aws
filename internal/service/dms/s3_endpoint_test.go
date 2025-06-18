@@ -508,7 +508,8 @@ func testAccS3EndpointConfig_basic(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -587,7 +588,8 @@ func testAccS3EndpointConfig_update(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test2" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"

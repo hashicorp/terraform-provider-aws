@@ -22,19 +22,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_transfer_connector", name="Connector")
-func newDataSourceConnector(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceConnector{}, nil
+func newConnectorDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &connectorDataSource{}, nil
 }
 
 const (
 	DSNameConnector = "Connector Data Source"
 )
 
-type dataSourceConnector struct {
-	framework.DataSourceWithConfigure
+type connectorDataSource struct {
+	framework.DataSourceWithModel[connectorDataSourceModel]
 }
 
-func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *connectorDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			// Connector object was expanded
@@ -44,10 +44,7 @@ func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaR
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"as2_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsAs2Config](ctx),
-				Computed:   true,
-			},
+			"as2_config": framework.DataSourceComputedListOfObjectAttribute[dsAs2Config](ctx),
 			names.AttrID: schema.StringAttribute{
 				CustomType: fwtypes.RegexpType,
 				Required:   true,
@@ -65,13 +62,11 @@ func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaR
 				Computed: true,
 			},
 			"service_managed_egress_ip_addresses": schema.ListAttribute{
-				CustomType: fwtypes.ListOfStringType,
-				Computed:   true,
+				CustomType:  fwtypes.ListOfStringType,
+				Computed:    true,
+				ElementType: types.StringType,
 			},
-			"sftp_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsSftpConfig](ctx),
-				Computed:   true,
-			},
+			"sftp_config":  framework.DataSourceComputedListOfObjectAttribute[dsSftpConfig](ctx),
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrURL: schema.StringAttribute{
 				Computed: true,
@@ -80,10 +75,10 @@ func (d *dataSourceConnector) Schema(ctx context.Context, req datasource.SchemaR
 	}
 }
 
-func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *connectorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().TransferClient(ctx)
 
-	var data dsConnectorData
+	var data connectorDataSourceModel
 	var describeConnectorInput transfer.DescribeConnectorInput
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -114,14 +109,15 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dsConnectorData struct {
-	Arn                             types.String                                  `tfsdk:"arn"`
+type connectorDataSourceModel struct {
+	framework.WithRegionModel
+	ARN                             types.String                                  `tfsdk:"arn"`
 	AccessRole                      types.String                                  `tfsdk:"access_role"`
 	As2Config                       fwtypes.ListNestedObjectValueOf[dsAs2Config]  `tfsdk:"as2_config"`
 	ConnectorId                     fwtypes.Regexp                                `tfsdk:"id"`
 	LoggingRole                     types.String                                  `tfsdk:"logging_role"`
 	SecurityPolicyName              types.String                                  `tfsdk:"security_policy_name"`
-	ServiceManagedEgressIpAddresses fwtypes.ListValueOf[types.String]             `tfsdk:"service_managed_egress_ip_addresses"`
+	ServiceManagedEgressIpAddresses fwtypes.ListOfString                          `tfsdk:"service_managed_egress_ip_addresses"`
 	SftpConfig                      fwtypes.ListNestedObjectValueOf[dsSftpConfig] `tfsdk:"sftp_config"`
 	Tags                            tftags.Map                                    `tfsdk:"tags"`
 	Url                             types.String                                  `tfsdk:"url"`

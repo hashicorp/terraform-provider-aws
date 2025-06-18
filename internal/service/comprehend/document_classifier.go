@@ -44,17 +44,16 @@ const (
 )
 
 // @SDKResource("aws_comprehend_document_classifier", name="Document Classifier")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
+// @Testing(preCheck="testAccPreCheck")
 func ResourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
 		ReadWithoutTimeout:   resourceDocumentClassifierRead,
 		UpdateWithoutTimeout: resourceDocumentClassifierUpdate,
 		DeleteWithoutTimeout: resourceDocumentClassifierDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),

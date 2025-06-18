@@ -35,14 +35,16 @@ import (
 )
 
 // @FrameworkResource("aws_imagebuilder_lifecycle_policy", name="Lifecycle Policy")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("lifecycle-policy/{name}")
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
 
 type lifecyclePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[lifecyclePolicyResourceModel]
+	framework.WithImportByARN
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -471,6 +473,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 }
 
 type lifecyclePolicyResourceModel struct {
+	framework.WithRegionModel
 	Description        types.String                                                           `tfsdk:"description"`
 	ExecutionRole      fwtypes.ARN                                                            `tfsdk:"execution_role"`
 	ID                 types.String                                                           `tfsdk:"id"`

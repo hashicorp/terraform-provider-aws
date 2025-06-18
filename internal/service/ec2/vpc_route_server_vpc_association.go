@@ -37,7 +37,7 @@ func newVPCRouteServerVPCAssociationResource(_ context.Context) (resource.Resour
 }
 
 type vpcRouteServerVPCAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcRouteServerVPCAssociationResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
@@ -177,6 +177,7 @@ func (r *vpcRouteServerVPCAssociationResource) ImportState(ctx context.Context, 
 }
 
 type vpcRouteServerVPCAssociationResourceModel struct {
+	framework.WithRegionModel
 	RouteServerID types.String   `tfsdk:"route_server_id"`
 	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 	VpcID         types.String   `tfsdk:"vpc_id"`

@@ -22,6 +22,7 @@ data "aws_cloudwatch_log_groups" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `log_group_name_prefix` - (Optional) Group prefix of the Cloudwatch log groups to list
 
 ## Attribute Reference

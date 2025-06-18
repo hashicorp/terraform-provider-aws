@@ -93,6 +93,7 @@ resource "aws_rds_custom_db_engine_version" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_installation_files_s3_bucket_name` - (Required) The name of the Amazon S3 bucket that contains the database installation files.
 * `database_installation_files_s3_prefix` - (Required) The prefix for the Amazon S3 bucket that contains the database installation files.
 * `description` - (Optional) The description of the CEV.

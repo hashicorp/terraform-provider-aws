@@ -2088,6 +2088,44 @@ func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Clie
 	return findSecurityGroupRules(ctx, conn, &input)
 }
 
+func findSecurityGroupVPCAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, groupID, vpcID string) (*awstypes.SecurityGroupVpcAssociation, error) {
+	input := ec2.DescribeSecurityGroupVpcAssociationsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"group-id": groupID,
+			"vpc-id":   vpcID,
+		}),
+	}
+
+	return findSecurityGroupVPCAssociation(ctx, conn, &input)
+}
+
+func findSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) (*awstypes.SecurityGroupVpcAssociation, error) {
+	output, err := findSecurityGroupVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecurityGroupVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) ([]awstypes.SecurityGroupVpcAssociation, error) {
+	var output []awstypes.SecurityGroupVpcAssociation
+
+	pages := ec2.NewDescribeSecurityGroupVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroupVpcAssociations...)
+	}
+
+	return output, nil
+}
+
 func findNetworkInterfacePermissions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) ([]awstypes.NetworkInterfacePermission, error) {
 	var output []awstypes.NetworkInterfacePermission
 
@@ -3223,7 +3261,9 @@ func findVPCPeeringConnection(ctx context.Context, conn *ec2.Client, input *ec2.
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool { return v.Status != nil })
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool {
+		return v.AccepterVpcInfo != nil && v.RequesterVpcInfo != nil && v.Status != nil
+	})
 }
 
 func findVPCPeeringConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) ([]awstypes.VpcPeeringConnection, error) {

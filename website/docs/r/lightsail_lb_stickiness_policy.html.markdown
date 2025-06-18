@@ -39,6 +39,10 @@ The following arguments are required:
 * `enabled` - (Required) Whether to enable session stickiness for the load balancer.
 * `lb_name` - (Required) Name of the load balancer to which you want to enable session stickiness.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

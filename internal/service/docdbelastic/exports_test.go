@@ -5,7 +5,7 @@ package docdbelastic
 
 // Exports for use in tests only.
 var (
-	ResourceCluster = newResourceCluster
+	ResourceCluster = newClusterResource
 
 	FindClusterByID = findClusterByID
 )

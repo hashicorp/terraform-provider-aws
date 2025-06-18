@@ -40,7 +40,7 @@ func newClusterPeeringResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type clusterPeeringResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[clusterPeeringResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
@@ -95,7 +95,7 @@ func (r *clusterPeeringResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	if status := output.Status; status != awstypes.ClusterStatusPendingSetup {
-		response.Diagnostics.AddError(fmt.Sprintf("Aurora DSQL Cluster (%s) is not in a valid state to create a peering (%s)", id, status), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("Aurora DSQL Cluster (%s) is not in a valid state to create a peering", id), string(status))
 
 		return
 	}
@@ -193,6 +193,7 @@ func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string
 }
 
 type clusterPeeringResourceModel struct {
+	framework.WithRegionModel
 	Clusters      fwtypes.SetOfARN `tfsdk:"clusters"`
 	Identifier    types.String     `tfsdk:"identifier"`
 	Timeouts      timeouts.Value   `tfsdk:"timeouts"`

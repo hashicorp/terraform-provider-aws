@@ -48,6 +48,7 @@ resource "aws_dynamodb_table" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.

@@ -69,12 +69,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 			delete(s, "instance_market_options")
 			delete(s, "spot_instance_request_id")
 
-			s["block_duration_minutes"] = &schema.Schema{
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntDivisibleBy(60),
-			}
 			s["instance_interruption_behavior"] = &schema.Schema{
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -177,10 +171,6 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
-	if v, ok := d.GetOk("block_duration_minutes"); ok {
-		input.BlockDurationMinutes = aws.Int32(int32(v.(int)))
-	}
-
 	if v, ok := d.GetOk("launch_group"); ok {
 		input.LaunchGroup = aws.String(v.(string))
 	}
@@ -268,7 +258,6 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("spot_request_state", request.State)
 	d.Set("launch_group", request.LaunchGroup)
-	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
 	setTagsOut(ctx, request.Tags)
 

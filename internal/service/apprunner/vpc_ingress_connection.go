@@ -26,16 +26,13 @@ import (
 
 // @SDKResource("aws_apprunner_vpc_ingress_connection", name="VPC Ingress Connection")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func resourceVPCIngressConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIngressConnectionCreate,
 		ReadWithoutTimeout:   resourceVPCIngressConnectionRead,
 		UpdateWithoutTimeout: resourceVPCIngressConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPCIngressConnectionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

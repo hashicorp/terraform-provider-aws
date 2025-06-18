@@ -3,28 +3,27 @@ subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function"
 description: |-
-  Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
+  Manages an AWS Lambda Function.
 ---
 
 # Resource: aws_lambda_function
 
-Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
+Manages an AWS Lambda Function. Use this resource to create serverless functions that run code in response to events without provisioning or managing servers.
 
-For information about Lambda and how to use it, see [What is AWS Lambda?][1]
+For information about Lambda and how to use it, see [What is AWS Lambda?](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html). For a detailed example of setting up Lambda and API Gateway, see [Serverless Applications with AWS Lambda and API Gateway](https://learn.hashicorp.com/terraform/aws/lambda-api-gateway).
 
-For a detailed example of setting up Lambda and API Gateway, see [Serverless Applications with AWS Lambda and API Gateway.][11]
+~> **Note:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), EC2 subnets and security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the customizable deletion timeouts of those Terraform resources to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
-~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), EC2 subnets and security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the customizable deletion timeouts of those Terraform resources to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
+~> **Note:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an `aws_lambda_function` with environment variables, the IAM role associated with the function may have been deleted and recreated after the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
 
-~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
-
--> To give an external source (like an EventBridge Rule, SNS, or S3) permission to access the Lambda function, use the [`aws_lambda_permission`](lambda_permission.html) resource. See [Lambda Permission Model][4] for more details. On the other hand, the `role` argument of this resource is the function's execution role for identity and access to AWS services and resources.
+-> **Tip:** To give an external source (like an EventBridge Rule, SNS, or S3) permission to access the Lambda function, use the [`aws_lambda_permission`](lambda_permission.html) resource. See [Lambda Permission Model](https://docs.aws.amazon.com/lambda/latest/dg/intro-permission-model.html) for more details. On the other hand, the `role` argument of this resource is the function's execution role for identity and access to AWS services and resources.
 
 ## Example Usage
 
-### Basic Example
+### Basic Function with Node.js
 
 ```terraform
+# IAM role for Lambda execution
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
@@ -38,140 +37,162 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
+resource "aws_iam_role" "example" {
+  name               = "lambda_execution_role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-data "archive_file" "lambda" {
+# Package the Lambda function code
+data "archive_file" "example" {
   type        = "zip"
-  source_file = "lambda.js"
-  output_path = "lambda_function_payload.zip"
+  source_file = "${path.module}/lambda/index.js"
+  output_path = "${path.module}/lambda/function.zip"
 }
 
-resource "aws_lambda_function" "test_lambda" {
-  # If the file is not in the current working directory you will need to include a
-  # path.module in the filename.
-  filename      = "lambda_function_payload.zip"
-  function_name = "lambda_function_name"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.test"
+# Lambda function
+resource "aws_lambda_function" "example" {
+  filename         = data.archive_file.example.output_path
+  function_name    = "example_lambda_function"
+  role             = aws_iam_role.example.arn
+  handler          = "index.handler"
+  source_code_hash = data.archive_file.example.output_base64sha256
 
-  source_code_hash = data.archive_file.lambda.output_base64sha256
-
-  runtime = "nodejs18.x"
+  runtime = "nodejs20.x"
 
   environment {
     variables = {
-      foo = "bar"
+      ENVIRONMENT = "production"
+      LOG_LEVEL   = "info"
     }
+  }
+
+  tags = {
+    Environment = "production"
+    Application = "example"
   }
 }
 ```
 
-### Lambda Layers
-
-~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+### Container Image Function
 
 ```terraform
+resource "aws_lambda_function" "example" {
+  function_name = "example_container_function"
+  role          = aws_iam_role.example.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.example.repository_url}:latest"
+
+  image_config {
+    entry_point = ["/lambda-entrypoint.sh"]
+    command     = ["app.handler"]
+  }
+
+  memory_size = 512
+  timeout     = 30
+
+  architectures = ["arm64"] # Graviton support for better price/performance
+}
+```
+
+### Function with Lambda Layers
+
+~> **Note:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 2.x, use `arn` references.
+
+```terraform
+# Common dependencies layer
 resource "aws_lambda_layer_version" "example" {
-  # ... other configuration ...
+  filename            = "layer.zip"
+  layer_name          = "example_dependencies_layer"
+  description         = "Common dependencies for Lambda functions"
+  compatible_runtimes = ["nodejs20.x", "python3.12"]
+
+  compatible_architectures = ["x86_64", "arm64"]
 }
 
+# Function using the layer
 resource "aws_lambda_function" "example" {
-  # ... other configuration ...
+  filename      = "function.zip"
+  function_name = "example_layered_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
   layers = [aws_lambda_layer_version.example.arn]
-}
-```
 
-### Lambda Ephemeral Storage
-
-Lambda Function Ephemeral Storage(`/tmp`) allows you to configure the storage upto `10` GB. The default value set to `512` MB.
-
-```terraform
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_role" "iam_for_lambda" {
-  name               = "iam_for_lambda"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-resource "aws_lambda_function" "test_lambda" {
-  filename      = "lambda_function_payload.zip"
-  function_name = "lambda_function_name"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.test"
-  runtime       = "nodejs18.x"
-
-  ephemeral_storage {
-    size = 10240 # Min 512 MB and the Max 10240 MB
+  tracing_config {
+    mode = "Active" # Enable X-Ray tracing
   }
 }
 ```
 
-### Lambda File Systems
-
-Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
+### VPC Function with Enhanced Networking
 
 ```terraform
-# A lambda function connected to an EFS file system
 resource "aws_lambda_function" "example" {
-  # ... other configuration ...
-
-  file_system_config {
-    # EFS file system access point ARN
-    arn = aws_efs_access_point.access_point_for_lambda.arn
-
-    # Local mount path inside the lambda function. Must start with '/mnt/'.
-    local_mount_path = "/mnt/efs"
-  }
+  filename      = "function.zip"
+  function_name = "example_vpc_function"
+  role          = aws_iam_role.example.arn
+  handler       = "app.handler"
+  runtime       = "python3.12"
+  memory_size   = 1024
+  timeout       = 30
 
   vpc_config {
-    # Every subnet should be able to reach an EFS mount target in the same Availability Zone. Cross-AZ mounts are not permitted.
-    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
-    security_group_ids = [aws_security_group.sg_for_lambda.id]
+    subnet_ids                  = [aws_subnet.example_private1.id, aws_subnet.example_private2.id]
+    security_group_ids          = [aws_security_group.example_lambda.id]
+    ipv6_allowed_for_dual_stack = true # Enable IPv6 support
   }
 
-  # Explicitly declare dependency on EFS mount target.
-  # When creating or updating Lambda functions, mount target must be in 'available' lifecycle state.
-  depends_on = [aws_efs_mount_target.alpha]
-}
+  # Increase /tmp storage to 5GB
+  ephemeral_storage {
+    size = 5120
+  }
 
-# EFS file system
-resource "aws_efs_file_system" "efs_for_lambda" {
+  # Enable SnapStart for faster cold starts
+  snap_start {
+    apply_on = "PublishedVersions"
+  }
+}
+```
+
+### Function with EFS Integration
+
+```terraform
+# EFS file system for Lambda
+resource "aws_efs_file_system" "example" {
+  encrypted = true
+
   tags = {
-    Name = "efs_for_lambda"
+    Name = "lambda-efs"
   }
 }
 
-# Mount target connects the file system to the subnet
-resource "aws_efs_mount_target" "alpha" {
-  file_system_id  = aws_efs_file_system.efs_for_lambda.id
-  subnet_id       = aws_subnet.subnet_for_lambda.id
-  security_groups = [aws_security_group.sg_for_lambda.id]
+# Example subnet IDs (replace with your actual subnet IDs)
+variable "subnet_ids" {
+  description = "List of subnet IDs for EFS mount targets"
+  type        = list(string)
+  default     = ["subnet-12345678", "subnet-87654321"]
 }
 
-# EFS access point used by lambda file system
-resource "aws_efs_access_point" "access_point_for_lambda" {
-  file_system_id = aws_efs_file_system.efs_for_lambda.id
+# Mount target in each subnet
+resource "aws_efs_mount_target" "example" {
+  count = length(var.subnet_ids)
+
+  file_system_id  = aws_efs_file_system.example.id
+  subnet_id       = var.subnet_ids[count.index]
+  security_groups = [aws_security_group.efs.id]
+}
+
+# Access point for Lambda
+resource "aws_efs_access_point" "example" {
+  file_system_id = aws_efs_file_system.example.id
 
   root_directory {
     path = "/lambda"
     creation_info {
       owner_gid   = 1000
       owner_uid   = 1000
-      permissions = "777"
+      permissions = "755"
     }
   }
 
@@ -180,74 +201,189 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
     uid = 1000
   }
 }
+
+# Lambda function with EFS
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_efs_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  vpc_config {
+    subnet_ids         = var.subnet_ids
+    security_group_ids = [aws_security_group.lambda.id]
+  }
+
+  file_system_config {
+    arn              = aws_efs_access_point.example.arn
+    local_mount_path = "/mnt/data"
+  }
+
+  # Ensure EFS is ready before Lambda creation
+  depends_on = [aws_efs_mount_target.example]
+}
 ```
 
-### Lambda retries
-
-Lambda Functions allow you to configure error handling for asynchronous invocation. The settings that it supports are `Maximum age of event` and `Retry attempts` as stated in [Lambda documentation for Configuring error handling for asynchronous invocation](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-errors). To configure these settings, refer to the [aws_lambda_function_event_invoke_config resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_event_invoke_config).
-
-## CloudWatch Logging and Permissions
-
-For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
+### Function with Advanced Logging
 
 ```terraform
-variable "lambda_function_name" {
-  default = "lambda_function_name"
-}
-
-resource "aws_lambda_function" "test_lambda" {
-  function_name = var.lambda_function_name
-
-  # Advanced logging controls (optional)
-  logging_config {
-    log_format = "Text"
-  }
-
-  # ... other configuration ...
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_logs,
-    aws_cloudwatch_log_group.example,
-  ]
-}
-
-# This is to optionally manage the CloudWatch Log Group for the Lambda Function.
-# If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
 resource "aws_cloudwatch_log_group" "example" {
-  name              = "/aws/lambda/${var.lambda_function_name}"
+  name              = "/aws/lambda/example_function"
   retention_in_days = 14
-}
 
-# See also the following AWS managed policy: AWSLambdaBasicExecutionRole
-data "aws_iam_policy_document" "lambda_logging" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-    ]
-
-    resources = ["arn:aws:logs:*:*:*"]
+  tags = {
+    Environment = "production"
+    Application = "example"
   }
 }
 
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  # Advanced logging configuration
+  logging_config {
+    log_format            = "JSON"
+    application_log_level = "INFO"
+    system_log_level      = "WARN"
+  }
+
+  # Ensure log group exists before function
+  depends_on = [aws_cloudwatch_log_group.example]
+}
+```
+
+### Function with Error Handling
+
+```terraform
+# Main Lambda function
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "example_function"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  dead_letter_config {
+    target_arn = aws_sqs_queue.dlq.arn
+  }
+}
+
+# Event invoke configuration for retries
+resource "aws_lambda_function_event_invoke_config" "example" {
+  function_name = aws_lambda_function.example.function_name
+
+  maximum_event_age_in_seconds = 60
+  maximum_retry_attempts       = 2
+
+  destination_config {
+    on_failure {
+      destination = aws_sqs_queue.dlq.arn
+    }
+    on_success {
+      destination = aws_sns_topic.success.arn
+    }
+  }
+}
+```
+
+### CloudWatch Logging and Permissions
+
+```terraform
+# Function name variable
+variable "function_name" {
+  description = "Name of the Lambda function"
+  type        = string
+  default     = "example_function"
+}
+
+# CloudWatch Log Group with retention
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = 14
+
+  tags = {
+    Environment = "production"
+    Function    = var.function_name
+  }
+}
+
+# Lambda execution role
+resource "aws_iam_role" "example" {
+  name = "lambda_execution_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# CloudWatch Logs policy
 resource "aws_iam_policy" "lambda_logging" {
   name        = "lambda_logging"
   path        = "/"
-  description = "IAM policy for logging from a lambda"
-  policy      = data.aws_iam_policy_document.lambda_logging.json
+  description = "IAM policy for logging from Lambda"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = ["arn:aws:logs:*:*:*"]
+      }
+    ]
+  })
 }
 
+# Attach logging policy to Lambda role
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.iam_for_lambda.name
+  role       = aws_iam_role.example.name
   policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+# Lambda function with logging
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = var.function_name
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  # Advanced logging configuration
+  logging_config {
+    log_format            = "JSON"
+    application_log_level = "INFO"
+    system_log_level      = "WARN"
+  }
+
+  # Ensure IAM role and log group are ready
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
+    aws_cloudwatch_log_group.example
+  ]
 }
 ```
 
 ## Specifying the Deployment Package
 
-AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes][6] for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime][8].
+AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
 
 Once you have created your deployment package you can specify it either directly as a local file (using the `filename` argument) or indirectly via Amazon S3 (using the `s3_bucket`, `s3_key` and `s3_object_version` arguments). When providing the deployment package via S3 it may be useful to use [the `aws_s3_object` resource](s3_object.html) to upload it.
 
@@ -258,102 +394,84 @@ For larger deployment packages it is recommended by Amazon to upload via S3, sin
 The following arguments are required:
 
 * `function_name` - (Required) Unique name for your Lambda Function.
-* `role` - (Required) Amazon Resource Name (ARN) of the function's execution role. The role provides the function's identity and access to AWS services and resources.
+* `role` - (Required) ARN of the function's execution role. The role provides the function's identity and access to AWS services and resources.
 
 The following arguments are optional:
 
-* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stay the same.
-* `code_signing_config_arn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
-* `dead_letter_config` - (Optional) Configuration block. Detailed below.
+* `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
+* `code_signing_config_arn` - (Optional) ARN of a code-signing configuration to enable code signing for this function.
+* `dead_letter_config` - (Optional) Configuration block for dead letter queue. [See below](#dead_letter_config-configuration-block).
 * `description` - (Optional) Description of what your Lambda Function does.
-* `environment` - (Optional) Configuration block. Detailed below.
-* `ephemeral_storage` - (Optional) The amount of Ephemeral storage(`/tmp`) to allocate for the Lambda Function in MB. This parameter is used to expand the total amount of Ephemeral storage available, beyond the default amount of `512`MB. Detailed below.
-* `file_system_config` - (Optional) Configuration block. Detailed below.
-* `filename` - (Optional) Path to the function's deployment package within the local filesystem. Exactly one of `filename`, `image_uri`, or `s3_bucket` must be specified.
-* `handler` - (Optional) Function [entrypoint][3] in your code.
-* `image_config` - (Optional) Configuration block. Detailed below.
-* `image_uri` - (Optional) ECR image URI containing the function's deployment package. Exactly one of `filename`, `image_uri`,  or `s3_bucket` must be specified.
-* `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
-* `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
-* `logging_config` - (Optional) Configuration block used to specify advanced logging settings. Detailed below.
-* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
+* `environment` - (Optional) Configuration block for environment variables. [See below](#environment-configuration-block).
+* `ephemeral_storage` - (Optional) Amount of ephemeral storage (`/tmp`) to allocate for the Lambda Function. [See below](#ephemeral_storage-configuration-block).
+* `file_system_config` - (Optional) Configuration block for EFS file system. [See below](#file_system_config-configuration-block).
+* `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
+* `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
+* `image_config` - (Optional) Container image configuration values. [See below](#image_config-configuration-block).
+* `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
+* `kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
+* `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
+* `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-configuration-block).
+* `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 10,240 MB (10 GB), in 1 MB increments. Defaults to 128.
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
-* `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
-* `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction.
-Removing these security group associations prior to function destruction can speed up security group deletion times of AWS's internal cleanup operations.
-By default, the security groups will be replaced with the `default` security group in the function's configured VPC.
-Set the `replacement_security_group_ids` attribute to use a custom list of security groups for replacement.
-* `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction.
-`replace_security_groups_on_destroy` must be set to `true` to use this attribute.
-* `runtime` - (Optional) Identifier of the function's runtime. See [Runtimes][6] for valid values.
-* `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. This bucket must reside in the same AWS region where you are creating the Lambda function. Exactly one of `filename`, `image_uri`, or `s3_bucket` must be specified. When `s3_bucket` is set, `s3_key` is required.
-* `s3_key` - (Optional) S3 key of an object containing the function's deployment package. When `s3_bucket` is set, `s3_key` is required.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `replace_security_groups_on_destroy` - (Optional) Whether to replace the security groups on the function's VPC configuration prior to destruction. Default is `false`.
+* `replacement_security_group_ids` - (Optional) List of security group IDs to assign to the function's VPC configuration prior to destruction. Required if `replace_security_groups_on_destroy` is `true`.
+* `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`.
+* `runtime` - (Optional) Identifier of the function's runtime. Required if `package_type` is `Zip`. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for valid values.
+* `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
+* `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Required if `s3_bucket` is set.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
-* `skip_destroy` - (Optional) Set to true if you do not wish the function to be deleted at destroy time, and instead just remove the function from the Terraform state.
-* `source_code_hash` - (Optional) Virtual attribute used to trigger replacement when source code changes. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
-* `snap_start` - (Optional) Snap start settings block. Detailed below.
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
-* `tracing_config` - (Optional) Configuration block. Detailed below.
-* `vpc_config` - (Optional) Configuration block. Detailed below.
+* `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
+* `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
+* `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
+* `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
+* `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
-### dead_letter_config
+### dead_letter_config Configuration Block
 
-Dead letter queue configuration that specifies the queue or topic where Lambda sends asynchronous events when they fail processing. For more information, see [Dead Letter Queues](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq).
+* `target_arn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails.
 
-* `target_arn` - (Required) ARN of an SNS topic or SQS queue to notify when an invocation fails. If this option is used, the function's IAM role must be granted suitable access to write to the target object, which means allowing either the `sns:Publish` or `sqs:SendMessage` action on this ARN, depending on which service is targeted.
+### environment Configuration Block
 
-### environment
+* `variables` - (Optional) Map of environment variables available to your Lambda function during execution.
 
-* `variables` - (Optional) Map of environment variables that are accessible from the function code during execution. If provided at least one key must be present.
+### ephemeral_storage Configuration Block
 
-### ephemeral_storage
+* `size` - (Required) Amount of ephemeral storage (`/tmp`) in MB. Valid between 512 MB and 10,240 MB (10 GB).
 
-* `size` - (Required) The size of the Lambda function Ephemeral storage(`/tmp`) represented in MB. The minimum supported `ephemeral_storage` value defaults to `512`MB and the maximum supported value is `10240`MB.
+### file_system_config Configuration Block
 
-### file_system_config
+* `arn` - (Required) ARN of the Amazon EFS Access Point.
+* `local_mount_path` - (Required) Path where the function can access the file system. Must start with `/mnt/`.
 
-Connection settings for an EFS file system. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets must be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
+### image_config Configuration Block
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
-* `local_mount_path` - (Required) Path where the function can access the file system, starting with /mnt/.
+* `command` - (Optional) Parameters to pass to the container image.
+* `entry_point` - (Optional) Entry point to your application.
+* `working_directory` - (Optional) Working directory for the container image.
 
-### image_config
+### logging_config Configuration Block
 
-Container image configuration values that override the values in the container image Dockerfile.
+* `application_log_level` - (Optional) Detail level of application logs. Valid values: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`.
+* `log_format` - (Required) Log format. Valid values: `Text`, `JSON`.
+* `log_group` - (Optional) CloudWatch log group where logs are sent.
+* `system_log_level` - (Optional) Detail level of Lambda platform logs. Valid values: `DEBUG`, `INFO`, `WARN`.
 
-* `command` - (Optional) Parameters that you want to pass in with `entry_point`.
-* `entry_point` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
-* `working_directory` - (Optional) Working directory.
+### snap_start Configuration Block
 
-### logging_config
+* `apply_on` - (Required) When to apply snap start optimization. Valid value: `PublishedVersions`.
 
-Advanced logging settings. See [Configuring advanced logging controls for your Lambda function][13].
+### tracing_config Configuration Block
 
-* `application_log_level` - (Optional) for JSON structured logs, choose the detail level of the logs your application sends to CloudWatch when using supported logging libraries.
-* `log_format` - (Required) select between `Text` and structured `JSON` format for your function's logs.
-* `log_group` - (Optional) the CloudWatch log group your function sends logs to.
-* `system_log_level` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `WARN`, `DEBUG`, or `INFO`.
+* `mode` - (Required) X-Ray tracing mode. Valid values: `Active`, `PassThrough`.
 
-### snap_start
+### vpc_config Configuration Block
 
-Snap start settings for low-latency startups. This feature is currently only supported for specific runtimes, see [Supported features and limitations][14].
-Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
-
-* `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
-
-### tracing_config
-
-* `mode` - (Required) Whether to sample and trace a subset of incoming requests with AWS X-Ray. Valid values are `PassThrough` and `Active`. If `PassThrough`, Lambda will only trace the request from an upstream service if it contains a tracing header with "sampled=1". If `Active`, Lambda will respect any tracing header it receives from an upstream service. If no tracing header is received, Lambda will call X-Ray for a tracing decision.
-
-### vpc_config
-
-For network connectivity to AWS resources in a VPC, specify a list of security groups and subnets in the VPC. When you connect a function to a VPC, it can only access resources and the internet through that VPC. See [VPC Settings][7].
-
-~> **NOTE:** If `subnet_ids`, `security_group_ids` and `ipv6_allowed_for_dual_stack` are empty then `vpc_config` is considered to be empty or unset.
-
-* `ipv6_allowed_for_dual_stack` - (Optional) Allows outbound IPv6 traffic on VPC functions that are connected to dual-stack subnets. Default is `false`.
+* `ipv6_allowed_for_dual_stack` - (Optional) Whether to allow outbound IPv6 traffic on VPC functions connected to dual-stack subnets. Default: `false`.
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
 
@@ -361,33 +479,19 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
+* `arn` - ARN identifying your Lambda Function.
 * `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
-* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
+* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
-* `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
+* `qualified_invoke_arn` - Qualified ARN (ARN with lambda version number) to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)'s `uri`.
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `snap_start.optimization_status` - Optimization status of the snap start configuration. Valid values are `On` and `Off`.
 * `source_code_size` - Size in bytes of the function .zip file.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.
-
-[1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
-[3]: https://docs.aws.amazon.com/lambda/latest/dg/walkthrough-custom-events-create-test-function.html
-[4]: https://docs.aws.amazon.com/lambda/latest/dg/intro-permission-model.html
-[5]: https://docs.aws.amazon.com/lambda/latest/dg/limits.html
-[6]: https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime
-[7]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html
-[8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
-[9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
-[10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
-[11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
-[12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
-[13]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced
-[14]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html#snapstart-runtimes
 
 ## Timeouts
 
@@ -403,13 +507,13 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_lambda_function.test_lambda
-  id = "my_test_lambda_function"
+  to = aws_lambda_function.example
+  id = "example"
 }
 ```
 
 Using `terraform import`, import Lambda Functions using the `function_name`. For example:
 
 ```console
-% terraform import aws_lambda_function.test_lambda my_test_lambda_function
+% terraform import aws_lambda_function.example example
 ```

@@ -20,6 +20,10 @@ import (
 )
 
 // @SDKResource("aws_iot_logging_options", name="Logging Options")
+// @SingletonIdentity
+// @NoImport
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
 func resourceLoggingOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingOptionsPut,

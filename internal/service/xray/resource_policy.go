@@ -27,8 +27,8 @@ import (
 )
 
 // @FrameworkResource("aws_xray_resource_policy", name="Resource Policy")
-func newResourceResourcePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourcePolicy{}
+func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePolicyResource{}
 
 	return r, nil
 }
@@ -37,12 +37,11 @@ const (
 	ResNameResourcePolicy = "Resource Policy"
 )
 
-type resourceResourcePolicy struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceResourcePolicyData]
+type resourcePolicyResource struct {
+	framework.ResourceWithModel[resourcePolicyResourceModel]
 }
 
-func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourcePolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"policy_document": schema.StringAttribute{
@@ -67,10 +66,10 @@ func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourcePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().XRayClient(ctx)
 
-	var plan resourceResourcePolicyData
+	var plan resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -112,10 +111,10 @@ func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().XRayClient(ctx)
 
-	var state resourceResourcePolicyData
+	var state resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -138,10 +137,10 @@ func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().XRayClient(ctx)
 
-	var state resourceResourcePolicyData
+	var state resourcePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -174,7 +173,7 @@ func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceResourcePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourcePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("policy_name"), req, resp)
 }
 
@@ -233,7 +232,8 @@ func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.Li
 	return output, nil
 }
 
-type resourceResourcePolicyData struct {
+type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	LastUpdatedTime          timetypes.RFC3339    `tfsdk:"last_updated_time"`
 	PolicyDocument           jsontypes.Normalized `tfsdk:"policy_document"`
 	PolicyName               types.String         `tfsdk:"policy_name"`

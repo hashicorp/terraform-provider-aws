@@ -28,16 +28,15 @@ import (
 
 // @SDKResource("aws_codeartifact_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("domain/{domain}")
+// @Testing(serialize=true)
 func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
 		ReadWithoutTimeout:   resourceDomainRead,
 		DeleteWithoutTimeout: resourceDomainDelete,
 		UpdateWithoutTimeout: resourceDomainUpdate,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

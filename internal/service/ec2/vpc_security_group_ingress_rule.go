@@ -167,7 +167,7 @@ type securityGroupRule interface {
 
 type securityGroupRuleResource struct {
 	securityGroupRule
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[securityGroupRuleResourceModel]
 	framework.WithImportByID
 }
 
@@ -426,6 +426,7 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 }
 
 type securityGroupRuleResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String `tfsdk:"arn"`
 	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
 	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`

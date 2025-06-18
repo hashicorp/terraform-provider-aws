@@ -115,8 +115,9 @@ type ListValueOf[T attr.Value] struct {
 }
 
 type (
-	ListOfString = ListValueOf[basetypes.StringValue]
-	ListOfARN    = ListValueOf[ARN]
+	ListOfString                         = ListValueOf[basetypes.StringValue]
+	ListOfARN                            = ListValueOf[ARN]
+	ListOfStringEnum[T enum.Valueser[T]] = ListValueOf[StringEnum[T]]
 )
 
 func (v ListValueOf[T]) Equal(o attr.Value) bool {

@@ -37,7 +37,7 @@ func newMemberDetectorFeatureResource(context.Context) (resource.ResourceWithCon
 }
 
 type memberDetectorFeatureResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[memberDetectorFeatureResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -277,6 +277,7 @@ func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *g
 }
 
 type memberDetectorFeatureResourceModel struct {
+	framework.WithRegionModel
 	AccountID               types.String                                                        `tfsdk:"account_id"`
 	AdditionalConfiguration fwtypes.ListNestedObjectValueOf[memberAdditionalConfigurationModel] `tfsdk:"additional_configuration"`
 	DetectorID              types.String                                                        `tfsdk:"detector_id"`
