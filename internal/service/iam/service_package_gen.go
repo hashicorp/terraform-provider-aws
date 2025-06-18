@@ -290,6 +290,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_role_policy_attachment",
 			Name:     "Role Policy Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrRole, true),
+				inttypes.StringIdentityAttribute("policy_arn", true),
+			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+				ImportID:      rolePolicyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceSAMLProvider,
