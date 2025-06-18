@@ -3,8 +3,8 @@ package ssoadmin
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -28,7 +28,7 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.Tags), nil
@@ -40,7 +40,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSOAdminClient(ctx), identifier, resourceType)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -119,7 +119,7 @@ func updateTags(ctx context.Context, conn *ssoadmin.Client, identifier, resource
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -135,7 +135,7 @@ func updateTags(ctx context.Context, conn *ssoadmin.Client, identifier, resource
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

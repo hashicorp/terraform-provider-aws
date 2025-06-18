@@ -3,8 +3,8 @@ package kinesis
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
@@ -27,7 +27,7 @@ func listTags(ctx context.Context, conn *kinesis.Client, identifier string, optF
 	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return KeyValueTags(ctx, output.Tags), nil
@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -118,7 +118,7 @@ func updateTags(ctx context.Context, conn *kinesis.Client, identifier string, ol
 			_, err := conn.RemoveTagsFromStream(ctx, &input, optFns...)
 
 			if err != nil {
-				return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+				return smarterr.NewError(err)
 			}
 		}
 	}
@@ -135,7 +135,7 @@ func updateTags(ctx context.Context, conn *kinesis.Client, identifier string, ol
 			_, err := conn.AddTagsToStream(ctx, &input, optFns...)
 
 			if err != nil {
-				return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+				return smarterr.NewError(err)
 			}
 		}
 	}

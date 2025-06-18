@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -399,7 +400,7 @@ func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name strin
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, aws.ToString(output.State), nil
@@ -422,10 +423,10 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatch.GetMetricStreamOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
@@ -439,10 +440,10 @@ func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatch.GetMetricStreamOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func validateMetricStreamName(v any, k string) (ws []string, errors []error) {

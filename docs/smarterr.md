@@ -1,177 +1,193 @@
-# smarterr
+# smarterr Quick Start & Migration Guide
 
-smarterr is config-driven error format management. Using these inputs:
+`smarterr` is a config-driven library for formatting and annotating Terraform AWS Provider errors in a consistent, helpful, and composable way. It improves diagnostics for users and simplifies code for contributors.
 
-1. HCL config files (i.e., `internal/smarterr.hcl` and `internal/service/cloudwatch/smarterr.hcl`)
-2. Context (`context.Context`)
-3. An error
-4. A diagnostic
-5. Arguments to the smarterr API functions
-6. Call stacks (captured and live)
+## What smarterr Does
 
-smarterr allows template-based formatting to output information in SDKv2 diagnostics, Framework diagnostics, and logs.
+smarterr consumes:
 
-## smerr
+* Configuration files (`smarterr.hcl`) with tokens, templates, transforms, etc.
+* Go error values (wrapped with context-aware stack info)
+* `context.Context`
+* Optional key/value arguments (`keyvals`)
+* Live and captured call stack frames
 
-`internal/smerr` is a wrapper for smarterr to inject private context (i.e., resource and service names) into arguments to smarterr functions.
+It then produces consistent diagnostics with clear user messages across:
 
-## Configuration
+* SDKv2-style diagnostics (`sdkdiag.Diagnostics`)
+* Framework-style diagnostics (`fwdiag.Diagnostics`)
+* Logs (if configured)
 
-Use `smarterr.hcl` files to configure smarterr using these configuration blocks: `token` (building blocks to use in `template`), `template` (Go `text/template` to format), `smarterr` (general configuration), `parameter` (static information), `stack_match` (expressions for matching the call stack), and `transform` (text transformations).
+---
 
-For more details, see [the documentation](https://github.com/YakDriver/smarterr/tree/main/docs).
+## `smerr`: Provider Integration
+
+The `internal/smerr` package is a thin wrapper over smarterr that:
+
+* Injects private provider context (e.g., resource name, service name)
+* Simplifies usage for both SDKv2 and Framework-style resources
+
+Use `smerr` in most cases instead of importing smarterr directly.
+
+---
+
+## smarterr Configuration
+
+Located in:
+
+* `internal/smarterr.hcl` – global config
+* `internal/service/<service>/smarterr.hcl` – service-specific overrides
+
+These files support:
+
+* `token` – building blocks like `id`, `error`, or `happening`
+* `template` – Go `text/template` blocks for message formatting
+* `parameter` – static values like service name
+* `stack_match` – extract info from call stack
+* `transform` – text cleanup utilities
+* `smarterr` – optional global configuration
+
+See [the smarterr docs](https://github.com/YakDriver/smarterr/tree/main/docs) for more.
+
+---
 
 ## Migration Guide
 
-Follow these steps to migrate SDKv2- and Framework-style resources and data sources to smarterr:
-1. [Determine](#is-the-resource-or-data-source-sdkv2--or-framework-style) whether you're working with an SDKv2- or Framework-style resource or data source
-2. If the resource or data source is SDKv2-style, follow the [SDKv2 steps](#steps-to-migrate-an-sdkv2-style-resource-or-data-source-to-smarterr)
-3. If the resource or data source is Framework-style, follow the [Framework steps](#steps-to-migrate-a-framework-style-resource-or-data-source-to-smarterr)
+### Step 1: Determine Resource Style
 
-### Is the resource or data source SDKv2- or Framework-style?
+#### Framework-style
 
-1. A **framework-style** resource/data source will have these characteristics:
-    - Imports `"github.com/hashicorp/terraform-plugin-framework/resource"`
-    - Has a `// @FrameworkResource(...)` or `// @FrameworkDataSource(...)` tag comment before the resource/data source function
-    - Defines a resource or data source receiver with `Schema`, `Create`, `Read`, `Update`, and/or `Delete` methods
-2. An **SDKv2-style** resource/data source will have these characteristics:
-    - Imports `"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"`
-    - Includes a `// @SDKResource(...)` tag comment before a function that returns the resource or data source
+* Uses `"github.com/hashicorp/terraform-plugin-framework/resource"`
+* Has `@FrameworkResource` or `@FrameworkDataSource` comments
+* Defines methods like `Schema`, `Create`, `Read`, `Update`, `Delete`
 
-### Steps to Migrate an SDKv2-style resource or data source to smarterr
+#### SDKv2-style
 
-To migrate SDKv2 style resources or data sources to smarterr, follow these steps:
+* Uses `"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"`
+* Has `@SDKResource` comment and returns `*schema.Resource`
 
-1. [Replace diagnostic appending functions with](#replace-diagnostic-appending-eg-sdkdiagappenderrorf) `smerr.Append()`
-2. [Wrap Go errors](#wrap-errors-with-smarterr-errors) with `smarterr.NewError()`
+---
 
-#### Replace Diagnostic Appending (e.g., `sdkdiag.AppendErrorf()`)
+### SDKv2 Migration Steps
 
-Replace use of any diagnostic append function with `smerr.Append()`. This includes replacing these and any other similar calls:
+1. **Replace diagnostic append calls**
+   Replace any of the following:
 
-- `sdkdiag.AppendErrorf` (from `"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"`)
-- `sdkdiag.AppendFromErr`
-- `create.AppendDiagError`
+   * `sdkdiag.AppendErrorf`
+   * `sdkdiag.AppendFromErr`
+   * `create.AppendDiagError`
 
-**Important** Use the same diagnostics variable (e.g., `diags`), ID (e.g., `name`, `d.Id()`, `id`), and error (e.g., `err`) as used in the original call.
+   **Before:**
 
-Before:
+   ```go
+   return sdkdiag.AppendErrorf(diags, "creating (%s): %s", id, err)
+   ```
 
-```go
-return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", name, err)
-```
+   **After:**
 
-After:
+   ```go
+   return smerr.Append(ctx, diags, err, smerr.ID, id)
+   ```
 
-```go
-return smerr.Append(ctx, diags, err, smerr.ID, name)
-```
+2. **Wrap all error return values**
+   **Before:**
 
-#### Wrap Go Errors with smarterr Errors
+   ```go
+   return nil, err
+   ```
 
-In places where errors are generated, passed, or returned as Go errors, wrap them with a smarterr `Error`. This often happens with find, wait, and status helpers.
+   **After:**
 
-Before:
+   ```go
+   return nil, smarterr.NewError(err)
+   ```
 
-```go
-func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
-    // ...
-	output, err := conn.DescribeAlarms(ctx, input)
-	if err != nil {
-		return nil, err // <===
-	}
+   For helpers like `AssertSingleValueResult`:
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input) // <===
-	}
+   ```go
+   return smarterr.Assert(tfresource.AssertSingleValueResult(...))
+   ```
 
-	return tfresource.AssertSingleValueResult(output.MetricAlarms) // <===
-}
-```
+---
 
-After:
+### Framework Migration Steps
 
-```go
-func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
-    // ...
-	output, err := conn.DescribeAlarms(ctx, input)
-	if err != nil {
-		return nil, smarterr.NewError(err) // <===
-	}
+1. **Replace `AddError`**
+   **Before:**
 
-	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input)) // <===
-	}
+   ```go
+   resp.Diagnostics.AddError("creating...", err.Error())
+   ```
 
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms)) // <===
-}
-```
+   **After:**
 
-### Steps to Migrate a Framework-style resource or data source to smarterr
+   ```go
+   smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
+   ```
 
-To migrate Framework-style resources or data sources to smarterr, follow these steps:
+2. **Replace `Append`**
+   If **no ID available** (e.g., early in `Create`):
 
-1. [Replace `Diagnostics.AddError` with `smerr.AddError`](#replace-diagnosticsadderror-with-smerradderror)
-2. [Replace `Diagnostics.Append` with `smerr.Append`](#replace-diagnosticsadderror-with-smerradderror)
-2. [Wrap Go errors](#wrap-errors-with-smarterr-errors) with `smarterr.NewError()` (see above)
+   ```go
+   smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+   ```
 
-#### Replace `Diagnostics.AddError` with `smerr.AddError`
+   **Important!** Use **ID if available**, even if it wasn't in the original `Append` call:
 
-If code uses `Diagnostics.AddError` (`github.com/hashicorp/terraform-plugin-framework/diag.Diagnostics.AddError()`), replace with `smerr.AddError`.
+   ```go
+   smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state), smerr.ID, state.RuleName.String())
+   ```
 
-**Important** Preserve these things from the original `Diagnostics.AddError()` call:
+   For example, replace (ID not available, early in function):
 
-* Use a pointer to the same `Diagnostics` instance (e.g., `&resp.Diagnostics`)
-* From the original `Diagnostics.AddError` call, use the same ID in the `smerr.AddError` call (e.g., `state.RuleName.String()`)
-* Also, use the same error (e.g., `err`)
+   ```go
+   resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+   ```
 
-Everything else (e.g., `names.CloudWatch`, `create.ErrActionSetting`, `ResNameContributorInsightsRule`) can be discarded.
+   With:
 
-Before:
+   ```go
+   smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+   ```
 
-```go
-resp.Diagnostics.AddError(
-    create.ProblemStandardMessage(names.CloudWatch, create.ErrActionSetting, ResNameContributorInsightRule, state.RuleName.String(), err),
-    err.Error(),
-)
-```
+   For example, replace (ID _is_ available, middle to end of function):
 
-After:
+   ```go
+   resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+   ```
 
-```go
-smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
-```
+   With:
 
-#### Replace `Diagnostics.Append` with `smerr.Append`
+   ```go
+   smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.ResourceArn.String())
+   ```
 
-**Important** Take note of these points when migrating:
+3. **Wrap error-producing calls**
+   Same as SDKv2:
 
-* Use a pointer to the same `Diagnostics` instance (e.g., `&resp.Diagnostics`)
-* From the original `Diagnostics.Append` call, use the **same inner call** (e.g., `req.State.Get()`)
-* _Add an ID_ if available in that part of the resource
-    - When getting state at the top of a CRUD function, no ID may be available.
-    - At the end of, e.g., Update or Read, an ID is available to use.
+   ```go
+   return nil, smarterr.NewError(err)
+   ```
 
-Before (No ID available):
+---
 
-```go
-resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-```
+## Why Wrap Errors?
 
-After (No ID available):
+Wrapping errors with `smarterr.NewError()` captures call stack information at the time of failure. This enables smarterr to:
 
-```go
-smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-```
+* Determine **subaction** like "finding", "waiting", etc.
+* Avoid duplicative wrapping (“walls of text”)
+* Format the **summary** and **detail** portions idiomatically
 
-Before (ID _available_):
+---
 
-```go
-resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-```
+## AI/Human Migration Tip
 
-After (ID _available_):
+Use this migration checklist:
 
-```go
-smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state), smerr.ID, state.RuleName.String())
-```
+* ✅ Wrapped all `return nil, err` with `smarterr.NewError()`
+* ✅ Replaced `AppendErrorf()` and friends with `smerr.Append()`
+* ✅ Replaced `AddError()` with `smerr.AddError()`
+* ✅ Replaced `Append()` with `smerr.EnrichAppend()`
+* ✅ Preserved `ctx`, `diags`, and `id` correctly
+* ✅ Did not modify resource schema or unrelated logic
