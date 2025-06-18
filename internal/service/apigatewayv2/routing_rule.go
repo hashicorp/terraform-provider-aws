@@ -340,7 +340,7 @@ func (r *resourceRoutingRule) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceRoutingRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrARN), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 	domainName, _, err := parseRoutingRuleARN(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
