@@ -356,7 +356,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -375,7 +375,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -436,7 +436,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {

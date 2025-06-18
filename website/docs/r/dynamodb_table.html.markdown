@@ -159,7 +159,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
   key          = "Architect"
   value        = "Gigi"
 }

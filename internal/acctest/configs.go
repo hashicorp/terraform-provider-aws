@@ -271,7 +271,7 @@ data "aws_region" "provider_test" {}
 
 # Required to initialize the provider.
 data "aws_service" "provider_test" {
-  region     = data.aws_region.provider_test.name
+  region     = data.aws_region.provider_test.region
   service_id = "s3"
 }
 `
@@ -715,7 +715,7 @@ resource "aws_iam_role_policy" "test" {
         "bedrock:InvokeModel"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       ]
     }
   ]
@@ -821,7 +821,7 @@ resource "null_resource" "db_setup" {
   provisioner "local-exec" {
     command = <<EOT
       sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
+      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.test.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.region} --query SecretString --output text | jq -r '."password"')
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
@@ -878,7 +878,7 @@ resource "aws_iam_role_policy" "test_update" {
         "bedrock:InvokeModel"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       ]
     }
   ]

@@ -5048,7 +5048,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5188,7 +5188,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5210,7 +5210,7 @@ resource "aws_rds_cluster" "alternate" {
   kms_key_id           = aws_kms_key.test.arn
   storage_encrypted    = true
   skip_final_snapshot  = true
-  source_region        = data.aws_region.current.name
+  source_region        = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5476,7 +5476,7 @@ resource "aws_rds_cluster" "secondary" {
   cluster_identifier        = %[5]q
   db_subnet_group_name      = aws_db_subnet_group.alternate.name
   skip_final_snapshot       = true
-  source_region             = data.aws_region.current.name
+  source_region             = data.aws_region.current.region
   global_cluster_identifier = aws_rds_global_cluster.test.id
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
@@ -5581,7 +5581,7 @@ resource "aws_rds_cluster" "secondary" {
   cluster_identifier             = %[5]q
   db_subnet_group_name           = aws_db_subnet_group.alternate.name
   skip_final_snapshot            = true
-  source_region                  = data.aws_region.current.name
+  source_region                  = data.aws_region.current.region
   global_cluster_identifier      = aws_rds_global_cluster.test.id
   enable_global_write_forwarding = true
   engine                         = aws_rds_global_cluster.test.engine
@@ -5696,7 +5696,7 @@ resource "aws_rds_cluster" "secondary" {
   global_cluster_identifier     = aws_rds_global_cluster.test.id
   replication_source_identifier = aws_rds_cluster.primary.arn
   skip_final_snapshot           = true
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 }
 
 resource "aws_rds_cluster_instance" "secondary" {

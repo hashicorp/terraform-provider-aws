@@ -55,7 +55,7 @@ resource "aws_elasticsearch_domain" "example" {
       "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
+      "Resource": "arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*",
       "Condition": {
         "IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
       }
@@ -187,7 +187,7 @@ resource "aws_elasticsearch_domain" "es" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
+			"Resource": "arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"
 		}
 	]
 }

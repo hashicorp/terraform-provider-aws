@@ -774,7 +774,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test1" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -783,7 +783,7 @@ resource "aws_vpc_endpoint" "test1" {
 
 resource "aws_vpc_endpoint" "test2" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 
   tags = {
     Name = %[1]q

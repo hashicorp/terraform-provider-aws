@@ -3594,7 +3594,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.s3"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
   subnet_ids          = aws_subnet.test[*].id

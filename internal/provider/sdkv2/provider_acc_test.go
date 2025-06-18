@@ -1044,7 +1044,7 @@ data "aws_region" "provider_test" {}
 
 # Required to initialize the provider.
 data "aws_service" "provider_test" {
-  region     = data.aws_region.provider_test.name
+  region     = data.aws_region.provider_test.region
   service_id = "s3"
 }
 `

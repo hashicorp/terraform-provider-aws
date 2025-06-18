@@ -210,7 +210,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = %[1]q
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `, rName)
@@ -262,7 +262,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `)
@@ -280,7 +280,7 @@ resource "aws_dynamodb_global_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `)
@@ -294,7 +294,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = %[1]q
 
   replica {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `, tableName))
