@@ -47,16 +47,13 @@ type StateGenerator struct {
 }
 
 func (r *StateGenerator) NextState() (int, string, error) {
-	p, v := r.position, ""
-	if len(r.stateSequence)-1 >= p {
-		v = r.stateSequence[p]
-	} else {
+	p := r.position
+	if p > len(r.stateSequence)-1 {
 		return -1, "", errors.New("No more states available")
 	}
 
-	r.position += 1
-
-	return p, v, nil
+	r.position++
+	return p, r.stateSequence[p], nil
 }
 
 func NewStateGenerator(sequence []string) *StateGenerator {
@@ -105,6 +102,8 @@ func UnknownPendingStateRefreshFunc() StateRefreshFunc {
 }
 
 func TestWaitForState_inconsistent_positive(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending:                   []string{"replicating"},
 		Target:                    []string{"done"},
@@ -126,6 +125,8 @@ func TestWaitForState_inconsistent_positive(t *testing.T) {
 }
 
 func TestWaitForState_inconsistent_negative(t *testing.T) {
+	t.Parallel()
+
 	refreshCount := int64(0)
 	f := InconsistentStateRefreshFunc()
 	refresh := func(ctx context.Context) (any, string, error) {
@@ -162,6 +163,8 @@ func TestWaitForState_inconsistent_negative(t *testing.T) {
 }
 
 func TestWaitForState_timeout(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
@@ -186,6 +189,8 @@ func TestWaitForState_timeout(t *testing.T) {
 }
 
 func TestWaitForState_success(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
@@ -203,6 +208,8 @@ func TestWaitForState_success(t *testing.T) {
 }
 
 func TestWaitForState_successUnknownPending(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Target:  []string{"done"},
 		Refresh: UnknownPendingStateRefreshFunc(),
@@ -219,6 +226,8 @@ func TestWaitForState_successUnknownPending(t *testing.T) {
 }
 
 func TestWaitForState_successEmpty(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{},
@@ -238,6 +247,8 @@ func TestWaitForState_successEmpty(t *testing.T) {
 }
 
 func TestWaitForState_failureEmpty(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending:        []string{"pending", "incomplete"},
 		Target:         []string{},
@@ -260,6 +271,8 @@ func TestWaitForState_failureEmpty(t *testing.T) {
 }
 
 func TestWaitForState_failure(t *testing.T) {
+	t.Parallel()
+
 	conf := &StateChangeConf{
 		Pending: []string{"pending", "incomplete"},
 		Target:  []string{"running"},
@@ -281,6 +294,8 @@ func TestWaitForState_failure(t *testing.T) {
 }
 
 func TestWaitForStateContext_cancel(t *testing.T) {
+	t.Parallel()
+
 	// make this refresh func block until we cancel it
 	ctx, cancel := context.WithCancel(context.Background())
 	refresh := func(context.Context) (any, string, error) {
@@ -318,7 +333,7 @@ func TestWaitForStateContext_cancel(t *testing.T) {
 		t.Fatal("WaitForState didn't return after refresh finished")
 	}
 
-	if err != context.Canceled {
+	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("Expected canceled context error, got: %s", err)
 	}
 }
