@@ -184,6 +184,10 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if .HasIDAttrDuplicates -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+		{{ else if gt (len .IdentityAttributes) 0 -}}
+			{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+			{{ end }}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 		{{ end -}}
@@ -362,11 +366,11 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
 									{{ . }}: knownvalue.NotNull(),
-								{{- end }}
+								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
-							{{- end }}
+							{{ end }}
 						{{ end -}}
 					{{ end -}}
 				},
@@ -484,11 +488,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 								{{ range .IdentityAttributes -}}
 									{{ . }}: knownvalue.NotNull(),
-								{{- end }}
+								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
-							{{- end }}
+							{{ end }}
 						{{ end -}}
 					{{ end -}}
 				},
