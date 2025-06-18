@@ -57,7 +57,7 @@ var (
 )
 
 type resourceRoutingRule struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceRoutingRuleModel]
 	framework.WithTimeouts
 }
 
