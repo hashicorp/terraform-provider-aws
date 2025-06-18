@@ -1962,24 +1962,22 @@ func testAccCheckCognitoOptions(enabled bool, status *awstypes.ElasticsearchDoma
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string, domain *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, v *awstypes.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ES Domain ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
-		resp, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+
+		output, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+
 		if err != nil {
-			return fmt.Errorf("Error describing domain: %s", err.Error())
+			return err
 		}
 
-		*domain = *resp
+		*v = *output
 
 		return nil
 	}
@@ -2032,6 +2030,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
+
 			_, err := tfelasticsearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
@@ -2042,8 +2041,9 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("Elasticsearch domain %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Elasticsearch Domain %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -3231,6 +3231,7 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 			enabled = true
 		}`
 	}
+
 	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 1), fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = %[1]q

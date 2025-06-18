@@ -15,8 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1127,6 +1132,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"enabled":  acctest.CtTrue,
 						"log_type": string(awstypes.LogTypeIndexSlowLogs),
 					}),
 				),
@@ -1163,6 +1169,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"enabled":  acctest.CtTrue,
 						"log_type": string(awstypes.LogTypeSearchSlowLogs),
 					}),
 				),
@@ -1199,6 +1206,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"enabled":  acctest.CtTrue,
 						"log_type": string(awstypes.LogTypeEsApplicationLogs),
 					}),
 				),
@@ -1235,6 +1243,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"enabled":  acctest.CtTrue,
 						"log_type": string(awstypes.LogTypeAuditLogs),
 					}),
 				),
@@ -1246,6 +1255,210 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_LogPublishingOptions_disable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_disabledLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(false),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_disabledLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(false),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_noLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_LogPublishingOptions_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_multipleLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
+			},
+			{
+				Config: testAccDomainConfig_logPublishingOptions(rName, string(awstypes.LogTypeIndexSlowLogs)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_multipleLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"enabled":  knownvalue.Bool(true),
+							"log_type": tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDomainConfig_noLogPublishingOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -2237,24 +2450,22 @@ func testAccCheckCognitoOptions(enabled bool, status *awstypes.DomainStatus) res
 	}
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string, domain *awstypes.DomainStatus) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, n string, v *awstypes.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No OpenSearch Domain ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
-		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+
+		output, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+
 		if err != nil {
-			return fmt.Errorf("Error describing domain: %s", err.Error())
+			return err
 		}
 
-		*domain = *resp
+		*v = *output
 
 		return nil
 	}
@@ -2307,6 +2518,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
@@ -2317,8 +2529,9 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("OpenSearch domain %s still exists", rs.Primary.ID)
+			return fmt.Errorf("OpenSearch Domain %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -3713,12 +3926,14 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomain_logPublishingOptionsBase(rName string) string {
+func testAccDomainConfig_baseLogPublishingOptions(rName string, nLogGroups int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
+  count = %[2]d
+
+  name = "%[1]s-${count.index}"
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
@@ -3742,7 +3957,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
     }]
   })
 }
-`, rName)
+`, rName, nLogGroups)
 }
 
 func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
@@ -3771,7 +3986,8 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 			enabled = true
 		}`
 	}
-	return acctest.ConfigCompose(testAccDomain_logPublishingOptionsBase(rName), fmt.Sprintf(`
+
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 1), fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
   engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
@@ -3781,14 +3997,72 @@ resource "aws_opensearch_domain" "test" {
     volume_size = 10
   }
 
-    %[2]s
+  %[2]s
 
   log_publishing_options {
     log_type                 = %[3]q
-    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[0].arn
   }
 }
 `, rName, auditLogsConfig, logType))
+}
+
+func testAccDomainConfig_multipleLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 2), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  log_publishing_options {
+    log_type                 = "INDEX_SLOW_LOGS"
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[0].arn
+  }
+
+  log_publishing_options {
+    log_type                 = "SEARCH_SLOW_LOGS"
+    cloudwatch_log_group_arn = aws_cloudwatch_log_group.test[1].arn
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_disabledLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 0), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  log_publishing_options {
+    enabled                  = false
+    log_type                 = "INDEX_SLOW_LOGS"
+    cloudwatch_log_group_arn = ""
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_noLogPublishingOptions(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseLogPublishingOptions(rName, 0), fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1" # needed for ESApplication/Audit Log Types
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName))
 }
 
 func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool) string {
