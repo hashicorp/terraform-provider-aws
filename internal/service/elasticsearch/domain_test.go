@@ -2511,7 +2511,7 @@ resource "aws_elasticsearch_domain" "test" {
         AWS = aws_iam_role.test.arn
       }
       Action   = "es:*"
-       Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }

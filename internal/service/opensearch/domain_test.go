@@ -3099,6 +3099,8 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3116,7 +3118,7 @@ resource "aws_opensearch_domain" "test" {
         AWS = aws_iam_role.test.arn
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -3142,6 +3144,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3162,7 +3166,7 @@ resource "aws_opensearch_domain" "test" {
         ]
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -3193,6 +3197,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyNewOrder(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3213,7 +3219,7 @@ resource "aws_opensearch_domain" "test" {
         ]
       }
       Action   = "es:*"
-      Resource = "arn:${data.aws_partition.current.partition}:es:*"
+      Resource = "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"
     }]
   })
 }
@@ -3244,6 +3250,8 @@ data "aws_iam_policy_document" "test" {
 func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3259,7 +3267,7 @@ resource "aws_opensearch_domain" "test" {
 data "aws_iam_policy_document" "test" {
   statement {
     actions   = ["es:*"]
-    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/%[1]s/*"]
     principals {
       type        = "AWS"
       identifiers = aws_iam_role.test[*].arn
