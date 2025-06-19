@@ -273,7 +273,6 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	{{- if .OverrideIdentifier }}
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	{{- end }}
