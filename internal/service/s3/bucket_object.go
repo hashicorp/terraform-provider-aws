@@ -39,6 +39,10 @@ import (
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
 // @Tags(identifierAttribute="arn", resourceType="BucketObject")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("key")
+// @IdAttrFormat("{bucket}/{key}")
+// @ImportIDHandler("bucketObjectImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 // @Testing(importIgnore="acl;force_destroy")
 func resourceBucketObject() *schema.Resource {
@@ -47,10 +51,6 @@ func resourceBucketObject() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketObjectRead,
 		UpdateWithoutTimeout: resourceBucketObjectUpdate,
 		DeleteWithoutTimeout: resourceBucketObjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceBucketObjectImport,
-		},
 
 		CustomizeDiff: resourceBucketObjectCustomizeDiff,
 
@@ -342,22 +342,6 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	id := d.Id()
-	id = strings.TrimPrefix(id, "s3://")
-
-	bucket, key, err := parseBucketObjectImportID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	d.SetId(id)
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrKey, key)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
@@ -529,11 +513,23 @@ func createBucketObjectImportID(d *schema.ResourceData) string {
 	return createObjectImportID(d)
 }
 
-func parseBucketObjectImportID(id string) (bucket, key string, err error) {
+type bucketObjectImportID struct{}
+
+func (_ bucketObjectImportID) Create(d *schema.ResourceData) string {
+	return createBucketObjectImportID(d)
+}
+
+func (_ bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+	id = strings.TrimPrefix(id, "s3://")
+
 	bucket, key, found := strings.Cut(id, "/")
 	if !found {
-		err = fmt.Errorf("id \"%s\" should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
-		return
+		return "", nil, fmt.Errorf("id \"%s\" should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
-	return
+
+	result := map[string]string{
+		names.AttrBucket: bucket,
+		names.AttrKey:    key,
+	}
+	return id, result, nil
 }
