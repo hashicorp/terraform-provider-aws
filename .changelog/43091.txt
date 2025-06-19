@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudtrail: Add `errorCode`, `eventType`, `sessionCredentialFromConsole` and `vpcEndpointId` to advanced_event_selector.field_selector
+```
