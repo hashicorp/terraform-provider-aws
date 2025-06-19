@@ -39,6 +39,7 @@ func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWith
 }
 
 type podIdentityAssociationResourceModel struct {
+	framework.WithRegionModel
 	AssociationARN types.String `tfsdk:"association_arn"`
 	AssociationID  types.String `tfsdk:"association_id"`
 	ClusterName    types.String `tfsdk:"cluster_name"`
@@ -59,7 +60,7 @@ const (
 )
 
 type podIdentityAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[podIdentityAssociationResourceModel]
 }
 
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

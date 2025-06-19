@@ -46,8 +46,7 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type directoryBucketResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[directoryBucketResourceModel] // Only 'force_destroy' can be updated.
+	framework.ResourceWithModel[directoryBucketResourceModel]
 	framework.WithImportByID
 }
 
@@ -252,6 +251,7 @@ func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string
 }
 
 type directoryBucketResourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String                                       `tfsdk:"arn"`
 	Bucket         types.String                                       `tfsdk:"bucket"`
 	DataRedundancy fwtypes.StringEnum[awstypes.DataRedundancy]        `tfsdk:"data_redundancy"`

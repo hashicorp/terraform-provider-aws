@@ -380,7 +380,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -389,7 +389,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -414,7 +414,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -423,7 +423,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -452,7 +452,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -461,7 +461,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -485,7 +485,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -494,7 +494,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -522,7 +522,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -531,7 +531,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }

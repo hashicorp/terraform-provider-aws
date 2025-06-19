@@ -21,19 +21,19 @@ import (
 // @FrameworkDataSource("aws_medialive_input", name="Input")
 // @Tags
 // @Testing(tagsIdentifierAttribute="arn")
-func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceInput{}, nil
+func newInputDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &inputDataSource{}, nil
 }
 
 const (
 	DSNameInput = "Input Data Source"
 )
 
-type dataSourceInput struct {
-	framework.DataSourceWithConfigure
+type inputDataSource struct {
+	framework.DataSourceWithModel[inputDataSourceModel]
 }
 
-func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *inputDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -41,10 +41,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
-			"destinations": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsDestination](ctx),
-				Computed:   true,
-			},
+			"destinations": framework.DataSourceComputedListOfObjectAttribute[dsDestination](ctx),
 			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
@@ -52,10 +49,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputClass](),
 				Computed:   true,
 			},
-			"input_devices": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputDevice](ctx),
-				Computed:   true,
-			},
+			"input_devices": framework.DataSourceComputedListOfObjectAttribute[dsInputDevice](ctx),
 			"input_partner_ids": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
@@ -64,10 +58,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputSourceType](),
 				Computed:   true,
 			},
-			"media_connect_flows": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMediaConnectFlow](ctx),
-				Computed:   true,
-			},
+			"media_connect_flows": framework.DataSourceComputedListOfObjectAttribute[dsMediaConnectFlow](ctx),
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -78,10 +69,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
-			"sources": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputSource](ctx),
-				Computed:   true,
-			},
+			"sources": framework.DataSourceComputedListOfObjectAttribute[dsInputSource](ctx),
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
@@ -95,10 +83,10 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 	}
 }
 
-func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *inputDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().MediaLiveClient(ctx)
 
-	var data dataSourceInputData
+	var data inputDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -124,7 +112,8 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceInputData struct {
+type inputDataSourceModel struct {
+	framework.WithRegionModel
 	ARN               types.String                                        `tfsdk:"arn"`
 	AttachedChannels  fwtypes.ListValueOf[types.String]                   `tfsdk:"attached_channels"`
 	Destinations      fwtypes.ListNestedObjectValueOf[dsDestination]      `tfsdk:"destinations"`

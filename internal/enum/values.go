@@ -13,15 +13,14 @@ type Valueser[T ~string] interface {
 }
 
 func EnumValues[T Valueser[T]]() []T {
-	return T("").Values()
+	var zero T
+	return zero.Values()
 }
 
 func Values[T Valueser[T]]() []string {
-	return Slice(EnumValues[T]()...)
+	return tfslices.Strings(EnumValues[T]())
 }
 
 func Slice[T ~string](l ...T) []string {
-	return tfslices.ApplyToAll(l, func(v T) string {
-		return string(v)
-	})
+	return tfslices.Strings(l)
 }

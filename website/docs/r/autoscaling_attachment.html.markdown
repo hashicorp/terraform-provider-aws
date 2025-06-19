@@ -34,6 +34,7 @@ resource "aws_autoscaling_attachment" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
 * `elb` - (Optional) Name of the ELB.
 * `lb_target_group_arn` - (Optional) ARN of a load balancer target group.

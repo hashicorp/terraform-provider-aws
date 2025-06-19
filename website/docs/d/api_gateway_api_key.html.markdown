@@ -23,6 +23,7 @@ data "aws_api_gateway_api_key" "my_api_key" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) ID of the API Key to look up.
 
 ## Attribute Reference

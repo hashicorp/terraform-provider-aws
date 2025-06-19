@@ -58,6 +58,10 @@ The following arguments are required:
 * `instance_name` - (Required) Name of the instance for which to open ports.
 * `port_info` - (Required) Descriptor of the ports to open for the specified instance. AWS closes all currently open ports that are not included in this argument. See [`port_info` Block](#port_info-block) for details.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### `port_info` Block
 
 The `port_info` configuration block supports the following arguments:

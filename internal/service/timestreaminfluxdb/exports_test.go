@@ -5,7 +5,7 @@ package timestreaminfluxdb
 
 // Exports for use in tests only.
 var (
-	ResourceDBInstance = newResourceDBInstance
+	ResourceDBInstance = newDBInstanceResource
 
 	FindDBInstanceByID = findDBInstanceByID
 )

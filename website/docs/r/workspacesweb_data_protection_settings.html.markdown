@@ -107,6 +107,7 @@ The following arguments are optional:
 * `customer_managed_key` - (Optional) ARN of the customer managed KMS key.
 * `description` - (Optional) The description of the data protection settings.
 * `inline_redaction_configuration` - (Optional) The inline redaction configuration of the data protection settings. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_redaction_configuration

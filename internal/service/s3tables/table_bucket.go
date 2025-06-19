@@ -34,19 +34,19 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket", name="Table Bucket")
-func newResourceTableBucket(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTableBucket{}, nil
+func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableBucketResource{}, nil
 }
 
 const (
 	resNameTableBucket = "Table Bucket"
 )
 
-type resourceTableBucket struct {
-	framework.ResourceWithConfigure
+type tableBucketResource struct {
+	framework.ResourceWithModel[tableBucketResourceModel]
 }
 
-func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tableBucketResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -107,10 +107,10 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tableBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTableBucketModel
+	var plan tableBucketResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -219,10 +219,10 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableBucketResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableBucketModel
+	var state tableBucketResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -282,8 +282,8 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state, plan resourceTableBucketModel
+func (r *tableBucketResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan tableBucketResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -376,10 +376,10 @@ func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTableBucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tableBucketResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableBucketModel
+	var state tableBucketResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -402,7 +402,7 @@ func (r *resourceTableBucket) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceTableBucket) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tableBucketResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
@@ -450,7 +450,8 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	return out.EncryptionConfiguration, nil
 }
 
-type resourceTableBucketModel struct {
+type tableBucketResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                                    `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                               `tfsdk:"created_at"`
 	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]             `tfsdk:"encryption_configuration"`
