@@ -1,5 +1,5 @@
 smarterr {
-  debug = true
+  debug = false
   hint_match_mode = "first"
   hint_join_char = "\n"
 }

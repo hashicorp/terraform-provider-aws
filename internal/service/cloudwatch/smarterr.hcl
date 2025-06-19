@@ -2,13 +2,7 @@ parameter "service" {
   value = "CloudWatch"
 }
 
-hint "serverless_cache_modify" {
-  error_contains = "ModifyServerlessCache"
-  suggestion = "If you are trying to modify a serverless cache, please use the `aws_cloudwatch_serverless_cache` resource instead of `aws_cloudwatch_log_group`."
-}
-
-hint "serverless_cache_modify2" {
-  error_contains = "ModifyServerlessCache"
-  regex_match = "ModifyServerlessCache.*InvalidParameterCombination: No"
-  suggestion = "Another suggestion is to use the `aws_cloudwatch_serverless_cache` resource instead of `aws_cloudwatch_log_group`."
+hint "dashboard_name_conflict" {
+  error_contains = "DashboardAlreadyExists"
+  suggestion = "A dashboard with this name already exists in your AWS account. Choose a unique name for your CloudWatch dashboard, or import the existing dashboard into Terraform using `terraform import` if you want to manage it."
 }
