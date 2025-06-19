@@ -209,6 +209,7 @@ class MyConvertedCode(TerraformStack):
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
@@ -460,4 +461,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a88d9c14f986db54162e1aabea941a1d5649d87ec337edd45cbc16b814a3a838 -->
+<!-- cache-key: cdktf-0.20.8 input-f361870528f60529529920123e1747d70429cdb27f38f923ba48ccd638895684 -->

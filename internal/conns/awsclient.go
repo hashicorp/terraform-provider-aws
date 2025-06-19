@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,7 +29,7 @@ import (
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
-	clients                   map[string]any
+	clients                   map[string]map[string]any // Region -> service package name -> API client.
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
@@ -38,9 +37,7 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
-	region                    string
 	servicePackages           map[string]ServicePackage
-	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
@@ -52,10 +49,6 @@ func (c *AWSClient) SetServicePackages(_ context.Context, servicePackages map[st
 	c.servicePackages = maps.Clone(servicePackages)
 }
 
-func (c *AWSClient) TerraformVersion(_ context.Context) string {
-	return c.terraformVersion
-}
-
 func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackage {
 	sp, ok := c.servicePackages[name]
 	if !ok {
@@ -64,8 +57,12 @@ func (c *AWSClient) ServicePackage(_ context.Context, name string) ServicePackag
 	return sp
 }
 
-func (c *AWSClient) ServicePackages(context.Context) iter.Seq2[string, ServicePackage] {
-	return maps.All(c.servicePackages)
+func (c *AWSClient) ServicePackages(_ context.Context) iter.Seq[ServicePackage] {
+	return maps.Values(c.servicePackages)
+}
+
+func (c *AWSClient) TerraformVersion(_ context.Context) string {
+	return c.terraformVersion
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
@@ -88,15 +85,6 @@ func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-
 	return c.awsConfig.Copy()
 }
 
-// AwsSession and Endpoints can be removed once the simpledb service is removed.
-func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
-	return c.session
-}
-
-func (c *AWSClient) Endpoints(context.Context) map[string]string {
-	return maps.Clone(c.endpoints)
-}
-
 // AccountID returns the configured AWS account ID.
 func (c *AWSClient) AccountID(context.Context) string {
 	return c.accountID
@@ -107,9 +95,17 @@ func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
 }
 
-// Region returns the ID of the configured AWS Region.
-func (c *AWSClient) Region(context.Context) string {
-	return c.region
+// Region returns the ID of the effective AWS Region.
+// If the currently in-process operation has defined a per-resource Region override,
+// that value is returned, otherwise the configured Region is returned.
+func (c *AWSClient) Region(ctx context.Context) string {
+	if inContext, ok := FromContext(ctx); ok {
+		if r := inContext.OverrideRegion(); r != "" {
+			return r
+		}
+	}
+
+	return c.awsConfig.Region
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -196,11 +192,8 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
-// To have effect it must be called before the AWS SDK v1 Session is created.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
-	if c.session == nil {
-		c.httpClient = httpClient
-	}
+	c.httpClient = httpClient
 }
 
 // HTTPClient returns the http.Client used for AWS API calls.
@@ -315,6 +308,19 @@ func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string
 	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
 }
 
+// ValidateInContextRegionInPartition verifies that the value of the top-level `region` attribute is in the configured AWS partition.
+func (c *AWSClient) ValidateInContextRegionInPartition(ctx context.Context) error {
+	if inContext, ok := FromContext(ctx); ok {
+		if r, p := inContext.OverrideRegion(), c.Partition(ctx); r != "" && p != "" {
+			if got, want := names.PartitionForRegion(r).ID(), p; got != want {
+				return fmt.Errorf("partition (%s) for per-resource Region (%s) is not the provider's configured partition (%s)", got, r, want)
+			}
+		}
+	}
+
+	return nil
+}
+
 func convertIPToDashIP(ip string) string {
 	return strings.Replace(ip, ".", "-", -1)
 }
@@ -325,6 +331,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.endpoints[servicePackageName],
 		"partition":        c.Partition(ctx),
+		"region":           c.Region(ctx),
 	}
 	switch servicePackageName {
 	case names.S3:
@@ -347,6 +354,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+	region := c.Region(ctx)
 
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -354,12 +362,14 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		c.lock.Lock()
 		defer c.lock.Unlock() // Runs at function exit, NOT block.
 
-		if raw, ok := c.clients[servicePackageName]; ok {
-			if client, ok := raw.(T); ok {
-				return client, nil
-			} else {
-				var zero T
-				return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+		if v, ok := c.clients[region]; ok {
+			if raw, ok := v[servicePackageName]; ok {
+				if client, ok := raw.(T); ok {
+					return client, nil
+				} else {
+					var zero T
+					return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
+				}
 			}
 		}
 	}
@@ -389,7 +399,10 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.
 
 	if isDefault {
-		c.clients[servicePackageName] = client
+		if _, ok := c.clients[region]; !ok {
+			c.clients[region] = make(map[string]any, 0)
+		}
+		c.clients[region][servicePackageName] = client
 	}
 
 	return client, nil

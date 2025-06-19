@@ -5,8 +5,11 @@ package dms
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -602,9 +605,275 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("ssl_mode", out.SslMode)
 	d.Set(names.AttrUsername, out.Username)
 
-	if err := resourceEndpointSetState(d, out); err != nil {
+	if err := resourceEndpointDataSourceSetState(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstypes.Endpoint) error {
+	d.SetId(aws.ToString(endpoint.EndpointIdentifier))
+
+	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
+	d.Set("endpoint_arn", endpoint.EndpointArn)
+	d.Set("endpoint_id", endpoint.EndpointIdentifier)
+	// For some reason the AWS API only accepts lowercase type but returns it as uppercase
+	d.Set(names.AttrEndpointType, strings.ToLower(string(endpoint.EndpointType)))
+	d.Set("engine_name", endpoint.EngineName)
+	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
+
+	switch aws.ToString(endpoint.EngineName) {
+	case engineNameAurora, engineNameMariadb, engineNameMySQL:
+		if endpoint.MySQLSettings != nil {
+			d.Set(names.AttrUsername, endpoint.MySQLSettings.Username)
+			d.Set("server_name", endpoint.MySQLSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.MySQLSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.MySQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MySQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MySQLSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameAuroraPostgresql, engineNamePostgres:
+		if endpoint.PostgreSQLSettings != nil {
+			d.Set(names.AttrUsername, endpoint.PostgreSQLSettings.Username)
+			d.Set("server_name", endpoint.PostgreSQLSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.PostgreSQLSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.PostgreSQLSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.PostgreSQLSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.PostgreSQLSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("postgres_settings", flattenPostgreSQLSettings(endpoint.PostgreSQLSettings)); err != nil {
+			return fmt.Errorf("setting postgres_settings: %w", err)
+		}
+	case engineNameDynamoDB:
+		if endpoint.DynamoDbSettings != nil {
+			d.Set("service_access_role", endpoint.DynamoDbSettings.ServiceAccessRoleArn)
+		} else {
+			d.Set("service_access_role", "")
+		}
+	case engineNameElasticsearch, engineNameOpenSearch:
+		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+			return fmt.Errorf("setting elasticsearch_settings: %w", err)
+		}
+	case engineNameKafka:
+		if endpoint.KafkaSettings != nil {
+			// SASL password isn't returned in API. Propagate state value.
+			tfMap := flattenKafkaSettings(endpoint.KafkaSettings)
+			tfMap["sasl_password"] = d.Get("kafka_settings.0.sasl_password").(string)
+
+			if err := d.Set("kafka_settings", []any{tfMap}); err != nil {
+				return fmt.Errorf("setting kafka_settings: %w", err)
+			}
+		} else {
+			d.Set("kafka_settings", nil)
+		}
+	case engineNameKinesis:
+		if err := d.Set("kinesis_settings", []any{flattenKinesisSettings(endpoint.KinesisSettings)}); err != nil {
+			return fmt.Errorf("setting kinesis_settings: %w", err)
+		}
+	case engineNameMongodb:
+		if endpoint.MongoDbSettings != nil {
+			d.Set(names.AttrUsername, endpoint.MongoDbSettings.Username)
+			d.Set("server_name", endpoint.MongoDbSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.MongoDbSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.MongoDbSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MongoDbSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MongoDbSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("mongodb_settings", flattenMongoDBSettings(endpoint.MongoDbSettings)); err != nil {
+			return fmt.Errorf("setting mongodb_settings: %w", err)
+		}
+	case engineNameOracle:
+		if endpoint.OracleSettings != nil {
+			d.Set(names.AttrUsername, endpoint.OracleSettings.Username)
+			d.Set("server_name", endpoint.OracleSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.OracleSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.OracleSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.OracleSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameRedis:
+		// Auth password isn't returned in API. Propagate state value.
+		tfMap := flattenRedisSettings(endpoint.RedisSettings)
+		tfMap["auth_password"] = d.Get("redis_settings.0.auth_password").(string)
+
+		if err := d.Set("redis_settings", []any{tfMap}); err != nil {
+			return fmt.Errorf("setting redis_settings: %w", err)
+		}
+	case engineNameRedshift:
+		if endpoint.RedshiftSettings != nil {
+			d.Set(names.AttrUsername, endpoint.RedshiftSettings.Username)
+			d.Set("server_name", endpoint.RedshiftSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.RedshiftSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.RedshiftSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.RedshiftSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.RedshiftSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
+			return fmt.Errorf("setting redshift_settings: %w", err)
+		}
+	case engineNameSQLServer, engineNameBabelfish:
+		if endpoint.MicrosoftSQLServerSettings != nil {
+			d.Set(names.AttrUsername, endpoint.MicrosoftSQLServerSettings.Username)
+			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.MicrosoftSQLServerSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.MicrosoftSQLServerSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameSybase:
+		if endpoint.SybaseSettings != nil {
+			d.Set(names.AttrUsername, endpoint.SybaseSettings.Username)
+			d.Set("server_name", endpoint.SybaseSettings.ServerName)
+			d.Set(names.AttrPort, endpoint.SybaseSettings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.SybaseSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.SybaseSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.SybaseSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameDB2, engineNameDB2zOS:
+		if endpoint.IBMDb2Settings != nil {
+			d.Set(names.AttrUsername, endpoint.IBMDb2Settings.Username)
+			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
+			d.Set(names.AttrPort, endpoint.IBMDb2Settings.Port)
+			d.Set(names.AttrDatabaseName, endpoint.IBMDb2Settings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.IBMDb2Settings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.IBMDb2Settings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameS3:
+		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
+			return fmt.Errorf("setting s3_settings for DMS: %s", err)
+		}
+	default:
+		d.Set(names.AttrDatabaseName, endpoint.DatabaseName)
+		d.Set(names.AttrPort, endpoint.Port)
+		d.Set("server_name", endpoint.ServerName)
+		d.Set(names.AttrUsername, endpoint.Username)
+	}
+
+	d.Set(names.AttrKMSKeyARN, endpoint.KmsKeyId)
+	d.Set("ssl_mode", endpoint.SslMode)
+
+	return nil
+}
+
+func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]any {
+	if apiObject == nil {
+		return []map[string]any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AddColumnName; v != nil {
+		tfMap["add_column_name"] = aws.ToBool(v)
+	}
+	if v := apiObject.BucketFolder; v != nil {
+		tfMap["bucket_folder"] = aws.ToString(v)
+	}
+	if v := apiObject.BucketName; v != nil {
+		tfMap[names.AttrBucketName] = aws.ToString(v)
+	}
+	tfMap["canned_acl_for_objects"] = string(apiObject.CannedAclForObjects)
+	if v := apiObject.CdcInsertsAndUpdates; v != nil {
+		tfMap["cdc_inserts_and_updates"] = aws.ToBool(v)
+	}
+	if v := apiObject.CdcInsertsOnly; v != nil {
+		tfMap["cdc_inserts_only"] = aws.ToBool(v)
+	}
+	if v := apiObject.CdcMaxBatchInterval; v != nil {
+		tfMap["cdc_max_batch_interval"] = aws.ToInt32(v)
+	}
+	if v := apiObject.CdcMinFileSize; v != nil {
+		tfMap["cdc_min_file_size"] = aws.ToInt32(v)
+	}
+	if v := apiObject.CdcPath; v != nil {
+		tfMap["cdc_path"] = aws.ToString(v)
+	}
+	tfMap["compression_type"] = string(apiObject.CompressionType)
+	if v := apiObject.CsvDelimiter; v != nil {
+		tfMap["csv_delimiter"] = aws.ToString(v)
+	}
+	if v := apiObject.CsvNoSupValue; v != nil {
+		tfMap["csv_no_sup_value"] = aws.ToString(v)
+	}
+	if v := apiObject.CsvNullValue; v != nil {
+		tfMap["csv_null_value"] = aws.ToString(v)
+	}
+	if v := apiObject.CsvRowDelimiter; v != nil {
+		tfMap["csv_row_delimiter"] = aws.ToString(v)
+	}
+	tfMap["data_format"] = string(apiObject.DataFormat)
+	if v := apiObject.DataPageSize; v != nil {
+		tfMap["data_page_size"] = aws.ToInt32(v)
+	}
+	tfMap["date_partition_delimiter"] = string(apiObject.DatePartitionDelimiter)
+	if v := apiObject.DatePartitionEnabled; v != nil {
+		tfMap["date_partition_enabled"] = aws.ToBool(v)
+	}
+	tfMap["date_partition_sequence"] = string(apiObject.DatePartitionSequence)
+	if v := apiObject.DictPageSizeLimit; v != nil {
+		tfMap["dict_page_size_limit"] = aws.ToInt32(v)
+	}
+	if v := apiObject.EnableStatistics; v != nil {
+		tfMap["enable_statistics"] = aws.ToBool(v)
+	}
+	tfMap["encoding_type"] = string(apiObject.EncodingType)
+	tfMap["encryption_mode"] = string(apiObject.EncryptionMode)
+	if v := apiObject.ExternalTableDefinition; v != nil {
+		tfMap["external_table_definition"] = aws.ToString(v)
+	}
+	if v := apiObject.GlueCatalogGeneration; v != nil {
+		tfMap["glue_catalog_generation"] = aws.ToBool(v)
+	}
+	if v := apiObject.IgnoreHeaderRows; v != nil {
+		tfMap["ignore_header_rows"] = aws.ToInt32(v)
+	}
+	if v := apiObject.IncludeOpForFullLoad; v != nil {
+		tfMap["include_op_for_full_load"] = aws.ToBool(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ParquetTimestampInMillisecond; v != nil {
+		tfMap["parquet_timestamp_in_millisecond"] = aws.ToBool(v)
+	}
+	tfMap["parquet_version"] = string(apiObject.ParquetVersion)
+	if v := apiObject.Rfc4180; v != nil {
+		tfMap["rfc_4180"] = aws.ToBool(v)
+	}
+	if v := apiObject.RowGroupLength; v != nil {
+		tfMap["row_group_length"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ServerSideEncryptionKmsKeyId; v != nil {
+		tfMap["server_side_encryption_kms_key_id"] = aws.ToString(v)
+	}
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.ToString(v)
+	}
+	if v := apiObject.TimestampColumnName; v != nil {
+		tfMap["timestamp_column_name"] = aws.ToString(v)
+	}
+	if v := apiObject.UseCsvNoSupValue; v != nil {
+		tfMap["use_csv_no_sup_value"] = aws.ToBool(v)
+	}
+	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
+		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.ToBool(v)
+	}
+
+	return []map[string]any{tfMap}
 }

@@ -71,7 +71,7 @@ var (
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
-	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
+	ResourceSecurityGroupVPCAssociation                   = newSecurityGroupVPCAssociationResource
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -206,6 +206,7 @@ var (
 	FindSecurityGroupByID                                      = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                            = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                           = findSecurityGroupIngressRuleByID
+	FindSecurityGroupVPCAssociationByTwoPartKey                = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSnapshot                                               = findSnapshot
 	FindSnapshotByID                                           = findSnapshotByID
 	FindSpotDatafeedSubscription                               = findSpotDatafeedSubscription
@@ -263,6 +264,7 @@ var (
 	FlattenSecurityGroups                                      = flattenSecurityGroups
 	IPAMServicePrincipal                                       = ipamServicePrincipal
 	InstanceMigrateState                                       = instanceMigrateState
+	InstanceStateUpgradeV1                                     = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                        = keyPairMigrateState
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID

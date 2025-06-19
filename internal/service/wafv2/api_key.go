@@ -37,7 +37,7 @@ func newAPIKeyResource(_ context.Context) (resource.ResourceWithConfigure, error
 }
 
 type apiKeyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[apiKeyResourceModel]
 	framework.WithNoUpdate
 }
 
@@ -232,6 +232,7 @@ func findAPIKeys(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKe
 }
 
 type apiKeyResourceModel struct {
+	framework.WithRegionModel
 	APIKey       types.String                       `tfsdk:"api_key"`
 	Scope        fwtypes.StringEnum[awstypes.Scope] `tfsdk:"scope"`
 	TokenDomains fwtypes.SetOfString                `tfsdk:"token_domains"`

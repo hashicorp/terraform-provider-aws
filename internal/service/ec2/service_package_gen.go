@@ -4,1487 +4,1740 @@ package ec2
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
 			Factory:  newCapacityBlockOfferingDataSource,
 			TypeName: "aws_ec2_capacity_block_offering",
 			Name:     "Capacity Block Offering",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceSpotDataFeedSubscription,
+			Factory:  newSpotDataFeedSubscriptionDataSource,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Data Feed Subscription Data Source",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCEndpointAssociationsDataSource,
 			TypeName: "aws_vpc_endpoint_associations",
 			Name:     "VPC Endpoint Associations",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newIPAMDataSource,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newIPAMsDataSource,
 			TypeName: "aws_vpc_ipams",
 			Name:     "IPAMs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSecurityGroupRuleDataSource,
 			TypeName: "aws_vpc_security_group_rule",
 			Name:     "Security Group Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSecurityGroupRulesDataSource,
 			TypeName: "aws_vpc_security_group_rules",
 			Name:     "Security Group Rules",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newEBSFastSnapshotRestoreResource,
 			TypeName: "aws_ebs_fast_snapshot_restore",
 			Name:     "EBS Fast Snapshot Restore",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newCapacityBlockReservationResource,
 			TypeName: "aws_ec2_capacity_block_reservation",
 			Name:     "Capacity Block Reservation",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newDefaultCreditSpecificationResource,
 			TypeName: "aws_ec2_default_credit_specification",
 			Name:     "Default Credit Specification",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newInstanceConnectEndpointResource,
 			TypeName: "aws_ec2_instance_connect_endpoint",
 			Name:     "Instance Connect Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newInstanceMetadataDefaultsResource,
 			TypeName: "aws_ec2_instance_metadata_defaults",
 			Name:     "Instance Metadata Defaults",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newTransitGatewayDefaultRouteTableAssociationResource,
 			TypeName: "aws_ec2_transit_gateway_default_route_table_association",
 			Name:     "Transit Gateway Default Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newTransitGatewayDefaultRouteTablePropagationResource,
 			TypeName: "aws_ec2_transit_gateway_default_route_table_propagation",
 			Name:     "Transit Gateway Default Route Table Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newEIPDomainNameResource,
 			TypeName: "aws_eip_domain_name",
 			Name:     "EIP Domain Name",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newNetworkInterfacePermissionResource,
 			TypeName: "aws_network_interface_permission",
 			Name:     "Network Interface Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCBlockPublicAccessExclusionResource,
 			TypeName: "aws_vpc_block_public_access_exclusion",
 			Name:     "VPC Block Public Access Exclusion",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCBlockPublicAccessOptionsResource,
 			TypeName: "aws_vpc_block_public_access_options",
 			Name:     "VPC Block Public Access Options",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCEndpointPrivateDNSResource,
 			TypeName: "aws_vpc_endpoint_private_dns",
 			Name:     "VPC Endpoint Private DNS",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCEndpointServicePrivateDNSVerificationResource,
 			TypeName: "aws_vpc_endpoint_service_private_dns_verification",
 			Name:     "VPC Endpoint Service Private DNS Verification",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCRouteServerResource,
 			TypeName: "aws_vpc_route_server",
 			Name:     "VPC Route Server",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "route_server_id",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCRouteServerEndpointResource,
 			TypeName: "aws_vpc_route_server_endpoint",
 			Name:     "VPC Route Server Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "route_server_endpoint_id",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCRouteServerPeerResource,
 			TypeName: "aws_vpc_route_server_peer",
 			Name:     "VPC Route Server Peer",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "route_server_peer_id",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCRouteServerPropagationResource,
 			TypeName: "aws_vpc_route_server_propagation",
 			Name:     "VPC Route Server Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newVPCRouteServerVPCAssociationResource,
 			TypeName: "aws_vpc_route_server_vpc_association",
 			Name:     "VPC Route Server VPC Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSecurityGroupEgressRuleResource,
 			TypeName: "aws_vpc_security_group_egress_rule",
 			Name:     "Security Group Egress Rule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newSecurityGroupIngressRuleResource,
 			TypeName: "aws_vpc_security_group_ingress_rule",
 			Name:     "Security Group Ingress Rule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceSecurityGroupVPCAssociation,
+			Factory:  newSecurityGroupVPCAssociationResource,
 			TypeName: "aws_vpc_security_group_vpc_association",
 			Name:     "Security Group VPC Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAMI,
 			TypeName: "aws_ami",
 			Name:     "AMI",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceAMIIDs,
 			TypeName: "aws_ami_ids",
 			Name:     "AMI IDs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceAvailabilityZone,
 			TypeName: "aws_availability_zone",
 			Name:     "Availability Zone",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceAvailabilityZones,
 			TypeName: "aws_availability_zones",
 			Name:     "Availability Zones",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
 			Name:     "Customer Gateway",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSDefaultKMSKey,
 			TypeName: "aws_ebs_default_kms_key",
 			Name:     "EBS Default KMS Key",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSEncryptionByDefault,
 			TypeName: "aws_ebs_encryption_by_default",
 			Name:     "EBS Encryption By Default",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
 			Name:     "EBS Snapshot",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSSnapshotIDs,
 			TypeName: "aws_ebs_snapshot_ids",
 			Name:     "EBS Snapshot IDs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSVolume,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEBSVolumes,
 			TypeName: "aws_ebs_volumes",
 			Name:     "EBS Volumes",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceClientVPNEndpoint,
 			TypeName: "aws_ec2_client_vpn_endpoint",
 			Name:     "Client VPN Endpoint",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceCoIPPool,
 			TypeName: "aws_ec2_coip_pool",
 			Name:     "COIP Pool",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceCoIPPools,
 			TypeName: "aws_ec2_coip_pools",
 			Name:     "COIP Pools",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceHost,
 			TypeName: "aws_ec2_host",
 			Name:     "Host",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstanceType,
 			TypeName: "aws_ec2_instance_type",
 			Name:     "Instance Type",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstanceTypeOffering,
 			TypeName: "aws_ec2_instance_type_offering",
 			Name:     "Instance Type Offering",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstanceTypeOfferings,
 			TypeName: "aws_ec2_instance_type_offerings",
 			Name:     "Instance Type Offering",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstanceTypes,
 			TypeName: "aws_ec2_instance_types",
 			Name:     "Instance Types",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGateway,
 			TypeName: "aws_ec2_local_gateway",
 			Name:     "Local Gateway",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGatewayRouteTable,
 			TypeName: "aws_ec2_local_gateway_route_table",
 			Name:     "Local Gateway Route Table",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGatewayRouteTables,
 			TypeName: "aws_ec2_local_gateway_route_tables",
 			Name:     "Local Gateway Route Table",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGatewayVirtualInterface,
 			TypeName: "aws_ec2_local_gateway_virtual_interface",
 			Name:     "Local Gateway Virtual Interface",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGatewayVirtualInterfaceGroup,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_group",
 			Name:     "Local Gateway Virtual Interface Group",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGatewayVirtualInterfaceGroups,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_groups",
 			Name:     "Local Gateway Virtual Interface Groups",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLocalGateways,
 			TypeName: "aws_ec2_local_gateways",
 			Name:     "Local Gateways",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
 			Name:     "Managed Prefix List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceManagedPrefixLists,
 			TypeName: "aws_ec2_managed_prefix_lists",
 			Name:     "Managed Prefix Lists",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
 			Name:     "Network Insights Analysis",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
 			Name:     "Network Insights Path",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourcePublicIPv4Pool,
 			TypeName: "aws_ec2_public_ipv4_pool",
 			Name:     "Public IPv4 Pool",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourcePublicIPv4Pools,
 			TypeName: "aws_ec2_public_ipv4_pools",
 			Name:     "Public IPv4 Pools",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSpotPrice,
 			TypeName: "aws_ec2_spot_price",
 			Name:     "Spot Price",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
 			Name:     "Transit Gateway",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_attachment",
 			Name:     "Transit Gateway Attachment",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayAttachments,
 			TypeName: "aws_ec2_transit_gateway_attachments",
 			Name:     "Transit Gateway Attachments",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
 			Name:     "Transit Gateway Connect",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
 			Name:     "Transit Gateway Connect Peer",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayDxGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_dx_gateway_attachment",
 			Name:     "Transit Gateway Direct Connect Gateway Attachment",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 			Name:     "Transit Gateway Multicast Domain",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
 			Name:     "Transit Gateway Peering Attachment",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayPeeringAttachments,
 			TypeName: "aws_ec2_transit_gateway_peering_attachments",
 			Name:     "Transit Gateway Peering Attachments",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
 			Name:     "Transit Gateway Route Table",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayRouteTableAssociations,
 			TypeName: "aws_ec2_transit_gateway_route_table_associations",
 			Name:     "Transit Gateway Route Table Associations",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayRouteTablePropagations,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
 			Name:     "Transit Gateway Route Table Propagations",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayRouteTableRoutes,
 			TypeName: "aws_ec2_transit_gateway_route_table_routes",
 			Name:     "Transit Gateway Route Table Routes",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayRouteTables,
 			TypeName: "aws_ec2_transit_gateway_route_tables",
 			Name:     "Transit Gateway Route Tables",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
 			Name:     "Transit Gateway VPC Attachment",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayVPCAttachments,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachments",
 			Name:     "Transit Gateway VPC Attachments",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceTransitGatewayVPNAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
 			Name:     "Transit Gateway VPN Attachment",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEIP,
 			TypeName: "aws_eip",
 			Name:     "EIP",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceEIPs,
 			TypeName: "aws_eips",
 			Name:     "EIPs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstance,
 			TypeName: "aws_instance",
 			Name:     "Instance",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInstances,
 			TypeName: "aws_instances",
 			Name:     "Instances",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceInternetGateway,
 			TypeName: "aws_internet_gateway",
 			Name:     "Internet Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceKeyPair,
 			TypeName: "aws_key_pair",
 			Name:     "Key Pair",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceLaunchTemplate,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNATGateway,
 			TypeName: "aws_nat_gateway",
 			Name:     "NAT Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNATGateways,
 			TypeName: "aws_nat_gateways",
 			Name:     "NAT Gateways",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNetworkACLs,
 			TypeName: "aws_network_acls",
 			Name:     "Network ACLs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNetworkInterface,
 			TypeName: "aws_network_interface",
 			Name:     "Network Interface",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceNetworkInterfaces,
 			TypeName: "aws_network_interfaces",
 			Name:     "Network Interfaces",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourcePrefixList,
 			TypeName: "aws_prefix_list",
 			Name:     "Prefix List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceRoute,
 			TypeName: "aws_route",
 			Name:     "Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceRouteTable,
 			TypeName: "aws_route_table",
 			Name:     "Route Table",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceRouteTables,
 			TypeName: "aws_route_tables",
 			Name:     "Route Tables",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecurityGroup,
 			TypeName: "aws_security_group",
 			Name:     "Security Group",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecurityGroups,
 			TypeName: "aws_security_groups",
 			Name:     "Security Groups",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
 			Name:     "Subnet",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSubnets,
 			TypeName: "aws_subnets",
 			Name:     "Subnets",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
 			Name:     "DHCP Options",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
 			Name:     "Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "Endpoint Service",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceIPAMPoolCIDRs,
 			TypeName: "aws_vpc_ipam_pool_cidrs",
 			Name:     "IPAM Pool CIDRs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceIPAMPools,
 			TypeName: "aws_vpc_ipam_pools",
 			Name:     "IPAM Pools",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
 			Name:     "IPAM Preview Next CIDR",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPCPeeringConnection,
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceVPCPeeringConnections,
 			TypeName: "aws_vpc_peering_connections",
 			Name:     "VPC Peering Connections",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPCs,
 			TypeName: "aws_vpcs",
 			Name:     "VPCs",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
 			Name:     "VPN Gateway",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAMI,
 			TypeName: "aws_ami",
 			Name:     "AMI",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceAMICopy,
 			TypeName: "aws_ami_copy",
 			Name:     "AMI",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceAMIFromInstance,
 			TypeName: "aws_ami_from_instance",
 			Name:     "AMI",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceAMILaunchPermission,
 			TypeName: "aws_ami_launch_permission",
 			Name:     "AMI Launch Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
 			Name:     "Customer Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultNetworkACL,
 			TypeName: "aws_default_network_acl",
 			Name:     "Network ACL",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultRouteTable,
 			TypeName: "aws_default_route_table",
 			Name:     "Route Table",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultSecurityGroup,
 			TypeName: "aws_default_security_group",
 			Name:     "Security Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultSubnet,
 			TypeName: "aws_default_subnet",
 			Name:     "Subnet",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultVPC,
 			TypeName: "aws_default_vpc",
 			Name:     "Default VPC",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDefaultVPCDHCPOptions,
 			TypeName: "aws_default_vpc_dhcp_options",
 			Name:     "DHCP Options",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSDefaultKMSKey,
 			TypeName: "aws_ebs_default_kms_key",
 			Name:     "EBS Default KMS Key",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSEncryptionByDefault,
 			TypeName: "aws_ebs_encryption_by_default",
 			Name:     "EBS Encryption By Default",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
 			Name:     "EBS Snapshot",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSSnapshotBlockPublicAccess,
 			TypeName: "aws_ebs_snapshot_block_public_access",
 			Name:     "EBS Snapshot Block Public Access",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceEBSSnapshotCopy,
 			TypeName: "aws_ebs_snapshot_copy",
 			Name:     "EBS Snapshot Copy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSSnapshotImport,
 			TypeName: "aws_ebs_snapshot_import",
 			Name:     "EBS Snapshot Import",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEBSVolume,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceAvailabilityZoneGroup,
 			TypeName: "aws_ec2_availability_zone_group",
 			Name:     "Availability Zone Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceCapacityReservation,
 			TypeName: "aws_ec2_capacity_reservation",
 			Name:     "Capacity Reservation",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceCarrierGateway,
 			TypeName: "aws_ec2_carrier_gateway",
 			Name:     "Carrier Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceClientVPNAuthorizationRule,
 			TypeName: "aws_ec2_client_vpn_authorization_rule",
 			Name:     "Client VPN Authorization Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceClientVPNEndpoint,
 			TypeName: "aws_ec2_client_vpn_endpoint",
 			Name:     "Client VPN Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceClientVPNNetworkAssociation,
 			TypeName: "aws_ec2_client_vpn_network_association",
 			Name:     "Client VPN Network Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceClientVPNRoute,
 			TypeName: "aws_ec2_client_vpn_route",
 			Name:     "Client VPN Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceFleet,
 			TypeName: "aws_ec2_fleet",
 			Name:     "Fleet",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceHost,
 			TypeName: "aws_ec2_host",
 			Name:     "Host",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingletonIdentity(),
 		},
 		{
 			Factory:  resourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
 			Name:     "Instance State",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceLocalGatewayRoute,
 			TypeName: "aws_ec2_local_gateway_route",
 			Name:     "Local Gateway Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
 			TypeName: "aws_ec2_local_gateway_route_table_vpc_association",
 			Name:     "Local Gateway Route Table VPC Association",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceManagedPrefixList,
 			TypeName: "aws_ec2_managed_prefix_list",
 			Name:     "Managed Prefix List",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceManagedPrefixListEntry,
 			TypeName: "aws_ec2_managed_prefix_list_entry",
 			Name:     "Managed Prefix List Entry",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
 			Name:     "Network Insights Analysis",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
 			Name:     "Network Insights Path",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
 			Name:     "Serial Console Access",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingletonIdentity(),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceSubnetCIDRReservation,
 			TypeName: "aws_ec2_subnet_cidr_reservation",
 			Name:     "Subnet CIDR Reservation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTag,
 			TypeName: "aws_ec2_tag",
 			Name:     "EC2 Resource Tag",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTrafficMirrorFilter,
 			TypeName: "aws_ec2_traffic_mirror_filter",
 			Name:     "Traffic Mirror Filter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTrafficMirrorFilterRule,
 			TypeName: "aws_ec2_traffic_mirror_filter_rule",
 			Name:     "Traffic Mirror Filter Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTrafficMirrorSession,
 			TypeName: "aws_ec2_traffic_mirror_session",
 			Name:     "Traffic Mirror Session",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTrafficMirrorTarget,
 			TypeName: "aws_ec2_traffic_mirror_target",
 			Name:     "Traffic Mirror Target",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
 			Name:     "Transit Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
 			Name:     "Transit Gateway Connect",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
 			Name:     "Transit Gateway Connect Peer",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 			Name:     "Transit Gateway Multicast Domain",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayMulticastDomainAssociation,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain_association",
 			Name:     "Transit Gateway Multicast Domain Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayMulticastGroupMember,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_member",
 			Name:     "Transit Gateway Multicast Group Member",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayMulticastGroupSource,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
 			Name:     "Transit Gateway Multicast Group Source",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
 			Name:     "Transit Gateway Peering Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment_accepter",
 			Name:     "Transit Gateway Peering Attachment Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayPolicyTable,
 			TypeName: "aws_ec2_transit_gateway_policy_table",
 			Name:     "Transit Gateway Policy Table",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayPolicyTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_policy_table_association",
 			Name:     "Transit Gateway Policy Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayPrefixListReference,
 			TypeName: "aws_ec2_transit_gateway_prefix_list_reference",
 			Name:     "Transit Gateway Prefix List Reference",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayRoute,
 			TypeName: "aws_ec2_transit_gateway_route",
 			Name:     "Transit Gateway Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
 			Name:     "Transit Gateway Route Table",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_route_table_association",
 			Name:     "Transit Gateway Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayRouteTablePropagation,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagation",
 			Name:     "Transit Gateway Route Table Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
 			Name:     "Transit Gateway VPC Attachment",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceTransitGatewayVPCAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment_accepter",
 			Name:     "Transit Gateway VPC Attachment Accepter",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
 			Name:     "Egress-Only Internet Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEIP,
 			TypeName: "aws_eip",
 			Name:     "EIP",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceEIPAssociation,
 			TypeName: "aws_eip_association",
 			Name:     "EIP Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceFlowLog,
 			TypeName: "aws_flow_log",
 			Name:     "Flow Log",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceInstance,
 			TypeName: "aws_instance",
 			Name:     "Instance",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceInternetGateway,
 			TypeName: "aws_internet_gateway",
 			Name:     "Internet Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceInternetGatewayAttachment,
 			TypeName: "aws_internet_gateway_attachment",
 			Name:     "Internet Gateway Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceKeyPair,
 			TypeName: "aws_key_pair",
 			Name:     "Key Pair",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "key_pair_id",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceLaunchTemplate,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceMainRouteTableAssociation,
 			TypeName: "aws_main_route_table_association",
 			Name:     "Main Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNATGateway,
 			TypeName: "aws_nat_gateway",
 			Name:     "NAT Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkACL,
 			TypeName: "aws_network_acl",
 			Name:     "Network ACL",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkACLAssociation,
 			TypeName: "aws_network_acl_association",
 			Name:     "Network ACL Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkACLRule,
 			TypeName: "aws_network_acl_rule",
 			Name:     "Network ACL Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkInterface,
 			TypeName: "aws_network_interface",
 			Name:     "Network Interface",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkInterfaceAttachment,
 			TypeName: "aws_network_interface_attachment",
 			Name:     "Network Interface Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkInterfaceSGAttachment,
 			TypeName: "aws_network_interface_sg_attachment",
 			Name:     "Network Interface SG Attachement",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourcePlacementGroup,
 			TypeName: "aws_placement_group",
 			Name:     "Placement Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "placement_group_id",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceRoute,
 			TypeName: "aws_route",
 			Name:     "Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceRouteTable,
 			TypeName: "aws_route_table",
 			Name:     "Route Table",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceRouteTableAssociation,
 			TypeName: "aws_route_table_association",
 			Name:     "Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSecurityGroup,
 			TypeName: "aws_security_group",
 			Name:     "Security Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSecurityGroupRule,
 			TypeName: "aws_security_group_rule",
 			Name:     "Security Group Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSnapshotCreateVolumePermission,
 			TypeName: "aws_snapshot_create_volume_permission",
 			Name:     "EBS Snapshot CreateVolume Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSpotDataFeedSubscription,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Datafeed Subscription",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSpotFleetRequest,
 			TypeName: "aws_spot_fleet_request",
 			Name:     "Spot Fleet Request",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSpotInstanceRequest,
 			TypeName: "aws_spot_instance_request",
 			Name:     "Spot Instance Request",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSubnet,
 			TypeName: "aws_subnet",
 			Name:     "Subnet",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessEndpoint,
 			TypeName: "aws_verifiedaccess_endpoint",
 			Name:     "Verified Access Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessGroup,
 			TypeName: "aws_verifiedaccess_group",
 			Name:     "Verified Access Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessInstance,
 			TypeName: "aws_verifiedaccess_instance",
 			Name:     "Verified Access Instance",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessInstanceLoggingConfiguration,
 			TypeName: "aws_verifiedaccess_instance_logging_configuration",
 			Name:     "Verified Access Instance Logging Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessInstanceTrustProviderAttachment,
 			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
 			Name:     "Verified Access Instance Trust Provider Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVerifiedAccessTrustProvider,
 			TypeName: "aws_verifiedaccess_trust_provider",
 			Name:     "Verified Access Trust Provider",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
 			Name:     "EBS Volume Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCDHCPOptions,
 			TypeName: "aws_vpc_dhcp_options",
 			Name:     "DHCP Options",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCDHCPOptionsAssociation,
 			TypeName: "aws_vpc_dhcp_options_association",
 			Name:     "VPC DHCP Options Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
 			Name:     "VPC Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointConnectionAccepter,
 			TypeName: "aws_vpc_endpoint_connection_accepter",
 			Name:     "VPC Endpoint Connection Accepter",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointConnectionNotification,
 			TypeName: "aws_vpc_endpoint_connection_notification",
 			Name:     "VPC Endpoint Connection Notification",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointPolicy,
 			TypeName: "aws_vpc_endpoint_policy",
 			Name:     "VPC Endpoint Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointRouteTableAssociation,
 			TypeName: "aws_vpc_endpoint_route_table_association",
 			Name:     "VPC Endpoint Route Table Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointSecurityGroupAssociation,
 			TypeName: "aws_vpc_endpoint_security_group_association",
 			Name:     "VPC Endpoint Security Group Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointService,
 			TypeName: "aws_vpc_endpoint_service",
 			Name:     "VPC Endpoint Service",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointServiceAllowedPrincipal,
 			TypeName: "aws_vpc_endpoint_service_allowed_principal",
 			Name:     "Endpoint Service Allowed Principal",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCEndpointSubnetAssociation,
 			TypeName: "aws_vpc_endpoint_subnet_association",
 			Name:     "VPC Endpoint Subnet Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAM,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMOrganizationAdminAccount,
 			TypeName: "aws_vpc_ipam_organization_admin_account",
 			Name:     "IPAM Organization Admin Account",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMPoolCIDR,
 			TypeName: "aws_vpc_ipam_pool_cidr",
 			Name:     "IPAM Pool CIDR",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMPoolCIDRAllocation,
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
 			Name:     "IPAM Pool CIDR Allocation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
 			Name:     "IPAM Preview Next CIDR",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMResourceDiscovery,
 			TypeName: "aws_vpc_ipam_resource_discovery",
 			Name:     "IPAM Resource Discovery",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMResourceDiscoveryAssociation,
 			TypeName: "aws_vpc_ipam_resource_discovery_association",
 			Name:     "IPAM Resource Discovery Association",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceIPAMScope,
 			TypeName: "aws_vpc_ipam_scope",
 			Name:     "IPAM Scope",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCIPv4CIDRBlockAssociation,
 			TypeName: "aws_vpc_ipv4_cidr_block_association",
 			Name:     "VPC IPV4 CIDR Block Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCIPv6CIDRBlockAssociation,
 			TypeName: "aws_vpc_ipv6_cidr_block_association",
 			Name:     "VPC IPV6 CIDR Block Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceNetworkPerformanceMetricSubscription,
 			TypeName: "aws_vpc_network_performance_metric_subscription",
 			Name:     "VPC Network Performance Metric Subscription",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCPeeringConnection,
 			TypeName: "aws_vpc_peering_connection",
 			Name:     "VPC Peering Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCPeeringConnectionAccepter,
 			TypeName: "aws_vpc_peering_connection_accepter",
 			Name:     "VPC Peering Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPCPeeringConnectionOptions,
 			TypeName: "aws_vpc_peering_connection_options",
 			Name:     "VPC Peering Connection Options",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPNConnection,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPNConnectionRoute,
 			TypeName: "aws_vpn_connection_route",
 			Name:     "VPN Connection Route",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
 			Name:     "VPN Gateway",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPNGatewayAttachment,
 			TypeName: "aws_vpn_gateway_attachment",
 			Name:     "VPN Gateway Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceVPNGatewayRoutePropagation,
 			TypeName: "aws_vpn_gateway_route_propagation",
 			Name:     "VPN Gateway Route Propagation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -1499,6 +1752,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*ec2.Options){
 		ec2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *ec2.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *ec2.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

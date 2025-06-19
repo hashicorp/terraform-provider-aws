@@ -52,7 +52,7 @@ func sweepAccountAssignments(region string) error {
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -113,7 +113,7 @@ func sweepAccountAssignments(region string) error {
 					targetID := aws.ToString(a.AccountId)
 					targetType := awstypes.TargetTypeAwsAccount // only valid value currently accepted by API
 
-					r := ResourceAccountAssignment()
+					r := resourceAccountAssignment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
@@ -137,14 +137,13 @@ func sweepApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
-
 	var sweepResources []sweep.Sweepable
 
 	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -156,10 +155,9 @@ func sweepApplications(region string) error {
 	}
 
 	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
-		instanceArn := v.([]any)[0].(string)
-
+		instanceARN := v.([]any)[0].(string)
 		input := ssoadmin.ListApplicationsInput{
-			InstanceArn: aws.String(instanceArn),
+			InstanceArn: aws.String(instanceARN),
 		}
 
 		paginator := ssoadmin.NewListApplicationsPaginator(conn, &input)
@@ -175,7 +173,9 @@ func sweepApplications(region string) error {
 
 			for _, application := range page.Applications {
 				applicationARN := aws.ToString(application.ApplicationArn)
-				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client, framework.NewAttribute("application_arn", applicationARN)))
+				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
+
+				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}
 	}
@@ -194,14 +194,13 @@ func sweepPermissionSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.SSOAdminClient(ctx)
-
 	var sweepResources []sweep.Sweepable
 
 	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
-	ds := DataSourceInstances()
+	ds := dataSourceInstances()
 	dsData := ds.Data(nil)
 
 	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
@@ -213,10 +212,9 @@ func sweepPermissionSets(region string) error {
 	}
 
 	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]any)) > 0 {
-		instanceArn := v.([]any)[0].(string)
-
+		instanceARN := v.([]any)[0].(string)
 		input := ssoadmin.ListPermissionSetsInput{
-			InstanceArn: aws.String(instanceArn),
+			InstanceArn: aws.String(instanceARN),
 		}
 
 		paginator := ssoadmin.NewListPermissionSetsPaginator(conn, &input)
@@ -230,10 +228,12 @@ func sweepPermissionSets(region string) error {
 				return fmt.Errorf("error listing SSO Permission Sets: %w", err)
 			}
 
-			for _, permissionSetArn := range page.PermissionSets {
-				r := ResourcePermissionSet()
+			for _, permissionSetARN := range page.PermissionSets {
+				log.Printf("[INFO] Deleting SSO Permission Set: %s", permissionSetARN)
+
+				r := resourcePermissionSet()
 				d := r.Data(nil)
-				d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
+				d.SetId(fmt.Sprintf("%s,%s", permissionSetARN, instanceARN))
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}

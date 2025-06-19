@@ -40,6 +40,7 @@ func newPodIdentityAssociationResource(_ context.Context) (resource.ResourceWith
 }
 
 type podIdentityAssociationResourceModel struct {
+	framework.WithRegionModel
 	AssociationARN     types.String `tfsdk:"association_arn"`
 	AssociationID      types.String `tfsdk:"association_id"`
 	ClusterName        types.String `tfsdk:"cluster_name"`
@@ -49,9 +50,9 @@ type podIdentityAssociationResourceModel struct {
 	Namespace          types.String `tfsdk:"namespace"`
 	RoleARN            fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount     types.String `tfsdk:"service_account"`
-	TargetRoleARN      fwtypes.ARN  `tfsdk:"target_role_arn"`
 	Tags               tftags.Map   `tfsdk:"tags"`
 	TagsAll            tftags.Map   `tfsdk:"tags_all"`
+	TargetRoleARN      fwtypes.ARN  `tfsdk:"target_role_arn"`
 }
 
 func (model *podIdentityAssociationResourceModel) setID() {
@@ -63,7 +64,7 @@ const (
 )
 
 type podIdentityAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[podIdentityAssociationResourceModel]
 }
 
 func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

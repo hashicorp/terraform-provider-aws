@@ -22,6 +22,7 @@ resource "aws_efs_access_point" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Required) ID of the file system for which the access point is intended.
 * `posix_user` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.
 * `root_directory`- (Optional) Directory on the Amazon EFS file system that the access point provides access to. [Detailed](#root_directory) below.

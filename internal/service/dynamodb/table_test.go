@@ -3836,6 +3836,7 @@ data "aws_kms_alias" "dynamodb" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -3861,6 +3862,7 @@ func testAccTableConfig_initialStateEncryptionBYOK(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -4519,7 +4521,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -4550,7 +4552,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName, sseEnabled))
@@ -4567,12 +4569,14 @@ data "aws_region" "alternate" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "awsalternate" {
   provider                = "awsalternate"
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -4588,7 +4592,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.awsalternate.arn
   }
 
@@ -4631,11 +4635,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 
   server_side_encryption {
@@ -4666,30 +4670,35 @@ data "aws_region" "third" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "awsalternate1" {
   provider                = "awsalternate"
   description             = "%[1]s-1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "awsalternate2" {
   provider                = "awsalternate"
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "awsthird1" {
   provider                = "awsthird"
   description             = "%[1]s-1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "awsthird2" {
   provider                = "awsthird"
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -4705,12 +4714,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.%[2]s.arn
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
     kms_key_arn = aws_kms_key.%[3]s.arn
   }
 
@@ -4757,12 +4766,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
   }
 }
@@ -4784,18 +4793,21 @@ data "aws_region" "third" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "alternate" {
   provider                = awsalternate
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "third" {
   provider                = awsthird
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -4820,13 +4832,13 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
     kms_key_arn            = aws_kms_key.alternate.arn
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
     kms_key_arn            = aws_kms_key.third.arn
   }
@@ -4859,12 +4871,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = data.aws_region.alternate.name
+    region_name    = data.aws_region.alternate.region
     propagate_tags = %[4]t
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = %[5]t
   }
 
@@ -4902,11 +4914,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 }
 `, rName))
@@ -5164,7 +5176,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   stream_enabled   = %[2]t
@@ -5266,6 +5278,7 @@ resource "aws_dynamodb_table" "source" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -5307,6 +5320,7 @@ resource "aws_dynamodb_table" "source" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -5361,6 +5375,7 @@ resource "aws_kms_key" "test" {
 
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -5391,6 +5406,7 @@ resource "aws_kms_key" "test_restore" {
 
   description             = "%[1]s-restore"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test_restore" {

@@ -64,6 +64,6 @@ const testAccServiceAccountDataSourceConfig_region = `
 data "aws_region" "current" {}
 
 data "aws_cloudtrail_service_account" "regional" {
-  region = data.aws_region.current.name
+  region = data.aws_region.current.region
 }
 `

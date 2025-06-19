@@ -42,7 +42,7 @@ func newNetworkSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type networkSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[networkSettingsResourceModel]
 }
 
 func (r *networkSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -249,6 +249,7 @@ func findNetworkSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 }
 
 type networkSettingsResourceModel struct {
+	framework.WithRegionModel
 	AssociatedPortalARNs fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
 	NetworkSettingsARN   types.String         `tfsdk:"network_settings_arn"`
 	SecurityGroupIDs     fwtypes.SetOfString  `tfsdk:"security_group_ids"`

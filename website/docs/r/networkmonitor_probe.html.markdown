@@ -34,6 +34,7 @@ resource "aws_networkmonitor_probe" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `destination` - (Required) The destination IP address. This must be either IPV4 or IPV6.
 - `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
 - `monitor_name` - (Required) The name of the monitor.

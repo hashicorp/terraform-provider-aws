@@ -51,7 +51,7 @@ func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 type pipelineResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[pipelineResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -479,6 +479,7 @@ func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, ti
 }
 
 type pipelineResourceModel struct {
+	framework.WithRegionModel
 	BufferOptions             fwtypes.ListNestedObjectValueOf[bufferOptionsModel]           `tfsdk:"buffer_options"`
 	EncryptionAtRestOptions   fwtypes.ListNestedObjectValueOf[encryptionAtRestOptionsModel] `tfsdk:"encryption_at_rest_options"`
 	ID                        types.String                                                  `tfsdk:"id"`

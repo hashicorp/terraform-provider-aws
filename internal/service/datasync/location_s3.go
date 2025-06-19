@@ -27,17 +27,16 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_s3", name="Location S3")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationS3Output")
+// @Testing(preCheck="testAccPreCheck")
 func resourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,
 		ReadWithoutTimeout:   resourceLocationS3Read,
 		UpdateWithoutTimeout: resourceLocationS3Update,
 		DeleteWithoutTimeout: resourceLocationS3Delete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"agent_arns": {

@@ -5,34 +5,40 @@ package auditmanager
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_auditmanager_account_registration", name="Account Registration")
-func newResourceAccountRegistration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAccountRegistration{}, nil
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(generator=false)
+// @Testing(hasExistsFunction=false, checkDestroyNoop=true)
+func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &accountRegistrationResource{}, nil
 }
 
-const (
-	ResNameAccountRegistration = "AccountRegistration"
-)
-
-type resourceAccountRegistration struct {
-	framework.ResourceWithConfigure
+type accountRegistrationResource struct {
+	framework.ResourceWithModel[accountRegistrationResourceModel]
+	framework.WithImportRegionalSingleton
 }
 
-func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *accountRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"delegated_admin_account": schema.StringAttribute{
 				Optional: true,
@@ -43,7 +49,7 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 			names.AttrKMSKey: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
@@ -51,136 +57,203 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceAccountRegistration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-	// Registration is applied per region, so use this as the ID
-	id := r.Meta().Region(ctx)
-
-	var plan resourceAccountRegistrationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *accountRegistrationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data accountRegistrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := auditmanager.RegisterAccountInput{}
-	if !plan.DelegatedAdminAccount.IsNull() {
-		in.DelegatedAdminAccount = plan.DelegatedAdminAccount.ValueStringPointer()
-	}
-	if !plan.KmsKey.IsNull() {
-		in.KmsKey = plan.KmsKey.ValueStringPointer()
-	}
-	out, err := conn.RegisterAccount(ctx, &in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameAccountRegistration, id, nil),
-			err.Error(),
-		)
+	output, diags := r.registerAccount(ctx, data)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state := plan
-	state.ID = types.StringValue(id)
-	state.Status = flex.StringValueToFramework(ctx, out.Status)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().Region(ctx)) // Registration is applied per region, so use this as the ID.
+	data.Status = fwflex.StringValueToFramework(ctx, output.Status)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceAccountRegistration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceAccountRegistrationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *accountRegistrationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data accountRegistrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	// There is no API to get account registration attributes like delegated admin account
 	// and KMS key. Read will instead call the GetAccountStatus API to confirm an active
 	// account status.
-	out, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameAccountRegistration, state.ID.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out.Status == awstypes.AccountStatusInactive {
-		resp.State.RemoveResource(ctx)
+	output, err := findAccountRegistration(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	state.Status = flex.StringValueToFramework(ctx, out.Status)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Account Registration (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	data.Status = fwflex.StringValueToFramework(ctx, output.Status)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAccountRegistration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var plan, state resourceAccountRegistrationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *accountRegistrationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old accountRegistrationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.DelegatedAdminAccount.Equal(state.DelegatedAdminAccount) ||
-		!plan.KmsKey.Equal(state.KmsKey) {
-		in := auditmanager.RegisterAccountInput{}
-		if !plan.DelegatedAdminAccount.IsNull() {
-			in.DelegatedAdminAccount = plan.DelegatedAdminAccount.ValueStringPointer()
-		}
-		if !plan.KmsKey.IsNull() {
-			in.KmsKey = plan.KmsKey.ValueStringPointer()
-		}
-		out, err := conn.RegisterAccount(ctx, &in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameAccountRegistration, state.ID.String(), nil),
-				err.Error(),
-			)
+	if !new.DelegatedAdminAccount.Equal(old.DelegatedAdminAccount) ||
+		!new.KMSKey.Equal(old.KMSKey) {
+		output, diags := r.registerAccount(ctx, new)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		state.DelegatedAdminAccount = plan.DelegatedAdminAccount
-		state.KmsKey = plan.KmsKey
-		state.Status = flex.StringValueToFramework(ctx, out.Status)
+		// Set values for unknowns.
+		new.Status = fwflex.StringValueToFramework(ctx, output.Status)
+	} else {
+		new.Status = old.Status
 	}
 
-	if !plan.DeregisterOnDestroy.Equal(state.DeregisterOnDestroy) {
-		state.DeregisterOnDestroy = plan.DeregisterOnDestroy
-	}
+	new.DeregisterOnDestroy = old.DeregisterOnDestroy
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceAccountRegistrationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *accountRegistrationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data accountRegistrationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if state.DeregisterOnDestroy.ValueBool() {
-		_, err := conn.DeregisterAccount(ctx, &auditmanager.DeregisterAccountInput{})
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	if data.DeregisterOnDestroy.ValueBool() {
+		input := auditmanager.DeregisterAccountInput{}
+		_, err := conn.DeregisterAccount(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameAccountRegistration, state.ID.String(), nil),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("deregistering Audit Manager Account (%s)", data.ID.ValueString()), err.Error())
+
+			return
 		}
 	}
 }
 
-func (r *resourceAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *accountRegistrationResource) registerAccount(ctx context.Context, data accountRegistrationResourceModel) (*auditmanager.GetAccountStatusOutput, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var input auditmanager.RegisterAccountInput
+	diags.Append(fwflex.Expand(ctx, data, &input)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	conn := r.Meta().AuditManagerClient(ctx)
+	id := r.Meta().Region(ctx)
+
+	_, err := conn.RegisterAccount(ctx, &input)
+
+	if err != nil {
+		diags.AddError(fmt.Sprintf("registering Audit Manager Account (%s)", id), err.Error())
+
+		return nil, diags
+	}
+
+	output, err := waitAccountRegistered(ctx, conn)
+
+	if err != nil {
+		diags.AddError(fmt.Sprintf("waiting for Audit Manager Account (%s) registered", id), err.Error())
+
+		return nil, diags
+	}
+
+	return output, diags
 }
 
-type resourceAccountRegistrationData struct {
+func findAccountRegistration(ctx context.Context, conn *auditmanager.Client) (*auditmanager.GetAccountStatusOutput, error) {
+	input := auditmanager.GetAccountStatusInput{}
+	output, err := conn.GetAccountStatus(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Status; status == awstypes.AccountStatusInactive {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusAccountRegistration(ctx context.Context, conn *auditmanager.Client) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findAccountRegistration(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitAccountRegistered(ctx context.Context, conn *auditmanager.Client) (*auditmanager.GetAccountStatusOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AccountStatusPendingActivation),
+		Target:  enum.Slice(awstypes.AccountStatusActive),
+		Refresh: statusAccountRegistration(ctx, conn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*auditmanager.GetAccountStatusOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+type accountRegistrationResourceModel struct {
+	framework.WithRegionModel
 	DelegatedAdminAccount types.String `tfsdk:"delegated_admin_account"`
 	DeregisterOnDestroy   types.Bool   `tfsdk:"deregister_on_destroy"`
-	KmsKey                types.String `tfsdk:"kms_key"`
+	KMSKey                types.String `tfsdk:"kms_key"`
 	ID                    types.String `tfsdk:"id"`
 	Status                types.String `tfsdk:"status"`
 }

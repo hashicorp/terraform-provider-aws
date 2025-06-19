@@ -7,12 +7,10 @@ import (
 	"context"
 	"log"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,26 +31,16 @@ import (
 
 // @SDKResource("aws_appflow_flow", name="Flow")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @ArnFormat("flow/{name}", attribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
+// @Testing(idAttrDuplicates="name")
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,
 		ReadWithoutTimeout:   resourceFlowRead,
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				p, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, err
-				}
-				name := strings.TrimPrefix(p.Resource, "flow/")
-				d.Set(names.AttrName, name)
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -1378,13 +1366,12 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.KmsArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateFlow(ctx, input)
-
+	_, err := conn.CreateFlow(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppFlow Flow (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.FlowArn))
+	d.SetId(name)
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
 }

@@ -54,7 +54,7 @@ func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type clusterResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
 }
 
@@ -518,6 +518,7 @@ func normalizeMultiRegionProperties(output *dsql.GetClusterOutput) *awstypes.Mul
 }
 
 type clusterResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String                                                `tfsdk:"arn"`
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
 	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`

@@ -29,6 +29,7 @@ resource "aws_sagemaker_device_fleet" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_fleet_name` - (Required) The name of the Device Fleet (must be unique).
 * `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
 * `output_config` - (Required) Specifies details about the repository. see [Output Config](#output-config) details below.

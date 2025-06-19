@@ -302,7 +302,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     asn_ranges         = ["64512-64555"]
     inside_cidr_blocks = ["172.16.0.0/16"]
     edge_locations {
-      location           = data.aws_region.current.name
+      location           = data.aws_region.current.region
       asn                = 64512
       inside_cidr_blocks = ["172.16.0.0/18"]
     }
