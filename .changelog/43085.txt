@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Replace deprecated `data.aws_region.current.name` with `data.aws_region.current.region` in tests and documentation
+```
