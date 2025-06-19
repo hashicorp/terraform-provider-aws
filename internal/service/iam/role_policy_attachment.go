@@ -198,15 +198,15 @@ func (_ rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
 	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
 }
 
-func (_ rolePolicyAttachmentImportID) Parse(id string) (map[string]string, error) {
+func (_ rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)
 	}
 
 	result := map[string]string{
 		names.AttrRole: parts[0],
 		"policy_arn":   parts[1],
 	}
-	return result, nil
+	return id, result, nil
 }

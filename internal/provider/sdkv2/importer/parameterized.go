@@ -90,11 +90,12 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 
 func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
 	if rd.Id() != "" {
-		parts, err := importSpec.ImportID.Parse(rd.Id())
+		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
 			return err
 		}
 
+		rd.SetId(id)
 		for attr, val := range parts {
 			rd.Set(attr, val)
 		}
@@ -138,11 +139,12 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 
 func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
 	if rd.Id() != "" {
-		parts, err := importSpec.ImportID.Parse(rd.Id())
+		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
 			return err
 		}
 
+		rd.SetId(id)
 		for attr, val := range parts {
 			rd.Set(attr, val)
 		}

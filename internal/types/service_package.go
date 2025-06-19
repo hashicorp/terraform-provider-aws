@@ -314,7 +314,7 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 
 type ImportID interface {
 	Create(d *schema.ResourceData) string
-	Parse(id string) (map[string]string, error)
+	Parse(id string) (string, map[string]string, error)
 }
 
 type Import struct {
