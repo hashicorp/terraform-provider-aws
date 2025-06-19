@@ -560,7 +560,7 @@ func TestAccS3TablesTable_metadata(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.name", "id"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.name", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.required", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.name", acctest.CtName),

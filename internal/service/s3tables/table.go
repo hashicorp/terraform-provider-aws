@@ -160,7 +160,7 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"schema": schema.ListNestedBlock{
+									names.AttrSchema: schema.ListNestedBlock{
 										Description: "Schema configuration for the Iceberg table.",
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
