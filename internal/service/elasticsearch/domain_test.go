@@ -823,8 +823,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T)
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"enabled":  acctest.CtTrue,
-						"log_type": string(awstypes.LogTypeIndexSlowLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeIndexSlowLogs),
 					}),
 				),
 			},
@@ -860,8 +860,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"enabled":  acctest.CtTrue,
-						"log_type": string(awstypes.LogTypeSearchSlowLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeSearchSlowLogs),
 					}),
 				),
 			},
@@ -897,8 +897,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_esApplicationLogs(t *testin
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"enabled":  acctest.CtTrue,
-						"log_type": string(awstypes.LogTypeEsApplicationLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeEsApplicationLogs),
 					}),
 				),
 			},
@@ -934,8 +934,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
-						"enabled":  acctest.CtTrue,
-						"log_type": string(awstypes.LogTypeAuditLogs),
+						names.AttrEnabled: acctest.CtTrue,
+						"log_type":        string(awstypes.LogTypeAuditLogs),
 					}),
 				),
 			},
@@ -981,8 +981,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_disable(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(false),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(false),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 					})),
 				},
@@ -1001,8 +1001,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_disable(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 					})),
 				},
@@ -1021,8 +1021,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_disable(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(false),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(false),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 					})),
 				},
@@ -1075,12 +1075,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
 						}),
 					})),
 				},
@@ -1107,8 +1107,8 @@ func TestAccElasticsearchDomain_LogPublishingOptions_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 					})),
 				},
@@ -1127,12 +1127,12 @@ func TestAccElasticsearchDomain_LogPublishingOptions_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetSizeExact(2)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("log_publishing_options"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeIndexSlowLogs),
 						}),
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"enabled":  knownvalue.Bool(true),
-							"log_type": tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
+							names.AttrEnabled: knownvalue.Bool(true),
+							"log_type":        tfknownvalue.StringExact(awstypes.LogTypeSearchSlowLogs),
 						}),
 					})),
 				},
