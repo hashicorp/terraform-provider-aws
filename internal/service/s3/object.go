@@ -44,7 +44,6 @@ import (
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags(identifierAttribute="arn", resourceType="Object")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
-// @Testing(importStateIdFunc=testAccObjectImportStateIdFunc)
 // @Testing(importIgnore="force_destroy")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
@@ -438,16 +437,13 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
-	parts := strings.Split(id, "/")
 
-	if len(parts) < 2 {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+	bucket, key, err := parseObjectImportID(id)
+	if err != nil {
+		return nil, err
 	}
 
-	bucket := parts[0]
-	key := strings.Join(parts[1:], "/")
-
-	d.SetId(key)
+	d.SetId(id)
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrKey, key)
 
@@ -600,7 +596,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(d.Get(names.AttrKey).(string))
+		d.SetId(createObjectImportID(d))
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
@@ -765,4 +761,17 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]any) *tftags.Defaul
 	}
 
 	return data
+}
+
+func createObjectImportID(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s/%s", d.Get(names.AttrBucket).(string), d.Get(names.AttrKey).(string))
+}
+
+func parseObjectImportID(id string) (bucket, key string, err error) {
+	bucket, key, found := strings.Cut(id, "/")
+	if !found {
+		err = fmt.Errorf("id \"%s\" should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+		return
+	}
+	return
 }
