@@ -1,4 +1,10 @@
 ## 6.1.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0. ([#43090](https://github.com/hashicorp/terraform-provider-aws/issues/43090))
+* resource/aws_quicksight_user: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `email` ([#43014](https://github.com/hashicorp/terraform-provider-aws/issues/43014))
+
 ## 6.0.0 (June 18, 2025)
 
 BREAKING CHANGES:
