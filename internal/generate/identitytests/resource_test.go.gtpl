@@ -187,7 +187,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
-			{{ end }}
+			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 		{{ end -}}
@@ -227,6 +227,10 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+		{{ else if gt (len .IdentityAttributes) 0 -}}
+			{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -453,6 +457,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .IDAttrFormat "" -}}
+						tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{{ .IDAttrFormat }}"),
+					{{ end -}}
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
 							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
