@@ -233,15 +233,15 @@ func (_ rolePolicyImportID) Create(d *schema.ResourceData) string {
 	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
 }
 
-func (_ rolePolicyImportID) Parse(id string) (map[string]string, error) {
+func (_ rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
 	roleName, policyName, err := rolePolicyParseID(id)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 
 	result := map[string]string{
 		names.AttrRole: roleName,
 		names.AttrName: policyName,
 	}
-	return result, nil
+	return id, result, nil
 }
