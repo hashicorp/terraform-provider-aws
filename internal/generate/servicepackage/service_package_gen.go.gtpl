@@ -273,12 +273,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{- end }}
 						),
 					{{- else }}
-						// Regional Parameterized Identity with more than one attribute not supported
-						/*Identity: inttypes.RegionalParameterizedIdentity(
+						Identity: inttypes.RegionalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),*/
+						),
 					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
