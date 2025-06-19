@@ -10,6 +10,7 @@ package s3
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -529,5 +530,10 @@ func createBucketObjectImportID(d *schema.ResourceData) string {
 }
 
 func parseBucketObjectImportID(id string) (bucket, key string, err error) {
-	return parseObjectImportID(id)
+	bucket, key, found := strings.Cut(id, "/")
+	if !found {
+		err = fmt.Errorf("id \"%s\" should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+		return
+	}
+	return
 }
