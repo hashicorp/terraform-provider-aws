@@ -222,7 +222,7 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_chimesdkvoice_sip_media_application" "test" {
   name       = %[1]q
-  aws_region = data.aws_region.current.name
+  aws_region = data.aws_region.current.region
   endpoints {
     lambda_arn = aws_lambda_function.test.arn
   }
@@ -243,7 +243,7 @@ resource "aws_chimesdkvoice_sip_rule" "test" {
   target_applications {
     priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-    aws_region               = data.aws_region.current.name
+    aws_region               = data.aws_region.current.region
   }
 }
 `, rName))
@@ -261,7 +261,7 @@ resource "aws_chimesdkvoice_sip_rule" "test" {
   target_applications {
     priority                 = 1
     sip_media_application_id = aws_chimesdkvoice_sip_media_application.test.id
-    aws_region               = data.aws_region.current.name
+    aws_region               = data.aws_region.current.region
   }
 }
 `, rName))

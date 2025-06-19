@@ -59,6 +59,7 @@ Upgrade topics:
 - [Resource `aws_cloudtrail_event_data_store`](#typenullablebool-validation-update)
 - [Resource `aws_cognito_user_in_group`](#resource-aws_cognito_user_in_group)
 - [Resource `aws_config_aggregate_authorization`](#resource-aws_config_aggregate_authorization)
+- [Resource `aws_cur_report_definition`](#resource-aws_cur_report_definition)
 - [Resource `aws_db_instance`](#resource-aws_db_instance)
 - [Resource `aws_dms_endpoint`](#resource-aws_dms_endpoint)
 - [Resource `aws_dx_gateway_association`](#resource-aws_dx_gateway_association)
@@ -508,6 +509,10 @@ For the `id`, use a comma-delimited string concatenating `user_pool_id`, `group_
 ## Resource `aws_config_aggregate_authorization`
 
 `region` has been deprecated. Use `authorized_aws_region` instead.
+
+## Resource `aws_cur_report_definition`
+
+`s3_prefix` is now required.
 
 ## Resource `aws_db_instance`
 

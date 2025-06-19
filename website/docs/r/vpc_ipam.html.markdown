@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam" "main" {
   description = "My IPAM"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -51,7 +51,7 @@ variable "ipam_regions" {
 
 locals {
   # ensure current provider region is an operating_regions entry
-  all_ipam_regions = distinct(concat([data.aws_region.current.name], var.ipam_regions))
+  all_ipam_regions = distinct(concat([data.aws_region.current.region], var.ipam_regions))
 }
 ```
 

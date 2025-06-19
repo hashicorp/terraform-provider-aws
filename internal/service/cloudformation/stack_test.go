@@ -1007,7 +1007,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -1029,7 +1029,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }

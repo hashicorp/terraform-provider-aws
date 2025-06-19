@@ -45,7 +45,7 @@ data "aws_lambda_invocation" "resource_config" {
 
   input = jsonencode({
     environment = var.environment
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     service     = "api"
   })
 }

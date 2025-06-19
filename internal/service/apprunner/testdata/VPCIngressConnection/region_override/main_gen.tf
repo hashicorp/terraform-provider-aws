@@ -47,7 +47,7 @@ resource "aws_vpc_endpoint" "test" {
   region = var.region
 
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.apprunner.requests"
   vpc_endpoint_type = "Interface"
 
   subnet_ids = aws_subnet.test[*].id

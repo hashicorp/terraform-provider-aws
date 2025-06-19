@@ -23,6 +23,7 @@ func schemaSchemaV0() schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"namespaces": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
