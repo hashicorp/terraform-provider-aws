@@ -79,6 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `association_arn` - The Amazon Resource Name (ARN) of the association.
 * `association_id` - The ID of the association.
+* `external_id` - The unique identifier for this association for a target IAM role. You put this value in the trust policy of the target role, in a Condition to match the sts.ExternalId.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
