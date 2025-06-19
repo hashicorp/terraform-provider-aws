@@ -1345,7 +1345,7 @@ func testAccCheckBucketObjectExists(ctx context.Context, n string, v *s3.GetObje
 	}
 }
 
-func testAccBucketObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc {
+func testAccBucketObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc { // nosemgrep:s3-in-func-name
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
