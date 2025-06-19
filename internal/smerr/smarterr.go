@@ -40,7 +40,7 @@ func injectContext(ctx context.Context, keyvals ...any) []any {
 		if v, err := names.HumanFriendly(srv); err == nil {
 			srv = v
 		}
-		keyvals = append(keyvals, "resource_name", inctx.ResourceName(), "service_name", srv)
+		keyvals = append(keyvals, smarterr.ResourceName, inctx.ResourceName(), smarterr.ServiceName, srv)
 	}
 	return keyvals
 }
