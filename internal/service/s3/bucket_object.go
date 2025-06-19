@@ -10,7 +10,6 @@ package s3
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -40,7 +39,6 @@ import (
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
 // @Tags(identifierAttribute="arn", resourceType="BucketObject")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
-// @Testing(importStateIdFunc=testAccBucketObjectImportStateIdFunc)
 // @Testing(importIgnore="acl;force_destroy")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
@@ -346,16 +344,13 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
-	parts := strings.Split(id, "/")
 
-	if len(parts) < 2 {
-		return []*schema.ResourceData{d}, fmt.Errorf("id %s should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+	bucket, key, err := parseBucketObjectImportID(id)
+	if err != nil {
+		return nil, err
 	}
 
-	bucket := parts[0]
-	key := strings.Join(parts[1:], "/")
-
-	d.SetId(key)
+	d.SetId(id)
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrKey, key)
 
@@ -489,7 +484,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() {
-		d.SetId(d.Get(names.AttrKey).(string))
+		d.SetId(createBucketObjectImportID(d))
 	}
 
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
@@ -527,4 +522,12 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		names.AttrStorageClass,
 		"website_redirect",
 	}, d.HasChange)
+}
+
+func createBucketObjectImportID(d *schema.ResourceData) string {
+	return createObjectImportID(d)
+}
+
+func parseBucketObjectImportID(id string) (bucket, key string, err error) {
+	return parseObjectImportID(id)
 }
