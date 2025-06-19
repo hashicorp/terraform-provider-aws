@@ -37,7 +37,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
-// @Testing(preCheckRegion="us-east-1")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
@@ -59,113 +58,8 @@ type exportResource struct {
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dataQueryLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"query_statement": schema.StringAttribute{
-					Required: true,
-				},
-				"table_configurations": schema.MapAttribute{
-					// map[string]map[string]string
-					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
-					Optional:   true,
-					PlanModifiers: []planmodifier.Map{
-						mapplanmodifier.UseStateForUnknown(),
-						mapplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
-	s3OutputConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"compression": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				names.AttrFormat: schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"output_type": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"overwrite": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
-				},
-			},
-		},
-	}
-
-	s3DestinationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				names.AttrS3Bucket: schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_prefix": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_region": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-			Blocks: map[string]schema.Block{
-				"s3_output_configurations": s3OutputConfigurationsLNB,
-			},
-		},
-	}
-
-	destinationConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"s3_destination": s3DestinationLNB,
-			},
-		},
-	}
-
-	refreshCadenceLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"frequency": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
@@ -200,9 +94,9 @@ func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"data_query":                 dataQueryLNB,
-						"destination_configurations": destinationConfigurationsLNB,
-						"refresh_cadence":            refreshCadenceLNB,
+						"data_query":                 exportDataQuerySchema(ctx),
+						"destination_configurations": exportDestinationConfigurationsSchema(ctx),
+						"refresh_cadence":            exportRefreshCadenceSchema(ctx),
 					},
 				},
 			},
@@ -210,6 +104,122 @@ func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Create: true,
 				Update: true,
 			}),
+		},
+	}
+}
+
+func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"query_statement": schema.StringAttribute{
+					Required: true,
+				},
+				"table_configurations": schema.MapAttribute{
+					// map[string]map[string]string
+					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
+					Optional:   true,
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.UseStateForUnknown(),
+						mapplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func exportS3OutputConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"compression": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrFormat: schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"output_type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"overwrite": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
+				},
+			},
+		},
+	}
+}
+
+func exportS3DestinationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrS3Bucket: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_prefix": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_region": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"s3_output_configurations": exportS3OutputConfigurationsSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportDestinationConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"s3_destination": exportS3DestinationSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportRefreshCadenceSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"frequency": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
 		},
 	}
 }
@@ -379,6 +389,17 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 			err.Error(),
 		)
 		return
+	}
+}
+
+func (r *exportResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := exportSchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeExportResourceStateFromV0,
+		},
 	}
 }
 

@@ -934,7 +934,7 @@ resource "aws_kms_key" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        "Service": "logs.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "kms:*",
       "Resource": "*"

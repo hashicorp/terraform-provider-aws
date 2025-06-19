@@ -630,7 +630,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
   output_format = "json"
 }
 `, rName, arnSuffix)
@@ -645,7 +645,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
   output_format = "json"
 
   tags = {
@@ -664,7 +664,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   include_filter {
@@ -687,7 +687,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   include_filter {
@@ -712,7 +712,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   exclude_filter {
@@ -735,7 +735,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   exclude_filter {
@@ -760,7 +760,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = %[1]q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
-  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
   statistics_configuration {

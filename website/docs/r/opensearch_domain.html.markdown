@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "example" {
     }
 
     actions   = ["es:*"]
-    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+    resources = ["arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
 
     condition {
       test     = "IpAddress"
@@ -188,7 +188,7 @@ data "aws_iam_policy_document" "example" {
     }
 
     actions   = ["es:*"]
-    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+    resources = ["arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
   }
 }
 

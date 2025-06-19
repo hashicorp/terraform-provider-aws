@@ -96,6 +96,10 @@ linters:
         text: 'SA1019: \w+.\w+ is deprecated: Use \w+Context or \w+WithoutTimeout instead'
       - linters:
           - staticcheck
+        path: internal/service/appsync/
+        text: 'SA1019: \w+.(\w+) is deprecated: (\w+) attribute is deprecated'
+      - linters:
+          - staticcheck
         path: internal/service/auditmanager/
         text: 'SA1019: apiObject.AwsServices is deprecated'
       - linters:
