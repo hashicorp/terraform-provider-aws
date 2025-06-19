@@ -164,15 +164,15 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 										Description: "Schema configuration for the Iceberg table.",
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
-												"field": schema.ListNestedBlock{
+												names.AttrField: schema.ListNestedBlock{
 													Description: "List of schema fields for the Iceberg table.",
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
+															names.AttrName: schema.StringAttribute{
 																Required:    true,
 																Description: "The name of the field.",
 															},
-															"type": schema.StringAttribute{
+															names.AttrType: schema.StringAttribute{
 																Required:    true,
 																Description: "The field type. S3 Tables supports all Apache Iceberg primitive types.",
 															},
