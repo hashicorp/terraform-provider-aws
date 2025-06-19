@@ -67,24 +67,13 @@ type podIdentityAssociationResource struct {
 	framework.ResourceWithModel[podIdentityAssociationResourceModel]
 }
 
-func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *podIdentityAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"association_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"disable_session_tags": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
-			},
-			names.AttrExternalID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrAssociationID: schema.StringAttribute{
@@ -99,6 +88,17 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"disable_session_tags": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			names.AttrExternalID: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrNamespace: schema.StringAttribute{
 				Required: true,
@@ -110,15 +110,15 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 				Required:   true,
 				CustomType: fwtypes.ARNType,
 			},
-			"target_role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-			},
 			"service_account": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"target_role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -126,18 +126,18 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *podIdentityAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *podIdentityAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var plan podIdentityAssociationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().EKSClient(ctx)
 
 	input := &eks.CreatePodIdentityAssociationInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -148,7 +148,7 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, req resourc
 	}, "Role provided in the request does not exist")
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EKS, create.ErrActionCreating, ResNamePodIdentityAssociation, plan.AssociationID.String(), err),
 			err.Error(),
 		)
@@ -164,29 +164,29 @@ func (r *podIdentityAssociationResource) Create(ctx context.Context, req resourc
 	}
 	plan.DisableSessionTags = fwflex.BoolToFramework(ctx, output.Association.DisableSessionTags)
 	plan.setID()
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *podIdentityAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *podIdentityAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().EKSClient(ctx)
 
 	var data podIdentityAssociationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, data.AssociationID.ValueString(), data.ClusterName.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EKS, create.ErrActionSetting, ResNamePodIdentityAssociation, data.AssociationID.String(), err),
 			err.Error(),
 		)
@@ -194,26 +194,26 @@ func (r *podIdentityAssociationResource) Read(ctx context.Context, req resource.
 	}
 
 	// Set attributes for import.
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, pia, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, pia, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, pia.Tags)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *podIdentityAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *podIdentityAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new podIdentityAssociationResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -223,8 +223,8 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 		!new.TargetRoleARN.Equal(old.TargetRoleARN) ||
 		!new.DisableSessionTags.Equal(old.DisableSessionTags) {
 		input := &eks.UpdatePodIdentityAssociationInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -235,28 +235,28 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 		}, "Role provided in the request does not exist")
 
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.EKS, create.ErrActionUpdating, ResNamePodIdentityAssociation, new.AssociationID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *podIdentityAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var state podIdentityAssociationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().EKSClient(ctx)
 
 	input := &eks.DeletePodIdentityAssociationInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, state, input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, state, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -267,7 +267,7 @@ func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resourc
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EKS, create.ErrActionDeleting, ResNamePodIdentityAssociation, state.AssociationID.String(), err),
 			err.Error(),
 		)
@@ -275,28 +275,30 @@ func (r *podIdentityAssociationResource) Delete(ctx context.Context, req resourc
 	}
 }
 
-func (r *podIdentityAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *podIdentityAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	const (
 		partCount = 2
 	)
-	parts, err := flex.ExpandResourceId(req.ID, partCount, false)
+	parts, err := flex.ExpandResourceId(request.ID, partCount, false)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("importing Pod Identity Association (%s)", req.ID), err.Error())
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(fmt.Errorf("wrong format of import ID (%s), use: 'cluster-name,association-id'", request.ID)))
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrAssociationID), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrAssociationID), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrClusterName), parts[0])...)
 }
 
 func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Client, associationID, clusterName string) (*awstypes.PodIdentityAssociation, error) {
-	input := &eks.DescribePodIdentityAssociationInput{
+	input := eks.DescribePodIdentityAssociationInput{
 		AssociationId: aws.String(associationID),
 		ClusterName:   aws.String(clusterName),
 	}
 
-	output, err := conn.DescribePodIdentityAssociation(ctx, input)
+	output, err := conn.DescribePodIdentityAssociation(ctx, &input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
@@ -311,5 +313,6 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	if output == nil || output.Association == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
+
 	return output.Association, nil
 }
