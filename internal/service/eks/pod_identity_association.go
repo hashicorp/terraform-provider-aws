@@ -86,9 +86,6 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, request res
 			},
 			names.AttrExternalID: schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrNamespace: schema.StringAttribute{
@@ -216,7 +213,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 		// Set values for unknowns.
 		input.ClientRequestToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdatePodIdentityAssociation(ctx, &input)
 		}, "Role provided in the request does not exist")
 
@@ -225,6 +222,12 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, request res
 
 			return
 		}
+
+		// Set values for unknowns.
+		association := outputRaw.(*eks.UpdatePodIdentityAssociationOutput).Association
+		new.ExternalID = fwflex.StringToFramework(ctx, association.ExternalId)
+	} else {
+		new.ExternalID = old.ExternalID
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
