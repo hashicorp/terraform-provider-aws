@@ -1,5 +1,9 @@
 ## 6.1.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `environment.docker_server` configuration block ([#42982](https://github.com/hashicorp/terraform-provider-aws/issues/42982))
+
 BUG FIXES:
 
 * resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0. ([#43090](https://github.com/hashicorp/terraform-provider-aws/issues/43090))
