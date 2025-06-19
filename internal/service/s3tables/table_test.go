@@ -804,7 +804,7 @@ resource "aws_s3tables_table" "test" {
   namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
-  
+
   metadata {
     iceberg {
       schema {
@@ -814,8 +814,8 @@ resource "aws_s3tables_table" "test" {
           required = true
         }
         field {
-          name     = "name"
-          type     = "string"
+          name = "name"
+          type = "string"
         }
         field {
           name     = "created_at"
