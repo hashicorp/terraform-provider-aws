@@ -1,6 +1,7 @@
 smarterr {
   debug = true
   hint_match_mode = "first"
+  hint_join_char = "\n"
 }
 
 template "error_summary" {
@@ -9,8 +10,20 @@ template "error_summary" {
 
 template "error_detail" {
   format = <<EOT
-ID: {{.identifier}}
-Cause:{{if .subaction}} While {{.subaction}},{{end}} {{.clean_error}}{{if .suggest}}
+{{if .identifier}}ID: {{.identifier}}
+{{end}}Cause:{{if .subaction}} While {{.subaction}},{{end}} {{.clean_error}}{{if .suggest}}
+{{.suggest}}{{end}}"
+EOT
+}
+
+template "diagnostic_summary" {
+  format = "{{.happening}} {{.service}} {{.resource}}: {{.diag.summary}}"
+}
+
+template "diagnostic_detail" {
+  format = <<EOT
+{{if .identifier}}ID: {{.identifier}}
+{{end}}Cause:{{if .subaction}} While {{.subaction}},{{end}} {{.diag.detail}}{{if .suggest}}
 {{.suggest}}{{end}}"
 EOT
 }
@@ -21,10 +34,14 @@ template "log_error" {
 
 token "happening" {
   stack_matches = [
-    "create",
-    "read",
-    "update",
-    "delete",
+    "sdk_create",
+    "sdk_read",
+    "sdk_update",
+    "sdk_delete",
+    "fw_create",
+    "fw_read",
+    "fw_update",
+    "fw_delete",
   ]
 }
 
@@ -47,6 +64,14 @@ token "clean_error" {
   ]
 }
 
+token "diag" {
+  source = "diagnostic"
+  field_transforms = {
+    "summary" = ["clean_diagnostics"]
+    "detail"  = ["clean_diagnostics"]
+  }
+}
+
 token "error" {
   source = "error"
 }
@@ -57,6 +82,9 @@ token "subaction" {
     "set",
     "find",
     "wait",
+    "list_tags",
+    "update_tags",
+    "tags",
   ]
 }
 
@@ -84,24 +112,47 @@ transform "clean_aws_error" {
   }
 }
 
-stack_match "create" {
+transform "clean_diagnostics" {
+  step "trim_space" {}
+}
+
+stack_match "sdk_create" {
   called_from = "resource[a-zA-Z0-9]*Create"
   display     = "creating"
 }
 
-stack_match "read" {
+stack_match "sdk_read" {
   called_from = "resource[a-zA-Z0-9]*Read"
   display     = "reading"
 }
 
-stack_match "update" {
+stack_match "sdk_update" {
   called_from = "resource[a-zA-Z0-9]*Update"
   display     = "updating"
 }
 
-
-stack_match "delete" {
+stack_match "sdk_delete" {
   called_from = "resource[a-zA-Z0-9]*Delete"
+  display     = "deleting"
+}
+
+stack_match "fw_create" {
+  called_from = ".*\\.Create$$"
+  display     = "creating"
+}
+
+stack_match "fw_read" {
+  called_from = ".*\\.Read$$"
+  display     = "reading"
+}
+
+stack_match "fw_update" {
+  called_from = ".*\\.Update$$"
+  display     = "updating"
+}
+
+stack_match "fw_delete" {
+  called_from = ".*\\.Delete$$"
   display     = "deleting"
 }
 
@@ -118,4 +169,19 @@ stack_match "find" {
 stack_match "wait" {
   called_from = "wait.*"
   display     = "waiting"
+}
+
+stack_match "list_tags" {
+  called_from = "(ListTags|listTags)"
+  display     = "listing tags"
+}
+
+stack_match "update_tags" {
+  called_from = "(UpdateTags|createTags|updateTags)"
+  display     = "updating tags"
+}
+
+stack_match "tags" {
+  called_from = "(getTagsIn|keyValueTags|setTagsOut|svcTags)"
+  display     = "tagging"
 }
