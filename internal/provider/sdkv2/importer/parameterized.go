@@ -31,14 +31,8 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, a
 		return err
 	}
 
-	if regionRaw, ok := identity.GetOk(names.AttrRegion); ok {
-		if region, ok := regionRaw.(string); !ok {
-			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
-		} else {
-			rd.Set(names.AttrRegion, region)
-		}
-	} else {
-		rd.Set(names.AttrRegion, client.Region(ctx))
+	if err := setRegion(ctx, identity, rd, client); err != nil {
+		return err
 	}
 
 	valRaw, ok := identity.GetOk(attrName)
@@ -94,6 +88,54 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 	return nil
 }
 
+func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
+	if rd.Id() != "" {
+		parts, err := importSpec.ImportID.Parse(rd.Id())
+		if err != nil {
+			return err
+		}
+
+		for attr, val := range parts {
+			rd.Set(attr, val)
+		}
+	} else {
+		identity, err := rd.Identity()
+		if err != nil {
+			return err
+		}
+
+		if err := validateAccountID(identity, client.AccountID(ctx)); err != nil {
+			return err
+		}
+
+		if err := setRegion(ctx, identity, rd, client); err != nil {
+			return err
+		}
+
+		for _, attr := range attrs {
+			switch attr.Name {
+			case names.AttrAccountID, names.AttrRegion:
+				// Do nothing
+
+			default:
+				valRaw, ok := identity.GetOk(attr.Name)
+				if attr.Required && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				}
+				val, ok := valRaw.(string)
+				if !ok {
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+				}
+				setAttribute(rd, attr.Name, val)
+			}
+		}
+
+		rd.SetId(importSpec.ImportID.Create(rd))
+	}
+
+	return nil
+}
+
 func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
 	if rd.Id() != "" {
 		parts, err := importSpec.ImportID.Parse(rd.Id())
@@ -135,5 +177,18 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, a
 		rd.SetId(importSpec.ImportID.Create(rd))
 	}
 
+	return nil
+}
+
+func setRegion(ctx context.Context, identity *schema.IdentityData, rd *schema.ResourceData, client AWSClient) error {
+	if regionRaw, ok := identity.GetOk(names.AttrRegion); ok {
+		if region, ok := regionRaw.(string); !ok {
+			return fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrRegion, regionRaw)
+		} else {
+			rd.Set(names.AttrRegion, region)
+		}
+	} else {
+		rd.Set(names.AttrRegion, client.Region(ctx))
+	}
 	return nil
 }
