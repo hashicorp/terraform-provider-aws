@@ -967,3 +967,39 @@ func TestMapKeysAre(t *testing.T) {
 		})
 	}
 }
+
+func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		value    any
+		wantDiag bool
+	}{
+		{
+			name:  "exact match",
+			value: "foo",
+		},
+		{
+			name:  "no match",
+			value: "baz",
+		},
+		{
+			name:     "case insensitive match",
+			value:    "FOO",
+			wantDiag: true,
+		},
+	}
+
+	f := CaseInsensitiveMatchDeprecation([]string{"foo", "bar"})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}

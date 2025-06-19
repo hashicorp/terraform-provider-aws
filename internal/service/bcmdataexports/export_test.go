@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbcmdataexports "github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,6 +50,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "export.0.export_arn", "bcm-data-exports", endpoints.UsEast1RegionID, regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern)),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
@@ -382,7 +385,7 @@ func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -409,7 +412,7 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
-		resp, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.BCMDataExports, create.ErrActionCheckingExistence, tfbcmdataexports.ResNameExport, rs.Primary.ID, err)

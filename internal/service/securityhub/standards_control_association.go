@@ -39,7 +39,7 @@ func newStandardsControlAssociationResource(_ context.Context) (resource.Resourc
 }
 
 type standardsControlAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[standardsControlAssociationResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -210,6 +210,7 @@ func (r *standardsControlAssociationResource) ValidateConfig(ctx context.Context
 }
 
 type standardsControlAssociationResourceModel struct {
+	framework.WithRegionModel
 	AssociationStatus fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
 	ID                types.String                                   `tfsdk:"id"`
 	SecurityControlID types.String                                   `tfsdk:"security_control_id"`

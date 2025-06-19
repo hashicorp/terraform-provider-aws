@@ -43,7 +43,7 @@ func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type environmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithImportByID
 }
 
@@ -312,6 +312,7 @@ func findEnvironment(ctx context.Context, conn *appconfig.Client, input *appconf
 }
 
 type environmentResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID types.String                                 `tfsdk:"application_id"`
 	ARN           types.String                                 `tfsdk:"arn"`
 	Description   types.String                                 `tfsdk:"description"`

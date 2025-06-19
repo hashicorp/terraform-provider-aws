@@ -24,14 +24,14 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
 resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
@@ -47,7 +47,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
@@ -72,6 +72,7 @@ resource "aws_vpc_ipam_pool_cidr" "ipv6_test_public" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmask_length`.
 * `cidr_authorization_context` - (Optional) A signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context) for more information.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.

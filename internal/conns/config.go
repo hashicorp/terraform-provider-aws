@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
@@ -165,21 +164,6 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
-	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
-
-	for _, d := range awsDiags {
-		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSDKSeverity(d.Severity()),
-			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
-			Detail:   d.Detail(),
-		})
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
 	tflog.Debug(ctx, "Retrieving AWS account details")
 	accountID, partitionID, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
@@ -210,14 +194,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
-	client.region = c.Region
-	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.session = session
 	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
-	client.clients = make(map[string]any, 0)
+	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle

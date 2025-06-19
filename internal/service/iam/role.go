@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,7 +42,10 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
+// @IdentityAttribute("name")
+// @WrappedImport(false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
+// @Testing(idAttrDuplicates="name")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -50,7 +54,15 @@ func resourceRole() *schema.Resource {
 		DeleteWithoutTimeout: resourceRoleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.GlobalSingleParameterized(ctx, rd, names.AttrName, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
+				rd.Set("force_detach_policies", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -510,11 +522,6 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	return diags
-}
-
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	d.Set("force_detach_policies", false)
-	return []*schema.ResourceData{d}, nil
 }
 
 func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {

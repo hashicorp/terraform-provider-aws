@@ -42,7 +42,7 @@ func newBrowserSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type browserSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[browserSettingsResourceModel]
 }
 
 func (r *browserSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -246,6 +246,7 @@ func findBrowserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 }
 
 type browserSettingsResourceModel struct {
+	framework.WithRegionModel
 	AdditionalEncryptionContext fwtypes.MapOfString  `tfsdk:"additional_encryption_context"`
 	AssociatedPortalARNs        fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
 	BrowserPolicy               jsontypes.Normalized `tfsdk:"browser_policy"`

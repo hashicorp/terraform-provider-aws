@@ -67,7 +67,7 @@ func sweepCapacityReservations(ctx context.Context, client *conns.AWSClient) ([]
 		}
 
 		for _, v := range page.CapacityReservations {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCapacityReservation, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newCapacityReservationResource, client,
 				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))),
 			)
 		}

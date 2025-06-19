@@ -76,6 +76,7 @@ service "" {
   not_implemented     = bool
   allowed_subcategory = bool
   note                = ""
+  is_global           = bool
 }
 
 ```
@@ -113,5 +114,6 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `allowed_subcategory` | Code | Bool based on if `Exclude` is non-blank, whether to include `human_friendly` in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides `exclude` in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if `Exclude` is non-blank. |
 | `not_implemented` | Code | Bool based on whether the service is implemented by the provider |
 | `note` | Reference | Very brief note usually to explain why excluded |
+| `is_global` | Code | Bool indicating whether the service is [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html). See [the Enhanced Region Support Guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/enhanced-region-support#global-services) |
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).

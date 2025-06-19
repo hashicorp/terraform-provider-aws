@@ -474,7 +474,9 @@ resource "aws_verifiedaccess_group" "test" {
 func testAccVerifiedAccessGroupConfig_kms(rName, policyDoc string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test_key" {
-  description = "KMS key for Verified Access Group test"
+  description             = "KMS key for Verified Access Group test"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_verifiedaccess_group" "test" {

@@ -79,15 +79,6 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 	}
 }
 
-// createTags creates drs service tags for new resources.
-func createTags(ctx context.Context, conn *drs.Client, identifier string, tags map[string]string, optFns ...func(*drs.Options)) error {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return updateTags(ctx, conn, identifier, nil, tags, optFns...)
-}
-
 // updateTags updates drs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

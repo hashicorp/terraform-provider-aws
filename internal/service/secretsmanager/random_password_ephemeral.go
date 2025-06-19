@@ -17,19 +17,19 @@ import (
 )
 
 // @EphemeralResource("aws_secretsmanager_random_password", name="Random Password")
-func newEphemeralRandomPassword(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralRandomPassword{}, nil
+func newRandomPasswordEphemeralResource(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &randomPasswordEphemeralResource{}, nil
 }
 
 const (
 	ERNameRandomPassword = "Random Password Ephemeral Resource"
 )
 
-type ephemeralRandomPassword struct {
-	framework.EphemeralResourceWithConfigure
+type randomPasswordEphemeralResource struct {
+	framework.EphemeralResourceWithModel[randomPasswordEphemeralResourceModel]
 }
 
-func (e *ephemeralRandomPassword) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
+func (e *randomPasswordEphemeralResource) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"exclude_characters": schema.StringAttribute{
@@ -64,10 +64,10 @@ func (e *ephemeralRandomPassword) Schema(ctx context.Context, req ephemeral.Sche
 	}
 }
 
-func (e *ephemeralRandomPassword) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
+func (e *randomPasswordEphemeralResource) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
 	conn := e.Meta().SecretsManagerClient(ctx)
 
-	var data ephemeralRandomPasswordModel
+	var data randomPasswordEphemeralResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -93,7 +93,8 @@ func (e *ephemeralRandomPassword) Open(ctx context.Context, req ephemeral.OpenRe
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 
-type ephemeralRandomPasswordModel struct {
+type randomPasswordEphemeralResourceModel struct {
+	framework.WithRegionModel
 	ExcludeCharacters       types.String `tfsdk:"exclude_characters"`
 	ExcludeLowercase        types.Bool   `tfsdk:"exclude_lowercase"`
 	ExcludeNumbers          types.Bool   `tfsdk:"exclude_numbers"`

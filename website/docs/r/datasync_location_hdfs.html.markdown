@@ -49,6 +49,7 @@ resource "aws_datasync_location_hdfs" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `authentication_type` - (Required) The type of authentication used to determine the identity of the user. Valid values are `SIMPLE` and `KERBEROS`.
 * `block_size` - (Optional) The size of data blocks to write into the HDFS cluster. The block size must be a multiple of 512 bytes. The default block size is 128 mebibytes (MiB).

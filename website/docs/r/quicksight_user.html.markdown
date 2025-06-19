@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional) ID for the AWS account that the user is in. Use the ID for the AWS account that contains your Amazon QuickSight account.
 * `iam_arn` - (Optional) ARN of the IAM user or role that you are registering with Amazon QuickSight. Required only for users with an identity type of `IAM`.
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.

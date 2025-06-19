@@ -574,6 +574,14 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+semgrep-vcr: ## Enable VCR support with Semgrep --autofix
+	@echo "make: Enable VCR support with Semgrep --autofix"
+	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
+	@echo "this target may need to be run twice."
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config internal/vcr/.semgrep-vcr.yml
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -698,7 +706,11 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
+		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
@@ -925,6 +937,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming \
 	semgrep-service-naming \
 	semgrep-validate \
+	semgrep-vcr \
 	semgrep \
 	skaff-check-compile \
 	skaff \

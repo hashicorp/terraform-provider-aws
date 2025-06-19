@@ -425,6 +425,7 @@ resource "aws_kms_key" "test" {
 
   description             = "%[1]s-${count.index}"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

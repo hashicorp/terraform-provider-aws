@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_cloudtrail", name="Trail")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,
 		ReadWithoutTimeout:   resourceTrailRead,
 		UpdateWithoutTimeout: resourceTrailUpdate,
 		DeleteWithoutTimeout: resourceTrailDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{

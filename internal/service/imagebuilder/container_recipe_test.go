@@ -754,11 +754,11 @@ func testAccContainerRecipeConfig_name(rName string) string {
 resource "aws_imagebuilder_container_recipe" "test" {
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -782,15 +782,15 @@ func testAccContainerRecipeConfig_component(rName string) string {
 resource "aws_imagebuilder_container_recipe" "test" {
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/aws-cli-version-2-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/aws-cli-version-2-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -839,7 +839,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
@@ -879,11 +879,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   description = "description"
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -923,11 +923,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
@@ -952,11 +952,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -987,11 +987,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1024,11 +1024,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1061,11 +1061,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1096,17 +1096,18 @@ func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSKMSK
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1149,11 +1150,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1186,11 +1187,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1224,11 +1225,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1261,11 +1262,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1298,11 +1299,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1333,11 +1334,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1378,11 +1379,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1409,17 +1410,18 @@ func testAccContainerRecipeConfig_kmsKeyID(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1446,11 +1448,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1479,11 +1481,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1513,11 +1515,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1548,7 +1550,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF

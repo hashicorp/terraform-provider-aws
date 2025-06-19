@@ -36,7 +36,7 @@ func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type indexPolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[indexPolicyResourceModel]
 }
 
 func (r *indexPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -221,6 +221,7 @@ func findIndexPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *
 }
 
 type indexPolicyResourceModel struct {
+	framework.WithRegionModel
 	LogGroupName   types.String         `tfsdk:"log_group_name"`
 	PolicyDocument jsontypes.Normalized `tfsdk:"policy_document"`
 }

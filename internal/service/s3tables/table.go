@@ -37,19 +37,19 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
-func newResourceTable(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTable{}, nil
+func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableResource{}, nil
 }
 
 const (
 	ResNameTable = "Table"
 )
 
-type resourceTable struct {
-	framework.ResourceWithConfigure
+type tableResource struct {
+	framework.ResourceWithModel[tableResourceModel]
 }
 
-func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -150,10 +150,10 @@ func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTableModel
+	var plan tableResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -293,10 +293,10 @@ func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTable) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableModel
+	var state tableResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -367,10 +367,10 @@ func (r *resourceTable) Read(ctx context.Context, req resource.ReadRequest, resp
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTable) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan, state resourceTableModel
+	var plan, state tableResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -501,10 +501,10 @@ func (r *resourceTable) Update(ctx context.Context, req resource.UpdateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTable) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableModel
+	var state tableResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -530,7 +530,7 @@ func (r *resourceTable) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func (r *resourceTable) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseTableIdentifier(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -570,7 +570,8 @@ func findTable(ctx context.Context, conn *s3tables.Client, bucketARN, namespace,
 	return out, nil
 }
 
-type resourceTableModel struct {
+type tableResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                              `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                         `tfsdk:"created_at"`
 	CreatedBy                types.String                                              `tfsdk:"created_by"`

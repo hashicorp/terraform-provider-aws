@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_cloudtrail_service_account: This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy.
+```
