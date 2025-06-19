@@ -165,6 +165,7 @@ const (
 	AttrRetentionPeriod            = "retention_period"
 	AttrRole                       = "role"
 	AttrRoleARN                    = "role_arn"
+	AttrTargetRoleARN              = "target_role_arn"
 	AttrRule                       = "rule"
 	AttrS3Bucket                   = "s3_bucket"
 	AttrS3BucketName               = "s3_bucket_name"

@@ -47,6 +47,7 @@ type podIdentityAssociationResourceModel struct {
 	Namespace      types.String `tfsdk:"namespace"`
 	RoleARN        fwtypes.ARN  `tfsdk:"role_arn"`
 	ServiceAccount types.String `tfsdk:"service_account"`
+	TargetRoleARN  types.String `tfsdk:"target_role_arn"`
 	Tags           tftags.Map   `tfsdk:"tags"`
 	TagsAll        tftags.Map   `tfsdk:"tags_all"`
 }
@@ -97,6 +98,12 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 			},
 			"service_account": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrTargetRoleARN: schema.StringAttribute{
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -198,7 +205,7 @@ func (r *podIdentityAssociationResource) Update(ctx context.Context, req resourc
 
 	conn := r.Meta().EKSClient(ctx)
 
-	if !new.RoleARN.Equal(old.RoleARN) {
+	if !new.RoleARN.Equal(old.RoleARN) || !new.TargetRoleARN.Equal(old.TargetRoleARN) {
 		input := &eks.UpdatePodIdentityAssociationInput{}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if resp.Diagnostics.HasError() {
