@@ -14,6 +14,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -38,7 +39,7 @@ import (
 )
 
 // @SDKResource("aws_elasticsearch_domain", name="Domain")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -48,16 +49,15 @@ func resourceDomain() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
-
+				region := d.Get(names.AttrRegion).(string)
 				name := d.Id()
-				ds, err := findDomainByName(ctx, conn, name)
-
-				if err != nil {
-					return nil, fmt.Errorf("reading Elasticsearch Domain (%s): %w", name, err)
-				}
-
-				d.SetId(aws.ToString(ds.ARN))
+				d.SetId(arn.ARN{
+					Partition: names.PartitionForRegion(region).ID(),
+					Region:    region,
+					AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+					Service:   "es",
+					Resource:  "domain/" + name,
+				}.String())
 				d.Set(names.AttrDomainName, name)
 
 				return []*schema.ResourceData{d}, nil

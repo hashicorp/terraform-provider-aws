@@ -604,3 +604,32 @@ func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
 		return diags
 	}
 }
+
+// CaseInsensitiveMatchDeprecation returns a warning diagnostic if the argument value
+// matches a valid value using unicode case-folding, but is not an exact match
+//
+// This validator can be used to deprecate case insensitive value matching in favor
+// of exact matching. A value which is an exact match or does not match any valid
+// value will return with empty diagnostics.
+func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		s := v.(string)
+
+		for _, item := range valid {
+			if s != item && strings.EqualFold(s, item) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Case Insensitive Matching Deprecated",
+					Detail: fmt.Sprintf("Expected an exact match to %q, got %q. ", item, v) +
+						"Case insensitive matching is deprecated for this argument. Update the value " +
+						"to an exact match to suppress this warning and avoid breaking changes " +
+						"in a future major version.",
+					AttributePath: path,
+				})
+			}
+		}
+
+		return diags
+	}
+}

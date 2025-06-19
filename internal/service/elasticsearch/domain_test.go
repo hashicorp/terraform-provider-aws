@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -58,6 +60,76 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.ElasticsearchDomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "es", "domain/{domain_name}"),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElasticsearchDomain_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := testAccRandomDomainName()
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "es", "domain/{domain_name}"),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName + "@" + acctest.AlternateRegion(),
 				ImportStateVerify: true,
 			},
 		},
@@ -2074,6 +2146,21 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName)
 }
 
+func testAccDomainConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  region = %[2]q
+
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, acctest.AlternateRegion())
+}
+
 func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
@@ -2668,6 +2755,7 @@ func testAccDomainConfig_encryptAtRestKey(rName, version string, enabled bool) s
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_elasticsearch_domain" "test" {

@@ -555,7 +555,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -612,7 +612,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
 						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -661,7 +661,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
 						"key3":                 knownvalue.StringExact("value3"),
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
@@ -798,7 +798,9 @@ func testAccKeyAddTag(ctx context.Context, t *testing.T, identifier, key, value 
 
 func testAccKeyConfig_basic() string {
 	return `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  enable_key_rotation = true
+}
 `
 }
 
@@ -806,6 +808,7 @@ func testAccKeyConfig_basicDeletionWindow() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }
@@ -815,6 +818,7 @@ func testAccKeyConfig_name(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }
@@ -836,6 +840,7 @@ func testAccKeyConfig_asymmetric(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "ECC_NIST_P384"
@@ -848,6 +853,7 @@ func testAccKeyConfig_hmac(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "GENERATE_VERIFY_MAC"
   customer_master_key_spec = "HMAC_256"
@@ -861,6 +867,7 @@ func testAccKeyConfig_policy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -886,6 +893,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   bypass_policy_lockout_safety_check = %[2]t
 
@@ -941,6 +949,7 @@ resource "aws_iam_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1097,6 +1106,7 @@ data "aws_iam_policy_document" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = data.aws_iam_policy_document.test.json
 }
@@ -1117,6 +1127,7 @@ resource "aws_iam_service_linked_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1163,6 +1174,7 @@ data "aws_partition" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = jsonencode({
     Id = %[1]q
@@ -1211,6 +1223,7 @@ func testAccKeyConfig_removedPolicy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }

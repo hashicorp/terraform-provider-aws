@@ -512,233 +512,6 @@ func resourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"s3_settings": {
-				Description:      "This argument is deprecated and will be removed in a future version; use aws_dms_s3_endpoint instead",
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"add_column_name": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"bucket_folder": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"canned_acl_for_objects": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.CannedAclForObjectsValueNone,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CannedAclForObjectsValue](),
-							StateFunc: func(v any) string {
-								return strings.ToLower(v.(string))
-							},
-						},
-						"cdc_inserts_and_updates": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"cdc_inserts_only": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"cdc_max_batch_interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      60,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"cdc_min_file_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      32000,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"cdc_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"compression_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      s3SettingsCompressionTypeNone,
-							ValidateFunc: validation.StringInSlice(s3SettingsCompressionType_Values(), false),
-						},
-						"csv_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  ",",
-						},
-						"csv_no_sup_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"csv_null_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "NULL",
-						},
-						"csv_row_delimiter": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "\\n",
-						},
-						"data_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DataFormatValueCsv,
-							ValidateDiagFunc: enum.Validate[awstypes.DataFormatValue](),
-						},
-						"data_page_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1048576,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"date_partition_delimiter": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DatePartitionDelimiterValueSlash,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionDelimiterValue](),
-							StateFunc: func(v any) string {
-								return strings.ToLower(v.(string))
-							},
-						},
-						"date_partition_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"date_partition_sequence": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DatePartitionSequenceValueYyyymmdd,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.DatePartitionSequenceValue](),
-							StateFunc: func(v any) string {
-								return strings.ToLower(v.(string))
-							},
-						},
-						"dict_page_size_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1048576,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"enable_statistics": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"encoding_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.EncodingTypeValueRleDictionary,
-							ValidateDiagFunc: enum.Validate[awstypes.EncodingTypeValue](),
-						},
-						"encryption_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      encryptionModeSseS3,
-							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
-						},
-						"external_table_definition": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"glue_catalog_generation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"ignore_header_rows": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntInSlice([]int{0, 1}),
-						},
-						"include_op_for_full_load": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"max_file_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1048576,
-							ValidateFunc: validation.IntBetween(1, 1048576),
-						},
-						"parquet_timestamp_in_millisecond": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"parquet_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.ParquetVersionValueParquet10,
-							ValidateDiagFunc: enum.Validate[awstypes.ParquetVersionValue](),
-						},
-						"preserve_transactions": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"rfc_4180": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-						"row_group_length": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      10000,
-							ValidateFunc: validation.IntAtLeast(0),
-						},
-						"server_side_encryption_kms_key_id": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: tfkms.DiffSuppressKey,
-							ValidateFunc:     tfkms.ValidateKey,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "",
-							ValidateFunc: verify.ValidARN,
-						},
-						"timestamp_column_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
-						},
-						"use_csv_no_sup_value": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"use_task_start_time_for_full_load_timestamp": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
 			"secrets_manager_access_role_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -779,8 +552,6 @@ func resourceEndpoint() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			requireEngineSettingsCustomizeDiff,
-			validateKMSKeyEngineCustomizeDiff,
-			validateS3SSEKMSKeyCustomizeDiff,
 			validateRedshiftSSEKMSKeyCustomizeDiff,
 		),
 	}
@@ -1020,8 +791,6 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-	case engineNameS3:
-		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]any)[0].(map[string]any))
 	default:
 		expandTopLevelConnectionInfo(d, input)
 	}
@@ -1384,11 +1153,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						expandTopLevelConnectionInfoModify(d, input)
 					}
 				}
-			case engineNameS3:
-				if d.HasChanges("s3_settings") {
-					input.S3Settings = expandS3Settings(d.Get("s3_settings").([]any)[0].(map[string]any))
-					input.EngineName = aws.String(engineName)
-				}
 			default:
 				if d.HasChange(names.AttrDatabaseName) {
 					input.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
@@ -1475,28 +1239,8 @@ func requireEngineSettingsCustomizeDiff(_ context.Context, diff *schema.Resource
 		if v, ok := diff.GetOk("redis_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 			return fmt.Errorf("redis_settings must be set when engine_name = %q", engineName)
 		}
-	case engineNameS3:
-		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
-			return fmt.Errorf("s3_settings must be set when engine_name = %q", engineName)
-		}
 	}
 
-	return nil
-}
-
-func validateKMSKeyEngineCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
-	if d.Get("engine_name").(string) == engineNameS3 {
-		if d.Get(names.AttrKMSKeyARN) != "" {
-			return fmt.Errorf("kms_key_arn must not be set when engine is %q. Use s3_settings.server_side_encryption_kms_key_id instead", engineNameS3)
-		}
-	}
-	return nil
-}
-
-func validateS3SSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
-	if d.Get("engine_name").(string) == engineNameS3 {
-		return validateSSEKMSKey("s3_settings", d)
-	}
 	return nil
 }
 
@@ -1681,10 +1425,6 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set("secrets_manager_arn", endpoint.IBMDb2Settings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
-		}
-	case engineNameS3:
-		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set(names.AttrDatabaseName, endpoint.DatabaseName)
@@ -2296,252 +2036,13 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	return []map[string]any{tfMap}
 }
 
-func expandS3Settings(tfMap map[string]any) *awstypes.S3Settings {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.S3Settings{}
-
-	if v, ok := tfMap["add_column_name"].(bool); ok {
-		apiObject.AddColumnName = aws.Bool(v)
-	}
-	if v, ok := tfMap["bucket_folder"].(string); ok {
-		apiObject.BucketFolder = aws.String(v)
-	}
-	if v, ok := tfMap[names.AttrBucketName].(string); ok {
-		apiObject.BucketName = aws.String(v)
-	}
-	if v, ok := tfMap["canned_acl_for_objects"].(string); ok {
-		apiObject.CannedAclForObjects = awstypes.CannedAclForObjectsValue(v)
-	}
-	if v, ok := tfMap["cdc_inserts_and_updates"].(bool); ok {
-		apiObject.CdcInsertsAndUpdates = aws.Bool(v)
-	}
-	if v, ok := tfMap["cdc_inserts_only"].(bool); ok {
-		apiObject.CdcInsertsOnly = aws.Bool(v)
-	}
-	if v, ok := tfMap["cdc_max_batch_interval"].(int); ok {
-		apiObject.CdcMaxBatchInterval = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["cdc_min_file_size"].(int); ok {
-		apiObject.CdcMinFileSize = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["cdc_path"].(string); ok {
-		apiObject.CdcPath = aws.String(v)
-	}
-	if v, ok := tfMap["compression_type"].(string); ok {
-		apiObject.CompressionType = awstypes.CompressionTypeValue(v)
-	}
-	if v, ok := tfMap["csv_delimiter"].(string); ok {
-		apiObject.CsvDelimiter = aws.String(v)
-	}
-	if v, ok := tfMap["csv_no_sup_value"].(string); ok {
-		apiObject.CsvNoSupValue = aws.String(v)
-	}
-	if v, ok := tfMap["csv_null_value"].(string); ok {
-		apiObject.CsvNullValue = aws.String(v)
-	}
-	if v, ok := tfMap["csv_row_delimiter"].(string); ok {
-		apiObject.CsvRowDelimiter = aws.String(v)
-	}
-	if v, ok := tfMap["data_format"].(string); ok {
-		apiObject.DataFormat = awstypes.DataFormatValue(v)
-	}
-	if v, ok := tfMap["data_page_size"].(int); ok {
-		apiObject.DataPageSize = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["date_partition_delimiter"].(string); ok {
-		apiObject.DatePartitionDelimiter = awstypes.DatePartitionDelimiterValue(v)
-	}
-	if v, ok := tfMap["date_partition_enabled"].(bool); ok {
-		apiObject.DatePartitionEnabled = aws.Bool(v)
-	}
-	if v, ok := tfMap["date_partition_sequence"].(string); ok {
-		apiObject.DatePartitionSequence = awstypes.DatePartitionSequenceValue(v)
-	}
-	if v, ok := tfMap["dict_page_size_limit"].(int); ok {
-		apiObject.DictPageSizeLimit = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["enable_statistics"].(bool); ok {
-		apiObject.EnableStatistics = aws.Bool(v)
-	}
-	if v, ok := tfMap["encoding_type"].(string); ok {
-		apiObject.EncodingType = awstypes.EncodingTypeValue(v)
-	}
-	if v, ok := tfMap["encryption_mode"].(string); ok {
-		apiObject.EncryptionMode = awstypes.EncryptionModeValue(v)
-	}
-	if v, ok := tfMap["external_table_definition"].(string); ok {
-		apiObject.ExternalTableDefinition = aws.String(v)
-	}
-	if v, ok := tfMap["glue_catalog_generation"].(bool); ok {
-		apiObject.GlueCatalogGeneration = aws.Bool(v)
-	}
-	if v, ok := tfMap["ignore_header_rows"].(int); ok {
-		apiObject.IgnoreHeaderRows = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["include_op_for_full_load"].(bool); ok {
-		apiObject.IncludeOpForFullLoad = aws.Bool(v)
-	}
-	if v, ok := tfMap["max_file_size"].(int); ok {
-		apiObject.MaxFileSize = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["parquet_timestamp_in_millisecond"].(bool); ok {
-		apiObject.ParquetTimestampInMillisecond = aws.Bool(v)
-	}
-	if v, ok := tfMap["parquet_version"].(string); ok {
-		apiObject.ParquetVersion = awstypes.ParquetVersionValue(v)
-	}
-	if v, ok := tfMap["preserve_transactions"].(bool); ok {
-		apiObject.PreserveTransactions = aws.Bool(v)
-	}
-	if v, ok := tfMap["rfc_4180"].(bool); ok {
-		apiObject.Rfc4180 = aws.Bool(v)
-	}
-	if v, ok := tfMap["row_group_length"].(int); ok {
-		apiObject.RowGroupLength = aws.Int32(int32(v))
-	}
-	if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok {
-		apiObject.ServerSideEncryptionKmsKeyId = aws.String(v)
-	}
-	if v, ok := tfMap["service_access_role_arn"].(string); ok {
-		apiObject.ServiceAccessRoleArn = aws.String(v)
-	}
-	if v, ok := tfMap["timestamp_column_name"].(string); ok {
-		apiObject.TimestampColumnName = aws.String(v)
-	}
-	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
-		apiObject.UseCsvNoSupValue = aws.Bool(v)
-	}
-	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
-		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
-	}
-
-	return apiObject
-}
-
-func flattenS3Settings(apiObject *awstypes.S3Settings) []map[string]any {
-	if apiObject == nil {
-		return []map[string]any{}
-	}
-
-	tfMap := map[string]any{}
-
-	if v := apiObject.AddColumnName; v != nil {
-		tfMap["add_column_name"] = aws.ToBool(v)
-	}
-	if v := apiObject.BucketFolder; v != nil {
-		tfMap["bucket_folder"] = aws.ToString(v)
-	}
-	if v := apiObject.BucketName; v != nil {
-		tfMap[names.AttrBucketName] = aws.ToString(v)
-	}
-	tfMap["canned_acl_for_objects"] = string(apiObject.CannedAclForObjects)
-	if v := apiObject.CdcInsertsAndUpdates; v != nil {
-		tfMap["cdc_inserts_and_updates"] = aws.ToBool(v)
-	}
-	if v := apiObject.CdcInsertsOnly; v != nil {
-		tfMap["cdc_inserts_only"] = aws.ToBool(v)
-	}
-	if v := apiObject.CdcMaxBatchInterval; v != nil {
-		tfMap["cdc_max_batch_interval"] = aws.ToInt32(v)
-	}
-	if v := apiObject.CdcMinFileSize; v != nil {
-		tfMap["cdc_min_file_size"] = aws.ToInt32(v)
-	}
-	if v := apiObject.CdcPath; v != nil {
-		tfMap["cdc_path"] = aws.ToString(v)
-	}
-	tfMap["compression_type"] = string(apiObject.CompressionType)
-	if v := apiObject.CsvDelimiter; v != nil {
-		tfMap["csv_delimiter"] = aws.ToString(v)
-	}
-	if v := apiObject.CsvNoSupValue; v != nil {
-		tfMap["csv_no_sup_value"] = aws.ToString(v)
-	}
-	if v := apiObject.CsvNullValue; v != nil {
-		tfMap["csv_null_value"] = aws.ToString(v)
-	}
-	if v := apiObject.CsvRowDelimiter; v != nil {
-		tfMap["csv_row_delimiter"] = aws.ToString(v)
-	}
-	tfMap["data_format"] = string(apiObject.DataFormat)
-	if v := apiObject.DataPageSize; v != nil {
-		tfMap["data_page_size"] = aws.ToInt32(v)
-	}
-	tfMap["date_partition_delimiter"] = string(apiObject.DatePartitionDelimiter)
-	if v := apiObject.DatePartitionEnabled; v != nil {
-		tfMap["date_partition_enabled"] = aws.ToBool(v)
-	}
-	tfMap["date_partition_sequence"] = string(apiObject.DatePartitionSequence)
-	if v := apiObject.DictPageSizeLimit; v != nil {
-		tfMap["dict_page_size_limit"] = aws.ToInt32(v)
-	}
-	if v := apiObject.EnableStatistics; v != nil {
-		tfMap["enable_statistics"] = aws.ToBool(v)
-	}
-	tfMap["encoding_type"] = string(apiObject.EncodingType)
-	tfMap["encryption_mode"] = string(apiObject.EncryptionMode)
-	if v := apiObject.ExternalTableDefinition; v != nil {
-		tfMap["external_table_definition"] = aws.ToString(v)
-	}
-	if v := apiObject.GlueCatalogGeneration; v != nil {
-		tfMap["glue_catalog_generation"] = aws.ToBool(v)
-	}
-	if v := apiObject.IgnoreHeaderRows; v != nil {
-		tfMap["ignore_header_rows"] = aws.ToInt32(v)
-	}
-	if v := apiObject.IncludeOpForFullLoad; v != nil {
-		tfMap["include_op_for_full_load"] = aws.ToBool(v)
-	}
-	if v := apiObject.MaxFileSize; v != nil {
-		tfMap["max_file_size"] = aws.ToInt32(v)
-	}
-	if v := apiObject.ParquetTimestampInMillisecond; v != nil {
-		tfMap["parquet_timestamp_in_millisecond"] = aws.ToBool(v)
-	}
-	tfMap["parquet_version"] = string(apiObject.ParquetVersion)
-	if v := apiObject.Rfc4180; v != nil {
-		tfMap["rfc_4180"] = aws.ToBool(v)
-	}
-	if v := apiObject.RowGroupLength; v != nil {
-		tfMap["row_group_length"] = aws.ToInt32(v)
-	}
-	if v := apiObject.ServerSideEncryptionKmsKeyId; v != nil {
-		tfMap["server_side_encryption_kms_key_id"] = aws.ToString(v)
-	}
-	if v := apiObject.ServiceAccessRoleArn; v != nil {
-		tfMap["service_access_role_arn"] = aws.ToString(v)
-	}
-	if v := apiObject.TimestampColumnName; v != nil {
-		tfMap["timestamp_column_name"] = aws.ToString(v)
-	}
-	if v := apiObject.UseCsvNoSupValue; v != nil {
-		tfMap["use_csv_no_sup_value"] = aws.ToBool(v)
-	}
-	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
-		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.ToBool(v)
-	}
-
-	return []map[string]any{tfMap}
-}
-
 func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
 	if d.Id() != "" {
 		o := extraConnectionAttributesToSet(old)
 		n := extraConnectionAttributesToSet(new)
 
 		var config *schema.Set
-		// when the engine is "s3" or "mongodb", the extra_connection_attributes
-		// can consist of a subset of the attributes configured in the {engine}_settings block;
-		// fields such as service_access_role_arn (in the case of "s3") are not returned from the API in
-		// extra_connection_attributes thus we take the Set difference to ensure
-		// the returned attributes were set in the {engine}_settings block or originally
-		// in the extra_connection_attributes field
 		if v, ok := d.GetOk("mongodb_settings"); ok {
-			config = engineSettingsToSet(v.([]any))
-		} else if v, ok := d.GetOk("s3_settings"); ok {
 			config = engineSettingsToSet(v.([]any))
 		}
 
@@ -2565,8 +2066,8 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 
 	s := &schema.Set{F: schema.HashString}
 
-	parts := strings.Split(extra, ";")
-	for _, part := range parts {
+	parts := strings.SplitSeq(extra, ";")
+	for part := range parts {
 		kvParts := strings.Split(part, "=")
 		if len(kvParts) != 2 {
 			continue

@@ -142,6 +142,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Servicecatalog": {
 			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
+			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial,
 		},
 	}
 

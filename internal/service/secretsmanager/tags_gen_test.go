@@ -11,10 +11,10 @@ import (
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfsecretsmanager.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfsecretsmanager.ServicePackage(ctx), resourceAddress, knownValue)
 }
 
-func expectFullDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTags(tfsecretsmanager.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTags(tfsecretsmanager.ServicePackage(ctx), resourceAddress, knownValue)
 }

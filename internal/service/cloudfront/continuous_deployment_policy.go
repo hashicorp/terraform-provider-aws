@@ -33,7 +33,7 @@ func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWi
 }
 
 type continuousDeploymentPolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[continuousDeploymentPolicyResourceModel]
 	framework.WithImportByID
 }
 

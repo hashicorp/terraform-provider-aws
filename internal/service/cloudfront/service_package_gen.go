@@ -4,171 +4,209 @@ package cloudfront
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceOriginAccessControl,
+			Factory:  newOriginAccessControlDataSource,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newContinuousDeploymentPolicyResource,
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newKeyValueStoreResource,
 			TypeName: "aws_cloudfront_key_value_store",
 			Name:     "Key Value Store",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newVPCOriginResource,
 			TypeName: "aws_cloudfront_vpc_origin",
 			Name:     "VPC Origin",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceFunction,
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceLogDeliveryCanonicalUserID,
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 			Name:     "Log Delivery Canonical User ID",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceOriginAccessIdentities,
 			TypeName: "aws_cloudfront_origin_access_identities",
 			Name:     "Origin Access Identities",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
 			Name:     "Cache Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceFieldLevelEncryptionConfig,
 			TypeName: "aws_cloudfront_field_level_encryption_config",
 			Name:     "Field-level Encryption Config",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceFieldLevelEncryptionProfile,
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 			Name:     "Field-level Encryption Profile",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceFunction,
 			TypeName: "aws_cloudfront_function",
 			Name:     "Function",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceKeyGroup,
 			TypeName: "aws_cloudfront_key_group",
 			Name:     "Key Group",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceMonitoringSubscription,
 			TypeName: "aws_cloudfront_monitoring_subscription",
 			Name:     "Monitoring Subscription",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceOriginAccessControl,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
 			Name:     "Origin Access Identity",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
 			Name:     "Origin Request Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourcePublicKey,
 			TypeName: "aws_cloudfront_public_key",
 			Name:     "Public Key",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
 			Name:     "Real-time Log Config",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
 			Name:     "Response Headers Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -183,6 +221,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*cloudfront.Options){
 		cloudfront.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *cloudfront.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *cloudfront.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

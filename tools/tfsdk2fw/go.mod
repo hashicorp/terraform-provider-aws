@@ -1,25 +1,23 @@
 module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-go 1.23.10
+go 1.24.4
 
 require (
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
+	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
 )
 
 require (
-	dario.cat/mergo v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.3.1 // indirect
-	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
+	github.com/Masterminds/semver/v3 v3.2.0 // indirect
+	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
 	github.com/ProtonMail/go-crypto v1.2.0 // indirect
 	github.com/YakDriver/go-version v0.1.0 // indirect
 	github.com/YakDriver/regexache v0.24.0 // indirect
-	github.com/agext/levenshtein v1.2.3 // indirect
+	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.55.7 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.29.15 // indirect
@@ -161,8 +159,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.21.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.27.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iotevents v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.3 // indirect
@@ -206,7 +202,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.18.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.46.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.19.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opsworks v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.38.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.15.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.50.1 // indirect
@@ -286,13 +281,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.61.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.31.5 // indirect
 	github.com/aws/smithy-go v1.22.3 // indirect
 	github.com/beevik/etree v1.5.1 // indirect
-	github.com/bgentry/speakeasy v0.2.0 // indirect
+	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/cedar-policy/cedar-go v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -305,7 +299,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0 // indirect
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.65 // indirect
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.66 // indirect
 	github.com/hashicorp/awspolicyequivalence v1.7.0 // indirect
 	github.com/hashicorp/cli v1.1.7 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -322,20 +315,21 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.23.0 // indirect
-	github.com/hashicorp/terraform-json v0.24.0 // indirect
-	github.com/hashicorp/terraform-plugin-framework v1.14.1 // indirect
+	github.com/hashicorp/terraform-json v0.25.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework v1.15.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 // indirect
-	github.com/hashicorp/terraform-plugin-framework-validators v0.17.0 // indirect
-	github.com/hashicorp/terraform-plugin-go v0.26.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.28.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
-	github.com/hashicorp/terraform-plugin-mux v0.18.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.12.0 // indirect
+	github.com/hashicorp/terraform-plugin-mux v0.20.0 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.13.2-0.20250602113327-7287626e5154 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.5 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
-	github.com/hashicorp/yamux v0.1.2 // indirect
-	github.com/huandu/xstrings v1.5.0 // indirect
+	github.com/hashicorp/yamux v0.1.1 // indirect
+	github.com/huandu/xstrings v1.3.3 // indirect
+	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20240118010651-0ba75a80ca38 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
@@ -343,21 +337,21 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/oklog/run v1.1.0 // indirect
+	github.com/oklog/run v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/spf13/cast v1.7.1 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	github.com/zclconf/go-cty v1.16.2 // indirect
+	github.com/zclconf/go-cty v1.16.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.61.0 // indirect
 	go.opentelemetry.io/otel v1.36.0 // indirect
@@ -371,9 +365,10 @@ require (
 	golang.org/x/text v0.26.0 // indirect
 	golang.org/x/tools v0.33.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250425173222-7b384671a197 // indirect
-	google.golang.org/grpc v1.72.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
+	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

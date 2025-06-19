@@ -1969,7 +1969,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2017,7 +2017,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2065,7 +2065,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2126,7 +2126,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2183,7 +2183,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2239,7 +2239,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

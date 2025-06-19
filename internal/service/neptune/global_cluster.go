@@ -152,7 +152,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	var output *neptune.CreateGlobalClusterOutput
 	var err error
-	for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutCreate)); r.Continue(ctx); {
+	for l := backoff.NewLoop(d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
 		output, err = conn.CreateGlobalCluster(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {

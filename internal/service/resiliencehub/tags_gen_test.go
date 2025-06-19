@@ -11,6 +11,6 @@ import (
 	tfresiliencehub "github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfresiliencehub.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfresiliencehub.ServicePackage(ctx), resourceAddress, knownValue)
 }

@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
@@ -101,21 +99,17 @@ var hostedZoneIDPerRegionNLBMap = map[string]string{
 }
 
 // @SDKDataSource("aws_lb_hosted_zone_id", name="Hosted Zone ID")
+// @Region(validateOverrideInPartition=false)
 func dataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidRegionName,
-			},
 			"load_balancer_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice(enum.Slice[awstypes.LoadBalancerTypeEnum](awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.LoadBalancerTypeEnumApplication,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(enum.Slice(awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false)),
 			},
 		},
 	}
@@ -124,28 +118,22 @@ func dataSourceHostedZoneID() *schema.Resource {
 func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
-
 	lbType := awstypes.LoadBalancerTypeEnumApplication
 	if v, ok := d.GetOk("load_balancer_type"); ok {
 		lbType = awstypes.LoadBalancerTypeEnum(v.(string))
 	}
-
-	switch lbType {
+	switch region := meta.(*conns.AWSClient).Region(ctx); lbType {
 	case awstypes.LoadBalancerTypeEnumApplication:
 		if v, ok := hostedZoneIDPerRegionALBMap[region]; ok {
 			d.SetId(v)
 		} else {
-			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported ELBv2 Region (%s)", region)
 		}
 	case awstypes.LoadBalancerTypeEnumNetwork:
 		if v, ok := hostedZoneIDPerRegionNLBMap[region]; ok {
 			d.SetId(v)
 		} else {
-			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported ELBv2 Region (%s)", region)
 		}
 	}
 

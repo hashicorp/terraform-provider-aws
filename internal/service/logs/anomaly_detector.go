@@ -35,7 +35,7 @@ import (
 // @Testing(importStateIdFunc="testAccAnomalyDetectorImportStateIDFunc")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="enabled")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/logs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
 func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
@@ -43,7 +43,7 @@ func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type anomalyDetectorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[anomalyDetectorResourceModel]
 }
 
 func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -262,6 +262,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 type anomalyDetectorResourceModel struct {
+	framework.WithRegionModel
 	AnomalyDetectorARN    types.String                                     `tfsdk:"arn"`
 	AnomalyVisibilityTime types.Int64                                      `tfsdk:"anomaly_visibility_time"`
 	DetectorName          types.String                                     `tfsdk:"detector_name"`

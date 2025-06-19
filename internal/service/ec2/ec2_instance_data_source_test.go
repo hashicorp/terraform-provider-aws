@@ -952,6 +952,7 @@ func testAccInstanceDataSourceConfig_ebsKMSKeyID(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_instance" "test" {
@@ -985,6 +986,7 @@ func testAccInstanceDataSourceConfig_rootBlockDeviceKMSKeyID(rName string) strin
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_instance" "test" {

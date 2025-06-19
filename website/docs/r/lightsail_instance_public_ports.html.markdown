@@ -58,6 +58,10 @@ The following arguments are required:
 * `instance_name` - (Required) Name of the Lightsail Instance.
 * `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. [See below](#port_info).
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### port_info
 
 The following arguments are required:

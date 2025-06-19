@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,7 +47,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		QueueUrl:   aws.String(url),
 	}
 
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 		return conn.SetQueueAttributes(ctx, input)

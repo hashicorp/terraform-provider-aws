@@ -293,6 +293,7 @@ func testAccAliasConfig_name(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -307,6 +308,7 @@ func testAccAliasConfig_nameGenerated(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -320,6 +322,7 @@ func testAccAliasConfig_namePrefix(rName, namePrefix string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -334,11 +337,13 @@ func testAccAliasConfig_updatedKeyID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -353,6 +358,7 @@ func testAccAliasConfig_multiple(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -372,6 +378,7 @@ func testAccAliasConfig_diffSuppress(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {

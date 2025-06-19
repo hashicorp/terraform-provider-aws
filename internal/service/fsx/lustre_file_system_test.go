@@ -1857,6 +1857,7 @@ func testAccLustreFileSystemConfig_kmsKeyID1(rName string) string {
 resource "aws_kms_key" "test1" {
   description             = "%[1]s-1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1878,6 +1879,7 @@ func testAccLustreFileSystemConfig_kmsKeyID2(rName string) string {
 resource "aws_kms_key" "test2" {
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_lustre_file_system" "test" {

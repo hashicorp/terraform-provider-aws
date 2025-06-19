@@ -33,7 +33,7 @@ func sweepDBInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 		}
 
 		for _, v := range page.Items {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDBInstance, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDBInstanceResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
 			))
 		}

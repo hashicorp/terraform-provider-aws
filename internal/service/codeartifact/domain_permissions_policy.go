@@ -24,16 +24,14 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
+// @ArnIdentity("resource_arn")
+// @Testing(serialize=true)
 func resourceDomainPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainPermissionsPolicyPut,
 		UpdateWithoutTimeout: resourceDomainPermissionsPolicyPut,
 		ReadWithoutTimeout:   resourceDomainPermissionsPolicyRead,
 		DeleteWithoutTimeout: resourceDomainPermissionsPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrDomain: {

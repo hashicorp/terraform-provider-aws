@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -28,6 +28,9 @@ import (
 )
 
 // @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
+// @Testing(importIgnore="policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -35,8 +38,8 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -110,12 +113,6 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	var data resourcePolicyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -229,6 +226,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn str
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ConfirmRemoveSelfResourceAccess types.Bool        `tfsdk:"confirm_remove_self_resource_access"`
 	ID                              types.String      `tfsdk:"id"`
 	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`
@@ -236,17 +234,12 @@ type resourcePolicyResourceModel struct {
 	RevisionID                      types.String      `tfsdk:"revision_id"`
 }
 
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
-}
-
 func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
+}
+
+func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	r.WithImportByARN.ImportState(ctx, request, response)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 }

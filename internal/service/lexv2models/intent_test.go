@@ -574,7 +574,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		slotPriorityAWS,
 	}
 
-	intentCreateTF := tflexv2models.ResourceIntentData{
+	intentCreateTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		Name:                   types.StringValue(testString),
@@ -609,7 +609,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		SampleUtterances:          sampleUtterancesAWS,
 	}
 
-	intentModifyTF := tflexv2models.ResourceIntentData{
+	intentModifyTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		Name:                   types.StringValue(testString),
@@ -649,7 +649,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	testTimeStr := "2023-12-08T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
 
-	intentDescribeTF := tflexv2models.ResourceIntentData{
+	intentDescribeTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
@@ -773,21 +773,21 @@ func TestIntentAutoFlex(t *testing.T) {
 		{
 			TestName: "create intent",
 			TFFull:   &intentCreateTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentCreateAWS,
 			AWSEmpty: &lexmodelsv2.CreateIntentInput{},
 		},
 		{
 			TestName: "update intent",
 			TFFull:   &intentModifyTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentModifyAWS,
 			AWSEmpty: &lexmodelsv2.UpdateIntentInput{},
 		},
 		{
 			TestName: "describe intent",
 			TFFull:   &intentDescribeTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentDescribeAWS,
 			AWSEmpty: &lexmodelsv2.DescribeIntentOutput{},
 		},
