@@ -14,11 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -147,6 +150,67 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"metadata": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[tableMetadataModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"iceberg": schema.ListNestedBlock{
+							Description: "Iceberg metadata configuration.",
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"schema": schema.ListNestedBlock{
+										Description: "Schema configuration for the Iceberg table.",
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"field": schema.ListNestedBlock{
+													Description: "List of schema fields for the Iceberg table.",
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"name": schema.StringAttribute{
+																Required:    true,
+																Description: "The name of the field.",
+															},
+															"type": schema.StringAttribute{
+																Required:    true,
+																Description: "The field type. S3 Tables supports all Apache Iceberg primitive types.",
+															},
+															"required": schema.BoolAttribute{
+																Optional:    true,
+																Description: "A Boolean value that specifies whether values are required for each row in this field. Default: false.",
+																Default:     booldefault.StaticBool(false),
+																Computed:    true,
+															},
+														},
+													},
+													Validators: []validator.List{
+														listvalidator.SizeAtLeast(1),
+													},
+												},
+											},
+										},
+										Validators: []validator.List{
+											listvalidator.SizeBetween(1, 1),
+										},
+									},
+								},
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+		},
 	}
 }
 
@@ -163,6 +227,20 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle metadata separately since it's an interface type
+	if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
+		metadataModel, d := plan.Metadata.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Expand(ctx, metadataModel, &input.Metadata)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	_, err := conn.CreateTable(ctx, &input)
@@ -578,6 +656,7 @@ type tableResourceModel struct {
 	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]       `tfsdk:"encryption_configuration"`
 	Format                   fwtypes.StringEnum[awstypes.OpenTableFormat]              `tfsdk:"format"`
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
+	Metadata                 fwtypes.ListNestedObjectValueOf[tableMetadataModel]       `tfsdk:"metadata"`
 	MetadataLocation         types.String                                              `tfsdk:"metadata_location"`
 	ModifiedAt               timetypes.RFC3339                                         `tfsdk:"modified_at"`
 	ModifiedBy               types.String                                              `tfsdk:"modified_by"`
@@ -834,4 +913,56 @@ var tableNameValidator = []validator.String{
 	stringMustContainLowerCaseLettersNumbersUnderscores,
 	stringMustStartWithLetterOrNumber,
 	stringMustEndWithLetterOrNumber,
+}
+
+// For the schema fields in an Iceberg table
+type icebergSchemaFieldModel struct {
+	Name     types.String `tfsdk:"name"`
+	Type     types.String `tfsdk:"type"`
+	Required types.Bool   `tfsdk:"required"`
+}
+
+// For the schema of an Iceberg table
+type icebergSchemaModel struct {
+	Fields fwtypes.ListNestedObjectValueOf[icebergSchemaFieldModel] `tfsdk:"field"`
+}
+
+// For the Iceberg metadata
+type icebergMetadataModel struct {
+	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+}
+
+// Container model for the TableMetadata interface
+type tableMetadataModel struct {
+	Iceberg fwtypes.ListNestedObjectValueOf[icebergMetadataModel] `tfsdk:"iceberg"`
+}
+
+var (
+	_ flex.Expander = tableMetadataModel{}
+)
+
+// Implement fwflex.Expander for tableMetadataModel
+func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Diagnostics) {
+	// If Iceberg metadata is set, expand it
+	if !m.Iceberg.IsNull() && !m.Iceberg.IsUnknown() {
+		icebergModel, d := m.Iceberg.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		// Create Iceberg schema
+		var schema awstypes.IcebergMetadata
+
+		diags.Append(flex.Expand(ctx, icebergModel, &schema)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		out = &awstypes.TableMetadataMemberIceberg{
+			Value: schema,
+		}
+	}
+
+	return out, diags
 }
