@@ -255,7 +255,7 @@ func testAccTemplateConfig_basic(quotaCode, serviceCode, value string) string {
 data "aws_region" "current" {}
 
 resource "aws_servicequotas_template" "test" {
-  aws_region   = data.aws_region.current.name
+  aws_region   = data.aws_region.current.region
   quota_code   = %[1]q
   service_code = %[2]q
   value        = %[3]s
@@ -268,7 +268,7 @@ func testAccTemplateConfig_region(quotaCode, serviceCode, value string) string {
 data "aws_region" "current" {}
 
 resource "aws_servicequotas_template" "test" {
-  region       = data.aws_region.current.name
+  region       = data.aws_region.current.region
   quota_code   = %[1]q
   service_code = %[2]q
   value        = %[3]s

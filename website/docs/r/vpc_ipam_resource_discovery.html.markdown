@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam_resource_discovery" "main" {
   description = "My IPAM Resource Discovery"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {

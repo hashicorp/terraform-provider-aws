@@ -1196,7 +1196,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tier = "free"
 }
@@ -1204,7 +1204,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test_pool" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool"
   aws_service      = "ec2"
@@ -1250,7 +1250,7 @@ data "aws_region" current {}
 
 resource "aws_eip" "test" {
   domain               = "vpc"
-  network_border_group = data.aws_region.current.name
+  network_border_group = data.aws_region.current.region
 
   tags = {
     Name = %[1]q

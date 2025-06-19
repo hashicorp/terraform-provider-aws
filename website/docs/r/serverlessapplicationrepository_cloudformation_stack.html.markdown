@@ -22,7 +22,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
   ]
   parameters = {
     functionName = "func-postgres-rotator"
-    endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint     = "secretsmanager.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
   }
 }
 

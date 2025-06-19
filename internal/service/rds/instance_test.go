@@ -9439,7 +9439,7 @@ resource "aws_secretsmanager_secret" "example" {
         "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:db:*"
       }
     }
   }]
@@ -9524,7 +9524,7 @@ resource "aws_secretsmanager_secret" "example-2" {
         "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:db:*"
       }
     }
   }]

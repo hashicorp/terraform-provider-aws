@@ -45,7 +45,7 @@ resource "aws_osis_pipeline" "example" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.example.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "example"
                     threshold:
                       event_collect_timeout: "60s"

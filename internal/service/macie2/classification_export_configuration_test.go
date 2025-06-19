@@ -204,8 +204,8 @@ resource "aws_s3_bucket_policy" "test" {
             },
             "ArnLike" : {
               "aws:SourceArn" : [
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:classification-job/*"
+                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
+                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:classification-job/*"
               ]
             }
           }

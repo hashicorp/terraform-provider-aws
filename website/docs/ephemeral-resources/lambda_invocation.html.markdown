@@ -69,7 +69,7 @@ ephemeral "aws_lambda_invocation" "resource_calculator" {
   payload = jsonencode({
     workload_type = var.workload_type
     expected_load = var.expected_requests_per_second
-    region        = data.aws_region.current.name
+    region        = data.aws_region.current.region
   })
 }
 
