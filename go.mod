@@ -10,7 +10,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.2.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
-	github.com/YakDriver/smarterr v0.0.0
+	github.com/YakDriver/smarterr v0.3.0
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.68
@@ -380,5 +380,3 @@ require (
 )
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
-
-replace github.com/YakDriver/smarterr => ../../YakDriver/smarterr
