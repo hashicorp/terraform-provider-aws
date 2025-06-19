@@ -565,8 +565,8 @@ github.com/bufbuild/protocompile v0.4.0 h1:LbFKd2XowZvQ/kajzguUp2DC9UEIQhIq77fZZ
 github.com/bufbuild/protocompile v0.4.0/go.mod h1:3v93+mbWn/v3xzN+31nwkJfrEpAUwp+BagBSZWx+TP8=
 github.com/cedar-policy/cedar-go v0.1.0 h1:2tZwWn8tNO/896YAM7OQmH3vn98EeHEA3g9anwdVZvA=
 github.com/cedar-policy/cedar-go v0.1.0/go.mod h1:pEgiK479O5dJfzXnTguOMm+bCplzy5rEEFPGdZKPWz4=
-github.com/cloudflare/circl v1.6.0 h1:cr5JKic4HI+LkINy2lg3W2jF8sHCVTBncJr5gIIq7qk=
-github.com/cloudflare/circl v1.6.0/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
+github.com/cloudflare/circl v1.6.1 h1:zqIqSPIndyBh1bjLVVDHMPpVKqp8Su/V+6MeDzzQBQ0=
+github.com/cloudflare/circl v1.6.1/go.mod h1:uddAzsPgqdMAYatqJ0lsjX1oECcQLIlRpzZh3pJrofs=
 github.com/cyphar/filepath-securejoin v0.4.1 h1:JyxxyPEaktOD+GAnqIqTf9A8tHyAG22rowi7HkoSU1s=
 github.com/cyphar/filepath-securejoin v0.4.1/go.mod h1:Sdj7gXlvMcPZsbhwhQ33GguGLDGQL7h7bg04C/+u9jI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -670,8 +670,8 @@ github.com/hashicorp/terraform-plugin-mux v0.20.0 h1:3QpBnI9uCuL0Yy2Rq/kR9cOdmOF
 github.com/hashicorp/terraform-plugin-mux v0.20.0/go.mod h1:wSIZwJjSYk86NOTX3fKUlThMT4EAV1XpBHz9SAvjQr4=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0 h1:NFPMacTrY/IdcIcnUB+7hsore1ZaRWU9cnB6jFoBnIM=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0/go.mod h1:QYmYnLfsosrxjCnGY1p9c7Zj6n9thnEE+7RObeYs3fA=
-github.com/hashicorp/terraform-plugin-testing v1.13.2-0.20250602113327-7287626e5154 h1:YTsax7BcYmo/IOQH0NgM6NIXImw4AWrFO0e9GQHt5xw=
-github.com/hashicorp/terraform-plugin-testing v1.13.2-0.20250602113327-7287626e5154/go.mod h1:kLDShEGdBxSlqlonwSJRj22+REfsHzVRNKeYzf2ExtU=
+github.com/hashicorp/terraform-plugin-testing v1.13.2 h1:mSotG4Odl020vRjIenA3rggwo6Kg6XCKIwtRhYgp+/M=
+github.com/hashicorp/terraform-plugin-testing v1.13.2/go.mod h1:WHQ9FDdiLoneey2/QHpGM/6SAYf4A7AZazVg7230pLE=
 github.com/hashicorp/terraform-registry-address v0.2.5 h1:2GTftHqmUhVOeuu9CW3kwDkRe4pcBDq0uuK5VJngU1M=
 github.com/hashicorp/terraform-registry-address v0.2.5/go.mod h1:PpzXWINwB5kuVS5CA7m1+eO2f1jKb5ZDIxrOPfpnGkg=
 github.com/hashicorp/terraform-svchost v0.1.1 h1:EZZimZ1GxdqFRinZ1tpJwVxxt49xc/S52uzrw4x0jKQ=
