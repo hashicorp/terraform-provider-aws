@@ -407,7 +407,7 @@ resource "aws_vpc_ipam" "test" {
   }
 
   operating_regions {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `)

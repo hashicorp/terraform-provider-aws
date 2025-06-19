@@ -344,7 +344,7 @@ resource "aws_ebs_snapshot" "test" {
 
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.alternate.name
+  source_region      = data.aws_region.alternate.region
 
   tags = {
     Name = %[1]q

@@ -271,7 +271,7 @@ resource "aws_vpc_ipam_resource_discovery" "test" {
     region_name = data.aws_region.current.region
   }
   operating_regions {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `)

@@ -276,7 +276,7 @@ resource "aws_dynamodb_global_table" "test" {
   name = aws_dynamodb_table.test.name
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {

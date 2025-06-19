@@ -1324,7 +1324,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.alternate.name
+    region = data.aws_region.alternate.region
   }
 }
 `, rName))

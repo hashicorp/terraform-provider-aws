@@ -391,7 +391,7 @@ resource "aws_route53_zone" "test" {
 
 resource "aws_route53_zone_association" "test" {
   vpc_id     = aws_vpc.alternate.id
-  vpc_region = data.aws_region.alternate.name
+  vpc_region = data.aws_region.alternate.region
   zone_id    = aws_route53_zone.test.id
 }
 `, rName, domainName))

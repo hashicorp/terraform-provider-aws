@@ -408,7 +408,7 @@ resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 
   replica {
-    region = data.aws_region.alternate.name
+    region = data.aws_region.alternate.region
   }
 }
 `, rName))

@@ -313,7 +313,7 @@ func testAccAWSLogSourceConfig_multiRegion(rName string) string {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.region, data.aws_region.alternate.name]
+    regions     = [data.aws_region.current.region, data.aws_region.alternate.region]
     source_name = "ROUTE53"
   }
 
