@@ -241,6 +241,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Object",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			),
+			Import: inttypes.Import{
+				WrappedImport: true,
+				ImportID:      objectImportID{},
+			},
 		},
 		{
 			Factory:  resourceObjectCopy,
