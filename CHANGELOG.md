@@ -1,40 +1,24 @@
-## 6.0.0 (Unreleased)
-
-BREAKING CHANGES:
-
-* resource/aws_cur_report_definition: The `s3_prefix` argument is now required ([#38446](https://github.com/hashicorp/terraform-provider-aws/issues/38446))
-* resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured ([#42753](https://github.com/hashicorp/terraform-provider-aws/issues/42753))
-
-## 6.0.0-beta3 (June  5, 2025)
+## 6.1.0 (Unreleased)
 
 ENHANCEMENTS:
 
-* resource/aws_auditmanager_framework_share: Add plan-time validation of `destination_account` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
-* resource/aws_auditmanager_organization_admin_account_registration: Add plan-time validation of `admin_account_id` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
-* resource/aws_ecs_service: Add `arn` attribute ([#42733](https://github.com/hashicorp/terraform-provider-aws/issues/42733))
-
-## 6.0.0-beta2 (May 22, 2025)
-
-BREAKING CHANGES:
-
-* provider: The `endpoints.iotanalytics` and `endpoints.iotevents` configuration arguments have been removed ([#42703](https://github.com/hashicorp/terraform-provider-aws/issues/42703))
-* resource/aws_sagemaker_image_version: `id` is now a comma-delimited string concatenating `image_name` and `version` ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
-
-NOTES:
-
-* data-source/aws_kms_secret: This data source will be removed in a future version ([#42524](https://github.com/hashicorp/terraform-provider-aws/issues/42524))
-* resource/aws_redshift_cluster: The default value of `encrypted` is now `true` to match the AWS API. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
-
-ENHANCEMENTS:
-
-* resource/aws_sagemaker_image_version: Add `aliases` argument ([#42610](https://github.com/hashicorp/terraform-provider-aws/issues/42610))
+* resource/aws_codebuild_project: Add `environment.docker_server` configuration block ([#42982](https://github.com/hashicorp/terraform-provider-aws/issues/42982))
+* resource/aws_lightsail_instance_public_ports: `-1` is now a valid value for `port_info.from_port` and `port_info.to_port` ([#37703](https://github.com/hashicorp/terraform-provider-aws/issues/37703))
 
 BUG FIXES:
 
-* resource/aws_redshift_cluster: Fixes permanent diff when `encrypted` is not explicitly set to `true`. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
-* resource/aws_sagemaker_image_version: Read the correct image version after creation rather than always fetching the latest ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
+* resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0. ([#43090](https://github.com/hashicorp/terraform-provider-aws/issues/43090))
+* resource/aws_elasticsearch_domain: Disable publishing for `log_publishing_options` removed on Update. This prevents a perpetual diff ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_elasticsearch_domain: Fix `ValidationException: The Resource Access Policy specified for the CloudWatch Logs log group ... does not grant sufficient permissions for Amazon Elasticsearch Service to create a log stream` IAM eventual consistency errors on Create ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_opensearch_domain: Disable publishing for `log_publishing_options` removed on Update. This prevents a perpetual diff ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_opensearch_domain: Fix `ValidationException: The Resource Access Policy specified for the CloudWatch Logs log group ... does not grant sufficient permissions for Amazon Elasticsearch Service to create a log stream` IAM eventual consistency errors on Create ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_quicksight_analysis: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_dashboard: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_template: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_user: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `email` ([#43014](https://github.com/hashicorp/terraform-provider-aws/issues/43014))
+* resource/aws_verifiedpermissions_schema: Fix `Value Conversion Error` errors when upgrading existing resources to Terraform AWS Provider v6.0.0 ([#43116](https://github.com/hashicorp/terraform-provider-aws/issues/43116))
 
-## 6.0.0-beta1 (May  7, 2025)
+## 6.0.0 (June 18, 2025)
 
 BREAKING CHANGES:
 
@@ -69,6 +53,7 @@ BREAKING CHANGES:
 * provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon Worklink, the `aws_worklink_fleet` resource has been removed ([#42059](https://github.com/hashicorp/terraform-provider-aws/issues/42059))
 * provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon Worklink, the `aws_worklink_website_certificate_authority_association` resource has been removed ([#42059](https://github.com/hashicorp/terraform-provider-aws/issues/42059))
 * provider: The `aws_redshift_service_account` resource has been removed. AWS [recommends](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy ([#41941](https://github.com/hashicorp/terraform-provider-aws/issues/41941))
+* provider: The `endpoints.iotanalytics` and `endpoints.iotevents` configuration arguments have been removed ([#42703](https://github.com/hashicorp/terraform-provider-aws/issues/42703))
 * provider: The `endpoints.opsworks` configuration argument has been removed ([#41948](https://github.com/hashicorp/terraform-provider-aws/issues/41948))
 * provider: The `endpoints.simpledb` and `endpoints.sdb` configuration arguments have been removed ([#41775](https://github.com/hashicorp/terraform-provider-aws/issues/41775))
 * provider: The `endpoints.worklink` configuration argument has been removed ([#42059](https://github.com/hashicorp/terraform-provider-aws/issues/42059))
@@ -85,6 +70,7 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_cloudfront_response_headers_policy: The `etag` argument is now computed only ([#38448](https://github.com/hashicorp/terraform-provider-aws/issues/38448))
 * resource/aws_cloudtrail_event_data_store: `suspend` now only accepts one of `""` (empty string), `true`, or `false` ([#42434](https://github.com/hashicorp/terraform-provider-aws/issues/42434))
 * resource/aws_cognito_user_in_group: The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments ([#34082](https://github.com/hashicorp/terraform-provider-aws/issues/34082))
+* resource/aws_cur_report_definition: The `s3_prefix` argument is now required ([#38446](https://github.com/hashicorp/terraform-provider-aws/issues/38446))
 * resource/aws_db_instance: `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`. ([#42348](https://github.com/hashicorp/terraform-provider-aws/issues/42348))
 * resource/aws_dms_endpoint: Remove `s3_settings` attribute. Use `aws_dms_s3_endpoint` instead ([#42379](https://github.com/hashicorp/terraform-provider-aws/issues/42379))
 * resource/aws_dx_gateway_association: `vpn_gateway_id` has been removed ([#42323](https://github.com/hashicorp/terraform-provider-aws/issues/42323))
@@ -123,6 +109,8 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 * resource/aws_redshift_cluster: The `snapshot_copy` attribute has been removed ([#41995](https://github.com/hashicorp/terraform-provider-aws/issues/41995))
 * resource/aws_rekognition_stream_processor: `regions_of_interest.bounding_box` is now a list nested block instead of a single nested block ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
 * resource/aws_resiliencehub_resiliency_policy: `policy`, `policy.az`, `policy.hardware`, `policy.software`, and `policy.region` are now list nested blocks instead of single nested blocks ([#42297](https://github.com/hashicorp/terraform-provider-aws/issues/42297))
+* resource/aws_sagemaker_app_image_config: Exactly one `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` block must be configured ([#42753](https://github.com/hashicorp/terraform-provider-aws/issues/42753))
+* resource/aws_sagemaker_image_version: `id` is now a comma-delimited string concatenating `image_name` and `version` ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
 * resource/aws_sagemaker_notebook_instance: Remove `accelerator_types` from your configuration—it no longer exists. Instead, use `instance_type` to use [Inferentia](https://docs.aws.amazon.com/sagemaker/latest/dg/neo-supported-cloud.html). ([#42099](https://github.com/hashicorp/terraform-provider-aws/issues/42099))
 * resource/aws_ssm_association: Remove `instance_id` argument ([#42224](https://github.com/hashicorp/terraform-provider-aws/issues/42224))
 * resource/aws_verifiedpermissions_schema: `definition` is now a list nested block instead of a single nested block ([#42305](https://github.com/hashicorp/terraform-provider-aws/issues/42305))
@@ -131,13 +119,13 @@ resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix`
 NOTES:
 
 * data-source/aws_cloudtrail_service_account: This data source is deprecated. AWS recommends using a service principal name instead of an AWS account ID in any relevant IAM policy. ([#42320](https://github.com/hashicorp/terraform-provider-aws/issues/42320))
+* data-source/aws_kms_secret: This data source will be removed in a future version ([#42524](https://github.com/hashicorp/terraform-provider-aws/issues/42524))
 * data-source/aws_region: The `name` attribute has been deprecated. All configurations using `name` should be updated to use the `region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 * data-source/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * data-source/aws_servicequotas_templates: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 * data-source/aws_ssmincidents_replication_set: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `regions` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * data-source/aws_vpc_endpoint_service: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `service_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * data-source/aws_vpc_peering_connection: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `requester_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
-* provider: Practitioners using Terraform 0.12 must [pin the version](https://developer.hashicorp.com/terraform/language/providers/requirements#v0-12-compatible-provider-requirements) of the AWS Provider to an exact version so as not to install a pre-release ([#41722](https://github.com/hashicorp/terraform-provider-aws/issues/41722))
 * provider: Support for the global S3 endpoint is deprecated, along with the `s3_us_east_1_regional_endpoint` argument. The ability to use the global S3 endpoint will be removed in `v7.0.0`. ([#42375](https://github.com/hashicorp/terraform-provider-aws/issues/42375))
 * resource/aws_cloudformation_stack_set_instance: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `stack_set_instance_region` attribute instead ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_codeconnections_host: Deprecates `id` in favor of `arn` ([#42232](https://github.com/hashicorp/terraform-provider-aws/issues/42232))
@@ -156,6 +144,7 @@ NOTES:
 * resource/aws_kinesis_analytics_application: Effective January 27, 2026, AWS will no longer support Kinesis Data Analytics for SQL. This resource is deprecated and will be removed in a future version. Use the `aws_kinesisanalyticsv2_application` resource instead ([#42102](https://github.com/hashicorp/terraform-provider-aws/issues/42102))
 * resource/aws_media_store_container: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
 * resource/aws_media_store_container_policy: This resource is deprecated. It will be removed in a future version. Use S3, AWS MediaPackage, or other storage solution instead. ([#42265](https://github.com/hashicorp/terraform-provider-aws/issues/42265))
+* resource/aws_redshift_cluster: The default value of `encrypted` is now `true` to match the AWS API. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
 * resource/aws_s3_bucket: Add `bucket_region` attribute. Use of the `bucket_region` attribute instead of the `region` attribute is encouraged ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_service_discovery_service: `health_check_custom_config.failure_threshold` is deprecated. The argument is no longer supported by AWS and is always set to 1 ([#40777](https://github.com/hashicorp/terraform-provider-aws/issues/40777))
 * resource/aws_servicequotas_template: The `region` attribute has been deprecated. All configurations using `region` should be updated to use the `aws_region` attribute instead ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
@@ -167,17 +156,24 @@ ENHANCEMENTS:
 * data-source/aws_availability_zone: Add `group_long_name` attribute ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * data-source/aws_availability_zone: Mark `region` as Optional, allowing a value to be configured ([#42014](https://github.com/hashicorp/terraform-provider-aws/issues/42014))
 * resource/aws_auditmanager_assessment: Add plan-time validation of `roles.role_arn` and `roles.role_type` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* provider: Add enhanced `region` support to most resources, data sources, and ephemeral resources, allowing per-resource Region targeting without requiring multiple provider configurations. See the [Enhanced Region Support guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/enhanced-region-support) for more information. ([#43075](https://github.com/hashicorp/terraform-provider-aws/issues/43075))
 * resource/aws_auditmanager_control: Add plan-time validation of `control_mapping_sources.source_frequency`, `control_mapping_sources.source_set_up_option`, and `control_mapping_sources.source_type` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_auditmanager_framework_share: Add plan-time validation of `destination_account` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
+* resource/aws_auditmanager_organization_admin_account_registration: Add plan-time validation of `admin_account_id` ([#42741](https://github.com/hashicorp/terraform-provider-aws/issues/42741))
 * resource/aws_cognito_user_in_group: Add import support ([#34082](https://github.com/hashicorp/terraform-provider-aws/issues/34082))
+* resource/aws_ecs_service: Add `arn` attribute ([#42733](https://github.com/hashicorp/terraform-provider-aws/issues/42733))
 * resource/aws_guardduty_detector: Adds validation to `finding_publishing_frequency`. ([#42436](https://github.com/hashicorp/terraform-provider-aws/issues/42436))
 * resource/aws_lb_listener: `mutual_authentication` attribute `trust_store_arn` is required if `mode` is `verify` ([#42326](https://github.com/hashicorp/terraform-provider-aws/issues/42326))
 * resource/aws_quicksight_iam_policy_assignment: Add plan-time validation of `policy_arn` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_sagemaker_image_version: Add `aliases` argument ([#42610](https://github.com/hashicorp/terraform-provider-aws/issues/42610))
 * resource/aws_securitylake_subscriber: Add plan-time validation of `access_type` `source.aws_log_source_resource.source_name`, and `subscriber_identity.external_id` ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 
 BUG FIXES:
 
 * resource/aws_auditmanager_control: Fix `Provider produced inconsistent result after apply` errors ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
+* resource/aws_redshift_cluster: Fixes permanent diff when `encrypted` is not explicitly set to `true`. ([#42631](https://github.com/hashicorp/terraform-provider-aws/issues/42631))
 * resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation ([#41380](https://github.com/hashicorp/terraform-provider-aws/issues/41380))
+* resource/aws_sagemaker_image_version: Read the correct image version after creation rather than always fetching the latest ([#42536](https://github.com/hashicorp/terraform-provider-aws/issues/42536))
 * resource/aws_securitylake_subscriber: Change `access_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#42131](https://github.com/hashicorp/terraform-provider-aws/issues/42131))
 
 ## Previous Releases

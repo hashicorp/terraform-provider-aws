@@ -21,6 +21,10 @@ func Values[T Valueser[T]]() []string {
 	return tfslices.Strings(EnumValues[T]())
 }
 
+func EnumSlice[T ~string](l ...T) []T {
+	return l
+}
+
 func Slice[T ~string](l ...T) []string {
 	return tfslices.Strings(l)
 }

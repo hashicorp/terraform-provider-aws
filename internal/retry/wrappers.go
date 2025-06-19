@@ -133,7 +133,7 @@ func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error)
 	}
 
 	var err error
-	if l.TimedOut() {
+	if l.Remaining() == 0 {
 		err = inttypes.ErrDeadlineExceeded
 	} else {
 		err = context.Cause(ctx)

@@ -412,7 +412,7 @@ resource "aws_kms_key" "test" {
         "StringEquals": {
           "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}",
           "kms:EncryptionContext:aws:s3:arn": "${aws_s3_bucket.test.arn}",
-          "kms:ViaService": "s3.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "s3.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }

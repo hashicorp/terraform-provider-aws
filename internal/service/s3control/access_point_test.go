@@ -528,7 +528,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
     ]
 
     principals {
@@ -573,7 +573,7 @@ data "aws_iam_policy_document" "test" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
+      "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*",
     ]
 
     principals {

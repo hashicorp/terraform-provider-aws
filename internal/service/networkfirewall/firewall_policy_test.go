@@ -1493,7 +1493,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
 
     stateful_rule_group_reference {
-      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
     }
   }
 }
@@ -1556,7 +1556,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
 
     stateful_rule_group_reference {
-      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
 
       override {
         action = %[2]q

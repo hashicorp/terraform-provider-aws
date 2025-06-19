@@ -720,7 +720,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.grafana-workspace"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
   subnet_ids          = [aws_subnet.test[count.index].id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -760,7 +760,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.grafana-workspace"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
   subnet_ids          = aws_subnet.test[*].id
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id

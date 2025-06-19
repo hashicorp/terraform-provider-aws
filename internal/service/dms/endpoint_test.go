@@ -2051,7 +2051,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "dms.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2494,7 +2494,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "opensearch"
 
   elasticsearch_settings {
-    endpoint_uri            = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri            = "search-estest.es.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
     service_access_role_arn = aws_iam_role.test.arn
   }
 
@@ -2513,7 +2513,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name                 = "elasticsearch"
   extra_connection_attributes = "errorRetryDuration=400;"
   elasticsearch_settings {
-    endpoint_uri               = "search-estest.es.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri               = "search-estest.es.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
     service_access_role_arn    = aws_iam_role.test.arn
     full_load_error_percentage = 20
   }
@@ -2533,7 +2533,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri            = "search-estest.${data.aws_region.current.region}.es.${data.aws_partition.current.dns_suffix}"
     error_retry_duration    = %[2]d
     service_access_role_arn = aws_iam_role.test.arn
   }
@@ -2553,7 +2553,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri            = "search-estest.${data.aws_region.current.region}.es.${data.aws_partition.current.dns_suffix}"
     use_new_mapping_type    = %[2]t
     service_access_role_arn = aws_iam_role.test.arn
   }
@@ -2573,7 +2573,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri               = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    endpoint_uri               = "search-estest.${data.aws_region.current.region}.es.${data.aws_partition.current.dns_suffix}"
     full_load_error_percentage = %[2]d
     service_access_role_arn    = aws_iam_role.test.arn
   }

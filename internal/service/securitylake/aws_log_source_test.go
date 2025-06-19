@@ -282,7 +282,7 @@ func testAccAWSLogSourceConfig_basic() string {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "ROUTE53"
   }
   depends_on = [aws_securitylake_data_lake.test]
@@ -297,7 +297,7 @@ func testAccAWSLogSourceConfig_sourceVersion(version string) string {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts       = [data.aws_caller_identity.current.account_id]
-    regions        = [data.aws_region.current.name]
+    regions        = [data.aws_region.current.region]
     source_name    = "ROUTE53"
     source_version = %[1]q
   }
@@ -313,7 +313,7 @@ func testAccAWSLogSourceConfig_multiRegion(rName string) string {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name, data.aws_region.alternate.name]
+    regions     = [data.aws_region.current.region, data.aws_region.alternate.region]
     source_name = "ROUTE53"
   }
 
@@ -333,7 +333,7 @@ func testAccAWSLogSourceConfig_multiple() string {
 resource "aws_securitylake_aws_log_source" "test" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "ROUTE53"
   }
   depends_on = [aws_securitylake_data_lake.test]
@@ -342,7 +342,7 @@ resource "aws_securitylake_aws_log_source" "test" {
 resource "aws_securitylake_aws_log_source" "test2" {
   source {
     accounts    = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
     source_name = "S3_DATA"
   }
   depends_on = [aws_securitylake_data_lake.test]
