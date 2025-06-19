@@ -135,10 +135,10 @@ func findDashboardByName(ctx context.Context, conn *cloudwatch.Client, name stri
 	output, err := conn.GetDashboard(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   smarterr.NewError(err),
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError:   err,
 			LastRequest: input,
-		}
+		})
 	}
 
 	if err != nil {

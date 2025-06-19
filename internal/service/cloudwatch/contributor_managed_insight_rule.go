@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -298,14 +299,14 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
-			}
+			})
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, rule := range page.ManagedRules {
@@ -321,10 +322,10 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) (*awstypes.ManagedRuleDescription, error) {
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
@@ -337,7 +338,7 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return rule, nil
