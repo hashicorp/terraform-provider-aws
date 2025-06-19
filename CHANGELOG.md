@@ -3,10 +3,14 @@
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `environment.docker_server` configuration block ([#42982](https://github.com/hashicorp/terraform-provider-aws/issues/42982))
+* resource/aws_lightsail_instance_public_ports: `-1` is now a valid value for `port_info.from_port` and `port_info.to_port` ([#37703](https://github.com/hashicorp/terraform-provider-aws/issues/37703))
 
 BUG FIXES:
 
 * resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0. ([#43090](https://github.com/hashicorp/terraform-provider-aws/issues/43090))
+* resource/aws_quicksight_analysis: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_dashboard: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_template: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
 * resource/aws_quicksight_user: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `email` ([#43014](https://github.com/hashicorp/terraform-provider-aws/issues/43014))
 
 ## 6.0.0 (June 18, 2025)
