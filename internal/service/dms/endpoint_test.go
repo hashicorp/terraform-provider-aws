@@ -3062,7 +3062,6 @@ resource "aws_dms_endpoint" "test" {
   server_name                 = "tftest"
   port                        = 27017
   username                    = "tftest"
-  password                    = "tftest"
   database_name               = "tftest"
   ssl_mode                    = "none"
   extra_connection_attributes = ""
