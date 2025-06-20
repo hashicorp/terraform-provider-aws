@@ -268,6 +268,6 @@ func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func ebsSnapshotARN(ctx context.Context, c *conns.AWSClient, snapshot string) string {
-	return c.RegionalARNNoAccount(ctx, names.EC2, "snapshot/"+snapshot)
+func ebsSnapshotARN(ctx context.Context, c *conns.AWSClient, snapshotID string) string {
+	return c.RegionalARNNoAccount(ctx, names.EC2, "snapshot/"+snapshotID)
 }
