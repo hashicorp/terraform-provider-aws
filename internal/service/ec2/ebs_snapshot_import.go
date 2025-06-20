@@ -235,7 +235,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	taskID := aws.ToString(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
-	output, err := waitEBSSnapshotImportComplete(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
+	output, err := waitSnapshotImportCompleted(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) create: %s", taskID, err)
@@ -258,7 +258,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) Storage Tier: %s", d.Id(), err)
 		}
 
-		_, err = waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout)
+		_, err = waitSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) Storage Tier archive: %s", d.Id(), err)

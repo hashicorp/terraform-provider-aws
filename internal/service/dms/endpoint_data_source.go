@@ -656,7 +656,7 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 			d.Set("service_access_role", "")
 		}
 	case engineNameElasticsearch, engineNameOpenSearch:
-		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+		if err := d.Set("elasticsearch_settings", flattenElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("setting elasticsearch_settings: %w", err)
 		}
 	case engineNameKafka:

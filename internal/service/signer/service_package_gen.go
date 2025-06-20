@@ -29,13 +29,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceSigningJob,
+			Factory:  dataSourceSigningJob,
 			TypeName: "aws_signer_signing_job",
 			Name:     "Signing Job",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceSigningProfile,
+			Factory:  dataSourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
 			Name:     "Signing Profile",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
@@ -46,13 +46,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceSigningJob,
+			Factory:  resourceSigningJob,
 			TypeName: "aws_signer_signing_job",
 			Name:     "Signing Job",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSigningProfile,
+			Factory:  resourceSigningProfile,
 			TypeName: "aws_signer_signing_profile",
 			Name:     "Signing Profile",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -61,7 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceSigningProfilePermission,
+			Factory:  resourceSigningProfilePermission,
 			TypeName: "aws_signer_signing_profile_permission",
 			Name:     "Signing Profile Permission",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
