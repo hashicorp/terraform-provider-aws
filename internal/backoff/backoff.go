@@ -31,6 +31,13 @@ func FixedDelay(delay time.Duration) DelayFunc {
 	}
 }
 
+// ZeroDelay returns 0 for all attempts.
+//
+// This DelayFunc should only be used for testing.
+var ZeroDelay = func(n uint) time.Duration {
+	return 0
+}
+
 type sdkv2HelperRetryCompatibleDelay struct {
 	minTimeout   time.Duration
 	pollInterval time.Duration

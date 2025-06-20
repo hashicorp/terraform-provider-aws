@@ -9,7 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+var (
+	testBackoffOpts = backoff.WithDelay(backoff.ZeroDelay) // Use 0 delay for testing
 )
 
 type ErrorGenerator struct {
@@ -80,7 +85,7 @@ func UntilFoundSleepOpFunc() OpFunc[any] {
 		nil,
 	}
 
-	return NewOpFunc(sequence, 1*time.Minute)
+	return NewOpFunc(sequence, 1*time.Second)
 }
 
 func UntilNotFoundOpFunc() OpFunc[any] {
@@ -132,7 +137,7 @@ func TestUntilFoundN(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(UntilFoundOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute)
+			_, err := Operation(UntilFoundOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -158,7 +163,7 @@ func TestUntilFoundN_timeout(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute)
+			_, err := Operation(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Second, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -189,7 +194,7 @@ func TestUntilNotFound(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(testCase.Op).UntilNotFound().Run(t.Context(), 2*time.Minute)
+			_, err := Operation(testCase.Op).UntilNotFound().Run(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
