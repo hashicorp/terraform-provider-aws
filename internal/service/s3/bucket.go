@@ -349,7 +349,6 @@ func resourceBucket() *schema.Resource {
 						"object_lock_enabled": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ForceNew:         true,
 							ConflictsWith:    []string{"object_lock_enabled"},
 							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 							Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
@@ -396,7 +395,6 @@ func resourceBucket() *schema.Resource {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
-				ForceNew:      true,
 				ConflictsWith: []string{"object_lock_configuration"},
 			},
 			names.AttrPolicy: {
