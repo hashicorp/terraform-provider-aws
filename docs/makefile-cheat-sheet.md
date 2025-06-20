@@ -173,6 +173,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |
 | `ts`<sup>M</sup> | Alias to `testacc-short` |  |  |  |
+| `vcr-enable` | Enable Go-VCR support |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `website`<sup>M</sup> | Run all CI website checks | ✔️ |  |  |
 | `website-link-check` | Check website links |  | ✔️ |  |
 | `website-link-check-ghrc` | Check website links with ghrc |  | ✔️ |  |

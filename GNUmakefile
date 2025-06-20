@@ -750,6 +750,12 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
+
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
@@ -963,6 +969,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
+	vcr-enable \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \

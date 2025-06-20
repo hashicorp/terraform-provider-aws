@@ -4,14 +4,26 @@
 package retry
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 //
 // Based on https://github.com/hashicorp/terraform-plugin-sdk/helper/retry/error.go.
 //
+
+// NotFound returns true if the error represents a "resource not found" condition.
+// Specifically, NotFound returns true if the error or a wrapped error is of type
+// retry.NotFoundError (either from this package or Plugin-SDK V2)
+func NotFound(err error) bool {
+	var e1 *NotFoundError          // nosemgrep:ci.is-not-found-error
+	var e2 *sdkretry.NotFoundError // nosemgrep:ci.is-not-found-error
+	return errors.As(err, &e1) || errors.As(err, &e2)
+}
 
 type NotFoundError struct {
 	LastError error
