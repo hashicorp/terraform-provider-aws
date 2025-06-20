@@ -125,7 +125,7 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 }
 
 type signed interface {
-	~int | ~int32 | ~int64
+	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
 // Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
@@ -154,11 +154,11 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringy interface {
+type stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringy](s S) []string {
+func Strings[S ~[]E, E stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})

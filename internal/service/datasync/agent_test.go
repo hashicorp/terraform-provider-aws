@@ -395,7 +395,7 @@ resource "aws_datasync_agent" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
+  service_name       = "com.amazonaws.${data.aws_region.current.region}.datasync"
   vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test.id]
   subnet_ids         = [aws_subnet.test[0].id]

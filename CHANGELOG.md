@@ -1,4 +1,23 @@
 ## 6.1.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `environment.docker_server` configuration block ([#42982](https://github.com/hashicorp/terraform-provider-aws/issues/42982))
+* resource/aws_lightsail_instance_public_ports: `-1` is now a valid value for `port_info.from_port` and `port_info.to_port` ([#37703](https://github.com/hashicorp/terraform-provider-aws/issues/37703))
+
+BUG FIXES:
+
+* resource/aws_bcmdataexports_export: Fixes error when refreshing state with resources created before v6.0. ([#43090](https://github.com/hashicorp/terraform-provider-aws/issues/43090))
+* resource/aws_elasticsearch_domain: Disable publishing for `log_publishing_options` removed on Update. This prevents a perpetual diff ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_elasticsearch_domain: Fix `ValidationException: The Resource Access Policy specified for the CloudWatch Logs log group ... does not grant sufficient permissions for Amazon Elasticsearch Service to create a log stream` IAM eventual consistency errors on Create ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_opensearch_domain: Disable publishing for `log_publishing_options` removed on Update. This prevents a perpetual diff ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_opensearch_domain: Fix `ValidationException: The Resource Access Policy specified for the CloudWatch Logs log group ... does not grant sufficient permissions for Amazon Elasticsearch Service to create a log stream` IAM eventual consistency errors on Create ([#43033](https://github.com/hashicorp/terraform-provider-aws/issues/43033))
+* resource/aws_quicksight_analysis: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_dashboard: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_template: `WHOLE` is now a valid value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.donut_options.arc_options.arc_thickness` ([#37116](https://github.com/hashicorp/terraform-provider-aws/issues/37116))
+* resource/aws_quicksight_user: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `email` ([#43014](https://github.com/hashicorp/terraform-provider-aws/issues/43014))
+* resource/aws_verifiedpermissions_schema: Fix `Value Conversion Error` errors when upgrading existing resources to Terraform AWS Provider v6.0.0 ([#43116](https://github.com/hashicorp/terraform-provider-aws/issues/43116))
+
 ## 6.0.0 (June 18, 2025)
 
 BREAKING CHANGES:

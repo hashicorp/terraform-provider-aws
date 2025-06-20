@@ -408,7 +408,7 @@ resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 
   replica {
-    region = data.aws_region.alternate.name
+    region = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -438,7 +438,7 @@ resource "aws_secretsmanager_secret" "test" {
 
   replica {
     kms_key_id = aws_kms_key.test.key_id
-    region     = data.aws_region.alternate.name
+    region     = data.aws_region.alternate.region
   }
 }
 `, rName, force_overwrite_replica_secret))
@@ -468,7 +468,7 @@ resource "aws_secretsmanager_secret" "test" {
 
   replica {
     kms_key_id = aws_kms_key.test2.key_id
-    region     = data.aws_region.third.name
+    region     = data.aws_region.third.region
   }
 }
 `, rName, force_overwrite_replica_secret))

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,10 +24,7 @@ func TestAccBCMDataExportsExport_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -212,10 +208,7 @@ func TestAccBCMDataExportsExport_tags_null(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -277,10 +270,7 @@ func TestAccBCMDataExportsExport_tags_EmptyMap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -330,10 +320,7 @@ func TestAccBCMDataExportsExport_tags_AddOnUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -415,10 +402,7 @@ func TestAccBCMDataExportsExport_tags_EmptyTag_OnCreate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -510,10 +494,7 @@ func TestAccBCMDataExportsExport_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -654,10 +635,7 @@ func TestAccBCMDataExportsExport_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -747,10 +725,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_providerOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -931,10 +906,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1094,10 +1066,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1273,10 +1242,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_updateToProviderOnly(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1366,10 +1332,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_updateToResourceOnly(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1460,10 +1423,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_emptyResourceTag(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1531,10 +1491,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1594,10 +1551,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_nullOverlappingResourceTag(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1668,10 +1622,7 @@ func TestAccBCMDataExportsExport_tags_DefaultTags_nullNonOverlappingResourceTag(
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1742,10 +1693,7 @@ func TestAccBCMDataExportsExport_tags_ComputedTag_OnCreate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1800,10 +1748,7 @@ func TestAccBCMDataExportsExport_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1900,10 +1845,7 @@ func TestAccBCMDataExportsExport_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1990,10 +1932,7 @@ func TestAccBCMDataExportsExport_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2155,10 +2094,7 @@ func TestAccBCMDataExportsExport_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		CheckDestroy: testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{

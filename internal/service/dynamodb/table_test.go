@@ -4521,7 +4521,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -4552,7 +4552,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName, sseEnabled))
@@ -4592,7 +4592,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.awsalternate.arn
   }
 
@@ -4635,11 +4635,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 
   server_side_encryption {
@@ -4714,12 +4714,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.%[2]s.arn
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
     kms_key_arn = aws_kms_key.%[3]s.arn
   }
 
@@ -4766,12 +4766,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
   }
 }
@@ -4832,13 +4832,13 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
     kms_key_arn            = aws_kms_key.alternate.arn
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
     kms_key_arn            = aws_kms_key.third.arn
   }
@@ -4871,12 +4871,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = data.aws_region.alternate.name
+    region_name    = data.aws_region.alternate.region
     propagate_tags = %[4]t
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = %[5]t
   }
 
@@ -4914,11 +4914,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 }
 `, rName))
@@ -5176,7 +5176,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   stream_enabled   = %[2]t
