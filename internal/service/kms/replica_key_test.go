@@ -45,7 +45,7 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, names.AttrARN),
