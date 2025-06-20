@@ -19,14 +19,14 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
 resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 ```
 
@@ -37,7 +37,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
@@ -54,7 +54,7 @@ resource "aws_vpc_ipam_pool_cidr" "parent_test" {
 resource "aws_vpc_ipam_pool" "child" {
   address_family      = "ipv4"
   ipam_scope_id       = aws_vpc_ipam.example.private_default_scope_id
-  locale              = data.aws_region.current.name
+  locale              = data.aws_region.current.region
   source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
 

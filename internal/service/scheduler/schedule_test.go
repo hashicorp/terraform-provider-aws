@@ -2512,7 +2512,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {
@@ -2543,7 +2543,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {

@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "example" {
     }
 
     actions   = ["mediastore:*"]
-    resources = ["arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.example.name}/*"]
+    resources = ["arn:aws:mediastore:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.example.name}/*"]
 
     condition {
       test     = "Bool"

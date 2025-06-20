@@ -1488,7 +1488,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1504,7 +1504,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1797,7 +1797,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1813,7 +1813,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1860,7 +1860,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1876,7 +1876,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }

@@ -419,7 +419,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -466,7 +466,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -517,7 +517,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -569,7 +569,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -620,7 +620,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -681,7 +681,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"
@@ -750,7 +750,7 @@ resource "aws_osis_pipeline" "test" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "test"
                     threshold:
                       event_collect_timeout: "60s"

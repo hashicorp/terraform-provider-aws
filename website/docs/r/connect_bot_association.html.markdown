@@ -71,7 +71,7 @@ resource "aws_lex_bot" "example" {
 resource "aws_connect_bot_association" "example" {
   instance_id = aws_connect_instance.example.id
   lex_bot {
-    lex_region = data.aws_region.current.name
+    lex_region = data.aws_region.current.region
     name       = aws_lex_bot.example.name
   }
 }
