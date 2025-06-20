@@ -930,7 +930,6 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-  enable_key_rotation     = true
 
   bypass_policy_lockout_safety_check = %[2]t
 
