@@ -1528,6 +1528,7 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_pre(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 data "aws_service_principal" "ec2" {
   service_name = "ec2"
 }
@@ -1580,6 +1581,7 @@ resource "aws_iam_instance_profile" "role_update_test" {
 
 func testAccRoleConfig_post(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 data "aws_service_principal" "ec2" {
   service_name = "ec2"
 }
