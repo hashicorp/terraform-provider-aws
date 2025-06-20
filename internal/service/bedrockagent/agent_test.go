@@ -445,14 +445,14 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisor), "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
-					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "agent_collaboration", string(awstypes.AgentCollaborationSupervisor)),
 				),
 			},
@@ -463,7 +463,7 @@ func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check", "prepare_agent"},
 			},
 			{
-				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-3-5-sonnet-20240620-v1:0", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter), "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -911,7 +911,7 @@ resource "aws_kms_key" "test_agent" {
 `, rName, model, description, timeout))
 }
 
-func testAccAgentConfig_agentCollaboration(rName, model, description, collaboration string) string {
+func testAccAgentConfig_agentCollaboration(rName, model, description, collaboration, prepareAgent string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_collaboration         = %[4]q
@@ -921,9 +921,9 @@ resource "aws_bedrockagent_agent" "test" {
   idle_session_ttl_in_seconds = 500
   instruction                 = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model            = %[2]q
-  prepare_agent               = false
+  prepare_agent               = %[5]s
 }
-`, rName, model, description, collaboration))
+`, rName, model, description, collaboration, prepareAgent))
 }
 
 func testAccAgentConfig_memoryConfiguration(rName, model, description string) string {

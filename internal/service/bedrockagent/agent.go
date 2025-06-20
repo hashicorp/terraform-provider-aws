@@ -211,11 +211,10 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
-
-		if err != nil {
-			response.Diagnostics.AddError("creating Agent", err.Error())
-
+		var diag diag.Diagnostics
+		agent, diag = prepareAgentWithChecks(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		response.Diagnostics.Append(diag...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -356,11 +355,10 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		}
 
 		if new.PrepareAgent.ValueBool() {
-			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-
-			if err != nil {
-				response.Diagnostics.AddError("updating Agent", err.Error())
-
+			var diag diag.Diagnostics
+			agent, diag = prepareAgentWithChecks(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+			response.Diagnostics.Append(diag...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 		}
@@ -442,8 +440,8 @@ func flexExpandForUpdate(ctx context.Context, value agentResourceModel, apiObjec
 	return fwflex.Expand(ctx, value, apiObject, fwflex.WithIgnoredFieldNames([]string{"GuardrailConfiguration", "PromptOverrideConfiguration"}))
 }
 
-func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
-	_, prepareErr := prepareAgent(ctx, conn, id, timeout)
+func prepareAgentWithChecks(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, diag.Diagnostics) {
+	agent, prepareErr := prepareAgent(ctx, conn, id, timeout)
 
 	var diags diag.Diagnostics
 
@@ -456,19 +454,19 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 		getAgentOutput, err := conn.GetAgent(ctx, &getAgentInput)
 		if err != nil {
 			diags.AddError("failed to read agent", err.Error())
-			return diags
+			return agent, diags
 		}
 
 		var state agentResourceModel
 		diags.Append(fwflex.Flatten(ctx, getAgentOutput.Agent, &state)...)
 		if diags.HasError() {
-			return diags
+			return agent, diags
 		}
 
 		var updateInput bedrockagent.UpdateAgentInput
 		diags.Append(flexExpandForUpdate(ctx, state, &updateInput)...)
 		if diags.HasError() {
-			return diags
+			return agent, diags
 		}
 
 		// Set Collaboration to DISABLED so the agent can be prepared
@@ -477,22 +475,22 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 		_, err = conn.UpdateAgent(ctx, &updateInput)
 		if err != nil {
 			diags.AddError("failed to update agent", err.Error())
-			return diags
+			return agent, diags
 		}
 
 		_, err = waitAgentUpdated(ctx, conn, id, timeout)
 
 		if err != nil {
 			diags.AddError("failed to wait for agent update", err.Error())
-			return diags
+			return agent, diags
 		}
 
 		// Preparing the agent releases the reference to the collaborators alias
-		_, err = prepareAgent(ctx, conn, id, timeout)
+		agent, err = prepareAgent(ctx, conn, id, timeout)
 
 		if err != nil {
 			diags.AddError("failed to prepare agent", err.Error())
-			return diags
+			return agent, diags
 		}
 
 		// Set Collaboration back to SUPERVISOR
@@ -500,20 +498,20 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 		_, err = conn.UpdateAgent(ctx, &updateInput)
 		if err != nil {
 			diags.AddError("failed to update agent", err.Error())
-			return diags
+			return agent, diags
 		}
 
-		_, err = waitAgentUpdated(ctx, conn, id, timeout)
+		agent, err = waitAgentUpdated(ctx, conn, id, timeout)
 		if err != nil {
 			diags.AddError("failed to wait for agent update", err.Error())
-			return diags
+			return agent, diags
 		}
 	} else {
 		if prepareErr != nil {
 			diags.AddError("failed to prepare agent", prepareErr.Error())
 		}
 	}
-	return diags
+	return agent, diags
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
