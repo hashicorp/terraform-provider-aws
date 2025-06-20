@@ -70,6 +70,9 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
+		if response.State.Raw.IsNull() {
+			break
+		}
 		identity := response.Identity
 		if identity == nil {
 			break
