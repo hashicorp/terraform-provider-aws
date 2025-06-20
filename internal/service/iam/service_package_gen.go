@@ -280,7 +280,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				inttypes.StringIdentityAttribute(names.AttrRole, true),
 				inttypes.StringIdentityAttribute(names.AttrName, true),
 			),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      rolePolicyImportID{},
 			},
@@ -294,7 +294,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				inttypes.StringIdentityAttribute(names.AttrRole, true),
 				inttypes.StringIdentityAttribute("policy_arn", true),
 			),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      rolePolicyAttachmentImportID{},
 			},

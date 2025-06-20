@@ -193,7 +193,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}
-					Import: inttypes.Import{
+					Import: inttypes.FrameworkImport{
 						WrappedImport: true,
 					},
 				{{- end }}
@@ -315,7 +315,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}
-					Import: inttypes.Import{
+					Import: inttypes.SDKv2Import{
 						WrappedImport: true,
 						{{- if ne $value.ImportIDHandler "" }}
 							ImportID: {{ $value.ImportIDHandler }}{},
