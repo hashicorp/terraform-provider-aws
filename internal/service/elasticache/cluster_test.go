@@ -117,6 +117,50 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_Engine_valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ec awstypes.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_engineValkey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "outpost_mode"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_outpost_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+				},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1579,6 +1623,17 @@ resource "aws_elasticache_cluster" "test" {
   engine_version  = "5.0.6"
   engine          = "redis"
   node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+}
+`, rName)
+}
+
+func testAccClusterConfig_engineValkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "valkey"
+  node_type       = "cache.t4g.micro"
   num_cache_nodes = 1
 }
 `, rName)
