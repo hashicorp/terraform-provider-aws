@@ -241,8 +241,8 @@ github.com/aws/aws-sdk-go-v2/service/emr v1.49.3 h1:bojA/Hy1JbiG84qjo0dKjzCSrlkG
 github.com/aws/aws-sdk-go-v2/service/emr v1.49.3/go.mod h1:3Fb28r8m3+76JD3SGbN080pY53Zf8S+kraglAVRIucc=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.4 h1:4DSQddd2X8DtQ7XkfoxgTQm9Ziqg7OMqTqYexZJiQsE=
 github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.4/go.mod h1:1wo3Ol0hdgtW5tnkHDSywVk1uGZgFz3GIczlHWigLSE=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.31.1 h1:djC8D10i5+P9dq9i4KxxzA88/1o//pzGkCR8cQGPLKo=
-github.com/aws/aws-sdk-go-v2/service/emrserverless v1.31.1/go.mod h1:DLlEeTpje5Jl1KXggBTphYGdTn+4VUgSOfPZOdQKwOg=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.0 h1:lMEEo2u0vS4+xid38JaKIyjxIh8OCkDNtyt4wHqZ4Os=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.0/go.mod h1:DLlEeTpje5Jl1KXggBTphYGdTn+4VUgSOfPZOdQKwOg=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.39.3 h1:T6L7fsONflMeXuvsT8qZ247hA8ShBB0jF9yUEhW4JqI=
 github.com/aws/aws-sdk-go-v2/service/eventbridge v1.39.3/go.mod h1:sIrUII6Z+hAVAgcpmsc2e9HvEr++m/v8aBPT7s4ZYUk=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.24.4 h1:LFq0twtI4iH7NoI8zqgom4RttSS//mKasAt4vbMbX3E=
@@ -327,8 +327,8 @@ github.com/aws/aws-sdk-go-v2/service/kms v1.41.1 h1:dkaX98cOXw4EgqpDXPqrVVLjsPR9
 github.com/aws/aws-sdk-go-v2/service/kms v1.41.1/go.mod h1:Pqd9k4TuespkireN206cK2QBsaBTL6X+VPAez5Qcijk=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.6 h1:IWuuiXh1p066X78KkbkMhclo5Yuioo0QU7onKZKqPLw=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.6/go.mod h1:NBaw/nPw3v62yWrxUOGkifYKkIeYoocc3O8lgrnvgxU=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.71.5 h1:JwtXDZZ8m0X3qTng2LKgo6apho0YWM+A2awtC7T5/1k=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.71.5/go.mod h1:vahA7MiX/fQE9J5o1PKbgn8KoXz7ogSFLAQQLdLUvM8=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0 h1:2LerDz2Lz22IDfdpR/RpSZIFoBoAh1tdHUaiUzG2z0k=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0/go.mod h1:vahA7MiX/fQE9J5o1PKbgn8KoXz7ogSFLAQQLdLUvM8=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.4 h1:zAxrTUh8ffwiunWoichOWc9tVVSzRpmU/dR6plwIiyE=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.4/go.mod h1:Q1KBC3ILbT5cYEAeWT8SSI4vrnNOqAK1mx5ru0Yk1V4=
 github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.4 h1:emmwvPyyB36dp+c6hPHvn5vR+y/C85VUBKSqS+RhpFI=
@@ -395,8 +395,8 @@ github.com/aws/aws-sdk-go-v2/service/osis v1.15.5 h1:GKITYwhEre2s69oYPdtOKXca7TW
 github.com/aws/aws-sdk-go-v2/service/osis v1.15.5/go.mod h1:Z4CSw4zWtSRQf2YUTFFm8DzccAwxYPZCoCRhgLMH9lE=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.50.3 h1:WjXG23ryEdlCLl2vSoEuGHYfbgxQ/ilZuDhfTHqMwm0=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.50.3/go.mod h1:XiGs3zv9ejL2VLM77wccs1qBnsmyAFnWs5Fs6iptvWY=
-github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.18.3 h1:ykTWO7VhlTLq2n7/SqB6sn7KXxXfBhm9qJ7jrwQBHJE=
-github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.18.3/go.mod h1:T1vNF1UfLFdQhuJmDLWlGNG2lo/OzX9xjjUSNnHW1OE=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.19.0 h1:Lwws0exTQXDwOtnvHQgDTA4xOv6Fh3o9SfU0hTCa/gQ=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.19.0/go.mod h1:T1vNF1UfLFdQhuJmDLWlGNG2lo/OzX9xjjUSNnHW1OE=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.11.3 h1:Kcd4PcPvUaNIffZP1O0Kr4Ki2n6WJJOGKgIUbZxMaDU=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.11.3/go.mod h1:zkxvVWdC/LpE3YfN6hmdVXA+2NwIzHs5sItf6Obv73o=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.6.2 h1:b1iBwCTqJRqpy8FMv/0d049PLwCa3Jk8+UVAh7qIF+0=
@@ -463,8 +463,8 @@ github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4 h1:oZjDliGfblCLGHBlw1CTT
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4/go.mod h1:E2HKzJfiZE7AfaaPKwKyuHsFCT6CMQx+xA+RBfvNMKY=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.4.2 h1:vLDrTSHXJKNQXU794nKkhnZbqV/PepTpbM78fj6olM4=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.4.2/go.mod h1:fTauvBZjNMRnXoEDSo+FFAW0BuLiWpilnB7dz8lnqhY=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.197.0 h1:IlDQiwn/iRYhXmlld9IcbTV2E62JR7GF/4R4fB/Puak=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.197.0/go.mod h1:uRG58IrTnRkk83JKfW9BgMpU1MKuHtcwdiBfQyC7agw=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.198.0 h1:b7K7vPhHzhBzagRmCoa/AED5KWhz3BUDxis8R1cYc+Q=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.198.0/go.mod h1:uRG58IrTnRkk83JKfW9BgMpU1MKuHtcwdiBfQyC7agw=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.8 h1:GlCIygedzgZOThUqfOlJmv9S7Dg/qknG6AHsJIvQQeQ=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.8/go.mod h1:6g2NPTPm0cx1YV1zYJbWXz80wn+xyX0JSBixqRSC99o=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.29.4 h1:NMQLKDG9A45/Wo5I5HtCrBaOsAzYWB4GmF1fgfQsGM8=

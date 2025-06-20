@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/emr v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.4
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.31.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/evs v1.0.2
@@ -153,7 +153,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.6
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.71.5
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.52.1
@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.50.3
-	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.18.3
+	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.35.4
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.4.2
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.197.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.198.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7
