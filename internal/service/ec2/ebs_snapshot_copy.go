@@ -174,7 +174,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Copy (%s) Storage Tier: %s", d.Id(), err)
 		}
 
-		if _, err := waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
+		if _, err := waitSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) Storage Tier archive: %s", d.Id(), err)
 		}
 	}
