@@ -69,7 +69,7 @@ type ServicePackageFrameworkResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   FrameworkImport
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -91,7 +91,7 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   SDKv2Import
 }
 
 type Identity struct {
@@ -312,13 +312,22 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-type ImportID interface {
-	Create(d *schema.ResourceData) string
+type ImportIDParser interface {
 	Parse(id string) (string, map[string]string, error)
 }
 
-type Import struct {
+type FrameworkImport struct {
 	WrappedImport bool
-	ImportID      ImportID // Multi-Parameter
+	ImportID      ImportIDParser // Multi-Parameter
+	SetIDAttr     bool
+}
 
+type SDKv2ImportID interface {
+	Create(d *schema.ResourceData) string
+	ImportIDParser
+}
+
+type SDKv2Import struct {
+	WrappedImport bool
+	ImportID      SDKv2ImportID // Multi-Parameter
 }

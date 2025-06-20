@@ -88,7 +88,7 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 	return nil
 }
 
-func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
+func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -137,7 +137,7 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 	return nil
 }
 
-func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.Import, client AWSClient) error {
+func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {

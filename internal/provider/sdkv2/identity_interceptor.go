@@ -94,7 +94,7 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.Import) *schema.ResourceImporter {
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
