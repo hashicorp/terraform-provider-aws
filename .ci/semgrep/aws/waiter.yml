@@ -4,7 +4,6 @@ rules:
     message: Don't use AWS SDK for Go v2 waiters
     paths:
       exclude:
-        - "internal/acctest"
         - "sweep.go"
     patterns:
       - pattern: |
