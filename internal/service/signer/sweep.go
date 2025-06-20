@@ -48,7 +48,7 @@ func sweepSigningProfiles(region string) error {
 		for _, profile := range page.Profiles {
 			name := aws.ToString(profile.ProfileName)
 
-			r := ResourceSigningProfile()
+			r := resourceSigningProfile()
 			d := r.Data(nil)
 			d.SetId(name)
 

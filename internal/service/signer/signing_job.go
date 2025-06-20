@@ -22,11 +22,12 @@ import (
 )
 
 // @SDKResource("aws_signer_signing_job", name="Signing Job")
-func ResourceSigningJob() *schema.Resource {
+func resourceSigningJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningJobCreate,
 		ReadWithoutTimeout:   resourceSigningJobRead,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

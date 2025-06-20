@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_signer_signing_job", name="Signing Job")
-func DataSourceSigningJob() *schema.Resource {
+func dataSourceSigningJob() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningJobRead,
 
