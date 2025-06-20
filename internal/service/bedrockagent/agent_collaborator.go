@@ -286,7 +286,8 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		response.Diagnostics.Append(prepareSupervisorToReleaseCollaborator(ctx, conn, data.AgentID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))...)
+		_, diag := prepareAgentWithChecks(ctx, conn, data.AgentID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
+		response.Diagnostics.Append(diag...)
 		if response.Diagnostics.HasError() {
 			return
 		}
