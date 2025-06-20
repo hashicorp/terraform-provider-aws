@@ -378,6 +378,7 @@ type ResourceDatum struct {
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
+	IDAttrFormat                string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -657,6 +658,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							d.isARNFormatGlobal = triBooleanFalse
 						}
 					}
+				}
+
+			case "IdAttrFormat":
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) > 0 {
+					d.IDAttrFormat = args.Positional[0]
 				}
 
 			case "MutableIdentity":

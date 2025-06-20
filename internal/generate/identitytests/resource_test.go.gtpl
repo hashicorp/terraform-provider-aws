@@ -184,6 +184,10 @@ ImportPlanChecks: resource.ImportPlanChecks{
 		{{ else if .HasIDAttrDuplicates -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), knownvalue.NotNull()),
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+		{{ else if gt (len .IdentityAttributes) 0 -}}
+			{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
 		{{ end -}}
@@ -223,6 +227,10 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ else if .IsGlobalSingleton -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
+		{{ else if gt (len .IdentityAttributes) 0 -}}
+			{{ range .IdentityAttributes -}}
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
@@ -269,7 +277,6 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	{{- if .OverrideIdentifier }}
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	{{- end }}
@@ -319,6 +326,9 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				),
 				{{ end -}}
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .IDAttrFormat "" -}}
+						tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{{ .IDAttrFormat }}"),
+					{{ end -}}
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
 							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
@@ -362,11 +372,11 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
 									{{ . }}: knownvalue.NotNull(),
-								{{- end }}
+								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
-							{{- end }}
+							{{ end }}
 						{{ end -}}
 					{{ end -}}
 				},
@@ -447,6 +457,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					"region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if ne .IDAttrFormat "" -}}
+						tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{{ .IDAttrFormat }}"),
+					{{ end -}}
 					{{ if ne .ARNFormat "" -}}
 						{{ if .IsGlobal -}}
 							tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New({{ .ARNAttribute }}), "{{ .ARNNamespace }}", "{{ .ARNFormat }}"),
@@ -484,11 +497,11 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 								{{ range .IdentityAttributes -}}
 									{{ . }}: knownvalue.NotNull(),
-								{{- end }}
+								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
-							{{- end }}
+							{{ end }}
 						{{ end -}}
 					{{ end -}}
 				},

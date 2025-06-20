@@ -722,7 +722,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				} else if resource.Identity.Singleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
 				} else {
-					r.Importer = newParameterizedIdentityImporter(resource.Identity)
+					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
 				}
 			}
 
