@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -110,18 +111,7 @@ func resourceKey() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"rotation_period_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -162,12 +152,12 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
-		p, err := structure.NormalizeJsonString(v.(string))
+		v, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Policy = aws.String(p)
+		input.Policy = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("custom_key_store_id"); ok {
@@ -255,18 +245,17 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
-	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
-	if key.metadata.XksKeyConfiguration != nil {
-		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
-	} else {
-		d.Set("xks_key_id", nil)
-	}
-
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
+	if v := key.metadata.XksKeyConfiguration; v != nil {
+		d.Set("xks_key_id", v.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
 
 	setTagsOut(ctx, key.tags)
 
@@ -580,7 +569,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
 	if err != nil {
-		return fmt.Errorf("policy contains invalid JSON: %w", err)
+		return err
 	}
 
 	updateFunc := func() (any, error) {
