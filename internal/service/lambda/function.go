@@ -209,6 +209,25 @@ func resourceFunction() *schema.Resource {
 						},
 					},
 				},
+
+				// Suppress diffs if the image configuration is provided, but values are unset
+				// which is a valid Lambda function configuration. e.g.
+				//   image_config {
+				//     command           = null
+				//     entry_point       = null
+				//	   working_directory = null
+				//   }
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Id() == "" || old == "1" || new == "0" {
+						return false
+					}
+
+					if d.HasChanges("image_config.0.entry_point", "image_config.0.command", "image_config.0.working_directory") {
+						return false
+					}
+
+					return true
+				},
 			},
 			"image_uri": {
 				Type:         schema.TypeString,
