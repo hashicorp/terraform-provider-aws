@@ -126,7 +126,7 @@ func resourceTargetGroup() *schema.Resource {
 						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  awstypes.ProtocolEnumHttp,
+							Computed: true,
 							StateFunc: func(v any) string {
 								return strings.ToUpper(v.(string))
 							},
@@ -471,7 +471,11 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.HealthCheckTimeoutSeconds = aws.Int32(int32(v))
 		}
 
-		healthCheckProtocol := awstypes.ProtocolEnum(tfMap[names.AttrProtocol].(string))
+		protocol, ok := tfMap[names.AttrProtocol].(string)
+		if !ok || protocol == "" {
+			protocol = string(awstypes.ProtocolEnumHttp)
+		}
+		healthCheckProtocol := awstypes.ProtocolEnum(protocol)
 		if healthCheckProtocol != awstypes.ProtocolEnumTcp {
 			if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 				input.HealthCheckPath = aws.String(v)
@@ -685,7 +689,11 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.HealthCheckTimeoutSeconds = aws.Int32(int32(v))
 			}
 
-			healthCheckProtocol := awstypes.ProtocolEnum(tfMap[names.AttrProtocol].(string))
+			protocol, ok := tfMap[names.AttrProtocol].(string)
+			if !ok || protocol == "" {
+				protocol = string(awstypes.ProtocolEnumHttp)
+			}
+			healthCheckProtocol := awstypes.ProtocolEnum(protocol)
 			if healthCheckProtocol != awstypes.ProtocolEnumTcp {
 				if v, ok := tfMap["matcher"].(string); ok {
 					if protocolVersion := d.Get("protocol_version").(string); protocolVersion == protocolVersionGRPC {
