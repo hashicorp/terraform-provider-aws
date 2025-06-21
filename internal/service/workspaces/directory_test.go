@@ -1256,6 +1256,40 @@ func testAccDirectory_poolsWorkspaceCreationAD(t *testing.T) {
 	})
 }
 
+func testAccDirectory_dedicatedTenancy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.WorkspaceDirectory
+	rName := sdkacctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.dedicated_tenancy"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryConfig_dedicatedTenancy(rName, "dedicated_tenancy"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_type", "DEDICATED_TENANCY"),
+					resource.TestCheckResourceAttr(resourceName, "user_identity_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_name", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_directory_description", fmt.Sprintf("tf-testacc-workspaces-directory-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", "DEDICATED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDirectoryConfig_basePools(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1465,4 +1499,18 @@ resource "aws_workspaces_directory" "pool" {
   }
 }
 `, rName, domain))
+}
+
+func testAccDirectoryConfig_dedicatedTenancy(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccDirectoryConfig_base(rName, domain),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "dedicated_tenancy" {
+  tenancy = "DEDICATED"
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName),
+	)
 }
