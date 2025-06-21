@@ -233,6 +233,10 @@ func dataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -281,6 +285,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }
