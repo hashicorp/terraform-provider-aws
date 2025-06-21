@@ -207,6 +207,12 @@ func resourcePolicy() *schema.Resource {
 						Type: schema.TypeString,
 					},
 				},
+				"resource_tag_logical_operator": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ResourceTagLogicalOperator](),
+				},
 				"resource_type_list": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -375,6 +381,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
 		diags = sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
+	d.Set("resource_tag_logical_operator", policy.ResourceTagLogicalOperator)
 	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
 	d.Set("resource_set_ids", policy.ResourceSetIds)
@@ -493,6 +500,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 				Key:   aws.String(k),
 				Value: aws.String(v),
 			})
+			apiObject.ResourceTagLogicalOperator = awstypes.ResourceTagLogicalOperator(d.Get("resource_tag_logical_operator").(string))
 		}
 	}
 
