@@ -125,6 +125,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_withOverriddenManagedRuleGro
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.#", resourceName, "firewall_policy.0.stateful_rule_group_reference.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0", resourceName, "firewall_policy.0.stateful_rule_group_reference.0"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.override.action", resourceName, "firewall_policy.0.stateful_rule_group_reference.override.action"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -154,6 +155,35 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_withPolicyVariables(t *testi
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.#", resourceName, "firewall_policy.rule_variables.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.ip_set.#", resourceName, "firewall_policy.rule_variables.ip_set.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.rule_variables.ip_set.0.definition.#", resourceName, "firewall_policy.rule_variables.ip_set.0.definition.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallPolicyDataSource_activeThreatDefense(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyDataSourceConfig_activeThreatDefense(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN), resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.0", resourceName, "firewall_policy.0.stateless_fragment_default_actions.0"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.#", resourceName, "firewall_policy.0.stateful_rule_group_reference.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0", resourceName, "firewall_policy.0.stateful_rule_group_reference.0"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -244,6 +274,30 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           definition = ["10.0.0.0/16", "10.1.0.0/24"]
         }
       }
+    }
+  }
+}
+
+data "aws_networkfirewall_firewall_policy" "test" {
+  arn = aws_networkfirewall_firewall_policy.test.arn
+}`, rName)
+}
+
+func testAccFirewallPolicyDataSourceConfig_activeThreatDefense(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+
+    stateful_rule_group_reference {
+      deep_threat_inspection = true
+      resource_arn           = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/AttackInfrastructureActionOrder"
     }
   }
 }
