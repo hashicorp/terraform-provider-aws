@@ -5,6 +5,7 @@ package lexv2models
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -68,18 +69,6 @@ func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fw
 	return false, diags
 }
 
-func promptAttemptSpecificationSliceToMap(_ context.Context, input []*PromptAttemptsSpecification) map[string]*PromptAttemptsSpecification {
-	output := make(map[string]*PromptAttemptsSpecification)
-	for _, item := range input {
-		if item == nil {
-			continue
-		}
-		key := item.MapBlockKey.ValueString()
-		output[key] = item
-	}
-	return output
-}
-
 // arePromptAttemptsEqual compares two PromptAttemptsSpecification fields for equality
 // treating them as maps with map_block_key as the key
 func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtypes.SetNestedObjectValueOf[PromptAttemptsSpecification]) (bool, diag.Diagnostics) {
@@ -106,14 +95,15 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 			return false, diags
 		}
 
-		newPromptAttemptSpecMap := promptAttemptSpecificationSliceToMap(ctx, newPromptAttemptSpecification)
-
 		var hasDefaults bool
 		for _, value := range oldPromptAttemptSpecification {
 			key := value.MapBlockKey.ValueString()
-			if newValue, ok := newPromptAttemptSpecMap[key]; ok {
-				// Compare the values for this key
-				if !arePromptAttemptValuesEqual(*newValue, *value) {
+			index := slices.IndexFunc(newPromptAttemptSpecification, func(item *PromptAttemptsSpecification) bool {
+				return item.MapBlockKey.ValueString() == key
+			})
+
+			if index != -1 {
+				if !arePromptAttemptValuesEqual(*newPromptAttemptSpecification[index], *value) {
 					return false, diags
 				}
 			} else if _, ok := promptAttemptSpecificationDefaults(ctx, key); ok {
