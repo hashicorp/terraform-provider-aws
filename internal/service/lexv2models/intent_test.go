@@ -2094,35 +2094,6 @@ resource "aws_lexv2models_intent" "test" {
       allow_interrupt            = true
       max_retries                = %[2]d
       message_selection_strategy = "Ordered"
-      prompt_attempts_specification {
-        allow_interrupt = true
-        map_block_key   = "Initial"
-
-        allowed_input_types {
-          allow_audio_input = true
-          allow_dtmf_input  = true
-        }
-
-        audio_and_dtmf_input_specification {
-          start_timeout_ms = 4000
-
-          audio_specification {
-            end_timeout_ms = %[4]d
-            max_length_ms  = 15000
-          }
-
-          dtmf_specification {
-            deletion_character = "*"
-            end_character      = "#"
-            end_timeout_ms     = 5000
-            max_length         = 513
-          }
-        }
-
-        text_input_specification {
-          start_timeout_ms = 30000
-        }
-      }
 
       message_group {
         message {
@@ -2154,6 +2125,36 @@ resource "aws_lexv2models_intent" "test" {
       allow_interrupt            = true
       max_retries                = %[2]d
       message_selection_strategy = "Ordered"
+
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = %[4]d
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
 
       message_group {
         message {

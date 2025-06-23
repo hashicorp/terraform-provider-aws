@@ -16,14 +16,12 @@ import (
 func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[IntentConfirmationSetting]) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	// Convert old value to pointer
 	oldConfirmationSettings, di := oldValue.ToPtr(ctx)
 	diags = append(diags, di...)
 	if diags.HasError() {
 		return false, diags
 	}
 
-	// Convert new value to pointer
 	newConfirmationSettings, di := newValue.ToPtr(ctx)
 	diags = append(diags, di...)
 	if diags.HasError() {
@@ -42,7 +40,6 @@ func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fw
 			!oldConfirmationSettings.FailureConditional.Equal(newConfirmationSettings.FailureConditional) ||
 			!oldConfirmationSettings.FailureNextStep.Equal(newConfirmationSettings.FailureNextStep) ||
 			!oldConfirmationSettings.FailureResponse.Equal(newConfirmationSettings.FailureResponse) {
-
 			return false, diags
 		}
 
@@ -119,9 +116,7 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 				if !arePromptAttemptValuesEqual(*newValue, *value) {
 					return false, diags
 				}
-			}
-
-			if _, ok := promptAttemptSpecificationDefaults(ctx, key); ok {
+			} else if _, ok := promptAttemptSpecificationDefaults(ctx, key); ok {
 				hasDefaults = true
 				continue
 			}
@@ -144,44 +139,46 @@ func arePromptAttemptValuesEqual(oldItem, newItem PromptAttemptsSpecification) b
 
 // promptAttemptSpecificationDefaults returns the default PromptAttemptsSpecification for a given key
 func promptAttemptSpecificationDefaults(ctx context.Context, key string) (*PromptAttemptsSpecification, bool) {
-	objectDefault := &PromptAttemptsSpecification{
-		MapBlockKey: fwtypes.StringEnumValue[PromptAttemptsType]("Initial"),
-		AllowedInputTypes: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AllowedInputTypes{
-			{
-				AllowAudioInput: fwflex.BoolValueToFramework(ctx, true),
-				AllowDTMFInput:  fwflex.BoolValueToFramework(ctx, true),
-			},
-		}),
-		AllowInterrupt: fwflex.BoolValueToFramework(ctx, true),
-		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioAndDTMFInputSpecification{
-			{
-				StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 4000),
-				AudioSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioSpecification{
-					{
-						EndTimeoutMs: fwflex.Int64ValueToFramework(ctx, 640),
-						MaxLengthMs:  fwflex.Int64ValueToFramework(ctx, 15000),
-					},
-				}),
-				DTMFSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*DTMFSpecification{
-					{
-						DeletionCharacter: fwflex.StringValueToFramework(ctx, "*"),
-						EndCharacter:      fwflex.StringValueToFramework(ctx, "#"),
-						EndTimeoutMs:      fwflex.Int64ValueToFramework(ctx, 5000),
-						MaxLength:         fwflex.Int64ValueToFramework(ctx, 513),
-					},
-				}),
-			},
-		}),
-		TextInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TextInputSpecification{
-			{
-				StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 30000),
-			},
-		}),
+	objectDefault := func(mapBlockKey PromptAttemptsType) *PromptAttemptsSpecification {
+		return &PromptAttemptsSpecification{
+			MapBlockKey: fwtypes.StringEnumValue(mapBlockKey),
+			AllowedInputTypes: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AllowedInputTypes{
+				{
+					AllowAudioInput: fwflex.BoolValueToFramework(ctx, true),
+					AllowDTMFInput:  fwflex.BoolValueToFramework(ctx, true),
+				},
+			}),
+			AllowInterrupt: fwflex.BoolValueToFramework(ctx, true),
+			AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioAndDTMFInputSpecification{
+				{
+					StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 4000), //nolint:mnd
+					AudioSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioSpecification{
+						{
+							EndTimeoutMs: fwflex.Int64ValueToFramework(ctx, 640),   //nolint:mnd
+							MaxLengthMs:  fwflex.Int64ValueToFramework(ctx, 15000), //nolint:mnd
+						},
+					}),
+					DTMFSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*DTMFSpecification{
+						{
+							DeletionCharacter: fwflex.StringValueToFramework(ctx, "*"),
+							EndCharacter:      fwflex.StringValueToFramework(ctx, "#"),
+							EndTimeoutMs:      fwflex.Int64ValueToFramework(ctx, 5000), //nolint:mnd
+							MaxLength:         fwflex.Int64ValueToFramework(ctx, 513),  //nolint:mnd
+						},
+					}),
+				},
+			}),
+			TextInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TextInputSpecification{
+				{
+					StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 30000), //nolint:mnd
+				},
+			}),
+		}
 	}
 
 	defaults := map[string]*PromptAttemptsSpecification{
-		"Initial": objectDefault,
-		"Retry":   objectDefault,
+		"Initial": objectDefault("Initial"),
+		"Retry1":  objectDefault("Retry1"),
 	}
 
 	if val, ok := defaults[key]; ok {
