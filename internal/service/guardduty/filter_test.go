@@ -244,7 +244,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -280,7 +280,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -315,7 +315,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {

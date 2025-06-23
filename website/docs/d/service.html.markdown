@@ -18,7 +18,7 @@ Use this data source to compose and decompose AWS service DNS names.
 data "aws_region" "current" {}
 
 data "aws_service" "test" {
-  region     = data.aws_region.current.name
+  region     = data.aws_region.current.region
   service_id = "ec2"
 }
 ```

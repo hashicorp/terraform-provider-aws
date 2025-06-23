@@ -19,7 +19,7 @@ customer-managed prefix list in the current region.
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "example" {
-  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 }
 ```
 

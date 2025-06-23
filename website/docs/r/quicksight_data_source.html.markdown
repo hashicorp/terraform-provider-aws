@@ -49,7 +49,7 @@ resource "aws_s3_object" "example" {
     fileLocations = [
       {
         URIPrefixes = [
-          "https://${aws_s3_bucket.example.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
+          "https://${aws_s3_bucket.example.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
         ]
       }
     ]

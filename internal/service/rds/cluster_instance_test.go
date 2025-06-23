@@ -1665,7 +1665,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,

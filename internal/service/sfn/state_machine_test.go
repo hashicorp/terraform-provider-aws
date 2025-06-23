@@ -749,7 +749,7 @@ resource "aws_iam_role" "for_sfn" {
   "Statement": [{
     "Effect": "Allow",
     "Principal": {
-      "Service": "states.${data.aws_region.current.name}.amazonaws.com"
+      "Service": "states.${data.aws_region.current.region}.amazonaws.com"
     },
     "Action": "sts:AssumeRole"
   }]

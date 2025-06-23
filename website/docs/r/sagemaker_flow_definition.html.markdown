@@ -47,7 +47,7 @@ resource "aws_sagemaker_flow_definition" "example" {
     task_count                            = 1
     task_description                      = "example"
     task_title                            = "example"
-    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {

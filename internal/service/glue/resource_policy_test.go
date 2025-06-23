@@ -241,7 +241,7 @@ data "aws_region" "current" {}
 data "aws_iam_policy_document" "glue-example-policy" {
   statement {
     actions   = [%[1]q]
-    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
     principals {
       identifiers = ["*"]
       type        = "AWS"
@@ -266,7 +266,7 @@ data "aws_region" "current" {}
 data "aws_iam_policy_document" "glue-example-policy" {
   statement {
     actions   = [%[1]q]
-    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
     principals {
       identifiers = ["*"]
       type        = "AWS"
@@ -296,7 +296,7 @@ resource "aws_glue_resource_policy" "test" {
       Action = "glue:CreateTable"
       Effect = "Allow"
       Resource = [
-        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
       ]
       Principal = {
         AWS = "*"
@@ -323,7 +323,7 @@ resource "aws_glue_resource_policy" "test" {
       Action = [
         "glue:CreateTable",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
       Principal = {
         AWS = ["*"]
       }

@@ -805,7 +805,7 @@ func testAccEnvironmentConfig_platformARN(rName, platformNameWithVersion string,
 resource "aws_elastic_beanstalk_environment" "test" {
   application  = aws_elastic_beanstalk_application.test.name
   name         = %[1]q
-  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/%[2]s"
+  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.region}::platform/%[2]s"
 
   setting {
     namespace = "aws:ec2:vpc"

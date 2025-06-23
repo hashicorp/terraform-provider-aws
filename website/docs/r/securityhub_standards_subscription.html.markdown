@@ -24,7 +24,7 @@ resource "aws_securityhub_standards_subscription" "cis" {
 
 resource "aws_securityhub_standards_subscription" "pci_321" {
   depends_on    = [aws_securityhub_account.example]
-  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/pci-dss/v/3.2.1"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.region}::standards/pci-dss/v/3.2.1"
 }
 ```
 

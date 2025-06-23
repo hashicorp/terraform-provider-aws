@@ -5026,7 +5026,7 @@ resource "aws_route_table_association" "test" {
 data "aws_ec2_managed_prefix_list" "test" {
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.${data.aws_region.current.name}.vpc-lattice"]
+    values = ["com.amazonaws.${data.aws_region.current.region}.vpc-lattice"]
   }
 }
 
