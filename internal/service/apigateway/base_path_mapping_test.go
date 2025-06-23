@@ -373,7 +373,7 @@ resource "aws_api_gateway_integration" "test" {
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
 
-  depends_on  = [aws_api_gateway_integration.test]
+  depends_on = [aws_api_gateway_integration.test]
 }
 
 resource "aws_api_gateway_stage" "test" {
@@ -464,7 +464,7 @@ resource "aws_api_gateway_integration" "test" {
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
 
-  depends_on  = [aws_api_gateway_integration.test]
+  depends_on = [aws_api_gateway_integration.test]
 }
 
 resource "aws_api_gateway_stage" "test" {
@@ -531,7 +531,7 @@ resource "aws_api_gateway_integration" "test2" {
 resource "aws_api_gateway_deployment" "test2" {
   rest_api_id = aws_api_gateway_rest_api.test2.id
 
-  depends_on  = [aws_api_gateway_integration.test2]
+  depends_on = [aws_api_gateway_integration.test2]
 }
 
 resource "aws_api_gateway_base_path_mapping" "test" {
