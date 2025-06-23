@@ -32,7 +32,7 @@ const (
 	fieldResourcesType                = "resources.type"
 	fieldSessionCredentialFromConsole = "sessionCredentialFromConsole"
 	fieldUserIdentityARN              = "userIdentity.arn"
-	fieldVpcEndpointId                = "vpcEndpointId"
+	fieldVPCEndpointID                = "vpcEndpointId"
 )
 
 func field_Values() []string {
@@ -47,7 +47,7 @@ func field_Values() []string {
 		fieldResourcesType,
 		fieldSessionCredentialFromConsole,
 		fieldUserIdentityARN,
-		fieldVpcEndpointId,
+		fieldVPCEndpointID,
 	}
 }
 
