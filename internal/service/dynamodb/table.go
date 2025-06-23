@@ -295,10 +295,10 @@ func resourceTable() *schema.Resource {
 							Computed: true,
 						},
 						"consistency_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      consistencyModeEventuallyConsistent,
-							ValidateFunc: validation.StringInSlice([]string{consistencyModeEventuallyConsistent, consistencyModeStronglyConsistent}, false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.MultiRegionConsistencyEventual,
+							ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
 						},
 						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
@@ -838,7 +838,6 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
-
 	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
@@ -930,6 +929,12 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	replicas = addReplicaTagPropagates(d.Get("replica").(*schema.Set), replicas)
 	replicas = clearReplicaDefaultKeys(ctx, meta.(*conns.AWSClient), replicas)
+
+	var mrc = awstypes.MultiRegionConsistencyEventual
+	if table.MultiRegionConsistency != "" {
+		mrc = table.MultiRegionConsistency
+	}
+	replicas = addReplicaMultiRegionConsistency(d.Get("replica").(*schema.Set), replicas, mrc)
 
 	if err := d.Set("replica", replicas); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "replica", err)
@@ -1362,45 +1367,56 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 }
 
 func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, create bool, timeout time.Duration) error {
+
+	// Duplicating this for MRSC Adoption. If using MRSC and CreateReplicationGroupMemberAction list isn't initiated for at least 2 replicas
+	// then the update table action will fail with
+	// "Unsupported table replica count for global tables with MultiRegionConsistency set to STRONG"
+	// If this logic can be consolidated for regular Replica creation then this can be refactored
+	var numReplicas = len(tfList)
+	var numReplicasMRSC = 0
+	var useMRSC = false
+	var mrscInput = awstypes.MultiRegionConsistencyStrong
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
+		tfMap, _ := tfMapRaw.(map[string]any)
 
-		if !ok {
-			continue
+		log.Printf("[DEBUG] %+v, %+v", tfMap["consistency_mode"].(string), tfMap["region_name"].(string))
+		if v, ok := tfMap["consistency_mode"].(string); ok {
+			if ok && v == (string(awstypes.MultiRegionConsistencyStrong)) {
+				numReplicasMRSC += 1
+			}
+
+		}
+	}
+	log.Printf("[DEBUG] numReplicas: (%s), numReplicasMRSC: (%s)\n", numReplicas, numReplicasMRSC)
+	if numReplicasMRSC > 0 {
+		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
+			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
+		}
+		if numReplicasMRSC == 1 {
+			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires exactly 2 replicas. ")
+		}
+		if numReplicasMRSC > 2 {
+			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency supports at most 2 replicas. ")
 		}
 
-		var replicaInput = &awstypes.CreateReplicationGroupMemberAction{}
+		mrscInput = awstypes.MultiRegionConsistencyStrong
+		useMRSC = true
+	}
 
-		if v, ok := tfMap["region_name"].(string); ok && v != "" {
-			replicaInput.RegionName = aws.String(v)
-		}
+	log.Printf("[DEBUG] mrscInput: (%s), useMRSC: (%s)\n", mrscInput, useMRSC)
 
-		if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-			replicaInput.KMSMasterKeyId = aws.String(v)
-		}
-		
-		// Handle Multi-Region Strong Consistency (MRSC)
-		if v, ok := tfMap["consistency_mode"].(string); ok && v == consistencyModeStronglyConsistent {
-			replicaInput.TableClassOverride = awstypes.TableClassStandard
-		}
+	// if MRSC or MREC is defined and meets the above criteria, then all replicas must be created in a single call to UpdateTable.
+	if useMRSC {
+		var replicaCreates []awstypes.ReplicationGroupUpdate
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]any)
 
-		input := &dynamodb.UpdateTableInput{
-			TableName: aws.String(tableName),
-			ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
-				{
-					Create: replicaInput,
-				},
-			},
-		}
+			if !ok {
+				continue
+			}
 
-		// currently this would not be needed because (replica has these arguments):
-		//   region_name can't be updated - new replica
-		//   kms_key_arn can't be updated - remove/add replica
-		//   propagate_tags - handled elsewhere
-		//   point_in_time_recovery - handled elsewhere
-		// if provisioned_throughput_override or table_class_override were added, they could be updated here
-		if !create {
-			var replicaInput = &awstypes.UpdateReplicationGroupMemberAction{}
+			var replicaInput = &awstypes.CreateReplicationGroupMemberAction{}
+
 			if v, ok := tfMap["region_name"].(string); ok && v != "" {
 				replicaInput.RegionName = aws.String(v)
 			}
@@ -1408,30 +1424,25 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 				replicaInput.KMSMasterKeyId = aws.String(v)
 			}
-			
-			// Handle Multi-Region Strong Consistency (MRSC) for updates
-			if v, ok := tfMap["consistency_mode"].(string); ok && v == consistencyModeStronglyConsistent {
-				replicaInput.TableClassOverride = awstypes.TableClassStandard
-			}
 
-			input = &dynamodb.UpdateTableInput{
-				TableName: aws.String(tableName),
-				ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
-					{
-						Update: replicaInput,
-					},
-				},
-			}
+			replicaCreates = append(replicaCreates, awstypes.ReplicationGroupUpdate{
+				Create: replicaInput,
+			})
 		}
-
+		input := &dynamodb.UpdateTableInput{
+			TableName:              aws.String(tableName),
+			ReplicaUpdates:         replicaCreates,
+			MultiRegionConsistency: mrscInput,
+		}
+		log.Printf("[DEBUG] UpdateTableInput (%+v)\n", input)
 		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
 					return retry.RetryableError(err)
 				}
-				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-					return retry.RetryableError(err)
+				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created.") {
+					return retry.NonRetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
 					return retry.RetryableError(err)
@@ -1444,30 +1455,133 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 			return nil
 		})
-
+		log.Printf("[DEBUG] UpdateTable Result (%+v)\n", err)
 		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTable(ctx, input)
 		}
 
-		// An update that doesn't (makes no changes) returns ValidationException
-		// (same region_name and kms_key_arn as currently) throws unhelpfully worded exception:
-		// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
-
-		if create && tfawserr.ErrMessageContains(err, errCodeValidationException, "already exist") {
-			return createReplicas(ctx, conn, tableName, tfList, false, timeout)
+		if err != nil {
+			return err
 		}
 
-		if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
-			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			log.Printf("[DEBUG] Waiting for replica to be active in region (%s)\n", tfMap["region_name"])
+			if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
+				return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
+			}
+
+			// pitr
+			if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
+				return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
+			}
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
-			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
-		}
+	} else {
 
-		// pitr
-		if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
-			return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]any)
+
+			if !ok {
+				continue
+			}
+
+			var replicaInput = &awstypes.CreateReplicationGroupMemberAction{}
+
+			if v, ok := tfMap["region_name"].(string); ok && v != "" {
+				replicaInput.RegionName = aws.String(v)
+			}
+
+			if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+				replicaInput.KMSMasterKeyId = aws.String(v)
+			}
+
+			input := &dynamodb.UpdateTableInput{
+				TableName: aws.String(tableName),
+				ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
+					{
+						Create: replicaInput,
+					},
+				},
+			}
+
+			// currently this would not be needed because (replica has these arguments):
+			//   region_name can't be updated - new replica
+			//   kms_key_arn can't be updated - remove/add replica
+			//   propagate_tags - handled elsewhere
+			//   point_in_time_recovery - handled elsewhere
+			// if provisioned_throughput_override or table_class_override were added, they could be updated here
+			if !create {
+				var replicaInput = &awstypes.UpdateReplicationGroupMemberAction{}
+				if v, ok := tfMap["region_name"].(string); ok && v != "" {
+					replicaInput.RegionName = aws.String(v)
+				}
+
+				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+					replicaInput.KMSMasterKeyId = aws.String(v)
+				}
+
+				input = &dynamodb.UpdateTableInput{
+					TableName: aws.String(tableName),
+					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
+						{
+							Update: replicaInput,
+						},
+					},
+				}
+
+			}
+
+			err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
+				_, err := conn.UpdateTable(ctx, input)
+				if err != nil {
+					if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+						return retry.RetryableError(err)
+					}
+					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+						return retry.RetryableError(err)
+					}
+					if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
+						return retry.RetryableError(err)
+					}
+					if errs.IsA[*awstypes.ResourceInUseException](err) {
+						return retry.RetryableError(err)
+					}
+
+					return retry.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if tfresource.TimedOut(err) {
+				_, err = conn.UpdateTable(ctx, input)
+			}
+
+			// An update that doesn't (makes no changes) returns ValidationException
+			// (same region_name and kms_key_arn as currently) throws unhelpfully worded exception:
+			// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
+
+			if create && tfawserr.ErrMessageContains(err, errCodeValidationException, "already exist") {
+				return createReplicas(ctx, conn, tableName, tfList, false, timeout)
+			}
+
+			if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
+				return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
+			}
+
+			if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
+				return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
+			}
+
+			// pitr
+			if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
+				return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
+			}
+
 		}
 	}
 
@@ -1644,7 +1758,7 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 				toAdd = append(toAdd, ma)
 				break
 			}
-			
+
 			// like "ForceNew" for the replica - consistency_mode change
 			if v1, ok1 := ma["consistency_mode"].(string); ok1 {
 				if v2, ok2 := mr["consistency_mode"].(string); ok2 && v1 != v2 {
@@ -1864,6 +1978,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, timeout time.Duration) error {
 	var g multierror.Group
 
+	var replicaDeletes []awstypes.ReplicationGroupUpdate
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
 
@@ -1881,61 +1996,142 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			continue
 		}
 
-		g.Go(func() error {
-			input := &dynamodb.UpdateTableInput{
-				TableName: aws.String(tableName),
-				ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
-					{
-						Delete: &awstypes.DeleteReplicationGroupMemberAction{
-							RegionName: aws.String(regionName),
-						},
+		if v, ok := tfMap["consistency_mode"].(string); ok {
+			if v == (string(awstypes.MultiRegionConsistencyStrong)) {
+				replicaDeletes = append(replicaDeletes, awstypes.ReplicationGroupUpdate{
+					Delete: &awstypes.DeleteReplicationGroupMemberAction{
+						RegionName: aws.String(regionName),
 					},
-				},
+				})
 			}
+		}
+	}
 
-			err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
-				_, err := conn.UpdateTable(ctx, input)
-				notFoundRetries := 0
-				if err != nil {
-					if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-						return retry.RetryableError(err)
-					}
-					if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-						notFoundRetries++
-						if notFoundRetries > 3 {
-							return retry.NonRetryableError(err)
-						}
-						return retry.RetryableError(err)
-					}
-					if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-						return retry.RetryableError(err)
-					}
-					if errs.IsA[*awstypes.ResourceInUseException](err) {
-						return retry.RetryableError(err)
-					}
-
-					return retry.NonRetryableError(err)
+	// We built an array of MultiRegionStrongConsistency replicas that need deletion.
+	// These need to all happen concurrently
+	if len(replicaDeletes) > 0 {
+		input := &dynamodb.UpdateTableInput{
+			TableName:      aws.String(tableName),
+			ReplicaUpdates: replicaDeletes,
+		}
+		err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+			_, err := conn.UpdateTable(ctx, input)
+			notFoundRetries := 0
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+					return retry.RetryableError(err)
 				}
-				return nil
-			})
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+					notFoundRetries++
+					if notFoundRetries > 3 {
+						return retry.NonRetryableError(err)
+					}
+					return retry.RetryableError(err)
+				}
+				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+					return retry.RetryableError(err)
+				}
+				if errs.IsA[*awstypes.ResourceInUseException](err) {
+					return retry.RetryableError(err)
+				}
 
-			if tfresource.TimedOut(err) {
-				_, err = conn.UpdateTable(ctx, input)
+				return retry.NonRetryableError(err)
 			}
+			return nil
+		})
 
-			if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return fmt.Errorf("deleting replica (%s): %w", regionName, err)
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateTable(ctx, input)
+		}
+
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]any)
+			if !ok {
+				continue
 			}
-
+			var regionName = tfMap["region_name"].(string)
 			if _, err := waitReplicaDeleted(ctx, conn, tableName, regionName, timeout); err != nil {
 				return fmt.Errorf("waiting for replica (%s) deletion: %w", regionName, err)
 			}
+		}
 
-			return nil
-		})
+		return nil
+
+	} else {
+
+		for _, tfMapRaw := range tfList {
+			tfMap, ok := tfMapRaw.(map[string]any)
+
+			if !ok {
+				continue
+			}
+
+			var regionName string
+
+			if v, ok := tfMap["region_name"].(string); ok {
+				regionName = v
+			}
+
+			if regionName == "" {
+				continue
+			}
+
+			g.Go(func() error {
+				input := &dynamodb.UpdateTableInput{
+					TableName: aws.String(tableName),
+					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
+						{
+							Delete: &awstypes.DeleteReplicationGroupMemberAction{
+								RegionName: aws.String(regionName),
+							},
+						},
+					},
+				}
+
+				err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+					_, err := conn.UpdateTable(ctx, input)
+					notFoundRetries := 0
+					if err != nil {
+						if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+							return retry.RetryableError(err)
+						}
+						if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+							notFoundRetries++
+							if notFoundRetries > 3 {
+								return retry.NonRetryableError(err)
+							}
+							return retry.RetryableError(err)
+						}
+						if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+							return retry.RetryableError(err)
+						}
+						if errs.IsA[*awstypes.ResourceInUseException](err) {
+							return retry.RetryableError(err)
+						}
+
+						return retry.NonRetryableError(err)
+					}
+					return nil
+				})
+
+				if tfresource.TimedOut(err) {
+					_, err = conn.UpdateTable(ctx, input)
+				}
+
+				if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+					return fmt.Errorf("deleting replica (%s): %w", regionName, err)
+				}
+
+				if _, err := waitReplicaDeleted(ctx, conn, tableName, regionName, timeout); err != nil {
+					return fmt.Errorf("waiting for replica (%s) deletion: %w", regionName, err)
+				}
+
+				return nil
+			})
+		}
+		return g.Wait().ErrorOrNil()
 	}
 
-	return g.Wait().ErrorOrNil()
 }
 
 func replicaPITR(ctx context.Context, conn *dynamodb.Client, tableName string, region string) (bool, error) {
@@ -1986,6 +2182,18 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.Client, tableName strin
 	}
 
 	return replicas, nil
+}
+
+func addReplicaMultiRegionConsistency(configReplicas *schema.Set, replicas []any, mode awstypes.MultiRegionConsistency) []any {
+	// This non-standard approach is needed because MRSC info for a replica
+	// comes from the Table object
+	for i, replicaRaw := range replicas {
+		replica := replicaRaw.(map[string]any)
+		replica["consistency_mode"] = (string(mode))
+		replicas[i] = replica
+	}
+
+	return replicas
 }
 
 func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName string, tfList []any) ([]any, error) {
@@ -2694,7 +2902,7 @@ func replicaHasMRSC(replica *awstypes.ReplicaDescription) bool {
 	if replica == nil {
 		return false
 	}
-	
+
 	// For MRSC, check if the replica has the STANDARD table class
 	// Since the AWS SDK doesn't expose TableClassSummary directly in ReplicaDescription,
 	// we need to infer it from other properties

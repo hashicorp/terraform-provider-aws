@@ -28,7 +28,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,10 +62,10 @@ func resourceTableReplica() *schema.Resource {
 				Computed: true,
 			},
 			"consistency_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      consistencyModeEventuallyConsistent,
-				ValidateFunc: validation.StringInSlice([]string{consistencyModeEventuallyConsistent, consistencyModeStronglyConsistent}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.MultiRegionConsistencyEventual,
+				ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
 			},
 			"deletion_protection_enabled": { // direct to replica
 				Type:     schema.TypeBool,
@@ -136,10 +135,11 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	if v, ok := d.GetOk("table_class_override"); ok {
 		replicaInput.TableClassOverride = awstypes.TableClass(v.(string))
 	}
-	
+
+	var mrscOption = awstypes.MultiRegionConsistencyEventual
 	// Handle Multi-Region Strong Consistency (MRSC)
-	if v, ok := d.GetOk("consistency_mode"); ok && v.(string) == consistencyModeStronglyConsistent {
-		replicaInput.TableClassOverride = awstypes.TableClassStandard
+	if v, ok := d.GetOk("consistency_mode"); ok && v.(string) == (string(awstypes.MultiRegionConsistencyStrong)) {
+		mrscOption = awstypes.MultiRegionConsistencyStrong
 	}
 
 	tableName, err := tableNameFromARN(d.Get("global_table_arn").(string))
@@ -152,6 +152,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
 			Create: replicaInput,
 		}},
+		MultiRegionConsistency: mrscOption,
 	}
 
 	err = retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
@@ -275,13 +276,13 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("table_class_override", nil)
 	}
-	
+
 	// Check for MRSC configuration
-	if replica.ReplicaTableClassSummary != nil && 
-	   replica.ReplicaTableClassSummary.TableClass == awstypes.TableClassStandard {
-		d.Set("consistency_mode", consistencyModeStronglyConsistent)
+	if replica.ReplicaTableClassSummary != nil &&
+		replica.ReplicaTableClassSummary.TableClass == awstypes.TableClassStandard {
+		d.Set("consistency_mode", awstypes.MultiRegionConsistencyStrong)
 	} else {
-		d.Set("consistency_mode", consistencyModeEventuallyConsistent)
+		d.Set("consistency_mode", awstypes.MultiRegionConsistencyEventual)
 	}
 
 	return append(diags, resourceTableReplicaReadReplica(ctx, d, meta)...)
@@ -369,12 +370,12 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			viaMainInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 	}
-	
+
 	// Handle MRSC consistency mode changes
 	if d.HasChange("consistency_mode") && !d.IsNewResource() {
 		viaMainChanges = true
-		
-		if d.Get("consistency_mode").(string) == consistencyModeStronglyConsistent {
+
+		if d.Get("consistency_mode").(string) == (string(awstypes.MultiRegionConsistencyStrong)) {
 			viaMainInput.TableClassOverride = awstypes.TableClassStandard
 		} else {
 			// When changing from STRONGLY_CONSISTENT to EVENTUALLY_CONSISTENT

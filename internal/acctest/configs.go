@@ -67,6 +67,16 @@ func ConfigMultipleAccountProvider(t *testing.T, accounts int) string {
 			),
 		)
 	}
+	if accounts == 4 {
+		config.WriteString(
+			ConfigNamedAccountProvider(
+				ProviderNameFourth,
+				os.Getenv(envvar.FourthAccessKeyId),
+				os.Getenv(envvar.FourthProfile),
+				os.Getenv(envvar.FourthSecretAccessKey),
+			),
+		)
+	}
 
 	return config.String()
 }
@@ -95,8 +105,12 @@ func ConfigMultipleRegionProvider(regions int) string {
 
 	config.WriteString(ConfigNamedRegionalProvider(ProviderNameAlternate, AlternateRegion()))
 
-	if regions >= 3 {
+	if regions == 3 {
 		config.WriteString(ConfigNamedRegionalProvider(ProviderNameThird, ThirdRegion()))
+	}
+
+	if regions == 4 {
+		config.WriteString(ConfigNamedRegionalProvider(ProviderNameFourth, FourthRegion()))
 	}
 
 	return config.String()
