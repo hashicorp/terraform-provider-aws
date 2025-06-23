@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -171,33 +172,54 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 															names.AttrName: schema.StringAttribute{
 																Required:    true,
 																Description: "The name of the field.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"required": schema.BoolAttribute{
+																Optional:    true,
+																Computed:    true,
+																Default:     booldefault.StaticBool(false),
+																Description: "A Boolean value that specifies whether values are required for each row in this field. Default: false.",
+																PlanModifiers: []planmodifier.Bool{
+																	boolplanmodifier.RequiresReplace(),
+																},
 															},
 															names.AttrType: schema.StringAttribute{
 																Required:    true,
 																Description: "The field type. S3 Tables supports all Apache Iceberg primitive types.",
-															},
-															"required": schema.BoolAttribute{
-																Optional:    true,
-																Description: "A Boolean value that specifies whether values are required for each row in this field. Default: false.",
-																Default:     booldefault.StaticBool(false),
-																Computed:    true,
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
 															},
 														},
 													},
 													Validators: []validator.List{
+														listvalidator.IsRequired(),
 														listvalidator.SizeAtLeast(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
 													},
 												},
 											},
 										},
 										Validators: []validator.List{
+											listvalidator.IsRequired(),
 											listvalidator.SizeBetween(1, 1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
 										},
 									},
 								},
 							},
 							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
+								listvalidator.IsRequired(),
+								listvalidator.SizeBetween(1, 1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 						},
 					},
@@ -207,7 +229,6 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
-					listplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -915,33 +936,28 @@ var tableNameValidator = []validator.String{
 	stringMustEndWithLetterOrNumber,
 }
 
-// For the schema fields in an Iceberg table
-type icebergSchemaFieldModel struct {
-	Name     types.String `tfsdk:"name"`
-	Type     types.String `tfsdk:"type"`
-	Required types.Bool   `tfsdk:"required"`
+type tableMetadataModel struct {
+	Iceberg fwtypes.ListNestedObjectValueOf[icebergMetadataModel] `tfsdk:"iceberg"`
 }
 
-// For the schema of an Iceberg table
-type icebergSchemaModel struct {
-	Fields fwtypes.ListNestedObjectValueOf[icebergSchemaFieldModel] `tfsdk:"field"`
-}
-
-// For the Iceberg metadata
 type icebergMetadataModel struct {
 	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
 }
 
-// Container model for the TableMetadata interface
-type tableMetadataModel struct {
-	Iceberg fwtypes.ListNestedObjectValueOf[icebergMetadataModel] `tfsdk:"iceberg"`
+type icebergSchemaModel struct {
+	Fields fwtypes.ListNestedObjectValueOf[icebergSchemaFieldModel] `tfsdk:"field"`
+}
+
+type icebergSchemaFieldModel struct {
+	Name     types.String `tfsdk:"name"`
+	Required types.Bool   `tfsdk:"required"`
+	Type     types.String `tfsdk:"type"`
 }
 
 var (
 	_ flex.Expander = tableMetadataModel{}
 )
 
-// Implement fwflex.Expander for tableMetadataModel
 func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Diagnostics) {
 	// If Iceberg metadata is set, expand it
 	if !m.Iceberg.IsNull() && !m.Iceberg.IsUnknown() {
