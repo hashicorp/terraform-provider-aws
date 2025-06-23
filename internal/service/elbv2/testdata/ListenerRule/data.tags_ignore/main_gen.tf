@@ -18,6 +18,7 @@ data "aws_lb_listener_rule" "test" {
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
+    
 
   action {
     type             = "forward"
@@ -37,6 +38,7 @@ resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
+    
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
@@ -47,6 +49,7 @@ resource "aws_lb_listener" "test" {
 resource "aws_security_group" "test" {
   name   = var.rName
   vpc_id = aws_vpc.test.id
+    
 
   ingress {
     from_port   = 0
@@ -68,6 +71,7 @@ resource "aws_lb" "test" {
   internal        = true
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
+    
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -78,6 +82,7 @@ resource "aws_lb_target_group" "test" {
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
+    
 
   health_check {
     path                = "/health"
