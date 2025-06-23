@@ -1027,6 +1027,38 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_defaults(rName, 1, "test", 640, 640),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -2027,6 +2059,37 @@ resource "aws_lexv2models_intent" "test" {
 
         text_input_specification {
           start_timeout_ms = 30000
+        }
+      }
+    }
+  }
+}
+`, rName, retries, textMsg, endTOMs1, endTOMs2))
+}
+
+func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_defaults(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+
+    prompt_specification {
+      allow_interrupt            = true
+      max_retries                = %[2]d
+      message_selection_strategy = "Ordered"
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[3]q
+          }
         }
       }
     }
