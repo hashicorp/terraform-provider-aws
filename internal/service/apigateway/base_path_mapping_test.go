@@ -372,8 +372,18 @@ resource "aws_api_gateway_integration" "test" {
 
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
+
   depends_on  = [aws_api_gateway_integration.test]
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
+
+  lifecycle {
+    ignore_changes = [variables, canary_settings]
+  }
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
@@ -383,7 +393,7 @@ func testAccBasePathMappingConfig_basic(domainName, key, certificate, basePath s
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id      = aws_api_gateway_rest_api.test.id
   base_path   = %[1]q
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
   domain_name = aws_api_gateway_domain_name.test.domain_name
 }
 `, basePath))
@@ -453,14 +463,24 @@ resource "aws_api_gateway_integration" "test" {
 
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
+
   depends_on  = [aws_api_gateway_integration.test]
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
+
+  lifecycle {
+    ignore_changes = [variables, canary_settings]
+  }
 }
 
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id         = aws_api_gateway_rest_api.test.id
   base_path      = %[4]q
-  stage_name     = aws_api_gateway_deployment.test.stage_name
+  stage_name     = aws_api_gateway_stage.test.stage_name
   domain_name    = aws_api_gateway_domain_name.test.domain_name
   domain_name_id = aws_api_gateway_domain_name.test.domain_name_id
 }
@@ -478,9 +498,7 @@ resource "aws_api_gateway_rest_api" "test2" {
   }
 }
 
-
 resource "aws_api_gateway_stage" "test2" {
-
   depends_on = [
     aws_api_gateway_deployment.test
   ]
@@ -510,10 +528,9 @@ resource "aws_api_gateway_integration" "test2" {
   type        = "MOCK"
 }
 
-
 resource "aws_api_gateway_deployment" "test2" {
   rest_api_id = aws_api_gateway_rest_api.test2.id
-  stage_name  = "test"
+
   depends_on  = [aws_api_gateway_integration.test2]
 }
 
