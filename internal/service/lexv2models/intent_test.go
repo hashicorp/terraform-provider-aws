@@ -1046,7 +1046,17 @@ func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_defaults(rName, 1, "test", 640, 640),
+				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_NoDefaults(rName, 1, "test", 640, 640),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_WithDefault(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -2067,7 +2077,67 @@ resource "aws_lexv2models_intent" "test" {
 `, rName, retries, textMsg, endTOMs1, endTOMs2))
 }
 
-func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_defaults(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
+func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_NoDefaults(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+
+    prompt_specification {
+      allow_interrupt            = true
+      max_retries                = %[2]d
+      message_selection_strategy = "Ordered"
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = %[4]d
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[3]q
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, retries, textMsg, endTOMs1, endTOMs2))
+}
+
+func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_WithDefault(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
 	return acctest.ConfigCompose(
 		testAccIntentConfig_base(rName, 60, true),
 		fmt.Sprintf(`
