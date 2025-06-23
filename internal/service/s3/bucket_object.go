@@ -524,7 +524,7 @@ func (_ bucketObjectImportID) Parse(id string) (string, map[string]string, error
 
 	bucket, key, found := strings.Cut(id, "/")
 	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in format <bucket>/<key> or s3://<bucket>/<key>", id)
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
 	result := map[string]string{
