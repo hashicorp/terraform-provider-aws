@@ -13,6 +13,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -162,6 +163,11 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 					},
 				},
 				Config: testAccAccountConfig_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
 				},
@@ -169,7 +175,17 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_basic,
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+				},
 			},
 		},
 	})
@@ -195,6 +211,11 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 					},
 				},
 				Config: testAccAccountConfig_role0(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(
 						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
@@ -206,7 +227,21 @@ func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_role0(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
 			},
 		},
 	})
