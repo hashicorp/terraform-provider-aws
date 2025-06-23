@@ -67,23 +67,25 @@ type StateChangeConf = StateChangeConfOf[any, string]
 //
 // Cancellation of the passed in context will cancel the refresh loop.
 //
-// When VCR testing is enabled in replay mode, the Delay and PollInterval fields are
-// overridden to allow interactions to be replayed with no observable delay between
-// state change refreshes.
+// When VCR testing is enabled in replay mode, the DelayFunc is overridden to
+// allow interactions to be replayed with no delay between state change refreshes.
 func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T, error) {
-	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
-		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
-			conf.Delay = time.Microsecond * 1
-			conf.PollInterval = time.Microsecond * 1
-		}
-	}
-
 	// Set a default for times to check for not found.
 	if conf.NotFoundChecks == 0 {
 		conf.NotFoundChecks = 20
 	}
 	if conf.ContinuousTargetOccurence == 0 {
 		conf.ContinuousTargetOccurence = 1
+	}
+
+	// Set a default DelayFunc using the StateChangeConf values
+	delayFunc := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
+
+	// When VCR testing in replay mode, override the default DelayFunc
+	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
+			delayFunc = backoff.ZeroDelay
+		}
 	}
 
 	var (
@@ -93,7 +95,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		notFoundTick, targetOccurence int
 		l                             *backoff.Loop
 	)
-	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout))); l.Continue(ctx); {
+	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(delayFunc)); l.Continue(ctx); {
 		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
