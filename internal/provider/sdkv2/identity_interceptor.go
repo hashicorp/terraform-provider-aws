@@ -32,6 +32,9 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	case After:
 		switch why {
 		case Create, Read:
+			if d.Id() == "" {
+				break
+			}
 			identity, err := d.Identity()
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -76,7 +79,7 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptorInvocation {
 	return interceptorInvocation{
 		when: After,
-		why:  Create, // TODO: probably need to do this after Read and Update as well
+		why:  Create | Read,
 		interceptor: identityInterceptor{
 			attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
 				return v.Name
