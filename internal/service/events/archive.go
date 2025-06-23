@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
@@ -66,6 +67,14 @@ func resourceArchive() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validArchiveName,
 			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 2048),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
+				),
+			},
 			"retention_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -95,6 +104,10 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		input.EventPattern = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
@@ -132,6 +145,7 @@ func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("event_pattern", output.EventPattern)
 	d.Set("event_source_arn", output.EventSourceArn)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set(names.AttrName, output.ArchiveName)
 	d.Set("retention_days", output.RetentionDays)
 
@@ -157,6 +171,10 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		input.EventPattern = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
