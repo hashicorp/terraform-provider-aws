@@ -7181,9 +7181,9 @@ func testAccInstance_ipv6AddressesExplicit(rName string, addressCount int) strin
 		testAccInstanceConfig_vpcIPv6Base(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t2.medium"
-  subnet_id     = aws_subnet.test.id
+  ami            = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type  = "t2.medium"
+  subnet_id      = aws_subnet.test.id
   ipv6_addresses = [for i in range(%[2]d) : cidrhost(aws_subnet.test.ipv6_cidr_block, i + 10)]
 
   tags = {
