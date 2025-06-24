@@ -159,25 +159,25 @@ The `iceberg_snapshot_management.settings` object supports the following argumen
 The `metadata` configuration block supports the following argument:
 
 * `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format.
-  [See `metadata.iceberg` below](#metadataiceberg).
+  [See `iceberg` below](#iceberg).
 
-### `metadata.iceberg`
+### `iceberg`
 
-The `metadata.iceberg` configuration block supports the following argument:
+The `iceberg` configuration block supports the following argument:
 
 * `schema` - (Required) Schema configuration for the Iceberg table.
-  [See `metadata.iceberg.schema` below](#metadataicebergschema).
+  [See `schema` below](#schema).
 
-### `metadata.iceberg.schema`
+### `schema`
 
-The `metadata.iceberg.schema` configuration block supports the following argument:
+The `schema` configuration block supports the following argument:
 
 * `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema.
-  [See `metadata.iceberg.schema.field` below](#metadataicebergschemafield).
+  [See `field` below](#field).
 
-### `metadata.iceberg.schema.field`
+### `field`
 
-The `metadata.iceberg.schema.field` configuration block supports the following arguments:
+The `field` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the field.
 * `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
