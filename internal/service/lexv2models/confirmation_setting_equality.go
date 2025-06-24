@@ -5,6 +5,7 @@ package lexv2models
 
 import (
 	"context"
+	"fmt"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -63,7 +64,7 @@ func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fw
 			return false, diags
 		}
 
-		return arePromptAttemptsEqual(ctx, oldPromptSpec.PromptAttemptsSpecification, newPromptSpec.PromptAttemptsSpecification)
+		return arePromptAttemptsEqual(ctx, oldPromptSpec.PromptAttemptsSpecification, newPromptSpec.PromptAttemptsSpecification, oldPromptSpec.MaxRetries.ValueInt64())
 	}
 
 	return false, diags
@@ -71,7 +72,7 @@ func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fw
 
 // arePromptAttemptsEqual compares two PromptAttemptsSpecification fields for equality
 // treating them as maps with map_block_key as the key
-func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtypes.SetNestedObjectValueOf[PromptAttemptsSpecification]) (bool, diag.Diagnostics) {
+func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtypes.SetNestedObjectValueOf[PromptAttemptsSpecification], maxRetries int64) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	// If both are null or unknown, they're equal
 	if oldAttempts.IsNull() && newAttempts.IsNull() {
@@ -95,7 +96,7 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 			return false, diags
 		}
 
-		var hasDefaults bool
+		var hasDefaults, areEqual bool
 		for _, value := range oldPromptAttemptSpecification {
 			key := value.MapBlockKey.ValueString()
 			index := slices.IndexFunc(newPromptAttemptSpecification, func(item *PromptAttemptsSpecification) bool {
@@ -103,16 +104,14 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 			})
 
 			if index != -1 {
-				if !arePromptAttemptValuesEqual(*newPromptAttemptSpecification[index], *value) {
-					return false, diags
-				}
-			} else if _, ok := promptAttemptSpecificationDefaults(ctx, key); ok {
-				hasDefaults = true
-				continue
+				areEqual = arePromptAttemptValuesEqual(*newPromptAttemptSpecification[index], *value)
 			}
+
+			_, ok := promptAttemptSpecificationDefaults(ctx, key, maxRetries)
+			hasDefaults = ok
 		}
 
-		return hasDefaults, diags
+		return (hasDefaults && areEqual) || len(newPromptAttemptSpecification) == 0, diags
 	}
 
 	return false, diags
@@ -128,47 +127,14 @@ func arePromptAttemptValuesEqual(oldItem, newItem PromptAttemptsSpecification) b
 }
 
 // promptAttemptSpecificationDefaults returns the default PromptAttemptsSpecification for a given key
-func promptAttemptSpecificationDefaults(ctx context.Context, key string) (*PromptAttemptsSpecification, bool) {
-	objectDefault := func(mapBlockKey PromptAttemptsType) *PromptAttemptsSpecification {
-		return &PromptAttemptsSpecification{
-			MapBlockKey: fwtypes.StringEnumValue(mapBlockKey),
-			AllowedInputTypes: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AllowedInputTypes{
-				{
-					AllowAudioInput: fwflex.BoolValueToFramework(ctx, true),
-					AllowDTMFInput:  fwflex.BoolValueToFramework(ctx, true),
-				},
-			}),
-			AllowInterrupt: fwflex.BoolValueToFramework(ctx, true),
-			AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioAndDTMFInputSpecification{
-				{
-					StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 4000), //nolint:mnd
-					AudioSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioSpecification{
-						{
-							EndTimeoutMs: fwflex.Int64ValueToFramework(ctx, 640),   //nolint:mnd
-							MaxLengthMs:  fwflex.Int64ValueToFramework(ctx, 15000), //nolint:mnd
-						},
-					}),
-					DTMFSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*DTMFSpecification{
-						{
-							DeletionCharacter: fwflex.StringValueToFramework(ctx, "*"),
-							EndCharacter:      fwflex.StringValueToFramework(ctx, "#"),
-							EndTimeoutMs:      fwflex.Int64ValueToFramework(ctx, 5000), //nolint:mnd
-							MaxLength:         fwflex.Int64ValueToFramework(ctx, 513),  //nolint:mnd
-						},
-					}),
-				},
-			}),
-			TextInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TextInputSpecification{
-				{
-					StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 30000), //nolint:mnd
-				},
-			}),
-		}
+func promptAttemptSpecificationDefaults(ctx context.Context, key string, maxRetries int64) (*PromptAttemptsSpecification, bool) {
+	defaults := map[string]*PromptAttemptsSpecification{
+		"Initial": defaultPromptAttemptsSpecification(ctx, "Initial"),
 	}
 
-	defaults := map[string]*PromptAttemptsSpecification{
-		"Initial": objectDefault("Initial"),
-		"Retry1":  objectDefault("Retry1"),
+	for i := 1; i <= int(maxRetries); i++ {
+		k := fmt.Sprintf("Retry%d", i)
+		defaults[k] = defaultPromptAttemptsSpecification(ctx, PromptAttemptsType(k))
 	}
 
 	if val, ok := defaults[key]; ok {
@@ -176,4 +142,41 @@ func promptAttemptSpecificationDefaults(ctx context.Context, key string) (*Promp
 	}
 
 	return nil, false
+}
+
+func defaultPromptAttemptsSpecification(ctx context.Context, mapBlockKey PromptAttemptsType) *PromptAttemptsSpecification {
+	return &PromptAttemptsSpecification{
+		MapBlockKey: fwtypes.StringEnumValue(mapBlockKey),
+		AllowedInputTypes: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AllowedInputTypes{
+			{
+				AllowAudioInput: fwflex.BoolValueToFramework(ctx, true),
+				AllowDTMFInput:  fwflex.BoolValueToFramework(ctx, true),
+			},
+		}),
+		AllowInterrupt: fwflex.BoolValueToFramework(ctx, true),
+		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioAndDTMFInputSpecification{
+			{
+				StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 4000), //nolint:mnd
+				AudioSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*AudioSpecification{
+					{
+						EndTimeoutMs: fwflex.Int64ValueToFramework(ctx, 640),   //nolint:mnd
+						MaxLengthMs:  fwflex.Int64ValueToFramework(ctx, 15000), //nolint:mnd
+					},
+				}),
+				DTMFSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*DTMFSpecification{
+					{
+						DeletionCharacter: fwflex.StringValueToFramework(ctx, "*"),
+						EndCharacter:      fwflex.StringValueToFramework(ctx, "#"),
+						EndTimeoutMs:      fwflex.Int64ValueToFramework(ctx, 5000), //nolint:mnd
+						MaxLength:         fwflex.Int64ValueToFramework(ctx, 513),  //nolint:mnd
+					},
+				}),
+			},
+		}),
+		TextInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TextInputSpecification{
+			{
+				StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 30000), //nolint:mnd
+			},
+		}),
+	}
 }
