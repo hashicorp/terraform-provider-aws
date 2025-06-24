@@ -580,6 +580,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
+					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs20x)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
