@@ -1419,18 +1419,18 @@ func TestAccEC2Instance_IPv6AddressesExplicit(t *testing.T) {
 				Config: testAccInstance_ipv6AddressesExplicit(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
-					testAccCheckInstanceRecreated(&original, &updated), // Should recreate due to ForceNew
+					testAccCheckInstanceRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "3"), // This tests the recomputation
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "3"),
 				),
 			},
 			{
 				Config: testAccInstance_ipv6AddressesExplicit(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
-					testAccCheckInstanceRecreated(&original, &updated), // Should recreate again
+					testAccCheckInstanceRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"), // This tests the recomputation
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 				),
 			},
 			{
