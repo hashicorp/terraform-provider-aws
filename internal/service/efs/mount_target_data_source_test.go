@@ -30,6 +30,7 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -61,6 +62,7 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -92,6 +94,7 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -107,7 +110,7 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 }
 
 func testAccMountTargetDataSourceConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
 
@@ -117,8 +120,9 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_mount_target" "test" {
-  file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test[0].id
+  file_system_id  = aws_efs_file_system.test.id
+  ip_address_type = "DUAL_STACK"
+  subnet_id       = aws_subnet.test[0].id
 }
 `, rName))
 }
