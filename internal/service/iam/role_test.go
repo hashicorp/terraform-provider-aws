@@ -1267,7 +1267,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1289,7 +1289,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1318,7 +1318,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1441,7 +1441,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1467,7 +1467,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1491,7 +1491,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1516,7 +1516,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1542,7 +1542,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1595,7 +1595,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1648,7 +1648,7 @@ resource "aws_iam_role" "test" {
   {
     "Action": "sts:AssumeRole",
     "Principal": {
-    "Service": "${data.aws_service_principal.ec2.name}",
+    "Service": data.aws_service_principal.ec2.name,
     },
     "Effect": "Allow",
     "Sid": ""
@@ -1720,7 +1720,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1744,7 +1744,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1787,7 +1787,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1849,7 +1849,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1892,7 +1892,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1934,7 +1934,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1975,7 +1975,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2017,7 +2017,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2075,7 +2075,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2160,7 +2160,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2245,7 +2245,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2310,7 +2310,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2349,7 +2349,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2373,7 +2373,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2417,7 +2417,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2443,7 +2443,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "${data.aws_service_principal.ec2.name}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
