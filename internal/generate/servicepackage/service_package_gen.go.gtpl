@@ -123,20 +123,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					// Parameterized Identity with more than one attribute not supported
-					/*{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
+					{{- if or $.IsGlobal $value.IsGlobal }}
+						// Global Parameterized Identity with more than one attribute not supported
+						/* Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),
+						),*/
 					{{- else }}
 						Identity: inttypes.RegionalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{- end }}*/
+					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
@@ -195,6 +195,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				{{- if $value.WrappedImport }}
 					Import: inttypes.FrameworkImport{
 						WrappedImport: true,
+						{{- if ne $value.ImportIDHandler "" }}
+							ImportID: {{ $value.ImportIDHandler }}{},
+						{{- end }}
 					},
 				{{- end }}
 			{{- end }}
