@@ -142,14 +142,6 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 	}
 }
 
-func setAttribute(d *schema.ResourceData, name, value string) {
-	if name == "id" {
-		d.SetId(value)
-	} else {
-		d.Set(name, value)
-	}
-}
-
 func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
 	if identity.IsGlobalResource {
 		return &schema.ResourceImporter{
