@@ -7,7 +7,7 @@ provider "aws" {
   }
 }
 
-resource "aws_lb_listener" "test" {  
+resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
@@ -20,7 +20,7 @@ resource "aws_lb_listener" "test" {
   tags = var.resource_tags
 }
 
-resource "aws_lb" "test" {  
+resource "aws_lb" "test" {
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -30,7 +30,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 
-resource "aws_lb_target_group" "test" {  
+resource "aws_lb_target_group" "test" {
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
@@ -48,7 +48,7 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_security_group" "test" {  
+resource "aws_security_group" "test" {
   name        = var.rName
   description = "Used for ALB Testing"
   vpc_id      = aws_vpc.test.id
