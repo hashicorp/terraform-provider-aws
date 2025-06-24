@@ -11,14 +11,18 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
+var _ ImportByIdentityer = &WithImportRegionalSingleton{}
+
 // WithImportRegionalSingleton is intended to be embedded in resources which import state via the "region" attribute.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportRegionalSingleton struct {
-	identity inttypes.Identity
+	identity   inttypes.Identity
+	importSpec inttypes.FrameworkImport
 }
 
-func (w *WithImportRegionalSingleton) SetIdentitySpec(identity inttypes.Identity) {
+func (w *WithImportRegionalSingleton) SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport) {
 	w.identity = identity
+	w.importSpec = importSpec
 }
 
 func (w *WithImportRegionalSingleton) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -33,5 +37,5 @@ func (w *WithImportRegionalSingleton) ImportState(ctx context.Context, request r
 		)
 		return
 	}
-	importer.RegionalSingleton(ctx, client, request, &w.identity, response)
+	importer.RegionalSingleton(ctx, client, request, &w.identity, &w.importSpec, response)
 }

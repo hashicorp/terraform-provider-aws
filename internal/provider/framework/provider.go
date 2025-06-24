@@ -562,7 +562,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			if res.Import.WrappedImport {
 				switch v := inner.(type) {
 				case framework.ImportByIdentityer:
-					v.SetIdentitySpec(res.Identity)
+					v.SetIdentitySpec(res.Identity, res.Import)
 
 				default:
 					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))

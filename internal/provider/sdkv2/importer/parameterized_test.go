@@ -691,13 +691,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name":       "a_name",
 				"type":       "a_type",
 			},
-			expectedAttrs: map[string]string{
-				"name": "a_name",
-				"type": "a_type",
-			},
-			expectedID:     "a_name,a_type",
-			expectedRegion: anotherRegion,
-			expectError:    true,
+			expectError: true,
 		},
 	}
 

@@ -13,14 +13,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// WithImportByParameterizedIdentity is intended to be embedded in global resources which import state via a parameterized Identity.
+var _ ImportByIdentityer = &WithImportByParameterizedIdentity{}
+
+// WithImportByParameterizedIdentity is intended to be embedded in resources which import state via a parameterized Identity.
 // See https://developer.hashicorp.com/terraform/plugin/framework/resources/import.
 type WithImportByParameterizedIdentity struct {
-	identity inttypes.Identity
+	identity   inttypes.Identity
+	importSpec inttypes.FrameworkImport
 }
 
-func (w *WithImportByParameterizedIdentity) SetIdentitySpec(identity inttypes.Identity) {
+func (w *WithImportByParameterizedIdentity) SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport) {
 	w.identity = identity
+	w.importSpec = importSpec
 }
 
 func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -38,9 +42,9 @@ func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, req
 
 	if w.identity.IsSingleParameter {
 		if w.identity.IsGlobalResource {
-			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, response)
+			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 		} else {
-			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, response)
+			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 		}
 
 		return

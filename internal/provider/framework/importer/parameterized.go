@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func RegionalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	regionPath := path.Root(names.AttrRegion)
 	attrPath := path.Root(identitySpec.IdentityAttribute)
 
@@ -65,7 +65,7 @@ func RegionalSingleParameterized(ctx context.Context, client AWSClient, request 
 	}
 }
 
-func GlobalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func GlobalSingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	attrPath := path.Root(identitySpec.IdentityAttribute)
 
 	parameterVal := request.ID

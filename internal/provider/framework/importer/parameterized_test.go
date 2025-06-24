@@ -5,13 +5,16 @@ package importer_test
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
@@ -19,7 +22,7 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-var regionalParameterizedSchema = schema.Schema{
+var regionalSingleParameterizedSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			Required: true,
@@ -28,7 +31,7 @@ var regionalParameterizedSchema = schema.Schema{
 	},
 }
 
-var regionalParameterizedWithIDSchema = schema.Schema{
+var regionalSingleParameterizedWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"id": framework.IDAttributeDeprecatedNoReplacement(),
 		"name": schema.StringAttribute{
@@ -123,12 +126,16 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
 			}
 
-			schema := regionalParameterizedSchema
+			schema := regionalSingleParameterizedSchema
 			if tc.useSchemaWithID {
-				schema = regionalParameterizedWithIDSchema
+				schema = regionalSingleParameterizedWithIDSchema
 			}
 
-			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec)
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
+			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -315,20 +322,17 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			identitySchema := ptr(identity.NewIdentitySchema(identitySpec))
 
-			schema := regionalParameterizedSchema
-			if tc.useSchemaWithID {
-				schema = regionalParameterizedWithIDSchema
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
 			}
-			// identityAttrs := make(map[string]string, 2)
-			// if tc.inputRegion != "" {
-			// 	identityAttrs["region"] = tc.inputRegion
-			// }
-			// if tc.inputAccountID != "" {
-			// 	identityAttrs["account_id"] = tc.inputAccountID
-			// }
+
+			schema := regionalSingleParameterizedSchema
+			if tc.useSchemaWithID {
+				schema = regionalSingleParameterizedWithIDSchema
+			}
 			identity := identityFromSchema(ctx, identitySchema, tc.identityAttrs)
 
-			response := importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+			response := importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -382,7 +386,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 	}
 }
 
-var globalParameterizedSchema = schema.Schema{
+var globalSingleParameterizedSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			Required: true,
@@ -390,7 +394,7 @@ var globalParameterizedSchema = schema.Schema{
 	},
 }
 
-var globalParameterizedWithIDSchema = schema.Schema{
+var globalSingleParameterizedWithIDSchema = schema.Schema{
 	Attributes: map[string]schema.Attribute{
 		"id": framework.IDAttributeDeprecatedNoReplacement(),
 		"name": schema.StringAttribute{
@@ -458,12 +462,16 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
 			}
 
-			schema := globalParameterizedSchema
+			schema := globalSingleParameterizedSchema
 			if tc.useSchemaWithID {
-				schema = globalParameterizedWithIDSchema
+				schema = globalSingleParameterizedWithIDSchema
 			}
 
-			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec)
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
+			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -596,14 +604,18 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 
 			identitySchema := ptr(identity.NewIdentitySchema(identitySpec))
 
-			schema := globalParameterizedSchema
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
+			schema := globalSingleParameterizedSchema
 			if tc.useSchemaWithID {
-				schema = globalParameterizedWithIDSchema
+				schema = globalSingleParameterizedWithIDSchema
 			}
 
 			identity := identityFromSchema(ctx, identitySchema, tc.identityAttrs)
 
-			response := importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+			response := importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")

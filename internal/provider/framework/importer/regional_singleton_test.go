@@ -177,12 +177,16 @@ func TestRegionalSingleton(t *testing.T) {
 				schema = regionalSingletonWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importByID(ctx, f, &client, schema, tc.inputRegion, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputRegion, identitySchema, identitySpec, &importSpec)
 			case "IDWithState":
-				response = importByIDWithState(ctx, f, &client, schema, tc.inputRegion, tc.stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputRegion, tc.stateAttrs, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identityAttrs := make(map[string]string, 2)
 				if tc.inputRegion != "" {
@@ -192,7 +196,7 @@ func TestRegionalSingleton(t *testing.T) {
 					identityAttrs["account_id"] = tc.inputAccountID
 				}
 				identity := identityFromSchema(ctx, identitySchema, identityAttrs)
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
