@@ -41,16 +41,14 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TargetGroup")
 // @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
+// @Testing(plannableImportAction="NoOp")
+// @ArnIdentity
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
 		ReadWithoutTimeout:   resourceTargetGroupRead,
 		UpdateWithoutTimeout: resourceTargetGroupUpdate,
 		DeleteWithoutTimeout: resourceTargetGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
