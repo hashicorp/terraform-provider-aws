@@ -1290,11 +1290,6 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"usage_of_action": {
-														Type:             schema.TypeString,
-														Required:         true,
-														ValidateDiagFunc: enum.Validate[awstypes.UsageOfAction](),
-													},
 													"exempt_uri_regular_expression": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -1314,6 +1309,11 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 														Optional:         true,
 														Default:          awstypes.SensitivityLevelHigh,
 														ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+													},
+													"usage_of_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.UsageOfAction](),
 													},
 												},
 											},
