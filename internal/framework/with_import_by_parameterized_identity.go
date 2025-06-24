@@ -48,6 +48,11 @@ func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, req
 		}
 
 		return
+	} else {
+		if !w.identity.IsGlobalResource {
+			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		}
 	}
 
 	if request.ID != "" {

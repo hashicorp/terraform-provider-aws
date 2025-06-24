@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -314,6 +315,10 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 
 type ImportIDParser interface {
 	Parse(id string) (string, map[string]string, error)
+}
+
+type FrameworkImportIDCreator interface {
+	Create(ctx context.Context, state tfsdk.State) string
 }
 
 type FrameworkImport struct {
