@@ -126,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `availability_zone_rebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launch_type`.
@@ -193,6 +194,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
 * `volume_type` - (Optional) Volume type.
 * `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
@@ -341,7 +343,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the service.
+* `arn` - ARN that identifies the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

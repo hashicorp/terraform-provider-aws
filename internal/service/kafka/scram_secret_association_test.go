@@ -214,8 +214,10 @@ resource "aws_msk_cluster" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  count       = %[2]d
-  description = "%[1]s-${count.index + 1}"
+  count                   = %[2]d
+  description             = "%[1]s-${count.index + 1}"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_secretsmanager_secret" "test" {

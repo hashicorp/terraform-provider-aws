@@ -27,7 +27,7 @@ const (
 )
 
 type clusterParameterGroupDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[clusterParameterGroupDataSourceModel]
 }
 
 func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -49,7 +49,7 @@ func (d *clusterParameterGroupDataSource) Schema(_ context.Context, _ datasource
 
 func (d *clusterParameterGroupDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().RDSClient(ctx)
-	var data dataSourceClusterParameterGroupData
+	var data clusterParameterGroupDataSourceModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
@@ -78,7 +78,8 @@ func (d *clusterParameterGroupDataSource) Read(ctx context.Context, request data
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceClusterParameterGroupData struct {
+type clusterParameterGroupDataSourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String `tfsdk:"arn"`
 	Description types.String `tfsdk:"description"`
 	Family      types.String `tfsdk:"family"`

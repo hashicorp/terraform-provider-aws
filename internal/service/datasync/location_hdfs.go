@@ -28,17 +28,16 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_hdfs", name="Location HDFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationHdfsOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationHDFSCreate,
 		ReadWithoutTimeout:   resourceLocationHDFSRead,
 		UpdateWithoutTimeout: resourceLocationHDFSUpdate,
 		DeleteWithoutTimeout: resourceLocationHDFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"agent_arns": {

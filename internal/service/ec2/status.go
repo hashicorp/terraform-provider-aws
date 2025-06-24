@@ -305,6 +305,22 @@ func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
+func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSpotFleetRequestByID(ctx, conn, id)
@@ -1609,6 +1625,86 @@ func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) re
 func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPeer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPeerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPropagation(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPropagationByTwoPartKey(ctx, conn, routeServerID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -44,8 +43,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -55,10 +52,10 @@ import (
 
 // @FrameworkResource("aws_dataexchange_revision_assets", name="Revision Assets")
 // @Tags(identifierAttribute="arn")
+// @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
-// @Testing(noImport=true)
-func newResourceRevisionAssets(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRevisionAssets{}
+func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 
 	return r, nil
@@ -68,12 +65,12 @@ const (
 	ResNameRevisionAssets = "Revision Assets"
 )
 
-type resourceRevisionAssets struct {
-	framework.ResourceWithConfigure
+type revisionAssetsResource struct {
+	framework.ResourceWithModel[revisionAssetsResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *revisionAssetsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -266,10 +263,10 @@ func (r *resourceRevisionAssets) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceRevisionAssets) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *revisionAssetsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan resourceRevisionAssetsModel
+	var plan revisionAssetsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -680,10 +677,10 @@ func (r *resourceRevisionAssets) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRevisionAssets) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *revisionAssetsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceRevisionAssetsModel
+	var state revisionAssetsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -713,10 +710,10 @@ func (r *resourceRevisionAssets) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRevisionAssets) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *revisionAssetsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var plan, state resourceRevisionAssetsModel
+	var plan, state revisionAssetsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -768,10 +765,10 @@ func (r *resourceRevisionAssets) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRevisionAssets) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *revisionAssetsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataExchangeClient(ctx)
 
-	var state resourceRevisionAssetsModel
+	var state revisionAssetsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -807,7 +804,7 @@ func (r *resourceRevisionAssets) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *revisionAssetsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// check if resource is being destroyed
 	if req.Plan.Raw.IsNull() {
 		var forceDestroy, finalized types.Bool
@@ -827,7 +824,7 @@ func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.Mo
 	}
 
 	if !req.Plan.Raw.IsNull() && !req.State.Raw.IsNull() {
-		var plan, state resourceRevisionAssetsModel
+		var plan, state revisionAssetsResourceModel
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 		if resp.Diagnostics.HasError() {
@@ -835,9 +832,15 @@ func (r *resourceRevisionAssets) ModifyPlan(ctx context.Context, req resource.Mo
 		}
 
 		if !plan.Comment.Equal(state.Comment) || !plan.Finalized.Equal(state.Finalized) {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		} else {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }
@@ -896,7 +899,8 @@ func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, re
 	return err
 }
 
-type resourceRevisionAssetsModel struct {
+type revisionAssetsResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                               `tfsdk:"arn"`
 	Assets       fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
 	Comment      types.String                               `tfsdk:"comment"`
@@ -1058,26 +1062,4 @@ func md5Reader(src io.Reader) (string, error) {
 	}
 
 	return itypes.Base64Encode(h.Sum(nil)), nil
-}
-
-func sweepRevisions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := dataexchange.ListDataSetRevisionsInput{}
-	conn := client.DataExchangeClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := dataexchange.NewListDataSetRevisionsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Revisions {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceRevisionAssets, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

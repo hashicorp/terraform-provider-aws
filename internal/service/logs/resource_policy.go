@@ -145,7 +145,7 @@ func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, 
 }
 
 func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) (*awstypes.ResourcePolicy, error) {
-	output, err := findResourcePolicies(ctx, conn, input, filter)
+	output, err := findResourcePolicies(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -154,8 +154,9 @@ func findResourcePolicy(ctx context.Context, conn *cloudwatchlogs.Client, input 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy]) ([]awstypes.ResourcePolicy, error) {
+func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, filter tfslices.Predicate[*awstypes.ResourcePolicy], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.ResourcePolicy, error) {
 	var output []awstypes.ResourcePolicy
+	opts := tfslices.NewFinderOptions(optFns)
 
 	err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -165,6 +166,9 @@ func findResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		for _, v := range page.ResourcePolicies {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return false
+				}
 			}
 		}
 

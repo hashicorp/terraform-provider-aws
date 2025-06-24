@@ -5,6 +5,7 @@ package datapipeline_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -155,7 +156,7 @@ func TestAccDataPipelinePipelineDataSource_tags_IgnoreTags_Overlap_DefaultTag(t 
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullPipelineDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPipelineDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -188,7 +189,7 @@ func TestAccDataPipelinePipelineDataSource_tags_IgnoreTags_Overlap_ResourceTag(t
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullPipelineDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullPipelineDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -198,9 +199,9 @@ func TestAccDataPipelinePipelineDataSource_tags_IgnoreTags_Overlap_ResourceTag(t
 	})
 }
 
-func expectFullPipelineDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfdatapipeline.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullPipelineDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfdatapipeline.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrID,
 		ResourceType:        "Pipeline",
-	}, knownValue)
+	}), knownValue)
 }

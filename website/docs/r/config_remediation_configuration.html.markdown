@@ -69,6 +69,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automatic` - (Optional) Remediation is triggered automatically if `true`.
 * `execution_controls` - (Optional) Configuration block for execution controls. See below.
 * `maximum_automatic_attempts` - (Optional) Maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.

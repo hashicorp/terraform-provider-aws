@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The retention rule description.
 * `resource_tags` - (Optional) Specifies the resource tags to use to identify resources that are to be retained by a tag-level retention rule. See [`resource_tags`](#resource_tags) below.
 * `lock_configuration` - (Optional) Information about the retention rule lock configuration. See [`lock_configuration`](#lock_configuration) below.

@@ -391,7 +391,7 @@ func testAccCheckImageExists(ctx context.Context, n string) resource.TestCheckFu
 func testAccImageBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -480,7 +480,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -507,7 +507,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 
@@ -923,7 +923,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
@@ -939,7 +939,7 @@ EOF
 
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
   target_repository {
     repository_name = aws_ecr_repository.test.name

@@ -46,12 +46,16 @@ Data Sources use a self-registration process that adds them to the provider usin
     )
 
     // @FrameworkDataSource("aws_something_example", name="Example")
-    func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
-    	return &dataSourceExample{}, nil
+    func newExampleDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+    	return &exampleDataSource{}, nil
     }
 
-    type dataSourceExample struct {
-	    framework.DataSourceWithConfigure
+    type exampleDataSource struct {
+    	framework.DataSourceWithModel[exampleDataSourceModel]
+    }
+
+    type exampleDataSourceModel {
+    	// Fields corresponding to attributes in the Schema.
     }
     ```
 

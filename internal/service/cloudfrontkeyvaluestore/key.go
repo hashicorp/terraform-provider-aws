@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -29,6 +30,10 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfrontkeyvaluestore_key", name="Key")
+// @IdentityAttribute("key_value_store_arn")
+// @IdentityAttribute("key")
+// @WrappedImport(false)
+// @Testing(identityTest=false)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -36,14 +41,13 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type keyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[keyResourceModel]
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrKey: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The key to put.",
@@ -129,12 +133,6 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 	var data keyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -324,24 +322,6 @@ const (
 	keyResourceIDPartCount = 2
 )
 
-func (data *keyResourceModel) InitFromID() error {
-	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, keyResourceIDPartCount, false)
-	if err != nil {
-		return err
-	}
-
-	_, err = arn.Parse(parts[0])
-	if err != nil {
-		return err
-	}
-
-	data.KvsARN = fwtypes.ARNValue(parts[0])
-	data.Key = types.StringValue(parts[1])
-
-	return nil
-}
-
 func (data *keyResourceModel) setID() (string, error) {
 	parts := []string{
 		data.KvsARN.ValueString(),
@@ -349,4 +329,60 @@ func (data *keyResourceModel) setID() (string, error) {
 	}
 
 	return flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
+}
+
+func (r *keyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	// Import-by-id case
+	if request.ID != "" {
+		id := request.ID
+		parts, err := flex.ExpandResourceId(id, keyResourceIDPartCount, false)
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Parsing Import ID",
+				err.Error(),
+			)
+			return
+		}
+
+		_, err = arn.Parse(parts[0])
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Parsing Import ID",
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key_value_store_arn"), parts[0])...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrKey), parts[1])...)
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...) // nosemgrep:ci.semgrep.framework.import-state-passthrough-id
+
+		return
+	}
+
+	if identity := request.Identity; identity != nil {
+		var arn string
+		identity.GetAttribute(ctx, path.Root("key_value_store_arn"), &arn)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("key_value_store_arn"), arn)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		var key string
+		identity.GetAttribute(ctx, path.Root(names.AttrKey), &key)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrKey), key)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		parts := []string{
+			arn,
+			key,
+		}
+		id, _ := flex.FlattenResourceId(parts, keyResourceIDPartCount, false)
+
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
+	}
 }

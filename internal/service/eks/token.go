@@ -422,8 +422,8 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 }
 
 func hasSignedClusterIDHeader(paramsLower *url.Values) bool {
-	signedHeaders := strings.Split(paramsLower.Get("x-amz-signedheaders"), ";")
-	for _, hdr := range signedHeaders {
+	signedHeaders := strings.SplitSeq(paramsLower.Get("x-amz-signedheaders"), ";")
+	for hdr := range signedHeaders {
 		if strings.EqualFold(hdr, clusterIDHeader) {
 			return true
 		}

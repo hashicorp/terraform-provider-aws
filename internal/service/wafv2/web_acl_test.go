@@ -738,7 +738,8 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 						"statement.0.managed_rule_group_statement.0.name":                                                     "AWSManagedRulesATPRuleSet",
 						"statement.0.managed_rule_group_statement.0.rule_action_override.#":                                   "0",
 						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                   "0",
-						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS"}),
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                              "AWS",
+					}),
 				),
 			},
 			{
@@ -1002,7 +1003,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 						"statement.0.managed_rule_group_statement.0.name":        "AWSManagedRulesBotControlRuleSet",
 						"statement.0.managed_rule_group_statement.0.vendor_name": "AWS",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level":        "TARGETED",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": acctest.CtFalse,
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": acctest.CtTrue,
 					}),
 				),
 			},
@@ -2535,7 +2536,6 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 						return !lastPage
 					})
-
 					if err != nil {
 						t.Fatalf("finding WebACL (%s): %s", webACLName, err)
 					}
@@ -2564,7 +2564,6 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 						return !lastPage
 					})
-
 					if err != nil {
 						t.Fatalf("finding rule group (%s): %s", webACLName, err)
 					}
@@ -3564,6 +3563,120 @@ func TestAccWAFV2WebACL_dataProtectionConfigMultiple(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ASNMatchStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_ASNMatchStatement(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:        webACLName,
+						names.AttrPriority:    "10",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
+						"visibility_config.0.metric_name":                fmt.Sprintf("%s-metric-name", webACLName),
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
+						"statement.#":                                                               "1",
+						"statement.0.asn_match_statement.#":                                         "1",
+						"statement.0.asn_match_statement.0.asn_list.#":                              "3",
+						"statement.0.asn_match_statement.0.asn_list.0":                              "1",
+						"statement.0.asn_match_statement.0.asn_list.1":                              "2",
+						"statement.0.asn_match_statement.0.asn_list.2":                              "3",
+						"statement.0.asn_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.asn_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.asn_match_statement.0.forwarded_ip_config.0.header_name":       "x-forwarded-for",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_RateBased_ASNMatchStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_ASNMatchStatement(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:                       "rule-1",
+						"action.#":                           "1",
+						"action.0.allow.#":                   "0",
+						"action.0.block.#":                   "0",
+						"action.0.count.#":                   "1",
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                                                   "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                                                "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                                                "0",
+						"statement.0.rate_based_statement.0.limit":                                                                                "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                               "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.#":                                         "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.asn_list.#":                              "3",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.asn_list.0":                              "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.asn_list.1":                              "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.asn_list.2":                              "3",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.asn_match_statement.0.forwarded_ip_config.0.header_name":       "x-forwarded-for",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
@@ -3600,7 +3713,6 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
-
 		if err != nil {
 			return err
 		}
@@ -5293,7 +5405,7 @@ resource "aws_wafv2_web_acl" "test" {
         managed_rule_group_configs {
           aws_managed_rules_bot_control_rule_set {
             inspection_level        = "TARGETED"
-            enable_machine_learning = false
+            enable_machine_learning = true
           }
         }
       }
@@ -7113,6 +7225,105 @@ resource "aws_wafv2_web_acl" "test" {
         field_type = "BODY"
       }
     }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_ASNMatchStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = %[1]q
+    priority = 10
+
+    action {
+      count {}
+    }
+
+    statement {
+      asn_match_statement {
+        asn_list = [1, 2, 3]
+        forwarded_ip_config {
+          fallback_behavior = "MATCH"
+          header_name       = "x-forwarded-for"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "%[1]s-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_rateBasedStatement_ASNMatchStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit = 50000
+        scope_down_statement {
+          asn_match_statement {
+            asn_list = [1, 2, 3]
+            forwarded_ip_config {
+              fallback_behavior = "MATCH"
+              header_name       = "x-forwarded-for"
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, rName)

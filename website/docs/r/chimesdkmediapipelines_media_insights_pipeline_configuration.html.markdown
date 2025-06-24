@@ -270,6 +270,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Configuration name.
 * `resource_access_role_arn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.
 * `elements` - (Required) Collection of processors and sinks to transform media and deliver data.

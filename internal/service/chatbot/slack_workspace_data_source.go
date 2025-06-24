@@ -19,19 +19,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_chatbot_slack_workspace", name="Slack Workspace")
-func newDataSourceSlackWorkspace(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSlackWorkspace{}, nil
+func newSlackWorkspaceDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &slackWorkspaceDataSource{}, nil
 }
 
 const (
 	DSNameSlackWorkspace = "Slack Workspace Data Source"
 )
 
-type dataSourceSlackWorkspace struct {
-	framework.DataSourceWithConfigure
+type slackWorkspaceDataSource struct {
+	framework.DataSourceWithModel[slackWorkspaceDataSourceModel]
 }
 
-func (d *dataSourceSlackWorkspace) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *slackWorkspaceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"slack_team_id": schema.StringAttribute{
@@ -44,10 +44,10 @@ func (d *dataSourceSlackWorkspace) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceSlackWorkspace) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *slackWorkspaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ChatbotClient(ctx)
 
-	var data dataSourceSlackWorkspaceData
+	var data slackWorkspaceDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -94,7 +94,8 @@ func findSlackWorkspaceByName(ctx context.Context, conn *chatbot.Client, slack_t
 	return nil, create.Error(names.Chatbot, "missing", DSNameSlackWorkspace, slack_team_name, nil)
 }
 
-type dataSourceSlackWorkspaceData struct {
+type slackWorkspaceDataSourceModel struct {
+	framework.WithRegionModel
 	SlackTeamName types.String `tfsdk:"slack_team_name"`
 	SlackTeamID   types.String `tfsdk:"slack_team_id"`
 }

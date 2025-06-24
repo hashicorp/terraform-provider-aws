@@ -7,15 +7,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
-	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 var (
@@ -128,33 +127,7 @@ func (v IAMPolicy) StringSemanticEquals(_ context.Context, newValuable basetypes
 		return false, diags
 	}
 
-	return policyStringsEquivalent(v.ValueString(), newValue.ValueString()), diags
-}
-
-// See verify.PolicyStringsEquivalent, which can't be called because of import cycles.
-func policyStringsEquivalent(s1, s2 string) bool {
-	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "" {
-		return true
-	}
-
-	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "" {
-		return true
-	}
-
-	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "{}" {
-		return true
-	}
-
-	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "{}" {
-		return true
-	}
-
-	equivalent, err := awspolicy.PoliciesAreEquivalent(s1, s2)
-	if err != nil {
-		return false
-	}
-
-	return equivalent
+	return verify.PolicyStringsEquivalent(v.ValueString(), newValue.ValueString()), diags
 }
 
 func (v IAMPolicy) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {

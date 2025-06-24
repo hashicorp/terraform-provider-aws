@@ -16,21 +16,21 @@ import (
 )
 
 // @FrameworkDataSource("aws_cloudfront_origin_access_control", name="Origin Access Control")
-func newDataSourceOriginAccessControl(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceOriginAccessControl{}
+func newOriginAccessControlDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &originAccessControlDataSource{}
 
 	return d, nil
 }
 
-type dataSourceOriginAccessControl struct {
-	framework.DataSourceWithConfigure
+type originAccessControlDataSource struct {
+	framework.DataSourceWithModel[originAccessControlDataSourceModel]
 }
 
 const (
 	DSNameOriginAccessControl = "Origin Access Control Data Source"
 )
 
-func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *originAccessControlDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -61,9 +61,9 @@ func (d *dataSourceOriginAccessControl) Schema(_ context.Context, _ datasource.S
 	}
 }
 
-func (d *dataSourceOriginAccessControl) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *originAccessControlDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().CloudFrontClient(ctx)
-	var data dataSourceOriginAccessControlData
+	var data originAccessControlDataSourceModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -91,7 +91,7 @@ func (d *dataSourceOriginAccessControl) Read(ctx context.Context, request dataso
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceOriginAccessControlData struct {
+type originAccessControlDataSourceModel struct {
 	ARN                           types.String `tfsdk:"arn"`
 	Description                   types.String `tfsdk:"description"`
 	Etag                          types.String `tfsdk:"etag"`

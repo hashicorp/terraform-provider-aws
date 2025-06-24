@@ -457,6 +457,7 @@ resource "aws_wafv2_web_acl" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `association_config` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config-block) below for details.
 * `captcha_config` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`captcha_config`](#captcha_config-block) below for details.
 * `challenge_config` - (Optional) Specifies how AWS WAF should handle Challenge evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`challenge_config`](#challenge_config-block) below for details.
@@ -628,6 +629,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `and_statement` - (Optional) Logical rule statement used to combine other rule statements with AND logic. See [`and_statement`](#and_statement-block) below for details.
+* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asn_match_statement`](#asn_match_statement-block) below for details.
 * `byte_match_statement` - (Optional) Rule statement that defines a string match search for AWS WAF to apply to web requests. See [`byte_match_statement`](#byte_match_statement-block) below for details.
 * `geo_match_statement` - (Optional) Rule statement used to identify web requests based on country of origin. See [`geo_match_statement`](#geo_match_statement-block) below for details.
 * `ip_set_reference_statement` - (Optional) Rule statement used to detect web requests coming from particular IP addresses or address ranges. See [`ip_set_reference_statement`](#ip_set_reference_statement-block) below for details.
@@ -650,6 +652,15 @@ A logical rule statement used to combine other rule statements with `AND` logic.
 The `and_statement` block supports the following arguments:
 
 * `statement` - (Required) Statements to combine with `AND` logic. You can use any statements that can be nested. See [`statement`](#statement-block) above for details.
+
+### `asn_match_statement` Block
+
+A rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address.
+
+The `asn_match_statement` block supports the following arguments:
+
+* `asn_list` - (Required) List of Autonomous System Numbers (ASNs).
+* `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for more details.
 
 ### `byte_match_statement` Block
 

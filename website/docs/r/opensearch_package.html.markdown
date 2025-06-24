@@ -40,6 +40,7 @@ resource "aws_opensearch_package" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `package_name` - (Required, Forces new resource) Unique name for the package.
 * `package_type` - (Required, Forces new resource) The type of package.
 * `package_source` - (Required, Forces new resource) Configuration block for the package source options.

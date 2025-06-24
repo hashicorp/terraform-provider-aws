@@ -50,7 +50,7 @@ func sweepExports(region string) error {
 			id := aws.ToString(b.ExportArn)
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceExport, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newExportResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
