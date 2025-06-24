@@ -11,12 +11,9 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,92 +42,21 @@ func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudfrontkeyvaluestore_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFront)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				Config: testAccKeyConfig_basic(rName, value),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName),
-				),
 				ConfigStateChecks: []statecheck.StateCheck{
+					// Add this check here until annotations can support comma
 					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{key_value_store_arn},{key}"),
-					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-					// 	names.AttrAccountID:   tfknownvalue.AccountID(),
-					// 	"key_value_store_arn": knownvalue.NotNull(),
-					// 	names.AttrKey:         knownvalue.NotNull(),
-					// }),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("key_value_store_arn")),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
 				},
 			},
-
-			// Step 2: Import command
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
 				ImportStateVerify: true,
 			},
-
-			// Step 3: Import block with Import ID
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
-					},
-				},
-			},
-
-			// // Step 4: Import block with Resource Identity
-			// {
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_value_store_arn"), knownvalue.NotNull()), // TODO: needs pair
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact(rName)),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()), // TODO: needs tfplancheck.ExpectAttributeFormat
-			// 		},
-			// 	},
-			// },
 		},
 	})
 }
@@ -190,7 +116,7 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value1),
@@ -206,7 +132,7 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value2),
