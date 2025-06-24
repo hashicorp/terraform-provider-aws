@@ -515,11 +515,11 @@ func createBucketObjectImportID(d *schema.ResourceData) string {
 
 type bucketObjectImportID struct{}
 
-func (_ bucketObjectImportID) Create(d *schema.ResourceData) string {
+func (bucketObjectImportID) Create(d *schema.ResourceData) string {
 	return createBucketObjectImportID(d)
 }
 
-func (_ bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")

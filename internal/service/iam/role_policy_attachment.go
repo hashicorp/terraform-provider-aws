@@ -194,11 +194,11 @@ func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
 
 type rolePolicyAttachmentImportID struct{}
 
-func (_ rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
 	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
 }
 
-func (_ rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)

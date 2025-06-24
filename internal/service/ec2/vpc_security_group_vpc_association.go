@@ -197,7 +197,7 @@ var _ inttypes.ImportIDParser = securityGroupVPCAssociationImportID{}
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (_ securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
 	sgID, vpcID, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <security-group-id>"+intflex.ResourceIdSeparator+"<vpc-id>", id)

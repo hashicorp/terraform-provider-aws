@@ -339,7 +339,7 @@ var (
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (_ securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
 	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
@@ -353,7 +353,7 @@ func (_ securityGroupVPCAssociationImportID) Parse(id string) (string, map[strin
 	return id, result, nil
 }
 
-func (_ securityGroupVPCAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+func (securityGroupVPCAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
 	parts := make([]string, 0, keyResourceIDPartCount)
 
 	var attrVal types.String

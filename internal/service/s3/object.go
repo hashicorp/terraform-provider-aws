@@ -754,11 +754,11 @@ func createObjectImportID(d *schema.ResourceData) string {
 
 type objectImportID struct{}
 
-func (_ objectImportID) Create(d *schema.ResourceData) string {
+func (objectImportID) Create(d *schema.ResourceData) string {
 	return createObjectImportID(d)
 }
 
-func (_ objectImportID) Parse(id string) (string, map[string]string, error) {
+func (objectImportID) Parse(id string) (string, map[string]string, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")

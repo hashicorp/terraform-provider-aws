@@ -229,11 +229,11 @@ func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 
 type rolePolicyImportID struct{}
 
-func (_ rolePolicyImportID) Create(d *schema.ResourceData) string {
+func (rolePolicyImportID) Create(d *schema.ResourceData) string {
 	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
 }
 
-func (_ rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
 	roleName, policyName, err := rolePolicyParseID(id)
 	if err != nil {
 		return "", nil, err
