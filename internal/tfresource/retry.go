@@ -5,16 +5,18 @@ package tfresource
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
+
+var ErrFoundResource = retry.ErrFoundResource
 
 // Retryable is a function that is used to decide if a function's error is retryable or not.
 // The error argument can be `nil`.
@@ -27,7 +29,7 @@ type Retryable func(error) (bool, error)
 func RetryWhen(ctx context.Context, timeout time.Duration, f func() (any, error), retryable Retryable) (any, error) {
 	var output any
 
-	err := Retry(ctx, timeout, func() *retry.RetryError {
+	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
 		var err error
 		var again bool
 
@@ -35,11 +37,11 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (any, error)
 		again, err = retryable(err)
 
 		if again {
-			return retry.RetryableError(err)
+			return sdkretry.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return sdkretry.NonRetryableError(err)
 		}
 
 		return nil
@@ -62,7 +64,7 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (any, error)
 func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, error), retryable Retryable) (T, error) {
 	var output T
 
-	err := Retry(ctx, timeout, func() *retry.RetryError {
+	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
 		var err error
 		var again bool
 
@@ -70,11 +72,11 @@ func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, 
 		again, err = retryable(err)
 
 		if again {
-			return retry.RetryableError(err)
+			return sdkretry.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return sdkretry.NonRetryableError(err)
 		}
 
 		return nil
@@ -200,17 +202,17 @@ func RetryGWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx 
 func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
 	var output T
 
-	err := Retry(ctx, timeout, func() *retry.RetryError {
+	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
 		var err error
 
 		output, err = f()
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return sdkretry.NonRetryableError(err)
 		}
 
 		if output != t {
-			return retry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
+			return sdkretry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
 		}
 
 		return nil
@@ -231,8 +233,6 @@ func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t
 
 	return output, nil
 }
-
-var ErrFoundResource = errors.New(`found resource`)
 
 // RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
 func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
@@ -290,7 +290,7 @@ type Options struct {
 	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
-func (o Options) Apply(c *retry.StateChangeConf) {
+func (o Options) Apply(c *sdkretry.StateChangeConf) {
 	if o.Delay > 0 {
 		c.Delay = o.Delay
 	}
@@ -354,7 +354,7 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 // Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func Retry(ctx context.Context, timeout time.Duration, f retry.RetryFunc, optFns ...OptionsFunc) error {
+func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, optFns ...OptionsFunc) error {
 	// These are used to pull the error out of the function; need a mutex to
 	// avoid a data race.
 	var resultErr error
@@ -365,7 +365,7 @@ func Retry(ctx context.Context, timeout time.Duration, f retry.RetryFunc, optFns
 		fn(&options)
 	}
 
-	c := &retry.StateChangeConf{
+	c := &sdkretry.StateChangeConf{
 		Pending:    []string{"retryableerror"},
 		Target:     []string{"success"},
 		Timeout:    timeout,
