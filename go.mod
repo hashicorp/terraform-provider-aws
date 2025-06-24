@@ -127,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.4
-	github.com/aws/aws-sdk-go-v2/service/glue v1.114.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.115.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.33.2
@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.81.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.58.3
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.4.2
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.198.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.4
