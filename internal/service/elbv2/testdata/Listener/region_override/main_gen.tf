@@ -1,7 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_lb_listener" "test" {  
+resource "aws_lb_listener" "test" {
+  region = var.region
+  
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
@@ -10,11 +12,11 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
-
-  tags = var.resource_tags
 }
 
-resource "aws_lb" "test" {  
+resource "aws_lb" "test" {
+  region = var.region
+  
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -24,7 +26,9 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 }
 
-resource "aws_lb_target_group" "test" {  
+resource "aws_lb_target_group" "test" {
+  region = var.region
+  
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
@@ -42,7 +46,9 @@ resource "aws_lb_target_group" "test" {
   }
 }
 
-resource "aws_security_group" "test" {  
+resource "aws_security_group" "test" {
+  region = var.region
+  
   name        = var.rName
   description = "Used for ALB Testing"
   vpc_id      = aws_vpc.test.id
@@ -65,10 +71,14 @@ resource "aws_security_group" "test" {
 # acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+  region = var.region
+
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -79,6 +89,8 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -98,9 +110,8 @@ variable "rName" {
   nullable    = false
 }
 
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
