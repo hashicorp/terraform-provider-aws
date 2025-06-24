@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_lb_listener_rule" "test" {
+  region = var.region
+
   listener_arn = aws_lb_listener.test.arn
   priority     = 100
-  
-  region = var.region
-  
 
   action {
     type             = "forward"
@@ -21,12 +20,11 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test" {
+  region = var.region
+
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
-  
-  region = var.region
-  
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
@@ -35,11 +33,10 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   name   = var.rName
   vpc_id = aws_vpc.test.id
-  
-  region = var.region
-  
 
   ingress {
     from_port   = 0
@@ -57,26 +54,24 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_lb" "test" {
+  region = var.region
+
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
-  
-  region = var.region
-  
 
   idle_timeout               = 30
   enable_deletion_protection = false
 }
 
 resource "aws_lb_target_group" "test" {
+  region = var.region
+
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
-  
-  region = var.region
-  
 
   health_check {
     path                = "/health"
