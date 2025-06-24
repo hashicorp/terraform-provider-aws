@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lb_target_group" "test" {
-{{- template "region" }}
   name     = var.rName
   port     = 443
   protocol = "HTTPS"
@@ -23,11 +25,14 @@ resource "aws_lb_target_group" "test" {
     unhealthy_threshold = 3
     matcher             = "200-299"
   }
-
-{{- template "tags" . }}
 }
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
   cidr_block = "10.0.0.0/16"
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
