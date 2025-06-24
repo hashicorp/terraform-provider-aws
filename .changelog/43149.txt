@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `rule.statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_anti_ddos_rule_set` for L7 DDoS protection
+```
