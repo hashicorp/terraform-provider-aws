@@ -5257,16 +5257,16 @@ resource "aws_wafv2_web_acl" "test" {
 
         managed_rule_group_configs {
           aws_managed_rules_anti_ddos_rule_set {
-			client_side_action_config {
+            client_side_action_config {
               challenge {
-                usage_of_action                = "ENABLED"
+                usage_of_action = "ENABLED"
                 exempt_uri_regular_expression {
-				 regex_string = "\\/api\\/"
+                  regex_string = "\\/api\\/"
                 }
                 exempt_uri_regular_expression {
-				 regex_string = "jpg"
+                  regex_string = "jpg"
                 }
-                sensitivity                    = "MEDIUM"
+                sensitivity = "MEDIUM"
               }
             }
             sensitivity_to_block = "HIGH"

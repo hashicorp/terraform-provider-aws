@@ -1507,7 +1507,7 @@ func expandClientSideAction(tfList []any) *awstypes.ClientSideAction {
 	}
 
 	if v, ok := m["exempt_uri_regular_expression"].([]any); ok && len(v) > 0 {
-		out.ExemptUriRegularExpressions = expandClientSideActionExemptUriRegularExpression(v)
+		out.ExemptUriRegularExpressions = expandClientSideActionExemptURIRegularExpression(v)
 	}
 	if v, ok := m["sensitivity"].(string); ok && v != "" {
 		out.Sensitivity = awstypes.SensitivityToAct(v)
@@ -1516,7 +1516,7 @@ func expandClientSideAction(tfList []any) *awstypes.ClientSideAction {
 	return out
 }
 
-func expandClientSideActionExemptUriRegularExpression(tfList []any) []awstypes.Regex {
+func expandClientSideActionExemptURIRegularExpression(tfList []any) []awstypes.Regex {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3128,7 +3128,7 @@ func flattenClientSideAction(apiObject *awstypes.ClientSideAction) []any {
 	}
 
 	if apiObject.ExemptUriRegularExpressions != nil {
-		m["exempt_uri_regular_expression"] = flattenClientSideActionExemptUriRegularExpression(apiObject.ExemptUriRegularExpressions)
+		m["exempt_uri_regular_expression"] = flattenClientSideActionExemptURIRegularExpression(apiObject.ExemptUriRegularExpressions)
 	}
 
 	if apiObject.Sensitivity != "" {
@@ -3138,7 +3138,7 @@ func flattenClientSideAction(apiObject *awstypes.ClientSideAction) []any {
 	return []any{m}
 }
 
-func flattenClientSideActionExemptUriRegularExpression(apiObject []awstypes.Regex) []any {
+func flattenClientSideActionExemptURIRegularExpression(apiObject []awstypes.Regex) []any {
 	if apiObject == nil {
 		return nil
 	}
