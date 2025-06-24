@@ -982,9 +982,6 @@ func resourceInstance() *schema.Resource {
 			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("ipv6_address_count")
 			}),
-			//customdiff.ComputedIf("ipv6_address_count", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-			//	return diff.HasChange("ipv6_addresses")
-			//}),
 			customdiff.ForceNewIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				if !diff.HasChange("ipv6_addresses") {
 					return false
