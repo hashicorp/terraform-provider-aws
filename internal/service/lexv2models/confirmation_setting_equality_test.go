@@ -87,6 +87,8 @@ func TestArePromptAttemptsEqual(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			result, _ := tflexv2models.ArePromptAttemptsEqual(ctx, test.plannedState, test.incomingPlan, test.maxRetries)
 			if result != test.expected {
 				t.Errorf("expected %v, got %v", test.expected, result)
