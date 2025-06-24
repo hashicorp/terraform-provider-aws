@@ -968,56 +968,6 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			useImportIDCreator: false,
 			expectError:        true,
 		},
-
-		// "ID_Required": {
-		// 	attrName: "id",
-		// 	identityAttrs: map[string]string{
-		// 		"id": "a_name",
-		// 	},
-		// 	useSchemaWithID: true,
-		// 	expectedRegion:  region,
-		// 	expectError:     false,
-		// },
-		// "ID_WithAccountID": {
-		// 	attrName: "id",
-		// 	identityAttrs: map[string]string{
-		// 		"account_id": accountID,
-		// 		"id":         "a_name",
-		// 	},
-		// 	useSchemaWithID: true,
-		// 	expectedRegion:  region,
-		// 	expectError:     false,
-		// },
-		// "ID_WithDefaultRegion": {
-		// 	attrName: "id",
-		// 	identityAttrs: map[string]string{
-		// 		"region": region,
-		// 		"id":     "a_name",
-		// 	},
-		// 	useSchemaWithID: true,
-		// 	expectedRegion:  region,
-		// 	expectError:     false,
-		// },
-		// "ID_WithRegionOverride": {
-		// 	attrName: "id",
-		// 	identityAttrs: map[string]string{
-		// 		"region": anotherRegion,
-		// 		"id":     "a_name",
-		// 	},
-		// 	useSchemaWithID: true,
-		// 	expectedRegion:  anotherRegion,
-		// 	expectError:     false,
-		// },
-		// "ID_WrongAccountID": {
-		// 	attrName: "id",
-		// 	identityAttrs: map[string]string{
-		// 		"account_id": "987654321098",
-		// 		"id":         "a_name",
-		// 	},
-		// 	useSchemaWithID: true,
-		// 	expectedRegion:  region,
-		// 	expectError:     true,
-		// },
 	}
 
 	for name, tc := range testCases {
@@ -1097,6 +1047,327 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				}
 				if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
 					t.Errorf("expected Identity `region` to be %q, got %q", e, a)
+				}
+				for name, expectedAttr := range tc.expectedAttrs {
+					if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
+						t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
+					}
+				}
+			}
+		})
+	}
+}
+
+var globalMultipleParameterizedSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			Required: true,
+		},
+		"type": schema.StringAttribute{
+			Required: true,
+		},
+	},
+}
+
+var globalMultipleParameterizedWithIDSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"id": framework.IDAttributeDeprecatedNoReplacement(),
+		"name": schema.StringAttribute{
+			Required: true,
+		},
+		"type": schema.StringAttribute{
+			Required: true,
+		},
+	},
+}
+
+func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for _, attrName := range attrNames {
+		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
+	}
+	return inttypes.RegionalParameterizedIdentity(attrs...)
+}
+
+func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
+	t.Parallel()
+
+	f := importer.GlobalMultipleParameterized
+
+	accountID := "123456789012"
+
+	testCases := map[string]struct {
+		inputID             string
+		useSchemaWithID     bool
+		noIdentity          bool
+		expectedAttrs       map[string]string
+		expectedID          string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"Basic": {
+			inputID: "a_name,a_type",
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectError: false,
+		},
+		"NoIdentity": {
+			inputID:    "a_name,a_type",
+			noIdentity: true,
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedID:  "a_name,a_type",
+			expectError: false,
+		},
+
+		"WithIDAttr": {
+			inputID:         "a_name,a_type",
+			useSchemaWithID: true,
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedID:  "a_name,a_type",
+			expectError: false,
+		},
+		"WithIDAttr_TrimmedID": {
+			inputID:         "trim:a_name,a_type",
+			useSchemaWithID: true,
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedID:  "a_name,a_type",
+			expectError: false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			client := mockClient{
+				accountID: accountID,
+			}
+
+			stateAttrs := map[string]string{}
+
+			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
+
+			var identitySchema *identityschema.Schema
+			if !tc.noIdentity {
+				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+			}
+
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      testImportID{t: t},
+			}
+			if tc.useSchemaWithID {
+				importSpec.SetIDAttr = true
+			}
+
+			schema := globalMultipleParameterizedSchema
+			if tc.useSchemaWithID {
+				schema = globalMultipleParameterizedWithIDSchema
+			}
+
+			response := importByIDWithState(ctx, f, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			if tc.expectError {
+				if !response.Diagnostics.HasError() {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(response.Diagnostics[0].Detail(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+				}
+				return
+			}
+
+			if response.Diagnostics.HasError() {
+				t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+			}
+
+			// Check attr values
+			for name, expectedAttr := range tc.expectedAttrs {
+				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
+					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
+				}
+			}
+
+			// Check ID value if using schema with ID
+			if tc.useSchemaWithID {
+				if e, a := tc.expectedID, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+					t.Errorf("expected `id` to be %q, got %q", e, a)
+				}
+			}
+
+			// Check identity
+			if tc.noIdentity {
+				if response.Identity != nil {
+					t.Error("Identity should not be set")
+				}
+			} else {
+				if identity := response.Identity; identity == nil {
+					t.Error("Identity should be set")
+				} else {
+					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
+						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					}
+					for name, expectedAttr := range tc.expectedAttrs {
+						if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
+							t.Errorf("expected Identity `%s` to be %q, got %q", name, e, a)
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
+	t.Parallel()
+
+	f := importer.GlobalMultipleParameterized
+
+	accountID := "123456789012"
+
+	testCases := map[string]struct {
+		identityAttrs       map[string]string
+		useSchemaWithID     bool
+		useImportIDCreator  bool
+		expectedID          string
+		expectedAttrs       map[string]string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"Required": {
+			identityAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedID: "a_name,a_type",
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectError: false,
+		},
+		"WithAccountID": {
+			identityAttrs: map[string]string{
+				"account_id": accountID,
+				"name":       "a_name",
+				"type":       "a_type",
+			},
+			expectedID: "a_name,a_type",
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectError: false,
+		},
+		"WrongAccountID": {
+			identityAttrs: map[string]string{
+				"account_id": "987654321098",
+				"name":       "a_name",
+				"type":       "a_type",
+			},
+			expectError: true,
+		},
+
+		"WithIDAttr_Required": {
+			identityAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			useSchemaWithID:    true,
+			useImportIDCreator: true,
+			expectedID:         "a_name,a_type",
+			expectError:        false,
+		},
+		"WithIDAttr_NoImportIDCreate": {
+			identityAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			useSchemaWithID:    true,
+			useImportIDCreator: false,
+			expectError:        true,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			client := mockClient{
+				accountID: accountID,
+			}
+
+			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
+
+			identitySchema := ptr(identity.NewIdentitySchema(identitySpec))
+
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      testImportID{t: t},
+			}
+			if tc.useSchemaWithID {
+				importSpec.SetIDAttr = true
+			}
+			if tc.useImportIDCreator {
+				importSpec.ImportID = testImportIDCreator{
+					testImportID: testImportID{t: t},
+				}
+			}
+
+			schema := globalMultipleParameterizedSchema
+			if tc.useSchemaWithID {
+				schema = globalMultipleParameterizedWithIDSchema
+			}
+
+			identity := identityFromSchema(ctx, identitySchema, tc.identityAttrs)
+
+			response := importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
+			if tc.expectError {
+				if !response.Diagnostics.HasError() {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(response.Diagnostics[0].Detail(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+				}
+				return
+			}
+
+			if response.Diagnostics.HasError() {
+				t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+			}
+
+			// Check attr values
+			for name, expectedAttr := range tc.expectedAttrs {
+				if e, a := expectedAttr, getAttributeValue(ctx, t, response.State, path.Root(name)); e != a {
+					t.Errorf("expected `%s` to be %q, got %q", name, e, a)
+				}
+			}
+
+			// Check ID value if using schema with ID
+			if tc.useSchemaWithID {
+				if e, a := tc.expectedID, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+					t.Errorf("expected `id` to be %q, got %q", e, a)
+				}
+			}
+
+			// Check identity
+			if identity := response.Identity; identity == nil {
+				t.Error("Identity should be set")
+			} else {
+				if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
+					t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
 				}
 				for name, expectedAttr := range tc.expectedAttrs {
 					if e, a := expectedAttr, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(name)); e != a {
