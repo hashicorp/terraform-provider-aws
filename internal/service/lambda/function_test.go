@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1249,9 +1250,12 @@ func TestAccLambdaFunction_loggingConfigWithPublish(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccFunctionConfig_loggingConfigWithPublish(rName, "JSON"),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccFunctionConfig_loggingConfigWithPublish(rName, "JSON"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				Config: testAccFunctionConfig_loggingConfigWithPublishUpdated1(rName, "JSON", "DEBUG"),
@@ -1278,9 +1282,12 @@ func TestAccLambdaFunction_loggingConfigWithPublish(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccFunctionConfig_loggingConfigWithPublish(rName, "JSON"),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccFunctionConfig_loggingConfigWithPublish(rName, "JSON"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				Config: testAccFunctionConfig_loggingConfigWithPublish(rName, "Text"),
@@ -1295,9 +1302,12 @@ func TestAccLambdaFunction_loggingConfigWithPublish(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccFunctionConfig_loggingConfigWithPublish(rName, "Text"),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccFunctionConfig_loggingConfigWithPublish(rName, "Text"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
