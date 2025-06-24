@@ -124,12 +124,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						// Global Parameterized Identity with more than one attribute not supported
-						/* Identity: inttypes.GlobalParameterizedIdentity(
+						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),*/
+						),
 					{{- else }}
 						Identity: inttypes.RegionalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
@@ -197,6 +196,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						WrappedImport: true,
 						{{- if ne $value.ImportIDHandler "" }}
 							ImportID: {{ $value.ImportIDHandler }}{},
+						{{- end }}
+						{{- if $value.SetIDAttribute }}
+							SetIDAttr: true,
 						{{- end }}
 					},
 				{{- end }}

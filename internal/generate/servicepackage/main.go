@@ -184,6 +184,7 @@ type ResourceDatum struct {
 	goImports                         []goImport
 	IdentityDuplicateAttrs            []string
 	ImportIDHandler                   string
+	SetIDAttribute                    bool
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -464,6 +465,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ImportIDHandler = typeName
 					if importSpec != nil {
 						d.goImports = append(d.goImports, *importSpec)
+					}
+				}
+
+				if attr, ok := args.Keyword["setIDAttribute"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SetIDAttribute = b
 					}
 				}
 			}
