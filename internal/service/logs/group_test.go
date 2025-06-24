@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
@@ -354,14 +355,20 @@ func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
 				),
 			},
 			{
-				Config:             testAccGroupConfig_logGroupClassDEVIVERYWithRetentionInDays(rName, 60),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithRetentionInDays(rName, 60),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
-				Config:             testAccGroupConfig_logGroupClassDEVIVERYWithoutRetentionInDays(rName),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithoutRetentionInDays(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
