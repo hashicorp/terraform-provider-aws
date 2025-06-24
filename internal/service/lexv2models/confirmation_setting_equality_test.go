@@ -71,7 +71,7 @@ func TestArePromptAttemptsEqual(t *testing.T) {
 			expected:   false,
 		},
 		{
-			name: "old values of null",
+			name: "missing default values",
 			plannedState: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
 				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Initial"),
 				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry2"),
