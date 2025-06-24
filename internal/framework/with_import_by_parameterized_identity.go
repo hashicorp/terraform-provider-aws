@@ -6,11 +6,9 @@ package framework
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var _ ImportByIdentityer = &WithImportByParameterizedIdentity{}
@@ -43,59 +41,18 @@ func (w *WithImportByParameterizedIdentity) ImportState(ctx context.Context, req
 	if w.identity.IsSingleParameter {
 		if w.identity.IsGlobalResource {
 			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
 		} else {
 			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-		}
-
-		return
-	} else {
-		if !w.identity.IsGlobalResource {
-			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 			return
 		}
-	}
-
-	if request.ID != "" {
-		if w.identity.IDAttrShadowsAttr != names.AttrID {
-			response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(w.identity.IDAttrShadowsAttr), request.ID)...)
-		}
-
-		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
-
-		return
-	}
-
-	if identity := request.Identity; identity != nil {
-		for _, attr := range w.identity.Attributes {
-			switch attr.Name {
-			case names.AttrAccountID:
-
-			case names.AttrRegion:
-				regionPath := path.Root(names.AttrRegion)
-				var regionVal string
-				response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, regionVal)...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-			default:
-				attrPath := path.Root(attr.Name)
-				var attrVal string
-				response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &attrVal)...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, attrVal)...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-			}
+	} else {
+		if w.identity.IsGlobalResource {
+			importer.GlobalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		} else {
+			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
 		}
 	}
 }
