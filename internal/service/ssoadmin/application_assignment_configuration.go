@@ -38,7 +38,7 @@ const (
 
 type applicationAssignmentConfigurationResource struct {
 	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

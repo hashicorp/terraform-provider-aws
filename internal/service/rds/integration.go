@@ -59,7 +59,7 @@ const (
 
 type integrationResource struct {
 	framework.ResourceWithModel[integrationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
