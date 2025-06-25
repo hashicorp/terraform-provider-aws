@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -56,7 +57,7 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type agentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentResourceModel]
 	framework.WithTimeouts
 }
 
@@ -133,11 +134,15 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.UTF8LengthBetween(40, 8000),
+					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
 			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prepared_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -408,7 +413,7 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 }
 
 func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	// Set prepare_agent to default value on import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
@@ -664,6 +669,7 @@ func removeDefaultPrompts(agent *awstypes.Agent) {
 }
 
 type agentResourceModel struct {
+	framework.WithRegionModel
 	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
 	AgentID                     types.String                                                      `tfsdk:"agent_id"`
 	AgentCollaboration          fwtypes.StringEnum[awstypes.AgentCollaboration]                   `tfsdk:"agent_collaboration"`
@@ -679,6 +685,7 @@ type agentResourceModel struct {
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	PreparedAt                  timetypes.RFC3339                                                 `tfsdk:"prepared_at"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`

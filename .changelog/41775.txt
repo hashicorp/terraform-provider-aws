@@ -1,0 +1,7 @@
+```release-note:breaking-change
+provider: As the [AWS SDK for Go v2](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/welcome.html) does not support Amazon SimpleDB the `aws_simpledb_domain` resource has been removed. Add a [constraint](https://developer.hashicorp.com/terraform/language/providers/requirements#version-constraints) to v5 of the Terraform AWS Provider for continued use of this resource
+```
+
+```release-note:breaking-change
+provider: The `endpoints.simpledb` and `endpoints.sdb` configuration arguments have been removed
+```

@@ -79,6 +79,7 @@ The following arguments are optional:
 * `launchTemplateConfiguration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `licenseConfigurationArns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 * `s3ExportConfiguration` - (Optional) Configuration block with S3 export settings. Detailed below.
+* `ssmParameterConfiguration` - (Optional) Configuration block with SSM parameter configuration to use as AMI id output. Detailed below.
 
 ### ami_distribution_configuration
 
@@ -142,6 +143,12 @@ The following arguments are optional:
 * `s3Bucket` - (Required) The name of the S3 bucket to store the exported image in. The bucket needs to exist before the export configuration is created.
 * `s3Prefix` - (Optional) The prefix for the exported image.
 
+### ssm_parameter_configuration
+
+* `parameterName` - (Required) Name of the SSM parameter that will store the AMI ID after distribution.
+* `amiAccountId` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
+* `dataType` - (Optional) Data type of the SSM parameter. Valid values are `text` and `aws:ec2:image`. AWS recommends using `aws:ec2:image`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -183,4 +190,4 @@ Using `terraform import`, import `aws_imagebuilder_distribution_configurations` 
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f7c8761b4f82592281b29755627d2977b88ed7794603283f70099569ca04841 -->
+<!-- cache-key: cdktf-0.20.8 input-eb6dbc802bd01b19ee30996247b2e7b453e7ee4434a81d1cf062bb07cb9592f4 -->

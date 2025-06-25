@@ -24,16 +24,14 @@ import (
 )
 
 // @SDKResource("aws_codestarconnections_host", name="Host")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections;codestarconnections.GetHostOutput")
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,
 		ReadWithoutTimeout:   resourceHostRead,
 		UpdateWithoutTimeout: resourceHostUpdate,
 		DeleteWithoutTimeout: resourceHostDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

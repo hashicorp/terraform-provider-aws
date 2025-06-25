@@ -1493,7 +1493,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
 
     stateful_rule_group_reference {
-      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
     }
   }
 }
@@ -1556,7 +1556,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
 
     stateful_rule_group_reference {
-      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
 
       override {
         action = %[2]q
@@ -1774,7 +1774,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 func testAccFirewallPolicyConfig_encryptionConfiguration(rName, statelessDefaultActions string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
@@ -1799,7 +1802,10 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 // InvalidRequestException: firewall policy has KMS key misconfigured
 func testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q

@@ -46,7 +46,7 @@ func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.Resou
 }
 
 type vpcBlockPublicAccessExclusionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcBlockPublicAccessExclusionResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -86,7 +86,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Schema(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -126,7 +126,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Create(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -164,10 +164,11 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 		return
 	}
 
-	if resource := resourceARN.Resource; strings.HasPrefix(resource, "vpc/") {
-		data.VPCID = types.StringValue(strings.TrimPrefix(resource, "vpc/"))
-	} else if strings.HasPrefix(resource, "subnet/") {
-		data.SubnetID = types.StringValue(strings.TrimPrefix(resource, "subnet/"))
+	resource := resourceARN.Resource
+	if trimmed, ok := strings.CutPrefix(resource, "vpc/"); ok {
+		data.VPCID = types.StringValue(trimmed)
+	} else if trimmed, ok := strings.CutPrefix(resource, "subnet/"); ok {
+		data.SubnetID = types.StringValue(trimmed)
 	} else {
 		response.Diagnostics.AddError("parsing Resource_ARN", fmt.Sprintf("unknown resource type: %s", resource))
 
@@ -180,7 +181,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new, old resourceVPCBlockPublicAccessExclusionModel
+	var new, old vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -217,7 +218,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Update(ctx context.Context, requ
 }
 
 func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceVPCBlockPublicAccessExclusionModel
+	var data vpcBlockPublicAccessExclusionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -261,7 +262,8 @@ func (r *vpcBlockPublicAccessExclusionResource) ConfigValidators(context.Context
 	}
 }
 
-type resourceVPCBlockPublicAccessExclusionModel struct {
+type vpcBlockPublicAccessExclusionResourceModel struct {
+	framework.WithRegionModel
 	ExclusionID                  types.String                                              `tfsdk:"id"`
 	InternetGatewayExclusionMode fwtypes.StringEnum[awstypes.InternetGatewayExclusionMode] `tfsdk:"internet_gateway_exclusion_mode"`
 	ResourceARN                  types.String                                              `tfsdk:"resource_arn"`

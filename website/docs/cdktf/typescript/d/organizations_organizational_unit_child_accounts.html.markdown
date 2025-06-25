@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `parentId` - (Required) The parent ID of the accounts.
 
 ## Attribute Reference
@@ -52,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
     * `status` - The status of the account in the organization.
 * `id` - Parent identifier of the organizational units.
 
-<!-- cache-key: cdktf-0.20.8 input-76dc172a797ae2e6f20b12434b37314ffa18984dde0049de9f69d083f89caebb -->
+<!-- cache-key: cdktf-0.20.8 input-b0658793b3086f0c24891cb05167968584d7b23b39c574d1b388ca8859f057d8 -->

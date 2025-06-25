@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `identity_id`- (Optional) The globally unique identifier (GUID) of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_name` - (Optional) The name of the user or group from the Amazon Web Services SSO Identity Store.
@@ -75,4 +75,4 @@ Using `terraform import`, import EMR studio session mappings using `studio-id:id
 % terraform import aws_emr_studio_session_mapping.example es-xxxxx:USER:xxxxx-xxx-xxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6be21ee08f5326f461796bd38e16a942ea254529c5e303950bf2b3a3f049afa4 -->
+<!-- cache-key: cdktf-0.20.8 input-0189d783a0f1e77dab1c2827967435a9d4ef23d60e75e401d8e26e016ed17b68 -->

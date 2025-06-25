@@ -31,8 +31,8 @@ import (
 )
 
 // @FrameworkResource("aws_glue_catalog_table_optimizer",name="Catalog Table Optimizer")
-func newResourceCatalogTableOptimizer(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCatalogTableOptimizer{}
+func newCatalogTableOptimizerResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &catalogTableOptimizerResource{}
 
 	return r, nil
 }
@@ -43,11 +43,11 @@ const (
 	idParts = 4
 )
 
-type resourceCatalogTableOptimizer struct {
-	framework.ResourceWithConfigure
+type catalogTableOptimizerResource struct {
+	framework.ResourceWithModel[catalogTableOptimizerResourceModel]
 }
 
-func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCatalogID: schema.StringAttribute{
@@ -158,9 +158,9 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 	response.Schema = s
 }
 
-func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *catalogTableOptimizerResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var plan resourceCatalogTableOptimizerData
+	var plan catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -216,9 +216,9 @@ func (r *resourceCatalogTableOptimizer) Create(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *catalogTableOptimizerResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var data resourceCatalogTableOptimizerData
+	var data catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -258,10 +258,10 @@ func (r *resourceCatalogTableOptimizer) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *catalogTableOptimizerResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().GlueClient(ctx)
 
-	var plan, state resourceCatalogTableOptimizerData
+	var plan, state catalogTableOptimizerResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -298,9 +298,9 @@ func (r *resourceCatalogTableOptimizer) Update(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *catalogTableOptimizerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().GlueClient(ctx)
-	var data resourceCatalogTableOptimizerData
+	var data catalogTableOptimizerResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -342,7 +342,7 @@ func (r *resourceCatalogTableOptimizer) Delete(ctx context.Context, request reso
 	}
 }
 
-func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts, err := flex.ExpandResourceId(request.ID, idParts, false)
 
 	if err != nil {
@@ -359,7 +359,8 @@ func (r *resourceCatalogTableOptimizer) ImportState(ctx context.Context, request
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrType), parts[3])...)
 }
 
-type resourceCatalogTableOptimizerData struct {
+type catalogTableOptimizerResourceModel struct {
+	framework.WithRegionModel
 	CatalogID     types.String                                       `tfsdk:"catalog_id"`
 	Configuration fwtypes.ListNestedObjectValueOf[configurationData] `tfsdk:"configuration"`
 	DatabaseName  types.String                                       `tfsdk:"database_name"`

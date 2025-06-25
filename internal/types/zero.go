@@ -7,7 +7,15 @@ import (
 	"reflect"
 )
 
-// IsZero returns true if `v` is `nil` or points to the zero value of `T`.
+// IsZero returns true if `v` is `nil`, is a pointer to `nil`, or points to the zero value of `T`.
 func IsZero[T any](v *T) bool {
-	return v == nil || reflect.ValueOf(*v).IsZero()
+	if v == nil {
+		return true
+	}
+
+	if val := reflect.ValueOf(*v); !val.IsValid() || val.IsZero() {
+		return true
+	}
+
+	return false
 }

@@ -289,11 +289,11 @@ data "aws_connect_instance_storage_config" "test" {
 
 func testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceStorageConfigDataSourceConfig_base(rName),
-		`
+		testAccInstanceStorageConfigDataSourceConfig_base(rName), `
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -319,7 +319,8 @@ data "aws_connect_instance_storage_config" "test" {
   instance_id    = aws_connect_instance.test.id
   resource_type  = aws_connect_instance_storage_config.test.resource_type
 }
-`)
+`,
+	)
 }
 
 func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string) string {
@@ -329,6 +330,7 @@ func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string)
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {

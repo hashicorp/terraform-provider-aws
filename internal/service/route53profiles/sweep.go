@@ -55,7 +55,7 @@ func sweepProfiles(region string) error {
 		}
 
 		for _, profile := range page.ProfileSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceProfile, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newProfileResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(profile.Id))))
 		}
 	}
@@ -91,7 +91,7 @@ func sweepProfileAssociations(region string) error {
 		}
 
 		for _, associations := range page.ProfileAssociations {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceProfile, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newProfileResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(associations.Id))))
 		}
 	}

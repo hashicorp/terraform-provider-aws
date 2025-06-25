@@ -26,16 +26,16 @@ import (
 
 // @SDKResource("aws_devicefarm_network_profile", name="Network Profile")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.NetworkProfile")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceNetworkProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkProfileCreate,
 		ReadWithoutTimeout:   resourceNetworkProfileRead,
 		UpdateWithoutTimeout: resourceNetworkProfileUpdate,
 		DeleteWithoutTimeout: resourceNetworkProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

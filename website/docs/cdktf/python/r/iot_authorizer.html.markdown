@@ -44,6 +44,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
 * `enable_caching_for_http`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
@@ -85,4 +87,4 @@ Using `terraform import`, import IOT Authorizers using the name. For example:
 % terraform import aws_iot_authorizer.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fc60ef7cd562c3e99b100a1641cd648afe6e9b18f170f7c7eb8339fc049ab953 -->
+<!-- cache-key: cdktf-0.20.8 input-167ddb4ef40e40458e9511b1f1dc9bef57cda282b11cccd657bd502746ad0e06 -->

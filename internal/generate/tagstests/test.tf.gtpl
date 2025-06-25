@@ -1,6 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+{{ define "region" -}}
+{{- end -}}
+
 {{ define "tags" }}
 {{ if eq . "tagsComputed1" }}
   tags = {

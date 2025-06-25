@@ -5,7 +5,7 @@ package ssmquicksetup
 
 // Exports for use in tests only.
 var (
-	ResourceConfigurationManager = newResourceConfigurationManager
+	ResourceConfigurationManager = newConfigurationManagerResource
 
 	FindConfigurationManagerByID = findConfigurationManagerByID
 )

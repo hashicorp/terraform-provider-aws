@@ -27,17 +27,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_azure_blob", name="Location Microsoft Azure Blob Storage")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationAzureBlobOutput")
+// @Testing(importIgnore="sas_configuration")
+// @Testing(preCheck="testAccPreCheck")
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
 		ReadWithoutTimeout:   resourceLocationAzureBlobRead,
 		UpdateWithoutTimeout: resourceLocationAzureBlobUpdate,
 		DeleteWithoutTimeout: resourceLocationAzureBlobDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_tier": {

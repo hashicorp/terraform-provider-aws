@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_customer_managed_policy_attachment", name="Customer Managed Policy Attachment")
-func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
+func resourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceCustomerManagedPolicyAttachmentRead,
@@ -123,7 +123,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
+	policy, err := findCustomerManagedPolicyByFourPartKey(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
@@ -200,7 +200,7 @@ func CustomerManagedPolicyAttachmentParseResourceID(id string) (string, string, 
 	return "", "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CUSTOMER_MANAGED_POLICY_NAME%[2]sCUSTOMER_MANAGED_POLICY_PATH%[2]sPERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, customerManagedPolicyAttachmentIDSeparator)
 }
 
-func FindCustomerManagedPolicy(ctx context.Context, conn *ssoadmin.Client, policyName, policyPath, permissionSetARN, instanceARN string) (*awstypes.CustomerManagedPolicyReference, error) {
+func findCustomerManagedPolicyByFourPartKey(ctx context.Context, conn *ssoadmin.Client, policyName, policyPath, permissionSetARN, instanceARN string) (*awstypes.CustomerManagedPolicyReference, error) {
 	input := &ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),

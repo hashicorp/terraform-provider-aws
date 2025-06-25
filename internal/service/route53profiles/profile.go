@@ -31,8 +31,8 @@ import (
 
 // @FrameworkResource("aws_route53profiles_profile", name="Profile")
 // @Tags("identifierAttribute=arn")
-func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProfile{}
+func newProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &profileResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultReadTimeout(30 * time.Minute)
@@ -45,14 +45,13 @@ const (
 	ResNameProfile = "Profile"
 )
 
-type resourceProfile struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceProfileData]
+type profileResource struct {
+	framework.ResourceWithModel[profileResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *profileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -102,10 +101,10 @@ func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *profileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var data resourceProfileData
+	var data profileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -153,10 +152,10 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var state resourceProfileData
+	var state profileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,10 +182,10 @@ func (r *resourceProfile) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *profileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
-	var state resourceProfileData
+	var state profileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -292,7 +291,8 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	return out.Profile, nil
 }
 
-type resourceProfileData struct {
+type profileResourceModel struct {
+	framework.WithRegionModel
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	Name          types.String                               `tfsdk:"name"`

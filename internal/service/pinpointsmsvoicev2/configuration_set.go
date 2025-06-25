@@ -39,7 +39,7 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type configurationSetResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[configurationSetResourceModel]
 	framework.WithImportByID
 }
 
@@ -227,6 +227,7 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 }
 
 type configurationSetResourceModel struct {
+	framework.WithRegionModel
 	ID                   types.String                             `tfsdk:"id"`
 	ConfigurationSetARN  types.String                             `tfsdk:"arn"`
 	ConfigurationSetName types.String                             `tfsdk:"name"`

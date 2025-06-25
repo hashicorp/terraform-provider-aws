@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `export_type` - (Required) Type of export. Acceptable values are `oas30` for OpenAPI 3.0.x and `swagger` for Swagger/OpenAPI 2.0.
 * `rest_api_id` - (Required) Identifier of the associated REST API.
 * `stage_name` - (Required) Name of the Stage that will be exported.
@@ -48,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content_type` - Content-type header value in the HTTP response.
 * `content_disposition` - Content-disposition header value in the HTTP response.
 
-<!-- cache-key: cdktf-0.20.8 input-c510075eea42189371d3ef965a6842b44146a7635515b8e6bc3e2af00098b481 -->
+<!-- cache-key: cdktf-0.20.8 input-25df30e659b411426013d55548398837bab1190b6e50ca5ecab00619091e7842 -->

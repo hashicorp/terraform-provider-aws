@@ -73,11 +73,11 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-Required arguments:
+The following arguments are required:
 
 * `global_table_arn` - (Required) ARN of the _main_ or global table which this resource will replicate.
 
-Optional arguments:
+The following arguments are optional:
 
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the CMK that should be used for the AWS KMS encryption. This argument should only be used if the key is different from the default KMS-managed DynamoDB key, `alias/aws/dynamodb`. **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the table replica.
@@ -130,4 +130,4 @@ Using `terraform import`, import DynamoDB table replicas using the `table-name:m
 % terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d7e5552443965a493af15058b2577dd7293e15b0d6d3d3fcd406df2f4ce90181 -->
+<!-- cache-key: cdktf-0.20.8 input-5a3899bf53d0e7df3453a1bf0d6a6bd6d554ffc7f4804b66f52a2ab0afa96574 -->

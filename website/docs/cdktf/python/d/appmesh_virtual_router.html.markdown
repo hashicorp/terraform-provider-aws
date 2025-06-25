@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual routers specification. See the [`aws_appmesh_virtual_router`](/docs/providers/aws/r/appmesh_virtual_router.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-09267d7d4084baeb433ba4250023e9410012cd2645c2c7f14eb2ee7f754980ad -->
+<!-- cache-key: cdktf-0.20.8 input-5d0cd8631251816c4b334a7f2cfad1d5225127d7aa239ba8ccdb670edff7d180 -->

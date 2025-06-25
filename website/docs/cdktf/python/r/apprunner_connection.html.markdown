@@ -39,7 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
 * `connection_name` - (Required) Name of the connection.
 * `provider_type` - (Required) Source repository provider. Valid values: `GITHUB`.
@@ -78,4 +78,4 @@ Using `terraform import`, import App Runner Connections using the `connection_na
 % terraform import aws_apprunner_connection.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3223a9c42fae1a70b59eb72d4fd08310c6f33713ae95b548fcc20326e370a660 -->
+<!-- cache-key: cdktf-0.20.8 input-233842c2d0a641cf7e062256608f043bbe8a22d7846d76cd1de98269db8b2a7a -->

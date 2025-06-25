@@ -241,7 +241,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `assume_role_policy` - (Required) Policy that grants an entity permission to assume the role.
 
@@ -305,4 +305,4 @@ Using `terraform import`, import IAM Roles using the `name`. For example:
 % terraform import aws_iam_role.developer developer_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc0706c2ff662b976d263da6b20bfd28567462ac69912e6e1cfb323fe6711d20 -->
+<!-- cache-key: cdktf-0.20.8 input-212b9628a5f57e77834cf417117db416853f3716879412cba171db4d5384fb78 -->

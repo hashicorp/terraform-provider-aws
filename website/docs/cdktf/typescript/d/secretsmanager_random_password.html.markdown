@@ -37,6 +37,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `excludeCharacters` - (Optional) String of the characters that you don't want in the password.
 * `excludeLowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `excludeNumbers` - (Optional) Specifies whether to exclude numbers from the password.
@@ -52,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `randomPassword` - Random password.
 
-<!-- cache-key: cdktf-0.20.8 input-253220cea464918e719cdeb6fc246c1972e3652b5d753f22810bdf68eb8eaeef -->
+<!-- cache-key: cdktf-0.20.8 input-ae0a62972b9718316151ee45b599025ddb7bfd46a48b2935ac9b105e8dfa1b5b -->

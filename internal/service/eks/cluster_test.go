@@ -1964,6 +1964,7 @@ func testAccClusterConfig_encryption(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_eks_cluster" "test" {
@@ -1992,6 +1993,7 @@ func testAccClusterConfig_encryptionVersion(rName, version string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_eks_cluster" "test" {

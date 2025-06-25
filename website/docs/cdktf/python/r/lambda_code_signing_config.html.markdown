@@ -30,7 +30,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         LambdaCodeSigningConfig(self, "new_csc",
             allowed_publishers=LambdaCodeSigningConfigAllowedPublishers(
-                signing_profile_version_arns=[example1.arn, example2.arn]
+                signing_profile_version_arns=[example1.version_arn, example2.version_arn]
             ),
             description="My awesome code signing config.",
             policies=LambdaCodeSigningConfigPolicies(
@@ -43,6 +43,8 @@ class MyConvertedCode(TerraformStack):
 ```
 
 ## Argument Reference
+
+This resource supports the following arguments:
 
 * `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
@@ -93,4 +95,4 @@ Using `terraform import`, import Code Signing Configs using their ARN. For examp
 % terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e7811cec92131887c279c3e50300db98d1a6fda984b73feceb743321e3bcaaf0 -->
+<!-- cache-key: cdktf-0.20.8 input-8277438b69c768d6fd9b1482f842bc5d5438d07f74a2ce6894246fda34455c7d -->

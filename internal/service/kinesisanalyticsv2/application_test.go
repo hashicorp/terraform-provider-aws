@@ -4537,7 +4537,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "InputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.input.name
         }
       }
@@ -4546,7 +4546,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "OutputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.output.name
         }
       }
@@ -4613,7 +4613,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "InputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.input.name
         }
       }
@@ -4622,7 +4622,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "OutputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.output.name
         }
       }
@@ -4848,7 +4848,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "InputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.input.name
         }
       }
@@ -4857,7 +4857,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "OutputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.output.name
         }
       }
@@ -4916,7 +4916,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "InputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.input.name
         }
       }
@@ -4925,7 +4925,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_group_id = "OutputStream0"
 
         property_map = {
-          "aws.region"  = data.aws_region.current.name
+          "aws.region"  = data.aws_region.current.region
           "stream.name" = aws_kinesis_stream.output.name
         }
       }

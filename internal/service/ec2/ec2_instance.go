@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -61,8 +62,15 @@ func resourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  instanceMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceInstanceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: instanceStateUpgradeV1,
+				Version: 1,
+			},
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -155,37 +163,19 @@ func resourceInstance() *schema.Resource {
 							},
 						},
 						"core_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_core_count"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 						"threads_per_core": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_threads_per_core"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 					},
 				},
-			},
-			"cpu_core_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_core_count is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.core_count"},
-			},
-			"cpu_threads_per_core": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_threads_per_core is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
@@ -808,7 +798,6 @@ func resourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
@@ -817,17 +806,38 @@ func resourceInstance() *schema.Resource {
 						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
 						return true
 					}
+
+					oldHashExists := old == userDataHashSum(new)
+					base64Encoded := userDataHashSum(old) == userDataHashSum(new)
+					if oldHashExists || base64Encoded {
+						return true
+					}
 					return false
 				},
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(0, 16384),
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringLenBetween(0, 16384)),
+					func(i any, path cty.Path) diag.Diagnostics {
+						var diags diag.Diagnostics
+						v, ok := i.(string)
+						if !ok {
+							return sdkdiag.AppendErrorf(diags, "expected type to be string")
+						}
+
+						if _, err := itypes.Base64Decode(v); err == nil {
+							// value is a base46 encoded string
+							return diag.Diagnostics{
+								diag.Diagnostic{
+									Severity:      diag.Warning,
+									Summary:       "Value is base64 encoded",
+									Detail:        "The value is base64 encoded. If you want to use base64 encoding, please use the user_data_base64 argument. user_data attribute is set as cleartext in state",
+									AttributePath: path,
+								},
+							}
+						}
+
+						return diags
+					},
+				),
 			},
 			"user_data_base64": {
 				Type:          schema.TypeString,
@@ -913,7 +923,7 @@ func resourceInstance() *schema.Resource {
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
-						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
 					}
@@ -1049,34 +1059,30 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DisableApiStop = instanceOpts.DisableAPIStop
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Instance: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
-			return conn.RunInstances(ctx, &input)
-		},
-		func(err error) (bool, error) {
-			// IAM instance profiles can take ~10 seconds to propagate in AWS:
-			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
-				return true, err
-			}
+	var output *ec2.RunInstancesOutput
+	for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
+		output, err = conn.RunInstances(ctx, &input)
 
-			// IAM roles can also take time to propagate in AWS:
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
-				return true, err
-			}
+		// IAM instance profiles can take ~10 seconds to propagate in AWS:
+		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
+			continue
+		}
 
-			return false, err
-		},
-	)
+		// IAM roles can also take time to propagate in AWS:
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, " has no associated IAM Roles") {
+			continue
+		}
+
+		break
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Instance: %s", err)
 	}
 
-	instanceId := outputRaw.(*ec2.RunInstancesOutput).Instances[0].InstanceId
-
-	d.SetId(aws.ToString(instanceId))
+	instanceID := output.Instances[0].InstanceId
+	d.SetId(aws.ToString(instanceID))
 
 	instance, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
@@ -1186,12 +1192,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("placement_partition_number", v.PartitionNumber)
 
 		d.Set("tenancy", v.Tenancy)
-	}
-
-	// preserved to maintain backward compatibility
-	if v := instance.CpuOptions; v != nil {
-		d.Set("cpu_core_count", v.CoreCount)
-		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
 	}
 
 	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
@@ -1454,7 +1454,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
+				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+				}
+				d.Set("user_data", string(data))
 			}
 		}
 	}
@@ -3108,16 +3112,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 
 	if v, ok := d.GetOk("cpu_options"); ok {
 		opts.CpuOptions = expandCPUOptions(v.([]any))
-	} else if v := d.Get("cpu_core_count").(int); v > 0 {
-		// preserved to maintain backward compatibility
-		tc := d.Get("cpu_threads_per_core").(int)
-		if tc < 0 {
-			tc = 2
-		}
-		opts.CpuOptions = &awstypes.CpuOptionsRequest{
-			CoreCount:      aws.Int32(int32(v)),
-			ThreadsPerCore: aws.Int32(int32(tc)),
-		}
 	}
 
 	if v := d.Get("hibernation"); v != "" {
