@@ -16,7 +16,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+func Singleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+	if identitySpec.IsGlobalResource {
+		globalSingleton(ctx, client, request, identitySpec, importSpec, response)
+	} else {
+		regionalSingleton(ctx, client, request, identitySpec, importSpec, response)
+	}
+}
+
+func regionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	accountIDPath := path.Root(names.AttrAccountID)
 	regionPath := path.Root(names.AttrRegion)
 
@@ -60,11 +68,31 @@ func RegionalSingleton(ctx context.Context, client AWSClient, request resource.I
 		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), regionVal)...)
 	}
 
-	accountID := client.AccountID(ctx)
+	if identity := response.Identity; identity != nil {
+		response.Diagnostics.Append(identity.SetAttribute(ctx, accountIDPath, client.AccountID(ctx))...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
+	}
+}
+
+func globalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+	accountIDPath := path.Root(names.AttrAccountID)
+
+	accountIDVal := client.AccountID(ctx)
+
+	// Historically, we have not validated the Import ID for Global Singletons
+	if identity := request.Identity; request.ID == "" && identity != nil {
+		response.Diagnostics.Append(validateAccountID(ctx, identity, client.AccountID(ctx))...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), accountIDVal)...)
+	}
 
 	if identity := response.Identity; identity != nil {
-		response.Diagnostics.Append(identity.SetAttribute(ctx, accountIDPath, accountID)...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, accountIDPath, client.AccountID(ctx))...)
 	}
 }
 
