@@ -107,12 +107,13 @@ transform "clean_aws_error" {
     value = "InvalidParameterCombination: No"
   }
   step "remove" {
-    value = "https response error StatusCode: 400"
+    regex = "https response error StatusCode: [0-9]{3}"
   }
-  step "strip_suffix" {
+    step "strip_suffix" {
     value = ","
     recurse = true
   }
+  step "fix_space" {}
 }
 
 transform "clean_diagnostics" {
