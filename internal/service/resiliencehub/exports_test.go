@@ -5,5 +5,5 @@ package resiliencehub
 
 // Exports for use in tests only.
 var (
-	ResourceResiliencyPolicy = newResourceResiliencyPolicy
+	ResourceResiliencyPolicy = newResiliencyPolicyResource
 )

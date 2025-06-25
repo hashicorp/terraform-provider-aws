@@ -21,19 +21,19 @@ import (
 
 // @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
 // @Tags(identifierAttribute="arn")
-func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePolicyStore{}, nil
+func newPolicyStoreDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &policyStoreDataSource{}, nil
 }
 
 const (
 	DSNamePolicyStore = "Policy Store Data Source"
 )
 
-type dataSourcePolicyStore struct {
-	framework.DataSourceWithConfigure
+type policyStoreDataSource struct {
+	framework.DataSourceWithModel[policyStoreDataSourceModel]
 }
 
-func (d *dataSourcePolicyStore) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *policyStoreDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -51,17 +51,13 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, request datasource.S
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"validation_settings": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[validationSettingsDataSource](ctx),
-				ElementType: fwtypes.NewObjectTypeOf[validationSettingsDataSource](ctx),
-				Computed:    true,
-			},
+			names.AttrTags:        tftags.TagsAttributeComputedOnly(),
+			"validation_settings": framework.DataSourceComputedListOfObjectAttribute[validationSettingsModel](ctx),
 		},
 	}
 }
-func (d *dataSourcePolicyStore) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourcePolicyStoreData
+func (d *policyStoreDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data policyStoreDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -87,16 +83,17 @@ func (d *dataSourcePolicyStore) Read(ctx context.Context, request datasource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourcePolicyStoreData struct {
-	ARN                types.String                                                  `tfsdk:"arn"`
-	CreatedDate        timetypes.RFC3339                                             `tfsdk:"created_date"`
-	Description        types.String                                                  `tfsdk:"description"`
-	ID                 types.String                                                  `tfsdk:"id"`
-	LastUpdatedDate    timetypes.RFC3339                                             `tfsdk:"last_updated_date"`
-	Tags               tftags.Map                                                    `tfsdk:"tags"`
-	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsDataSource] `tfsdk:"validation_settings"`
+type policyStoreDataSourceModel struct {
+	framework.WithRegionModel
+	ARN                types.String                                             `tfsdk:"arn"`
+	CreatedDate        timetypes.RFC3339                                        `tfsdk:"created_date"`
+	Description        types.String                                             `tfsdk:"description"`
+	ID                 types.String                                             `tfsdk:"id"`
+	LastUpdatedDate    timetypes.RFC3339                                        `tfsdk:"last_updated_date"`
+	Tags               tftags.Map                                               `tfsdk:"tags"`
+	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsModel] `tfsdk:"validation_settings"`
 }
 
-type validationSettingsDataSource struct {
+type validationSettingsModel struct {
 	Mode fwtypes.StringEnum[awstypes.ValidationMode] `tfsdk:"mode"`
 }

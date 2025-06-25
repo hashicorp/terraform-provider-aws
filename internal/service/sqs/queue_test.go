@@ -1053,7 +1053,7 @@ resource "aws_sqs_queue" "test" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
+      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
       "Condition": {
         "ArnEquals": {
           "aws:SourceArn": "${aws_sns_topic.test.arn}"
@@ -1105,7 +1105,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:DeleteMessage",
         "sqs:ListQueues",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn
@@ -1155,7 +1155,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:SendMessage",
         "sqs:DeleteMessage",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn

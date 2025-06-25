@@ -28,7 +28,10 @@ import (
 )
 
 // @SDKResource("aws_codegurureviewer_repository_association", name="Repository Association")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
+// @Testing(importIgnore="repository", plannableImportAction="Replace")
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
@@ -295,7 +298,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
-	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
+	out, err := findRepositoryAssociationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeGuru Reviewer Repository Association (%s) not found, removing from state", d.Id())
@@ -358,9 +361,9 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.Client, id string) (*types.RepositoryAssociation, error) {
+func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.Client, arn string) (*types.RepositoryAssociation, error) {
 	input := &codegurureviewer.DescribeRepositoryAssociationInput{
-		AssociationArn: aws.String(id),
+		AssociationArn: aws.String(arn),
 	}
 
 	output, err := conn.DescribeRepositoryAssociation(ctx, input)
@@ -385,7 +388,7 @@ func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.C
 
 func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findRepositoryAssociationByID(ctx, conn, id)
+		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

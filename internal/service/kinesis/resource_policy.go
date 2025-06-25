@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,6 +26,10 @@ import (
 )
 
 // @FrameworkResource("aws_kinesis_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(useAlternateAccount=true)
+// We need to ignore `policy` because the JSON body is not normalized
+// @Testing(importIgnore="policy")
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -34,8 +37,8 @@ func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByARN
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -92,12 +95,6 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -209,20 +206,10 @@ func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resource
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String      `tfsdk:"id"`
 	Policy      fwtypes.IAMPolicy `tfsdk:"policy"`
 	ResourceARN fwtypes.ARN       `tfsdk:"resource_arn"`
-}
-
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
 }
 
 func (data *resourcePolicyResourceModel) setID() {

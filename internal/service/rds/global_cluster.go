@@ -26,6 +26,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -288,7 +289,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get(names.AttrForceDestroy).(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())

@@ -1997,7 +1997,9 @@ resource "aws_msk_cluster" "test" {
 func testAccClusterConfig_encryptionInfoEncryptionAtRestKMSKeyARN(rName string) string { // nosemgrep:ci.msk-in-func-name
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "example_key" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   tags = {
     Name = %[1]q

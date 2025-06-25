@@ -95,12 +95,11 @@ func resourceFlowLog() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"log_destination": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{names.AttrLogGroupName},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"log_destination_type": {
 				Type:             schema.TypeString,
@@ -114,14 +113,6 @@ func resourceFlowLog() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
-			},
-			names.AttrLogGroupName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"log_destination"},
-				Deprecated:    "log_group_name is deprecated. Use log_destination instead.",
 			},
 			"max_aggregation_interval": {
 				Type:         schema.TypeInt,
@@ -238,10 +229,6 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.LogFormat = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrLogGroupName); ok {
-		input.LogGroupName = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("max_aggregation_interval"); ok {
 		input.MaxAggregationInterval = aws.Int32(int32(v.(int)))
 	}
@@ -299,7 +286,6 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
-	d.Set(names.AttrLogGroupName, fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	switch resourceID := aws.ToString(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):

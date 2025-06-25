@@ -41,7 +41,7 @@ func newEnrollmentStatusResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type enrollmentStatusResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[enrollmentStatusResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 	framework.WithImportByID
@@ -234,6 +234,7 @@ func waitEnrollmentStatusUpdated(ctx context.Context, conn *computeoptimizer.Cli
 }
 
 type enrollmentStatusResourceModel struct {
+	framework.WithRegionModel
 	ID                            types.String   `tfsdk:"id"`
 	MemberAccountsEnrolled        types.Bool     `tfsdk:"include_member_accounts"`
 	NumberOfMemberAccountsOptedIn types.Int64    `tfsdk:"number_of_member_accounts_opted_in"`

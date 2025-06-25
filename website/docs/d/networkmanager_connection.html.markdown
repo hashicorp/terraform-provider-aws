@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connection"
 description: |-
-  Retrieve information about a connection.
+  Provides details about an existing Network Manager connection.
 ---
 
 # Data Source:  aws_networkmanager_connection
 
-Retrieve information about a connection.
+Provides details about an existing Network Manager connection.
 
 ## Example Usage
 

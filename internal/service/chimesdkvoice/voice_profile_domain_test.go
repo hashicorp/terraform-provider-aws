@@ -271,6 +271,7 @@ func testAccVoiceProfileDomainConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -287,6 +288,7 @@ func testAccVoiceProfileDomainConfig_description(rName, description string) stri
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -304,6 +306,7 @@ func testAccVoiceProfileDomainConfig_tags1(rName, tagKey1, tagValue1 string) str
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -324,6 +327,7 @@ func testAccVoiceProfileDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, t
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {

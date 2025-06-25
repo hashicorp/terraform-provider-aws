@@ -39,7 +39,7 @@ func newDRTAccessLogBucketAssociationResource(context.Context) (resource.Resourc
 }
 
 type drtAccessLogBucketAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[drtAccessLogBucketAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts

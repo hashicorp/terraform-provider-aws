@@ -37,7 +37,7 @@ func newTransitGatewayDefaultRouteTablePropagationResource(_ context.Context) (r
 }
 
 type transitGatewayDefaultRouteTablePropagationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[transitGatewayDefaultRouteTablePropagationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -218,6 +218,7 @@ func (r *transitGatewayDefaultRouteTablePropagationResource) Delete(ctx context.
 }
 
 type transitGatewayDefaultRouteTablePropagationResourceModel struct {
+	framework.WithRegionModel
 	ID                          types.String   `tfsdk:"id"`
 	OriginalDefaultRouteTableID types.String   `tfsdk:"original_default_route_table_id"`
 	RouteTableID                types.String   `tfsdk:"transit_gateway_route_table_id"`

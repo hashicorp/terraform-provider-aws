@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_signer_signing_profile", name="Signing Profile")
-func DataSourceSigningProfile() *schema.Resource {
+func dataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 

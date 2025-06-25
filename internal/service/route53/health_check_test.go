@@ -640,7 +640,7 @@ data "aws_region" "current" {}
 resource "aws_route53_health_check" "test" {
   type                            = "CLOUDWATCH_METRIC"
   cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
-  cloudwatch_alarm_region         = data.aws_region.current.name
+  cloudwatch_alarm_region         = data.aws_region.current.region
   insufficient_data_health_status = "Healthy"
 }
 `
@@ -664,7 +664,7 @@ data "aws_region" "current" {}
 resource "aws_route53_health_check" "test" {
   type                            = "CLOUDWATCH_METRIC"
   cloudwatch_alarm_name           = aws_cloudwatch_metric_alarm.test.alarm_name
-  cloudwatch_alarm_region         = data.aws_region.current.name
+  cloudwatch_alarm_region         = data.aws_region.current.region
   insufficient_data_health_status = "Healthy"
 
   triggers = {

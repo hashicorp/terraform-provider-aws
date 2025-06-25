@@ -48,25 +48,34 @@ func resourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: resourceComputeEnvironmentCustomizeDiff,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    computeEnvironmentSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: computeEnvironmentStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"compute_environment_name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"compute_environment_name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
 			"compute_resources": {
@@ -278,7 +287,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
+	computeEnvironmentName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	computeEnvironmentType := awstypes.CEType(d.Get(names.AttrType).(string))
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
@@ -349,8 +358,8 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
-	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
-	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
+	d.Set(names.AttrName, computeEnvironment.ComputeEnvironmentName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)

@@ -23,16 +23,15 @@ import (
 )
 
 // @SDKResource("aws_glue_resource_policy", name="Resource Policy")
+// @SingletonIdentity
+// @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionNotExist),
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
 		UpdateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionMustExist),
 		DeleteWithoutTimeout: resourceResourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: {

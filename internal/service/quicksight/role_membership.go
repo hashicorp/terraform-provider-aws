@@ -29,20 +29,20 @@ import (
 )
 
 // @FrameworkResource("aws_quicksight_role_membership", name="Role Membership")
-func newResourceRoleMembership(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceRoleMembership{}, nil
+func newRoleMembershipResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &roleMembershipResource{}, nil
 }
 
 const (
 	ResNameRoleMembership = "Role Membership"
 )
 
-type resourceRoleMembership struct {
-	framework.ResourceWithConfigure
+type roleMembershipResource struct {
+	framework.ResourceWithModel[roleMembershipResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceRoleMembership) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *roleMembershipResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAWSAccountID: schema.StringAttribute{
@@ -78,10 +78,10 @@ func (r *resourceRoleMembership) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceRoleMembership) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *roleMembershipResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceRoleMembershipModel
+	var plan roleMembershipResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,10 +110,10 @@ func (r *resourceRoleMembership) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRoleMembership) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *roleMembershipResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRoleMembershipModel
+	var state roleMembershipResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,10 +135,10 @@ func (r *resourceRoleMembership) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRoleMembership) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *roleMembershipResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceRoleMembershipModel
+	var state roleMembershipResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,7 +167,7 @@ func (r *resourceRoleMembership) Delete(ctx context.Context, req resource.Delete
 
 const roleMembershipIDParts = 4
 
-func (r *resourceRoleMembership) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *roleMembershipResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts, err := intflex.ExpandResourceId(req.ID, roleMembershipIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -224,7 +224,8 @@ func findRoleMemberships(ctx context.Context, conn *quicksight.Client, input *qu
 	return memberNames, nil
 }
 
-type resourceRoleMembershipModel struct {
+type roleMembershipResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID types.String                      `tfsdk:"aws_account_id"`
 	MemberName   types.String                      `tfsdk:"member_name"`
 	Namespace    types.String                      `tfsdk:"namespace"`

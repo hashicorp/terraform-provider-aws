@@ -52,7 +52,6 @@ func resourceUser() *schema.Resource {
 				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Required: true,
-					ForceNew: true,
 				},
 				"iam_arn": {
 					Type:     schema.TypeString,

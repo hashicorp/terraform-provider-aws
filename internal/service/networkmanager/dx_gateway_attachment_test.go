@@ -340,7 +340,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
       asn      = 64512
     }
   }
@@ -450,7 +450,7 @@ func testAccDirectConnectGatewayAttachmentConfig_basic(rName string, requireAcce
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.name]
+  edge_locations             = [data.aws_region.current.region]
 }
 `)
 }
@@ -460,7 +460,7 @@ func testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName string) st
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.name]
+  edge_locations             = [data.aws_region.current.region]
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
@@ -495,7 +495,7 @@ func testAccDirectConnectGatewayAttachmentConfig_tags1(rName, tagKey1, tagValue1
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.name]
+  edge_locations             = [data.aws_region.current.region]
 
   tags = {
     %[1]q = %[2]q
@@ -509,7 +509,7 @@ func testAccDirectConnectGatewayAttachmentConfig_tags2(rName, tagKey1, tagValue1
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = aws_dx_gateway.test.arn
-  edge_locations             = [data.aws_region.current.name]
+  edge_locations             = [data.aws_region.current.region]
 
   tags = {
     %[1]q = %[2]q

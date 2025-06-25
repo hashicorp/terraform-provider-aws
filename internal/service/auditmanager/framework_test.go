@@ -5,7 +5,6 @@ package auditmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -187,45 +186,44 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfauditmanager.FindFrameworkByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.AuditManager, create.ErrActionCheckingDestroyed, tfauditmanager.ResNameFramework, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Audit Manager Framework %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFrameworkExists(ctx context.Context, name string, framework *types.Framework) resource.TestCheckFunc {
+func testAccCheckFrameworkExists(ctx context.Context, n string, v *types.Framework) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFramework, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFramework, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
-		resp, err := tfauditmanager.FindFrameworkByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfauditmanager.FindFrameworkByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFramework, rs.Primary.ID, err)
+			return err
 		}
 
-		*framework = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccFrameworkConfigBase(rName string) string {
+func testAccFrameworkConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_auditmanager_control" "test" {
   name = %[1]q
@@ -241,7 +239,7 @@ resource "aws_auditmanager_control" "test" {
 
 func testAccFrameworkConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccFrameworkConfigBase(rName),
+		testAccFrameworkConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_framework" "test" {
   name = %[1]q
@@ -258,7 +256,7 @@ resource "aws_auditmanager_framework" "test" {
 
 func testAccFrameworkConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccFrameworkConfigBase(rName),
+		testAccFrameworkConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_framework" "test" {
   name = %[1]q
@@ -279,7 +277,7 @@ resource "aws_auditmanager_framework" "test" {
 
 func testAccFrameworkConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccFrameworkConfigBase(rName),
+		testAccFrameworkConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_framework" "test" {
   name = %[1]q
@@ -301,7 +299,7 @@ resource "aws_auditmanager_framework" "test" {
 
 func testAccFrameworkConfig_optional(rName, complianceType, description string) string {
 	return acctest.ConfigCompose(
-		testAccFrameworkConfigBase(rName),
+		testAccFrameworkConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_auditmanager_framework" "test" {
   name = %[1]q

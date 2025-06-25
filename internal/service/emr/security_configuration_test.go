@@ -184,7 +184,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,
@@ -212,7 +212,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,
@@ -242,7 +242,7 @@ resource "aws_emr_security_configuration" "test" {
       },
       "LocalDiskEncryptionConfiguration": {
         "EncryptionKeyProviderType": "AwsKms",
-        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
+        "AwsKmsKey": "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:alias/tf_emr_test_key"
       }
     },
     "EnableInTransitEncryption": false,

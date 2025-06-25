@@ -20,7 +20,7 @@ Create a replication set.
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-  region {
+  regions {
     name = "us-west-2"
   }
 
@@ -34,11 +34,11 @@ Add a Region to a replication set. (You can add only one Region at a time.)
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-  region {
+  regions {
     name = "us-west-2"
   }
 
-  region {
+  regions {
     name = "ap-southeast-2"
   }
 }
@@ -48,7 +48,7 @@ Delete a Region from a replication set. (You can delete only one Region at a tim
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-  region {
+  regions {
     name = "us-west-2"
   }
 }
@@ -63,7 +63,7 @@ Create a replication set with an AWS Key Management Service (AWS KMS) customer m
 resource "aws_kms_key" "example_key" {}
 
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-  region {
+  regions {
     name        = "us-west-2"
     kms_key_arn = aws_kms_key.example_key.arn
   }
@@ -78,7 +78,8 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 This resource supports the following arguments:
 
-* `region` - (Required) The Regions that Incident Manager replicates your data to. You can have up to three Regions in your replication set.
+* `region` - (Optional, **Deprecated**) The replication set's Regions. Use `regions` instead.
+* `regions` - (Optional) The replication set's Regions.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
@@ -93,7 +94,7 @@ For information about the maximum allowed number of Regions and tag value constr
 
 ~> **NOTE:** If possible, create all the customer managed keys you need (using the `terraform apply` command) before you create the replication set, or create the keys and replication set in the same `terraform apply` command. Otherwise, to delete a replication set, you must run one `terraform apply` command to delete the replication set and another to delete the AWS KMS keys used by the replication set. Deleting the AWS KMS keys before deleting the replication set results in an error. In that case, you must manually reenable the deleted key using the AWS Management Console before you can delete the replication set.
 
-The `region` configuration block supports the following arguments:
+The `regions` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the Region, such as `ap-southeast-2`.
 * `kms_key_arn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
@@ -112,7 +113,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The overall status of a replication set.
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 
-In addition to the preceding arguments, the `region` configuration block exports the following attributes for each Region:
+In addition to the preceding arguments, the `regions` configuration block exports the following attributes for each Region:
 
 * `status` - The current status of the Region.
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`

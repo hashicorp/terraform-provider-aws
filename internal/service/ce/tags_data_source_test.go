@@ -128,7 +128,7 @@ data "aws_ce_tags" "test" {
   filter {
     dimension {
       key           = "REGION"
-      values        = [data.aws_region.current.name]
+      values        = [data.aws_region.current.region]
       match_options = ["EQUALS"]
     }
   }

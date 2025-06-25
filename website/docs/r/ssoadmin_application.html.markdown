@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_token` - (Optional) A unique, case-sensitive ID that you provide to ensure the idempotency of the request. AWS generates a random value when not provided.
 * `description` - (Optional) Description of the application.
 * `portal_options` - (Optional) Options for the portal associated with an application. See [`portal_options`](#portal_options-argument-reference) below.
@@ -81,8 +82,9 @@ If `IDENTITY_CENTER` is set, IAM Identity Center uses SAML identity-provider ini
 This resource exports the following attributes in addition to the arguments above:
 
 * `application_account` - AWS account ID.
-* `application_arn` - ARN of the application.
-* `id` - ARN of the application.
+* `application_arn` - (**Deprecated** Reference `arn` instead) ARN of the application.
+* `arn` - ARN of the application.
+* `id` - (**Deprecated** Reference `arn` instead) ARN of the application.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import

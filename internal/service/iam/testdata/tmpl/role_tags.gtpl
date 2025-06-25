@@ -1,5 +1,3 @@
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "test" {
   name = var.rName
 
@@ -16,3 +14,5 @@ resource "aws_iam_role" "test" {
   })
 {{- template "tags" . }}
 }
+
+data "aws_partition" "current" {}

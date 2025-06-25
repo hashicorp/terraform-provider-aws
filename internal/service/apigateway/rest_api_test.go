@@ -1712,7 +1712,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1762,7 +1762,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1771,7 +1771,7 @@ resource "aws_vpc_endpoint" "test" {
 resource "aws_vpc_endpoint" "test2" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1823,7 +1823,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1908,7 +1908,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1992,7 +1992,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id

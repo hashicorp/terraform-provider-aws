@@ -164,6 +164,7 @@ resource "aws_amplify_app" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for an Amplify app.
 * `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
 * `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. See [`auto_branch_creation_config` Block](#auto_branch_creation_config-block) for details.

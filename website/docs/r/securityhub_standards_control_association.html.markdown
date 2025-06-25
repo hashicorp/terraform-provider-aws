@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `updated_reason` - (Optional) The reason for updating the control's enablement status in the standard. Required when `association_status` is `DISABLED`.
 
 ## Attribute Reference

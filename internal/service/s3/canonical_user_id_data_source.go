@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_canonical_user_id", name="Canonical User ID")
+// @Region(global=true)
 func dataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCanonicalUserIDRead,

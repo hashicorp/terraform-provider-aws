@@ -27,17 +27,14 @@ import (
 )
 
 // @SDKResource("aws_cloudtrail_event_data_store", name="Event Data Store")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func resourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,
 		ReadWithoutTimeout:   resourceEventDataStoreRead,
 		UpdateWithoutTimeout: resourceEventDataStoreUpdate,
 		DeleteWithoutTimeout: resourceEventDataStoreDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

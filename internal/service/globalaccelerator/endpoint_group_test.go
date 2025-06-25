@@ -863,7 +863,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
     weight      = 10
   }
 
-  endpoint_group_region         = data.aws_region.current.name
+  endpoint_group_region         = data.aws_region.current.region
   health_check_interval_seconds = 30
   health_check_port             = 1234
   health_check_protocol         = "TCP"

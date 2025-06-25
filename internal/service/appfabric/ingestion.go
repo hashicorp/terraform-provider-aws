@@ -43,8 +43,7 @@ func newIngestionResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type ingestionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[ingestionResourceModel]
+	framework.ResourceWithModel[ingestionResourceModel]
 	framework.WithImportByID
 }
 
@@ -231,6 +230,7 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 }
 
 type ingestionResourceModel struct {
+	framework.WithRegionModel
 	App           types.String                               `tfsdk:"app"`
 	AppBundleARN  fwtypes.ARN                                `tfsdk:"app_bundle_arn"`
 	ARN           types.String                               `tfsdk:"arn"`

@@ -27,7 +27,7 @@ func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfig
 }
 
 type repositoriesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[repositoriesDataSourceModel]
 }
 
 func (d *repositoriesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -92,6 +92,7 @@ func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 }
 
 type repositoriesDataSourceModel struct {
+	framework.WithRegionModel
 	ID    types.String                     `tfsdk:"id"`
 	Names fwtypes.SetValueOf[types.String] `tfsdk:"names"`
 }

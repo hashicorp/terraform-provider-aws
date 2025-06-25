@@ -37,6 +37,7 @@ data "aws_network_interface" "interface" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `route_table_id` - (Required) ID of the specific Route Table containing the Route entry.
 * `carrier_gateway_id` - (Optional) EC2 Carrier Gateway ID of the Route belonging to the Route Table.
 * `core_network_arn` - (Optional) Core network ARN of the Route belonging to the Route Table.

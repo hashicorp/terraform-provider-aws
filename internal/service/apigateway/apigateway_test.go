@@ -30,8 +30,7 @@ func TestAccAPIGateway_serial(t *testing.T) {
 			"CloudwatchRoleARN_Empty":              testAccAccount_cloudwatchRoleARN_empty,
 			"FrameworkMigration_Basic":             testAccAccount_frameworkMigration_basic,
 			"FrameworkMigration_CloudwatchRoleARN": testAccAccount_frameworkMigration_cloudwatchRoleARN,
-			"ResetOnDelete_false":                  testAccAccount_resetOnDelete_false,
-			"ResetOnDelete_true":                   testAccAccount_resetOnDelete_true,
+			"UpgradeV6":                            testAccAccount_upgradeV6,
 		},
 		// Some aws_api_gateway_method_settings tests require the account-level CloudWatch Logs role ARN to be set.
 		// Serialize all this resource's acceptance tests.

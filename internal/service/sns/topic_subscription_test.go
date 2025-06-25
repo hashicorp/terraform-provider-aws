@@ -1485,7 +1485,7 @@ resource "aws_sns_topic_subscription" "test" {
   topic_arn = provider::aws::arn_build(
     data.aws_partition.current.id,
     "sns",
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     %[1]q,
   )

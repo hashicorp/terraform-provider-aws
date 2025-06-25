@@ -37,7 +37,7 @@ func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConf
 }
 
 type accessGrantsInstanceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsInstanceResourceModel]
 	framework.WithImportByID
 }
 
@@ -297,6 +297,7 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 }
 
 type accessGrantsInstanceResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantsInstanceARN      types.String `tfsdk:"access_grants_instance_arn"`
 	AccessGrantsInstanceID       types.String `tfsdk:"access_grants_instance_id"`
 	AccountID                    types.String `tfsdk:"account_id"`

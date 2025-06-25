@@ -233,7 +233,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {

@@ -98,7 +98,7 @@ resource "aws_placement_group" "sample" {
 }
 
 resource "aws_batch_compute_environment" "sample" {
-  compute_environment_name = "sample"
+  name = "sample"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
@@ -133,7 +133,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ```terraform
 resource "aws_batch_compute_environment" "sample" {
-  compute_environment_name = "sample"
+  name = "sample"
 
   compute_resources {
     max_vcpus = 16
@@ -159,7 +159,7 @@ resource "aws_batch_compute_environment" "sample" {
 
 ```terraform
 resource "aws_batch_compute_environment" "sample" {
-  compute_environment_name = "sample"
+  name = "sample"
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -189,8 +189,9 @@ resource "aws_batch_compute_environment" "sample" {
 
 This resource supports the following arguments:
 
-* `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
-* `compute_environment_name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `compute_environment_name`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
 * `service_role` - (Optional) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
@@ -260,7 +261,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `compute_environment_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `name`. For example:
 
 ```terraform
 import {
@@ -269,7 +270,7 @@ import {
 }
 ```
 
-Using `terraform import`, import AWS Batch compute using the `compute_environment_name`. For example:
+Using `terraform import`, import AWS Batch compute using the `name`. For example:
 
 ```console
 % terraform import aws_batch_compute_environment.sample sample

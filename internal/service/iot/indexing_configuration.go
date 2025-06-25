@@ -21,16 +21,16 @@ import (
 )
 
 // @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
+// @SingletonIdentity
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,
 		ReadWithoutTimeout:   resourceIndexingConfigurationRead,
 		UpdateWithoutTimeout: resourceIndexingConfigurationPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"thing_group_indexing_configuration": {

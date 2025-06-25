@@ -48,7 +48,7 @@ func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type resourceGatewayResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceGatewayResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -353,6 +353,7 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 }
 
 type resourceGatewayResourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String                                              `tfsdk:"arn"`
 	ID               types.String                                              `tfsdk:"id"`
 	IPAddressType    fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`

@@ -953,6 +953,7 @@ func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryptio
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
 }
 
 resource "aws_athena_workgroup" "test" {

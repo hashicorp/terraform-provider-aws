@@ -197,7 +197,7 @@ func FlattenStringValueSetCaseInsensitive(list []string) *schema.Set {
 }
 
 func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
-	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
+	return schema.NewSet(schema.HashString, FlattenStringyValueList(list))
 }
 
 func FlattenStringValueMap(m map[string]string) map[string]any {

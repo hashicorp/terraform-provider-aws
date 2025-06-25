@@ -361,7 +361,6 @@ func resourceListener() *schema.Resource {
 						"ignore_client_certificate_expiry": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 						names.AttrMode: {
 							Type:         schema.TypeString,
@@ -542,6 +541,7 @@ func resourceListener() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			validateListenerActionsCustomDiff(names.AttrDefaultAction),
+			validateMutualAuthenticationCustomDiff,
 		),
 	}
 }
@@ -1341,16 +1341,7 @@ func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenti
 	}
 
 	switch mode := tfMap[names.AttrMode].(string); mode {
-	case mutualAuthenticationOff:
-		return &awstypes.MutualAuthenticationAttributes{
-			Mode: aws.String(mode),
-		}
-	case mutualAuthenticationPassthrough:
-		return &awstypes.MutualAuthenticationAttributes{
-			Mode:          aws.String(mode),
-			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
-		}
-	default:
+	case mutualAuthenticationVerify:
 		apiObject := &awstypes.MutualAuthenticationAttributes{
 			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 			Mode:                          aws.String(mode),
@@ -1361,6 +1352,11 @@ func expandMutualAuthenticationAttributes(tfList []any) *awstypes.MutualAuthenti
 		}
 
 		return apiObject
+
+	default:
+		return &awstypes.MutualAuthenticationAttributes{
+			Mode: aws.String(mode),
+		}
 	}
 }
 
@@ -1521,28 +1517,28 @@ func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticat
 		return []any{}
 	}
 
-	if mode := aws.ToString(apiObject.Mode); mode == mutualAuthenticationOff {
+	switch mode := aws.ToString(apiObject.Mode); mode {
+	case mutualAuthenticationVerify:
+		tfMap := map[string]any{
+			"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
+			names.AttrMode:                   mode,
+		}
+		if apiObject.IgnoreClientCertificateExpiry != nil {
+			tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
+		}
+		if apiObject.TrustStoreArn != nil {
+			tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
+		}
+
+		return []any{tfMap}
+
+	default:
 		return []any{
 			map[string]any{
 				names.AttrMode: mode,
 			},
 		}
 	}
-
-	tfMap := map[string]any{
-		"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
-	}
-	if apiObject.IgnoreClientCertificateExpiry != nil {
-		tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
-	}
-	if apiObject.Mode != nil {
-		tfMap[names.AttrMode] = aws.ToString(apiObject.Mode)
-	}
-	if apiObject.TrustStoreArn != nil {
-		tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
-	}
-
-	return []any{tfMap}
 }
 
 func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []any {
@@ -1755,7 +1751,7 @@ func alpnPolicyEnum_Values() []string {
 }
 
 func validateListenerActionsCustomDiff(attrName string) schema.CustomizeDiffFunc {
-	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	return func(_ context.Context, d *schema.ResourceDiff, _ any) error {
 		var diags diag.Diagnostics
 
 		configRaw := d.GetRawConfig()
@@ -1940,6 +1936,71 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))
+		}
+	}
+}
+
+func validateMutualAuthenticationCustomDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	var diags diag.Diagnostics
+
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
+	mutualAuthPath := cty.GetAttrPath("mutual_authentication")
+	mutualAuth := configRaw.GetAttr("mutual_authentication")
+	if mutualAuth.IsWhollyKnown() && !mutualAuth.IsNull() {
+		mutualAuthListPlantimeValidate(mutualAuthPath, mutualAuth, &diags)
+	}
+
+	return sdkdiag.DiagnosticsError(diags)
+}
+
+func mutualAuthListPlantimeValidate(mutualAuthPath cty.Path, mutualAuth cty.Value, diags *diag.Diagnostics) {
+	it := mutualAuth.ElementIterator()
+	for it.Next() {
+		i, mutualAuth := it.Element()
+		mutualAuthPath := mutualAuthPath.Index(i)
+
+		mutualAuthPlantimeValidate(mutualAuthPath, mutualAuth, diags)
+	}
+}
+
+func mutualAuthPlantimeValidate(mutualAuthPath cty.Path, mutualAuth cty.Value, diags *diag.Diagnostics) {
+	modePath := mutualAuthPath.GetAttr(names.AttrMode)
+	mode := mutualAuth.GetAttr(names.AttrMode)
+	if !mode.IsKnown() {
+		return
+	}
+	if mode.IsNull() {
+		return
+	}
+
+	trustStoreARNPath := mutualAuthPath.GetAttr("trust_store_arn")
+	trustStoreARN := mutualAuth.GetAttr("trust_store_arn")
+
+	switch mode := mode.AsString(); mode {
+	case mutualAuthenticationVerify:
+		if trustStoreARN.IsNull() {
+			*diags = append(*diags, errs.NewAttributeRequiredWhenError(trustStoreARNPath, modePath, mode))
+		}
+
+	default:
+		advertisePath := mutualAuthPath.GetAttr("advertise_trust_store_ca_names")
+		advertise := mutualAuth.GetAttr("advertise_trust_store_ca_names")
+		if !advertise.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(advertisePath, modePath, mode))
+		}
+
+		ignorePath := mutualAuthPath.GetAttr("ignore_client_certificate_expiry")
+		ignore := mutualAuth.GetAttr("ignore_client_certificate_expiry")
+		if !ignore.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(ignorePath, modePath, mode))
+		}
+
+		if !trustStoreARN.IsNull() {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenError(trustStoreARNPath, modePath, mode))
 		}
 	}
 }

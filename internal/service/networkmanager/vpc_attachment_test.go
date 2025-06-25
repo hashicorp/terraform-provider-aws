@@ -733,7 +733,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
       asn      = 64512
     }
   }

@@ -917,6 +917,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 
@@ -937,6 +938,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 

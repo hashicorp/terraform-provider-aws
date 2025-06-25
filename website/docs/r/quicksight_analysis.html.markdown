@@ -93,6 +93,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 * `definition` - (Optional) A detailed analysis definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `parameters` - (Optional) The parameters for the creation of the analysis, which you want to use to override the default settings. An analysis can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).

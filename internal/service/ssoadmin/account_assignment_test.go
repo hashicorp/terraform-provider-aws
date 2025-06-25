@@ -160,7 +160,7 @@ func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestChec
 			permissionSetARN := idParts[4]
 			instanceARN := idParts[5]
 
-			_, err = tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -197,7 +197,7 @@ func testAccCheckAccountAssignmentExists(ctx context.Context, n string) resource
 		permissionSetARN := idParts[4]
 		instanceARN := idParts[5]
 
-		_, err = tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
 		return err
 	}

@@ -22,6 +22,7 @@ data "aws_signer_signing_job" "build_signing_job" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `job_id` - (Required) ID of the signing job on output.
 
 ## Attribute Reference

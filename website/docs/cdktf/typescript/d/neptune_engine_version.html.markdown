@@ -12,6 +12,8 @@ description: |-
 
 Information about a Neptune engine version.
 
+~> **Note:** If AWS returns multiple matching engine versions, this data source will produce a `multiple Neptune engine versions` error. To avoid this, provide additional criteria to narrow the results or use the `latest` argument to select a single version. See the [Argument Reference](#argument-reference) for details.
+
 ## Example Usage
 
 ```typescript
@@ -27,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsNeptuneEngineVersion(this, "test", {
-      preferredVersions: ["1.0.3.0", "1.0.2.2", "1.0.2.1"],
+      preferredVersions: ["1.4.5.0", "1.4.4.0", "1.4.3.0"],
     });
   }
 }
@@ -38,8 +40,14 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `engine` - (Optional) DB engine. (Default: `neptune`)
-* `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `neptune1`.
+* `defaultOnly` – (Optional) Whether to return only default engine versions that match all other criteria. AWS may define multiple default versions for a given engine, so using `defaultOnly` alone does not guarantee that only one version will be returned. To ensure a single version is selected, consider combining this with `latest`. Note that default versions are defined by AWS and may not reflect the most recent engine version available.
+* `engine` - (Optional) DB engine. Must be `neptune`. Default is `neptune`.
+* `hasMajorTarget` - (Optional) Whether to filter for engine versions that have a major target.
+* `hasMinorTarget` - (Optional) Whether to filter for engine versions that have a minor target.
+* `latest` – (Optional) Whether to return only the latest engine version that matches all other criteria. This differs from `defaultOnly`: AWS may define multiple defaults, and the latest version is not always marked as the default. As a result, `defaultOnly` may still return multiple versions, while `latest` selects a single version. The two options can be used together. **Note:** This argument uses a best-effort approach. Because AWS does not consistently provide version dates or standardized identifiers, the result may not always reflect the true latest version.
+* `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. An example parameter group family is `neptune1.4`. For some versions, if this is provided, AWS returns no results.
+* `preferredMajorTargets` - (Optional) Ordered list of preferred major engine versions.
+* `preferredUpgradeTargets` - (Optional) Ordered list of preferred upgrade engine versions.
 * `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
 * `version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.2.2`, and `1.0.3.0`. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
 
@@ -47,12 +55,18 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `defaultCharacterSet` - Default character set for the engine version.
 * `engineDescription` - Description of the database engine.
 * `exportableLogTypes` - Set of log types that the database engine has available for export to CloudWatch Logs.
-* `supportedTimezones` - Set of the time zones supported by this engine.
-* `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
-* `supportsReadReplica` - Indicates whether the database engine version supports read replicas.
+* `supportedCharacterSets` - Set of character sets supported by this engine version.
+* `supportedTimezones` - Set of time zones supported by this engine.
+* `supportsGlobalDatabases` - Whether the engine version supports global databases.
+* `supportsLogExportsToCloudwatch` - Whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
+* `supportsReadReplica` - Whether the database engine version supports read replicas.
+* `validMajorTargets` - Set of valid major engine versions that this version can be upgraded to.
+* `validMinorTargets` - Set of valid minor engine versions that this version can be upgraded to.
 * `validUpgradeTargets` - Set of engine versions that this database engine version can be upgraded to.
+* `versionActual` - Actual engine version returned by the API.
 * `versionDescription` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.20.8 input-95a44d0ef7849262a188ffdb9a5ba6d99336bcbafcda87d6d4674964f3cbe7d9 -->
+<!-- cache-key: cdktf-0.20.8 input-9567644a3ca7a828cf893592b961551bdaeafee59a25cea9e39da7319ccbcbec -->

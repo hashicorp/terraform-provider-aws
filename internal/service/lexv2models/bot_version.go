@@ -5,7 +5,7 @@ package lexv2models
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,19 +21,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lexv2models_bot_version", name="Bot Version")
-func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBotVersion{}
+func newBotVersionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &botVersionResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -41,24 +43,18 @@ func newResourceBotVersion(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameBotVersion = "Bot Version"
-)
-
-type resourceBotVersion struct {
+type botVersionResource struct {
 	framework.ResourceWithConfigure
+	// Doesn't work with map[string]Object.
+	// framework.ResourceWithModel[botVersionResourceModel]
+	framework.WithNoUpdate
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *botVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"bot_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -73,14 +69,22 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrDescription: schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			"locale_specification": schema.MapAttribute{
-				Required:    true,
-				ElementType: types.ObjectType{AttrTypes: botVersionLocaleDetails},
+				Required: true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[botVersionLocaleDetailsModel](ctx),
+				},
 				PlanModifiers: []planmodifier.Map{
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -92,193 +96,167 @@ func (r *resourceBotVersion) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 const (
-	botVersionIDPartCount = 2
+	botVersionResourceIDPartCount = 2
 )
 
-func (r *resourceBotVersion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *botVersionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data botVersionResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceBotVersionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var input lexmodelsv2.CreateBotVersionInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var localeSpec map[string]versionLocaleDetailsData
-	resp.Diagnostics.Append(plan.LocaleSpecification.ElementsAs(ctx, &localeSpec, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &lexmodelsv2.CreateBotVersionInput{
-		BotId:                         plan.BotID.ValueStringPointer(),
-		BotVersionLocaleSpecification: expandLocalSpecification(localeSpec),
-	}
-
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
-	}
-
-	out, err := conn.CreateBotVersion(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.BotID.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.BotVersion == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotVersion, plan.BotID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	idParts := []string{
-		aws.ToString(out.BotId),
-		aws.ToString(out.BotVersion),
-	}
-	id, err := fwflex.FlattenResourceId(idParts, botVersionIDPartCount, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, id, err),
-			err.Error(),
-		)
-		return
-	}
-
-	plan.BotID = flex.StringToFramework(ctx, out.BotId)
-	state := plan
-	state.Id = types.StringValue(id)
-	state.BotVersion = flex.StringToFramework(ctx, out.BotVersion)
-
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitBotVersionCreated(ctx, conn, state.Id.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotVersion, state.Id.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
-}
-
-func (r *resourceBotVersion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LexV2ModelsClient(ctx)
-
-	var state resourceBotVersionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := FindBotVersionByID(ctx, conn, state.Id.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotVersion, state.Id.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.BotID = flex.StringToFramework(ctx, out.BotId)
-	state.BotVersion = flex.StringToFramework(ctx, out.BotVersion)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceBotVersion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// No-op update
-
-}
-
-func (r *resourceBotVersion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LexV2ModelsClient(ctx)
-
-	var state resourceBotVersionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &lexmodelsv2.DeleteBotVersionInput{
-		BotId:      state.BotID.ValueStringPointer(),
-		BotVersion: state.BotVersion.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteBotVersion(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
-			return
+	// Additional fields.
+	input.BotVersionLocaleSpecification = tfmaps.ApplyToAllValues(data.BotVersionLocaleSpecification.Elements(), func(v attr.Value) awstypes.BotVersionLocaleDetails {
+		return awstypes.BotVersionLocaleDetails{
+			SourceBotVersion: fwflex.StringFromFramework(ctx, v.(types.Object).Attributes()["source_bot_version"].(types.String)),
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotVersion, state.Id.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	})
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotVersionDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
+	output, err := conn.CreateBotVersion(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotVersion, state.Id.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating Lex v2 Bot Version", err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	botID, botVersion := aws.ToString(output.BotId), aws.ToString(output.BotVersion)
+	id, _ := intflex.FlattenResourceId([]string{botID, botVersion}, botVersionResourceIDPartCount, false)
+	data.BotVersion = fwflex.StringValueToFramework(ctx, botVersion)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+
+	if _, err := waitBotVersionCreated(ctx, conn, botID, botVersion, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.BotID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Locale (%s) create", id), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+}
+
+func (r *botVersionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data botVersionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botVersionResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	botID, botVersion := parts[0], parts[1]
+	output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Lex v2 Bot Version (%s)", id), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *botVersionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data botVersionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botVersionResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	botID, botVersion := parts[0], parts[1]
+	input := lexmodelsv2.DeleteBotVersionInput{
+		BotId:      aws.String(botID),
+		BotVersion: aws.String(botVersion),
+	}
+	_, err = conn.DeleteBotVersion(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Lex v2 Bot Version (%s)", id), err.Error())
+
+		return
+	}
+
+	if _, err := waitBotVersionDeleted(ctx, conn, botID, botVersion, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Version (%s) delete", id), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceBotVersion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) (*lexmodelsv2.DescribeBotVersionOutput, error) {
+	input := lexmodelsv2.DescribeBotVersionInput{
+		BotId:      aws.String(botID),
+		BotVersion: aws.String(botVersion),
+	}
+	output, err := conn.DescribeBotVersion(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BotVersion == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.BotStatusCreating, awstypes.BotStatusVersioning),
-		Target:                    enum.Slice(awstypes.BotStatusAvailable),
-		Refresh:                   statusBotVersion(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.BotStatusDeleting),
-		Target:  []string{},
-		Refresh: statusBotVersion(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
+func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindBotVersionByID(ctx, conn, id)
+		output, err := findBotVersionByTwoPartKey(ctx, conn, botID, botVersion)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -287,65 +265,60 @@ func statusBotVersion(ctx context.Context, conn *lexmodelsv2.Client, id string) 
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.BotStatus)), nil
+		return output, string(output.BotStatus), nil
 	}
 }
 
-func FindBotVersionByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeBotVersionOutput, error) {
-	parts, err := fwflex.ExpandResourceId(id, botVersionIDPartCount, false)
-	if err != nil {
-		return nil, err
-	}
-	in := &lexmodelsv2.DescribeBotVersionInput{
-		BotId:      aws.String(parts[0]),
-		BotVersion: aws.String(parts[1]),
-	}
-
-	out, err := conn.DescribeBotVersion(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
+func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotStatusCreating, awstypes.BotStatusVersioning),
+		Target:                    enum.Slice(awstypes.BotStatusAvailable),
+		Refresh:                   statusBotVersion(ctx, conn, botID, botVersion),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	if out == nil || out.BotVersion == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
+		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+
+		return output, err
 	}
 
-	return out, nil
+	return nil, err
 }
 
-func expandLocalSpecification(tfMap map[string]versionLocaleDetailsData) map[string]awstypes.BotVersionLocaleDetails {
-	if len(tfMap) == 0 {
-		return nil
+func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotVersionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BotStatusDeleting),
+		Target:  []string{},
+		Refresh: statusBotVersion(ctx, conn, botID, botVersion),
+		Timeout: timeout,
 	}
 
-	tfObj := make(map[string]awstypes.BotVersionLocaleDetails)
-	for key, value := range tfMap {
-		tfObj[key] = awstypes.BotVersionLocaleDetails{SourceBotVersion: value.SourceBotVersion.ValueStringPointer()}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
+		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+
+		return output, err
 	}
 
-	return tfObj
+	return nil, err
 }
 
-type resourceBotVersionData struct {
-	LocaleSpecification types.Map      `tfsdk:"locale_specification"`
-	Description         types.String   `tfsdk:"description"`
-	BotID               types.String   `tfsdk:"bot_id"`
-	BotVersion          types.String   `tfsdk:"bot_version"`
-	Id                  types.String   `tfsdk:"id"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
+type botVersionResourceModel struct {
+	framework.WithRegionModel
+	BotID      types.String `tfsdk:"bot_id"`
+	BotVersion types.String `tfsdk:"bot_version"`
+	//BotVersionLocaleSpecification fwtypes.MapOfObject `tfsdk:"locale_specification" autoflex:"-"`
+	BotVersionLocaleSpecification types.Map      `tfsdk:"locale_specification" autoflex:"-"`
+	Description                   types.String   `tfsdk:"description"`
+	ID                            types.String   `tfsdk:"id"`
+	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
 }
 
-type versionLocaleDetailsData struct {
+type botVersionLocaleDetailsModel struct {
 	SourceBotVersion types.String `tfsdk:"source_bot_version"`
-}
-
-var botVersionLocaleDetails = map[string]attr.Type{
-	"source_bot_version": types.StringType,
 }

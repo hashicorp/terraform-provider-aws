@@ -202,7 +202,7 @@ func testAccControlConfig_basic(ouName string) string {
 		testAccControlConfigBase(ouName),
 		`
 resource "aws_controltower_control" "test" {
-  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.name}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
+  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.region}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
   target_identifier  = data.aws_organizations_organizational_unit.test.arn
 }
 `)
@@ -218,7 +218,7 @@ func testAccControlConfig_parameters(ouName string) string {
 		testAccControlConfigBase(ouName),
 		`
 resource "aws_controltower_control" "test" {
-  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.name}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
+  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.region}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
   target_identifier  = data.aws_organizations_organizational_unit.test.arn
 
   parameters {

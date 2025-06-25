@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Project resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -68,6 +70,7 @@ resource "aws_evidently_project" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_delivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.
 * `name` - (Required) A name for the project.

@@ -17,19 +17,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_devopsguru_notification_channel", name="Notification Channel")
-func newDataSourceNotificationChannel(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceNotificationChannel{}, nil
+func newNotificationChannelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &notificationChannelDataSource{}, nil
 }
 
 const (
 	DSNameNotificationChannel = "Notification Channel Data Source"
 )
 
-type dataSourceNotificationChannel struct {
-	framework.DataSourceWithConfigure
+type notificationChannelDataSource struct {
+	framework.DataSourceWithModel[notificationChannelDataSourceModel]
 }
 
-func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *notificationChannelDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: schema.StringAttribute{
@@ -68,10 +68,10 @@ func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasour
 		},
 	}
 }
-func (d *dataSourceNotificationChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *notificationChannelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().DevOpsGuruClient(ctx)
 
-	var data dataSourceNotificationChannelData
+	var data notificationChannelDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -90,7 +90,8 @@ func (d *dataSourceNotificationChannel) Read(ctx context.Context, req datasource
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceNotificationChannelData struct {
+type notificationChannelDataSourceModel struct {
+	framework.WithRegionModel
 	Filters fwtypes.ListNestedObjectValueOf[filtersData] `tfsdk:"filters"`
 	ID      types.String                                 `tfsdk:"id"`
 	Sns     fwtypes.ListNestedObjectValueOf[snsData]     `tfsdk:"sns"`

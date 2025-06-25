@@ -107,6 +107,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -129,8 +130,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
-	"github.com/aws/aws-sdk-go-v2/service/iotevents"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -174,7 +173,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -253,7 +251,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wellarchitected"
-	"github.com/aws/aws-sdk-go-v2/service/worklink"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -645,6 +642,10 @@ func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless.Clie
 	return errs.Must(client[*emrserverless.Client](ctx, c, names.EMRServerless, make(map[string]any)))
 }
 
+func (c *AWSClient) EVSClient(ctx context.Context) *evs.Client {
+	return errs.Must(client[*evs.Client](ctx, c, names.EVS, make(map[string]any)))
+}
+
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache.Client {
 	return errs.Must(client[*elasticache.Client](ctx, c, names.ElastiCache, make(map[string]any)))
 }
@@ -763,14 +764,6 @@ func (c *AWSClient) InvoicingClient(ctx context.Context) *invoicing.Client {
 
 func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
 	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTAnalyticsClient(ctx context.Context) *iotanalytics.Client {
-	return errs.Must(client[*iotanalytics.Client](ctx, c, names.IoTAnalytics, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTEventsClient(ctx context.Context) *iotevents.Client {
-	return errs.Must(client[*iotevents.Client](ctx, c, names.IoTEvents, make(map[string]any)))
 }
 
 func (c *AWSClient) KMSClient(ctx context.Context) *kms.Client {
@@ -943,10 +936,6 @@ func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis.Client 
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless.Client {
 	return errs.Must(client[*opensearchserverless.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks.Client {
-	return errs.Must(client[*opsworks.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations.Client {
@@ -1255,10 +1244,6 @@ func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
 	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
-}
-
-func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink.Client {
-	return errs.Must(client[*worklink.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {

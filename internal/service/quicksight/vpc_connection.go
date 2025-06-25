@@ -29,6 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +51,7 @@ func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure
 }
 
 type vpcConnectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcConnectionResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -93,6 +95,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
@@ -106,6 +109,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
@@ -119,6 +123,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"dns_resolvers": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
@@ -152,7 +157,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceVPCConnectionData
+	var plan vpcConnectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,14 +171,14 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 		AwsAccountId:     aws.String(awsAccountID),
 		Name:             plan.Name.ValueStringPointer(),
 		RoleArn:          plan.RoleArn.ValueStringPointer(),
-		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
-		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
+		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
+		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIDs),
 		Tags:             getTagsIn(ctx),
 		VPCConnectionId:  aws.String(vpcConnectionID),
 	}
 
-	if !plan.DnsResolvers.IsNull() {
-		in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DnsResolvers)
+	if !plan.DNSResolvers.IsNull() {
+		in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DNSResolvers)
 	}
 
 	// account for IAM propagation when attempting to assume role
@@ -214,7 +219,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceVPCConnectionData
+	var state vpcConnectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -247,14 +252,12 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
 	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
-	state.SecurityGroupIds = flex.FlattenFrameworkStringValueSet(ctx, out.SecurityGroupIds)
-	state.DnsResolvers = flex.FlattenFrameworkStringValueSet(ctx, out.DnsResolvers)
+	state.SecurityGroupIDs = flex.FlattenFrameworkStringValueSetOfString(ctx, out.SecurityGroupIds)
+	state.DNSResolvers = flex.FlattenFrameworkStringValueSetOfString(ctx, out.DnsResolvers)
 	state.AvailabilityStatus = flex.StringValueToFramework(ctx, out.AvailabilityStatus)
-	var subnetIds []*string
-	for _, iface := range out.NetworkInterfaces {
-		subnetIds = append(subnetIds, iface.SubnetId)
-	}
-	state.SubnetIds = flex.FlattenFrameworkStringSet(ctx, subnetIds)
+	state.SubnetIDs = flex.FlattenFrameworkStringValueSetOfString(ctx, tfslices.ApplyToAll(out.NetworkInterfaces, func(v awstypes.NetworkInterface) string {
+		return aws.ToString(v.SubnetId)
+	}))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -262,7 +265,7 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan, state resourceVPCConnectionData
+	var plan, state vpcConnectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -279,21 +282,21 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	if !plan.Name.Equal(state.Name) ||
-		!plan.DnsResolvers.Equal(state.DnsResolvers) ||
+		!plan.DNSResolvers.Equal(state.DNSResolvers) ||
 		!plan.RoleArn.Equal(state.RoleArn) ||
-		!plan.SecurityGroupIds.Equal(state.SecurityGroupIds) ||
-		!plan.SubnetIds.Equal(state.SubnetIds) {
+		!plan.SecurityGroupIDs.Equal(state.SecurityGroupIDs) ||
+		!plan.SubnetIDs.Equal(state.SubnetIDs) {
 		in := quicksight.UpdateVPCConnectionInput{
 			AwsAccountId:     aws.String(awsAccountID),
 			Name:             plan.Name.ValueStringPointer(),
 			RoleArn:          plan.RoleArn.ValueStringPointer(),
-			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
-			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
+			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
+			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIDs),
 			VPCConnectionId:  aws.String(vpcConnectionID),
 		}
 
-		if !plan.DnsResolvers.IsNull() {
-			in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DnsResolvers)
+		if !plan.DNSResolvers.IsNull() {
+			in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DNSResolvers)
 		}
 
 		out, err := conn.UpdateVPCConnection(ctx, &in)
@@ -333,7 +336,7 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 func (r *vpcConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceVPCConnectionData
+	var state vpcConnectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -529,18 +532,19 @@ func vpcConnectionParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-type resourceVPCConnectionData struct {
-	ID                 types.String   `tfsdk:"id"`
-	ARN                types.String   `tfsdk:"arn"`
-	AWSAccountID       types.String   `tfsdk:"aws_account_id"`
-	VPCConnectionID    types.String   `tfsdk:"vpc_connection_id"`
-	Name               types.String   `tfsdk:"name"`
-	RoleArn            types.String   `tfsdk:"role_arn"`
-	AvailabilityStatus types.String   `tfsdk:"availability_status"`
-	SecurityGroupIds   types.Set      `tfsdk:"security_group_ids"`
-	SubnetIds          types.Set      `tfsdk:"subnet_ids"`
-	DnsResolvers       types.Set      `tfsdk:"dns_resolvers"`
-	Tags               tftags.Map     `tfsdk:"tags"`
-	TagsAll            tftags.Map     `tfsdk:"tags_all"`
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+type vpcConnectionResourceModel struct {
+	framework.WithRegionModel
+	ID                 types.String        `tfsdk:"id"`
+	ARN                types.String        `tfsdk:"arn"`
+	AWSAccountID       types.String        `tfsdk:"aws_account_id"`
+	VPCConnectionID    types.String        `tfsdk:"vpc_connection_id"`
+	Name               types.String        `tfsdk:"name"`
+	RoleArn            types.String        `tfsdk:"role_arn"`
+	AvailabilityStatus types.String        `tfsdk:"availability_status"`
+	SecurityGroupIDs   fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs          fwtypes.SetOfString `tfsdk:"subnet_ids"`
+	DNSResolvers       fwtypes.SetOfString `tfsdk:"dns_resolvers"`
+	Tags               tftags.Map          `tfsdk:"tags"`
+	TagsAll            tftags.Map          `tfsdk:"tags_all"`
+	Timeouts           timeouts.Value      `tfsdk:"timeouts"`
 }

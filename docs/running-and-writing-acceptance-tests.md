@@ -1520,9 +1520,9 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 #### Hardcoded Region
 
-- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
+- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.region`
 
-Here's an example of using `aws_region` and `data.aws_region.current.name`:
+Here's an example of using `aws_region` and `data.aws_region.current.region`:
 
 ```terraform
 data "aws_region" "current" {}
@@ -1530,7 +1530,7 @@ data "aws_region" "current" {}
 resource "aws_route53_zone" "test" {
   vpc {
     vpc_id     = aws_vpc.test.id
-    vpc_region = data.aws_region.current.name
+    vpc_region = data.aws_region.current.region
   }
 }
 ```

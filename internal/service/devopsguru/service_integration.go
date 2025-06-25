@@ -26,22 +26,26 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_service_integration", name="Service Integration")
-func newResourceServiceIntegration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceServiceIntegration{}, nil
+// @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
+func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &serviceIntegrationResource{}, nil
 }
 
 const (
 	ResNameServiceIntegration = "Service Integration"
 )
 
-type resourceServiceIntegration struct {
-	framework.ResourceWithConfigure
+type serviceIntegrationResource struct {
+	framework.ResourceWithModel[serviceIntegrationResourceModel]
+	framework.WithImportRegionalSingleton
 }
 
-func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *serviceIntegrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
 			"kms_server_side_encryption": schema.ListNestedBlock{
@@ -129,10 +133,10 @@ func (r *resourceServiceIntegration) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceServiceIntegration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *serviceIntegrationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var plan resourceServiceIntegrationData
+	var plan serviceIntegrationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -172,10 +176,10 @@ func (r *resourceServiceIntegration) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceServiceIntegration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *serviceIntegrationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceServiceIntegrationData
+	var state serviceIntegrationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -194,10 +198,10 @@ func (r *resourceServiceIntegration) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceServiceIntegration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *serviceIntegrationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var plan, state resourceServiceIntegrationData
+	var plan, state serviceIntegrationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -242,7 +246,7 @@ func (r *resourceServiceIntegration) Update(ctx context.Context, req resource.Up
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceServiceIntegration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *serviceIntegrationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Delete is a no-op to prevent unintentionally disabling account-wide settings.
 	//
 	// The registry documentation includes a description of this behavior, indicating
@@ -251,20 +255,16 @@ func (r *resourceServiceIntegration) Delete(ctx context.Context, req resource.De
 	// this resource.
 }
 
-func (r *resourceServiceIntegration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceServiceIntegration) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *serviceIntegrationResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.kmsSSEPlanModifier(ctx, req, resp)
 	r.destroyPlanModifier(ctx, req, resp)
 }
 
 // kmsSSEPlanModifier is a resource plan modifier to handle cases where KMS settings
 // are changed from a customer managed key to an AWS owned key
-func (r *resourceServiceIntegration) kmsSSEPlanModifier(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *serviceIntegrationResource) kmsSSEPlanModifier(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var config, plan resourceServiceIntegrationData
+		var config, plan serviceIntegrationResourceModel
 		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 		if resp.Diagnostics.HasError() {
@@ -293,7 +293,7 @@ func (r *resourceServiceIntegration) kmsSSEPlanModifier(ctx context.Context, req
 }
 
 // destroyPlanModifier provides context on how to disable configured settings
-func (r *resourceServiceIntegration) destroyPlanModifier(_ context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *serviceIntegrationResource) destroyPlanModifier(_ context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// If the entire plan is null, the resource is planned for destruction.
 	if req.Plan.Raw.IsNull() {
 		resp.Diagnostics.AddWarning(
@@ -319,7 +319,8 @@ func findServiceIntegration(ctx context.Context, conn *devopsguru.Client) (*awst
 	return out.ServiceIntegration, nil
 }
 
-type resourceServiceIntegrationData struct {
+type serviceIntegrationResourceModel struct {
+	framework.WithRegionModel
 	ID                      types.String                                                 `tfsdk:"id"`
 	KMSServerSideEncryption fwtypes.ListNestedObjectValueOf[kmsServerSideEncryptionData] `tfsdk:"kms_server_side_encryption"`
 	LogsAnomalyDetection    fwtypes.ListNestedObjectValueOf[logsAnomalyDetectionData]    `tfsdk:"logs_anomaly_detection"`

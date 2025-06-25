@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,6 +43,10 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 }
 
 // @FrameworkResource("aws_shield_application_layer_automatic_response", name="Application Layer Automatic Response")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/shield/types;awstypes;awstypes.ApplicationLayerAutomaticResponseConfiguration")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
+// @Testing(preCheck="testAccPreCheck")
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
@@ -54,9 +58,9 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 }
 
 type applicationLayerAutomaticResponseResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByARN
 }
 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -66,7 +70,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
 				Required:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrResourceARN)),
 			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -134,13 +138,6 @@ func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, re
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().ShieldClient(ctx)
 
 	resourceARN := data.ID.ValueString()
@@ -325,17 +322,6 @@ type applicationLayerAutomaticResponseResourceModel struct {
 	ID          types.String                                                `tfsdk:"id"`
 	ResourceARN fwtypes.ARN                                                 `tfsdk:"resource_arn"`
 	Timeouts    timeouts.Value                                              `tfsdk:"timeouts"`
-}
-
-func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
-
-	return nil
 }
 
 func (data *applicationLayerAutomaticResponseResourceModel) setID() {

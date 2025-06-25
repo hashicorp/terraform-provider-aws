@@ -216,7 +216,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
     # Managed rule group required for override block.
     stateful_rule_group_reference {
-      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
+      resource_arn = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.region}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
 
       override {
         action = "DROP_TO_ALERT"

@@ -25,15 +25,14 @@ import (
 )
 
 // @SDKResource("aws_dynamodb_table_export", name="Table Export")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
+// @Testing(checkDestroyNoop=true)
 func resourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
 		ReadWithoutTimeout:   resourceTableExportRead,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),

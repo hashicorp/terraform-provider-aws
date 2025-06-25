@@ -5,7 +5,7 @@ package lexv2models
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,8 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -23,19 +21,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lexv2models_bot_locale", name="Bot Locale")
-func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBotLocale{}
+func newBotLocaleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &botLocaleResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -44,17 +43,14 @@ func newResourceBotLocale(_ context.Context) (resource.ResourceWithConfigure, er
 	return r, nil
 }
 
-const (
-	ResNameBotLocale = "Bot Locale"
-)
-
-type resourceBotLocale struct {
-	framework.ResourceWithConfigure
+type botLocaleResource struct {
+	framework.ResourceWithModel[botLocaleResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *botLocaleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -71,13 +67,13 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
@@ -91,23 +87,22 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 		},
 		Blocks: map[string]schema.Block{
 			"voice_settings": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[voiceSettingsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"voice_id": schema.StringAttribute{
-							Required: true,
-						},
 						names.AttrEngine: schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.VoiceEngine](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.VoiceEngine](),
+							Optional:   true,
+							Computed:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
 							},
+						},
+						"voice_id": schema.StringAttribute{
+							Required: true,
 						},
 					},
 				},
@@ -122,300 +117,221 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 const (
-	botLocaleIDPartCount = 3
+	botLocaleResourceIDPartCount = 3
 )
 
-func (r *resourceBotLocale) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *botLocaleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data botLocaleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceBotLocaleData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var input lexmodelsv2.CreateBotLocaleInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &lexmodelsv2.CreateBotLocaleInput{
-		BotId:                        plan.BotID.ValueStringPointer(),
-		BotVersion:                   plan.BotVersion.ValueStringPointer(),
-		LocaleId:                     plan.LocaleID.ValueStringPointer(),
-		NluIntentConfidenceThreshold: plan.NluIntentCOnfidenceThreshold.ValueFloat64Pointer(),
-	}
+	output, err := conn.CreateBotLocale(ctx, &input)
 
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
-	}
-	if !plan.VoiceSettings.IsNull() {
-		var tfList []voiceSettingsData
-		resp.Diagnostics.Append(plan.VoiceSettings.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		vsInput := expandVoiceSettings(ctx, tfList)
-		in.VoiceSettings = vsInput
-	}
-
-	out, err := conn.CreateBotLocale(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotLocale, plan.LocaleID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.LocaleId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionCreating, ResNameBotLocale, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating Lex v2 Bot Locale", err.Error())
+
 		return
 	}
 
-	idParts := []string{
-		aws.ToString(out.LocaleId),
-		aws.ToString(out.BotId),
-		aws.ToString(out.BotVersion),
-	}
-	id, _ := fwflex.FlattenResourceId(idParts, botLocaleIDPartCount, false)
-	if resp.Diagnostics.HasError() {
+	// Set values for unknowns.
+	localeID, botID, botVersion := aws.ToString(output.LocaleId), aws.ToString(output.BotId), aws.ToString(output.BotVersion)
+	id, _ := intflex.FlattenResourceId([]string{localeID, botID, botVersion}, botLocaleResourceIDPartCount, false)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+	data.LocaleName = fwflex.StringToFramework(ctx, output.LocaleName)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.VoiceSettings, &data.VoiceSettings)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	plan.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
-	plan.Id = types.StringValue(id)
-	state := plan
-	state.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
-	state.BotID = flex.StringToFramework(ctx, out.BotId)
-	state.Id = types.StringValue(id)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.Name = flex.StringToFramework(ctx, out.LocaleName)
+	if _, err := waitBotLocaleCreated(ctx, conn, localeID, botID, botVersion, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.BotID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Locale (%s) create", id), err.Error())
 
-	vs, _ := flattenVoiceSettings(ctx, out.VoiceSettings)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.VoiceSettings = vs
-
-	state.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
-	state.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
-
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err = waitBotLocaleCreated(ctx, conn, state.Id.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForCreation, ResNameBotLocale, plan.Name.String(), err),
-			err.Error(),
-		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceBotLocale) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LexV2ModelsClient(ctx)
-	var state resourceBotLocaleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *botLocaleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data botLocaleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindBotLocaleByID(ctx, conn, state.Id.ValueString())
+	conn := r.Meta().LexV2ModelsClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botLocaleResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	localeID, botID, botVersion := parts[0], parts[1], parts[2]
+	output, err := findBotLocaleByThreePartKey(ctx, conn, localeID, botID, botVersion)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameBotLocale, state.LocaleID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Lex v2 Bot Locale (%s)", id), err.Error())
+
 		return
 	}
 
-	state.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
-	state.BotID = flex.StringToFramework(ctx, out.BotId)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
-	state.Name = flex.StringToFramework(ctx, out.LocaleName)
-	state.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
-
-	vs, _ := flattenVoiceSettings(ctx, out.VoiceSettings)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state.VoiceSettings = vs
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBotLocale) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *botLocaleResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old botLocaleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state resourceBotLocaleData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	id := fwflex.StringValueFromFramework(ctx, new.ID)
+	parts, err := intflex.ExpandResourceId(id, botLocaleResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	if !plan.BotID.Equal(state.BotID) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.BotVersion.Equal(state.BotVersion) ||
-		!plan.LocaleID.Equal(state.LocaleID) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.VoiceSettings.Equal(state.VoiceSettings) ||
-		!plan.NluIntentCOnfidenceThreshold.Equal(state.NluIntentCOnfidenceThreshold) {
-		in := &lexmodelsv2.UpdateBotLocaleInput{
-			BotId:                        plan.BotID.ValueStringPointer(),
-			BotVersion:                   plan.BotVersion.ValueStringPointer(),
-			LocaleId:                     plan.LocaleID.ValueStringPointer(),
-			NluIntentConfidenceThreshold: plan.NluIntentCOnfidenceThreshold.ValueFloat64Pointer(),
+	localeID, botID, botVersion := parts[0], parts[1], parts[2]
+
+	if !new.BotID.Equal(old.BotID) ||
+		!new.BotVersion.Equal(old.BotVersion) ||
+		!new.Description.Equal(old.Description) ||
+		!new.LocaleID.Equal(old.LocaleID) ||
+		!new.LocaleName.Equal(old.LocaleName) ||
+		!new.NLUIntentConfidenceThreshold.Equal(old.NLUIntentConfidenceThreshold) ||
+		!new.VoiceSettings.Equal(old.VoiceSettings) {
+		var input lexmodelsv2.UpdateBotLocaleInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.Description.IsNull() {
-			in.Description = plan.Description.ValueStringPointer()
-		}
-		if !plan.VoiceSettings.IsNull() {
-			var tfList []voiceSettingsData
-			resp.Diagnostics.Append(plan.VoiceSettings.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
+		_, err := conn.UpdateBotLocale(ctx, &input)
 
-			in.VoiceSettings = expandVoiceSettings(ctx, tfList)
-		}
-
-		_, err := conn.UpdateBotLocale(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameBotLocale, plan.LocaleID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		out, err := waitBotLocaleUpdated(ctx, conn, plan.Id.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBotLocale, plan.LocaleID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Lex v2 Bot Locale (%s)", id), err.Error())
+
 			return
 		}
 
-		if out == nil || out.LocaleId == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameBotLocale, plan.LocaleID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+		if _, err := waitBotLocaleUpdated(ctx, conn, localeID, botID, botVersion, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Locale (%s) update", id), err.Error())
+
 			return
 		}
-		state.refreshFromOutput(ctx, out)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *botLocaleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data botLocaleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceBotLocaleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	parts, err := intflex.ExpandResourceId(id, botLocaleResourceIDPartCount, false)
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
 		return
 	}
 
-	in := &lexmodelsv2.DeleteBotLocaleInput{
-		LocaleId:   state.LocaleID.ValueStringPointer(),
-		BotId:      state.BotID.ValueStringPointer(),
-		BotVersion: state.BotVersion.ValueStringPointer(),
+	localeID, botID, botVersion := parts[0], parts[1], parts[2]
+	input := lexmodelsv2.DeleteBotLocaleInput{
+		BotId:      aws.String(botID),
+		BotVersion: aws.String(botVersion),
+		LocaleId:   aws.String(localeID),
+	}
+	_, err = conn.DeleteBotLocale(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
+		return
 	}
 
-	_, err := conn.DeleteBotLocale(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
-			return
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Lex v2 Bot Locale (%s)", id), err.Error())
+
+		return
+	}
+
+	if _, err := waitBotLocaleDeleted(ctx, conn, localeID, botID, botVersion, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Lex v2 Bot Locale (%s) delete", id), err.Error())
+
+		return
+	}
+}
+
+func findBotLocaleByThreePartKey(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
+	input := lexmodelsv2.DescribeBotLocaleInput{
+		BotId:      aws.String(botID),
+		BotVersion: aws.String(botVersion),
+		LocaleId:   aws.String(localeID),
+	}
+	output, err := conn.DescribeBotLocale(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameBotLocale, state.LocaleID.String(), err),
-			err.Error(),
-		)
-		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotLocaleDeleted(ctx, conn, state.Id.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBotLocale, state.LocaleID.String(), err),
-			err.Error(),
-		)
-		return
+		return nil, err
 	}
+
+	if output == nil || output.LocaleId == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func (r *resourceBotLocale) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.BotLocaleStatusCreating),
-		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
-		Refresh:                   statusBotLocale(ctx, conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                5 * time.Second,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.BotLocaleStatusBuilding),
-		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
-		Refresh:                   statusBotLocale(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.BotLocaleStatusDeleting),
-		Target:  []string{},
-		Refresh: statusBotLocale(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
+func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindBotLocaleByID(ctx, conn, id)
+		output, err := findBotLocaleByThreePartKey(ctx, conn, localeID, botID, botVersion)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -424,112 +340,84 @@ func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, id string) r
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.BotLocaleStatus)), nil
+		return output, string(output.BotLocaleStatus), nil
 	}
 }
 
-func FindBotLocaleByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	parts, err := fwflex.ExpandResourceId(id, botLocaleIDPartCount, false)
-	if err != nil {
-		return nil, err
-	}
-	in := &lexmodelsv2.DescribeBotLocaleInput{
-		LocaleId:   aws.String(parts[0]),
-		BotId:      aws.String(parts[1]),
-		BotVersion: aws.String(parts[2]),
-	}
-
-	out, err := conn.DescribeBotLocale(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
+func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotLocaleStatusCreating),
+		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
+		Refresh:                   statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Timeout:                   timeout,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
-	if out == nil || out.LocaleId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
+		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+
+		return output, err
 	}
 
-	return out, nil
+	return nil, err
 }
 
-func flattenVoiceSettings(ctx context.Context, apiObject *awstypes.VoiceSettings) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: voiceSettingsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
+func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.BotLocaleStatusBuilding),
+		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
+		Refresh:                   statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	obj := map[string]attr.Value{
-		"voice_id":       flex.StringValueToFramework(ctx, *apiObject.VoiceId),
-		names.AttrEngine: flex.StringValueToFramework(ctx, apiObject.Engine),
-	}
-	objVal, d := types.ObjectValue(voiceSettingsAttrTypes, obj)
-	diags.Append(d...)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
+		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
 
-	return listVal, diags
-}
-
-func expandVoiceSettings(ctx context.Context, tfList []voiceSettingsData) *awstypes.VoiceSettings {
-	if len(tfList) == 0 {
-		return nil
+		return output, err
 	}
 
-	tfObj := tfList[0]
-	return &awstypes.VoiceSettings{
-		VoiceId: flex.StringFromFramework(ctx, tfObj.VoiceId),
-		Engine:  awstypes.VoiceEngine(tfObj.Engine.ValueString()),
-	}
+	return nil, err
 }
 
-type resourceBotLocaleData struct {
-	BotID                        types.String   `tfsdk:"bot_id"`
-	BotVersion                   types.String   `tfsdk:"bot_version"`
-	LocaleID                     types.String   `tfsdk:"locale_id"`
-	Name                         types.String   `tfsdk:"name"`
-	VoiceSettings                types.List     `tfsdk:"voice_settings"`
-	Description                  types.String   `tfsdk:"description"`
-	NluIntentCOnfidenceThreshold types.Float64  `tfsdk:"n_lu_intent_confidence_threshold"`
-	Id                           types.String   `tfsdk:"id"`
-	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
-}
-
-type voiceSettingsData struct {
-	VoiceId types.String `tfsdk:"voice_id"`
-	Engine  types.String `tfsdk:"engine"`
-}
-
-var voiceSettingsAttrTypes = map[string]attr.Type{
-	"voice_id":       types.StringType,
-	names.AttrEngine: types.StringType,
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceBotLocaleData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotLocaleOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
+func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.BotLocaleStatusDeleting),
+		Target:  []string{},
+		Refresh: statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Timeout: timeout,
 	}
 
-	rd.LocaleID = flex.StringToFramework(ctx, out.LocaleId)
-	rd.BotID = flex.StringToFramework(ctx, out.BotId)
-	rd.Description = flex.StringToFramework(ctx, out.Description)
-	vs, d := flattenVoiceSettings(ctx, out.VoiceSettings)
-	diags.Append(d...)
-	rd.VoiceSettings = vs
-	rd.BotVersion = flex.StringValueToFramework(ctx, *out.BotVersion)
-	rd.Name = flex.StringToFramework(ctx, out.LocaleName)
-	rd.NluIntentCOnfidenceThreshold = flex.Float64ToFramework(ctx, out.NluIntentConfidenceThreshold)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return diags
+	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
+		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+type botLocaleResourceModel struct {
+	framework.WithRegionModel
+	BotID                        types.String                                        `tfsdk:"bot_id"`
+	BotVersion                   types.String                                        `tfsdk:"bot_version"`
+	Description                  types.String                                        `tfsdk:"description"`
+	ID                           types.String                                        `tfsdk:"id"`
+	LocaleID                     types.String                                        `tfsdk:"locale_id"`
+	LocaleName                   types.String                                        `tfsdk:"name"`
+	NLUIntentConfidenceThreshold types.Float64                                       `tfsdk:"n_lu_intent_confidence_threshold"`
+	Timeouts                     timeouts.Value                                      `tfsdk:"timeouts"`
+	VoiceSettings                fwtypes.ListNestedObjectValueOf[voiceSettingsModel] `tfsdk:"voice_settings"`
+}
+
+type voiceSettingsModel struct {
+	Engine  fwtypes.StringEnum[awstypes.VoiceEngine] `tfsdk:"engine"`
+	VoiceID types.String                             `tfsdk:"voice_id"`
 }

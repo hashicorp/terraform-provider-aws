@@ -1066,7 +1066,7 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["arn:${data.aws_partition.current.partition}:automate:${data.aws_region.current.name}:ec2:%[2]s"]
+  alarm_actions       = ["arn:${data.aws_partition.current.partition}:automate:${data.aws_region.current.region}:ec2:%[2]s"]
   alarm_description   = "Status checks have failed for system"
   alarm_name          = %[1]q
   comparison_operator = "GreaterThanThreshold"
@@ -1118,7 +1118,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["arn:${data.aws_partition.current.partition}:swf:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]
+  alarm_actions       = ["arn:${data.aws_partition.current.partition}:swf:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:action/actions/AWS_EC2.InstanceId.Reboot/1.0"]
   alarm_description   = "Status checks have failed, rebooting system."
   alarm_name          = %[1]q
   comparison_operator = "GreaterThanThreshold"

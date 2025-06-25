@@ -29,7 +29,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
-func ResourceThreatIntelSet() *schema.Resource {
+func resourceThreatIntelSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThreatIntelSetCreate,
 		ReadWithoutTimeout:   resourceThreatIntelSetRead,

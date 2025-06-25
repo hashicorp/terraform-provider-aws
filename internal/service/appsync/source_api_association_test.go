@@ -239,7 +239,7 @@ data "aws_iam_policy_document" "test" {
 
     condition {
       test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current.partition}:appsync:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}::apis/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:appsync:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}::apis/*"]
       variable = "aws:SourceArn"
     }
   }

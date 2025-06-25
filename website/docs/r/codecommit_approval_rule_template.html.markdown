@@ -33,6 +33,7 @@ resource "aws_codecommit_approval_rule_template" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content` - (Required) The content of the approval rule template. Maximum of 3000 characters.
 * `name` - (Required) The name for the approval rule template. Maximum of 100 characters.
 * `description` - (Optional) The description of the approval rule template. Maximum of 1000 characters.

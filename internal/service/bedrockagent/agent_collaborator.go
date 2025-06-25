@@ -48,7 +48,7 @@ func newAgentCollaboratorResource(context.Context) (resource.ResourceWithConfigu
 }
 
 type agentCollaboratorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentCollaboratorResourceModel]
 	framework.WithTimeouts
 }
 
@@ -327,6 +327,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 }
 
 type agentCollaboratorResourceModel struct {
+	framework.WithRegionModel
 	AgentID                  types.String                                          `tfsdk:"agent_id"`
 	AgentVersion             types.String                                          `tfsdk:"agent_version"`
 	AgentDescriptor          fwtypes.ListNestedObjectValueOf[agentDescriptorModel] `tfsdk:"agent_descriptor"`

@@ -46,26 +46,19 @@ var hostedZoneIDs = map[string]string{
 }
 
 // @SDKDataSource("aws_elastic_beanstalk_hosted_zone", name="Hosted Zone")
+// @Region(validateOverrideInPartition=false)
 func dataSourceHostedZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
+		Schema: map[string]*schema.Schema{},
 	}
 }
 
 func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
 
+	region := meta.(*conns.AWSClient).Region(ctx)
 	zoneID, ok := hostedZoneIDs[region]
 	if !ok {
 		return sdkdiag.AppendErrorf(diags, "unsupported Elastic Beanstalk Region (%s)", region)

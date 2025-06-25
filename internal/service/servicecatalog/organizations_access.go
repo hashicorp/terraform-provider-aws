@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKResource("aws_servicecatalog_organizations_access", name="Organizations Access")
+// @Region(global=true)
 func resourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,

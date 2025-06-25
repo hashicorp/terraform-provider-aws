@@ -218,7 +218,7 @@ func findSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlog
 }
 
 func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter]) (*awstypes.SubscriptionFilter, error) {
-	output, err := findSubscriptionFilters(ctx, conn, input, filter)
+	output, err := findSubscriptionFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
 
 	if err != nil {
 		return nil, err
@@ -227,8 +227,9 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
+func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.SubscriptionFilter, error) {
 	var output []awstypes.SubscriptionFilter
+	opts := tfslices.NewFinderOptions(optFns)
 
 	pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -248,6 +249,9 @@ func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, i
 		for _, v := range page.SubscriptionFilters {
 			if filter(&v) {
 				output = append(output, v)
+				if opts.ReturnFirstMatch() {
+					return output, nil
+				}
 			}
 		}
 	}

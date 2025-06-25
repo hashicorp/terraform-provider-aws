@@ -38,6 +38,7 @@ data "aws_eks_cluster_versions" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_type` - (Optional) Type of clusters to filter by.
 Currently, the only valid value is `eks`.
 * `cluster_versions` - (Optional) A list of Kubernetes versions that you can use to check if EKS supports it.

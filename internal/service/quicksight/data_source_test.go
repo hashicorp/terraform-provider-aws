@@ -452,7 +452,7 @@ resource "aws_s3_object" "test" {
     fileLocations = [
       {
         URIs = [
-          "https://${aws_s3_bucket.test.id}.s3.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/%[1]s-test-data.csv"
+          "https://${aws_s3_bucket.test.id}.s3.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/%[1]s-test-data.csv"
         ]
       }
     ]

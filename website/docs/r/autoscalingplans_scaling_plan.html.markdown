@@ -132,6 +132,7 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the scaling plan. Names cannot contain vertical bars, colons, or forward slashes.
 * `application_source` - (Required) CloudFormation stack or set of tags. You can create one scaling plan per application source.
 * `scaling_instruction` - (Required) Scaling instructions. More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_ScalingInstruction.html).

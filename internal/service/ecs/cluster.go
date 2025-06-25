@@ -26,7 +26,8 @@ import (
 )
 
 // @SDKResource("aws_ecs_cluster", name="Cluster")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnFormat("cluster/{name}")
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -329,9 +330,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
+
+	region := d.Get(names.AttrRegion).(string)
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
+		Partition: names.PartitionForRegion(region).ID(),
+		Region:    region,
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "cluster/" + d.Id(),

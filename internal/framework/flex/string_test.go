@@ -56,7 +56,7 @@ func TestStringFromFramework(t *testing.T) {
 func BenchmarkStringFromFramework(b *testing.B) {
 	ctx := context.Background()
 	input := types.StringValue("TEST")
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.StringFromFramework(ctx, input)
 		if r == nil {
 			b.Fatal("should never see this")
@@ -106,7 +106,7 @@ func TestStringValueFromFramework(t *testing.T) {
 func BenchmarkStringValueFromFramework(b *testing.B) {
 	ctx := context.Background()
 	input := types.StringValue("TEST")
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.StringValueFromFramework(ctx, input)
 		if r == "" {
 			b.Fatal("should never see this")
@@ -152,7 +152,7 @@ func TestStringToFramework(t *testing.T) {
 func BenchmarkStringToFramework(b *testing.B) {
 	ctx := context.Background()
 	input := aws.String("TEST")
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.StringToFramework(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -200,7 +200,7 @@ func TestStringValueToFramework(t *testing.T) {
 func BenchmarkStringValueToFramework(b *testing.B) {
 	ctx := context.Background()
 	input := "TEST"
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.StringValueToFramework(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")
@@ -346,7 +346,7 @@ func TestStringToFrameworkARN(t *testing.T) {
 func BenchmarkStringToFrameworkARN(b *testing.B) {
 	ctx := context.Background()
 	input := aws.String("arn:aws:iam::123456789012:user/David")
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		r := flex.StringToFrameworkARN(ctx, input)
 		if r.IsNull() {
 			b.Fatal("should never see this")

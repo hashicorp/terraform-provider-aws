@@ -39,8 +39,7 @@ func newConnectionAliasResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type connectionAliasResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[connectionAliasResourceModel]
+	framework.ResourceWithModel[connectionAliasResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -273,6 +272,7 @@ func waitConnectionAliasDeleted(ctx context.Context, conn *workspaces.Client, id
 }
 
 type connectionAliasResourceModel struct {
+	framework.WithRegionModel
 	ConnectionString types.String   `tfsdk:"connection_string"`
 	ID               types.String   `tfsdk:"id"`
 	OwnerAccountId   types.String   `tfsdk:"owner_account_id"`

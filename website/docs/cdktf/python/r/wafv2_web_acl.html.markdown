@@ -632,6 +632,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `and_statement` - (Optional) Logical rule statement used to combine other rule statements with AND logic. See [`and_statement`](#and_statement-block) below for details.
+* `asn_match_statement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asn_match_statement`](#asn_match_statement-block) below for details.
 * `byte_match_statement` - (Optional) Rule statement that defines a string match search for AWS WAF to apply to web requests. See [`byte_match_statement`](#byte_match_statement-block) below for details.
 * `geo_match_statement` - (Optional) Rule statement used to identify web requests based on country of origin. See [`geo_match_statement`](#geo_match_statement-block) below for details.
 * `ip_set_reference_statement` - (Optional) Rule statement used to detect web requests coming from particular IP addresses or address ranges. See [`ip_set_reference_statement`](#ip_set_reference_statement-block) below for details.
@@ -654,6 +655,15 @@ A logical rule statement used to combine other rule statements with `AND` logic.
 The `and_statement` block supports the following arguments:
 
 * `statement` - (Required) Statements to combine with `AND` logic. You can use any statements that can be nested. See [`statement`](#statement-block) above for details.
+
+### `asn_match_statement` Block
+
+A rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address.
+
+The `asn_match_statement` block supports the following arguments:
+
+* `asn_list` - (Required) List of Autonomous System Numbers (ASNs).
+* `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for more details.
 
 ### `byte_match_statement` Block
 
@@ -1231,4 +1241,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-61c655f379bdfc076ec899a04650d249cf3282e480fa8453470a3f567df368d2 -->
+<!-- cache-key: cdktf-0.20.8 input-2a83f1c599b9f6e519a765ca5bece64ac86a11205b334fe9e1003e6ee3ef6da9 -->

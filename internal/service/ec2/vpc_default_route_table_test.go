@@ -955,7 +955,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_vpc.test.default_route_table_id]
 
   tags = {

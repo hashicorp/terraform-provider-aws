@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_paymentcryptography_key: `key_attributes` and `key_attributes.key_modes_of_use` are now list nested blocks instead of single nested blocks.
+```

@@ -22,11 +22,12 @@ data "aws_lakeformation_resource" "example" {
 
 This data source supports the following arguments:
 
-* `arn` – (Required) ARN of the resource, an S3 path.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `arn` - (Required) ARN of the resource, an S3 path.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `role_arn` – Role that the resource was registered with.
+* `role_arn` - Role that the resource was registered with.

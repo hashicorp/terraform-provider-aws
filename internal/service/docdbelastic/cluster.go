@@ -39,8 +39,12 @@ import (
 
 // @FrameworkResource("aws_docdbelastic_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCluster{}
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/docdbelastic/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="admin_user_password")
+func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &clusterResource{}
+
 	r.SetDefaultCreateTimeout(45 * time.Minute)
 	r.SetDefaultUpdateTimeout(45 * time.Minute)
 	r.SetDefaultDeleteTimeout(45 * time.Minute)
@@ -48,17 +52,17 @@ func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error)
 	return r, nil
 }
 
-type resourceCluster struct {
-	framework.ResourceWithConfigure
+type clusterResource struct {
+	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByARN
 }
 
 const (
 	ResNameCluster = "Cluster"
 )
 
-func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *clusterResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"admin_user_name": schema.StringAttribute{
@@ -167,9 +171,9 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 	response.Schema = s
 }
 
-func (r *resourceCluster) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *clusterResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
-	var plan resourceClusterData
+	var plan clusterResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -227,9 +231,9 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
-	var state resourceClusterData
+	var state clusterResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -262,9 +266,9 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *clusterResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
-	var state, plan resourceClusterData
+	var state, plan clusterResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -326,9 +330,9 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().DocDBElasticClient(ctx)
-	var state resourceClusterData
+	var state clusterResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -370,7 +374,8 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-type resourceClusterData struct {
+type clusterResourceModel struct {
+	framework.WithRegionModel
 	AdminUserName              types.String                      `tfsdk:"admin_user_name"`
 	AdminUserPassword          types.String                      `tfsdk:"admin_user_password"`
 	ARN                        types.String                      `tfsdk:"arn"`

@@ -25,6 +25,7 @@ resource "aws_ec2_client_vpn_authorization_rule" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `target_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the network to which the authorization rule applies.
 * `access_group_id` - (Optional) The ID of the group to which the authorization rule grants access. One of `access_group_id` or `authorize_all_groups` must be set.

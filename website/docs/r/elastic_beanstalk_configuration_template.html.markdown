@@ -31,14 +31,15 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A unique name for this Template.
-* `application` – (Required) name of the application to associate with this configuration template
+* `application` - (Required) name of the application to associate with this configuration template
 * `description` - (Optional) Short description of the Template
-* `environment_id` – (Optional) The ID of the environment used with this configuration template
-* `setting` – (Optional) Option settings to configure the new Environment. These
+* `environment_id` - (Optional) The ID of the environment used with this configuration template
+* `setting` - (Optional) Option settings to configure the new Environment. These
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
-* `solution_stack_name` – (Optional) A solution stack to base your Template
+* `solution_stack_name` - (Optional) A solution stack to base your Template
 off of. Example stacks can be found in the [Amazon API documentation][1]
 
 ## Option Settings

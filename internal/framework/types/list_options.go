@@ -3,20 +3,20 @@
 
 package types
 
-type ListNestedObjectOfOption[T any] func(*ListNestedObjectOfOptions[T])
+type NestedObjectOfOption[T any] func(*NestedObjectOfOptions[T])
 
-type ListNestedObjectOfOptions[T any] struct {
-	SemanticEqualityFunc listSemanticEqualityFunc[T]
+type NestedObjectOfOptions[T any] struct {
+	SemanticEqualityFunc semanticEqualityFunc[T]
 }
 
-func WithSemanticEqualityFunc[T any](f listSemanticEqualityFunc[T]) ListNestedObjectOfOption[T] {
-	return func(o *ListNestedObjectOfOptions[T]) {
+func WithSemanticEqualityFunc[T any](f semanticEqualityFunc[T]) NestedObjectOfOption[T] {
+	return func(o *NestedObjectOfOptions[T]) {
 		o.SemanticEqualityFunc = f
 	}
 }
 
-func newListNestedObjectOfOptions[T any](options ...ListNestedObjectOfOption[T]) *ListNestedObjectOfOptions[T] {
-	opts := &ListNestedObjectOfOptions[T]{}
+func newNestedObjectOfOptions[T any](options ...NestedObjectOfOption[T]) *NestedObjectOfOptions[T] {
+	opts := &NestedObjectOfOptions[T]{}
 
 	for _, opt := range options {
 		opt(opts)

@@ -19,11 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_ip_ranges", name="IP Ranges")
+// @Region(overrideEnabled=false)
 func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &ipRangesDataSource{}
 
@@ -31,13 +33,14 @@ func newIPRangesDataSource(context.Context) (datasource.DataSourceWithConfigure,
 }
 
 type ipRangesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[ipRangesDataSourceModel]
 }
 
 func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cidr_blocks": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -50,13 +53,16 @@ func (d *ipRangesDataSource) Schema(ctx context.Context, request datasource.Sche
 			},
 			"ipv6_cidr_blocks": schema.ListAttribute{
 				ElementType: types.StringType,
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 			},
 			"regions": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 			},
 			"services": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
@@ -133,8 +139,8 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 
 	data.CreateDate = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.CreateDate)
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, ipRanges.SyncToken)
-	data.IPv4CIDRBlocks = fwflex.FlattenFrameworkStringValueListLegacy(ctx, ipv4Prefixes)
-	data.IPv6CIDRBlocks = fwflex.FlattenFrameworkStringValueListLegacy(ctx, ipv6Prefixes)
+	data.IPv4CIDRBlocks = fwflex.FlattenFrameworkStringValueListOfStringLegacy(ctx, ipv4Prefixes)
+	data.IPv6CIDRBlocks = fwflex.FlattenFrameworkStringValueListOfStringLegacy(ctx, ipv6Prefixes)
 	data.SyncToken = types.Int64Value(int64(syncToken))
 	data.URL = fwflex.StringValueToFrameworkLegacy(ctx, url)
 
@@ -142,14 +148,14 @@ func (d *ipRangesDataSource) Read(ctx context.Context, request datasource.ReadRe
 }
 
 type ipRangesDataSourceModel struct {
-	CreateDate     types.String `tfsdk:"create_date"`
-	ID             types.String `tfsdk:"id"`
-	IPv4CIDRBlocks types.List   `tfsdk:"cidr_blocks"`
-	IPv6CIDRBlocks types.List   `tfsdk:"ipv6_cidr_blocks"`
-	Regions        types.Set    `tfsdk:"regions"`
-	Services       types.Set    `tfsdk:"services"`
-	SyncToken      types.Int64  `tfsdk:"sync_token"`
-	URL            types.String `tfsdk:"url"`
+	CreateDate     types.String         `tfsdk:"create_date"`
+	ID             types.String         `tfsdk:"id"`
+	IPv4CIDRBlocks fwtypes.ListOfString `tfsdk:"cidr_blocks"`
+	IPv6CIDRBlocks fwtypes.ListOfString `tfsdk:"ipv6_cidr_blocks"`
+	Regions        fwtypes.SetOfString  `tfsdk:"regions"`
+	Services       fwtypes.SetOfString  `tfsdk:"services"`
+	SyncToken      types.Int64          `tfsdk:"sync_token"`
+	URL            types.String         `tfsdk:"url"`
 }
 
 func readAll(ctx context.Context, url string) ([]byte, error) {

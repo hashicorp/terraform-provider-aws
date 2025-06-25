@@ -810,7 +810,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "*"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -839,7 +839,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "${aws_iam_role.example.arn}"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -919,7 +919,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "arn:${data.aws_partition.current.partition}:iam::123456789012:role/wooo"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",

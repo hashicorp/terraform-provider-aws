@@ -40,6 +40,7 @@ resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone_name` - (Optional) the AWS Availability Zone in which to create the file system. Used to create a file system that uses One Zone storage classes. See [user guide](https://docs.aws.amazon.com/efs/latest/ug/availability-durability.html) for more information.
 * `creation_token` - (Optional) A unique name (a maximum of 64 characters are allowed)
 used as reference when creating the Elastic File System to ensure idempotent file

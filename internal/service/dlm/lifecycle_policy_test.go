@@ -1075,8 +1075,9 @@ func testAccLifecyclePolicyConfig_updateCrossRegionCopyRule(rName string) string
 		lifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider    = "awsalternate"
-  description = %[1]q
+  provider            = "awsalternate"
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = <<POLICY
 {

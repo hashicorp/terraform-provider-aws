@@ -28,7 +28,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsBatchComputeEnvironment(self, "batch-mongo",
-            compute_environment_name="batch-mongo-production"
+            name="batch-mongo-production"
         )
 ```
 
@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `compute_environment_name` - (Required) Name of the Batch Compute Environment
+* `name` - (Required) Name of the Batch Compute Environment
 
 ## Attribute Reference
 

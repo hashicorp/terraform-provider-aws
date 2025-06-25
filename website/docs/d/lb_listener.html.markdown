@@ -43,6 +43,7 @@ data "aws_lb_listener" "selected443" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the listener. Required if `load_balancer_arn` and `port` is not set.
 * `load_balancer_arn` - (Optional) ARN of the load balancer. Required if `arn` is not set.
 * `port` - (Optional) Port of the listener. Required if `arn` is not set.

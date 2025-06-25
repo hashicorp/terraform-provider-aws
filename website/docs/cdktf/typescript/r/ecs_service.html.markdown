@@ -279,6 +279,7 @@ The `managedEbsVolume` configuration block supports the following:
 * `sizeInGb` - (Optional) Size of the volume in GiB. You must specify either a `sizeInGb` or a `snapshotId`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshotId` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `sizeInGb` or a `snapshotId`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volumeInitializationRate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshotId`.
 * `volumeType` - (Optional) Volume type.
 * `tagSpecifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
@@ -470,4 +471,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2bcd990d1489113643cf2af1249276f0f9e683ffcb02656bfaaff9d5e3d457af -->
+<!-- cache-key: cdktf-0.20.8 input-8a3f7df10a6caa0315ce7d31bc09f589d96c19567871829b6f4242fcee7b6fce -->

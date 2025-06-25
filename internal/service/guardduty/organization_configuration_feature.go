@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_organization_configuration_feature", name="Organization Configuration Feature")
-func ResourceOrganizationConfigurationFeature() *schema.Resource {
+func resourceOrganizationConfigurationFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationFeaturePut,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationFeatureRead,

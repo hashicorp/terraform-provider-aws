@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKResource("aws_backup_global_settings", name="Global Settings")
+// @Region(global=true)
 func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,

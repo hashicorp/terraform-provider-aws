@@ -29,16 +29,13 @@ import (
 
 // @SDKResource("aws_apprunner_service", name="Service")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
 		ReadWithoutTimeout:   resourceServiceRead,
 		UpdateWithoutTimeout: resourceServiceUpdate,
 		DeleteWithoutTimeout: resourceServiceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

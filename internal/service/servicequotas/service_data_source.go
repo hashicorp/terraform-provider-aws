@@ -8,16 +8,18 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
-	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_servicequotas_service", name="Service)
-func DataSourceService() *schema.Resource {
+// @SDKDataSource("aws_servicequotas_service", name="Service")
+func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
@@ -38,37 +40,55 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
-	serviceName := d.Get(names.AttrServiceName).(string)
+	service, err := findServiceByName(ctx, conn, d.Get(names.AttrServiceName).(string))
 
-	input := &servicequotas.ListServicesInput{}
-
-	var service *types.ServiceInfo
-	paginator := servicequotas.NewListServicesPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing Services: %s", err)
-		}
-
-		for _, s := range page.Services {
-			if aws.ToString(s.ServiceName) == serviceName {
-				service = &s
-				break
-			}
-		}
-
-		if service != nil {
-			break // stop paging once found
-		}
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Service Quotas Service", err))
 	}
 
-	if service == nil {
-		return sdkdiag.AppendErrorf(diags, "finding Service (%s): no results found", serviceName)
-	}
-
-	d.Set("service_code", service.ServiceCode)
+	serviceCode := aws.ToString(service.ServiceCode)
+	d.SetId(serviceCode)
+	d.Set("service_code", serviceCode)
 	d.Set(names.AttrServiceName, service.ServiceName)
-	d.SetId(aws.ToString(service.ServiceCode))
 
 	return diags
+}
+
+func findServiceByName(ctx context.Context, conn *servicequotas.Client, name string) (*awstypes.ServiceInfo, error) {
+	input := servicequotas.ListServicesInput{}
+
+	return findService(ctx, conn, &input, func(v *awstypes.ServiceInfo) bool {
+		return aws.ToString(v.ServiceName) == name
+	})
+}
+
+func findService(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListServicesInput, filter tfslices.Predicate[*awstypes.ServiceInfo]) (*awstypes.ServiceInfo, error) {
+	output, err := findServices(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServices(ctx context.Context, conn *servicequotas.Client, input *servicequotas.ListServicesInput, filter tfslices.Predicate[*awstypes.ServiceInfo]) ([]awstypes.ServiceInfo, error) {
+	var output []awstypes.ServiceInfo
+
+	pages := servicequotas.NewListServicesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Services {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

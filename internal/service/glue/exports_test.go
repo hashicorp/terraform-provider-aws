@@ -7,7 +7,7 @@ package glue
 var (
 	ResourceCatalogDatabase               = resourceCatalogDatabase
 	ResourceCatalogTable                  = resourceCatalogTable
-	ResourceCatalogTableOptimizer         = newResourceCatalogTableOptimizer
+	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier
 	ResourceConnection                    = resourceConnection
 	ResourceCrawler                       = resourceCrawler

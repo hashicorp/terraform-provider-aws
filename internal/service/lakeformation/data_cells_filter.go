@@ -35,8 +35,8 @@ import (
 )
 
 // @FrameworkResource("aws_lakeformation_data_cells_filter", name="Data Cells Filter")
-func newResourceDataCellsFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDataCellsFilter{}
+func newDataCellsFilterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dataCellsFilterResource{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 
 	return r, nil
@@ -46,13 +46,13 @@ const (
 	ResNameDataCellsFilter = "Data Cells Filter"
 )
 
-type resourceDataCellsFilter struct {
-	framework.ResourceWithConfigure
+type dataCellsFilterResource struct {
+	framework.ResourceWithModel[dataCellsFilterResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataCellsFilterResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -158,10 +158,10 @@ const (
 	dataCellsFilterIDPartCount = 4
 )
 
-func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan resourceDataCellsFilterData
+	var plan dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -235,10 +235,10 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataCellsFilterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceDataCellsFilterData
+	var state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -270,10 +270,10 @@ func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan, state resourceDataCellsFilterData
+	var plan, state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -321,10 +321,10 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dataCellsFilterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceDataCellsFilterData
+	var state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -368,7 +368,7 @@ func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceDataCellsFilter) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *dataCellsFilterResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("table_data").AtListIndex(0).AtName("column_names"),
@@ -415,7 +415,8 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 	return out.DataCellsFilter, nil
 }
 
-type resourceDataCellsFilterData struct {
+type dataCellsFilterResourceModel struct {
+	framework.WithRegionModel
 	ID        types.String                               `tfsdk:"id"`
 	TableData fwtypes.ListNestedObjectValueOf[tableData] `tfsdk:"table_data"`
 	Timeouts  timeouts.Value                             `tfsdk:"timeouts"`

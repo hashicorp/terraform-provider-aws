@@ -19,19 +19,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_shield_protection", name="Protection")
-func newDataSourceProtection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceProtection{}, nil
+func newProtectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &protectionDataSource{}, nil
 }
 
 const (
 	DSNameProtection = "Protection Data Source"
 )
 
-type dataSourceProtection struct {
-	framework.DataSourceWithConfigure
+type protectionDataSource struct {
+	framework.DataSourceWithModel[protectionDataSourceModel]
 }
 
-func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *protectionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -51,7 +51,7 @@ func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.Schema
 	}
 }
 
-func (d *dataSourceProtection) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+func (d *protectionDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot("protection_id"),
@@ -60,10 +60,10 @@ func (d *dataSourceProtection) ConfigValidators(ctx context.Context) []datasourc
 	}
 }
 
-func (d *dataSourceProtection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *protectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ShieldClient(ctx)
 
-	var data dataSourceProtectionData
+	var data protectionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -96,7 +96,7 @@ func (d *dataSourceProtection) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceProtectionData struct {
+type protectionDataSourceModel struct {
 	ID            types.String `tfsdk:"id"`
 	Name          types.String `tfsdk:"name"`
 	ProtectionARN types.String `tfsdk:"protection_arn"`

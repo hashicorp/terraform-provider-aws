@@ -25,6 +25,7 @@ resource "aws_emr_studio_session_mapping" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_id`- (Optional) The globally unique identifier (GUID) of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_name` - (Optional) The name of the user or group from the Amazon Web Services SSO Identity Store.
 * `identity_type` - (Required) Specifies whether the identity to map to the Amazon EMR Studio is a `USER` or a `GROUP`.

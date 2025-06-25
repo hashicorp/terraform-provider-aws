@@ -88,6 +88,7 @@ EOT
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prefix` - (Required, Forces new resource) The repository name prefix to match against. Use `ROOT` to match any prefix that doesn't explicitly match another template.
 * `applied_for` - (Required) Which features this template applies to. Must contain one or more of `PULL_THROUGH_CACHE` or `REPLICATION`.
 * `custom_role_arn` - (Optional) A custom IAM role to use for repository creation. Required if using repository tags or KMS encryption.

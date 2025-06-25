@@ -1172,6 +1172,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1414,6 +1415,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1479,6 +1481,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1521,6 +1524,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1560,6 +1564,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1597,6 +1602,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {

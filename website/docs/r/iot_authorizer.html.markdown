@@ -34,6 +34,7 @@ resource "aws_iot_authorizer" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_function_arn` - (Required) The ARN of the authorizer's Lambda function.
 * `enable_caching_for_http`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.

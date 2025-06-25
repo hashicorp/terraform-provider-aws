@@ -42,14 +42,6 @@ resource "aws_launch_template" "foo" {
 
   ebs_optimized = true
 
-  elastic_gpu_specifications {
-    type = "test"
-  }
-
-  elastic_inference_accelerator {
-    type = "eia1.medium"
-  }
-
   iam_instance_profile {
     name = "test"
   }
@@ -111,6 +103,7 @@ resource "aws_launch_template" "foo" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -123,9 +116,6 @@ This resource supports the following arguments:
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
-  below for more details.
-* `elastic_inference_accelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -226,22 +216,6 @@ The `credit_specification` block supports the following:
   Can be `standard` or `unlimited`.
   T3 instances are launched as `unlimited` by default.
   T2 instances are launched as `standard` by default.
-
-### Elastic GPU
-
-Attach an elastic GPU the instance.
-
-The `elastic_gpu_specifications` block supports the following:
-
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
-
-### Elastic Inference Accelerator
-
-**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
-
-The `elastic_inference_accelerator` configuration block supports the following:
-
-* `type` - (Required) Accelerator type.
 
 ### Enclave Options
 

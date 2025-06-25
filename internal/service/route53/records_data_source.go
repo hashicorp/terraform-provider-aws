@@ -25,7 +25,7 @@ func newRecordsDataSource(context.Context) (datasource.DataSourceWithConfigure, 
 }
 
 type recordsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[recordsDataSourceModel]
 }
 
 func (d *recordsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

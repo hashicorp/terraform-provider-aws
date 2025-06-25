@@ -11,8 +11,13 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -464,6 +469,142 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "user_settings_arn"),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebUserSettings_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userSettings awstypes.UserSettings
+	resourceName := "aws_workspacesweb_user_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.99.0",
+					},
+				},
+				Config: testAccUserSettingsConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccUserSettingsConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userSettings awstypes.UserSettings
+	resourceName := "aws_workspacesweb_user_settings.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.99.0",
+					},
+				},
+				Config: testAccUserSettingsConfig_toolbarConfigurationBefore(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("toolbar_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"hidden_toolbar_items": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("Webcam"),
+							}),
+							"max_display_resolution": knownvalue.Null(),
+							"toolbar_type":           knownvalue.StringExact("Docked"),
+							"visual_mode":            knownvalue.StringExact("Dark"),
+						}),
+					})),
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrRegion)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccUserSettingsConfig_toolbarConfigurationAfter(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("toolbar_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"hidden_toolbar_items": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.StringExact("Webcam"),
+								knownvalue.StringExact("Microphone"),
+							}),
+							"max_display_resolution": knownvalue.Null(),
+							"toolbar_type":           knownvalue.StringExact("Floating"),
+							"visual_mode":            knownvalue.StringExact("Light"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
 			},
 		},
 	})

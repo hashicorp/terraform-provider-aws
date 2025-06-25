@@ -5,7 +5,6 @@ package quicksight
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -13,8 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,11 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,21 +35,13 @@ func newIAMPolicyAssignmentResource(_ context.Context) (resource.ResourceWithCon
 	return &iamPolicyAssignmentResource{}, nil
 }
 
-const (
-	resNameIAMPolicyAssignment = "IAM Policy Assignment"
-
-	defaultIAMPolicyAssignmentNamespace = "default"
-	identitiesUserKey                   = "user"
-	identitiesGroupKey                  = "group"
-)
-
 type iamPolicyAssignmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[iamPolicyAssignmentResourceModel]
 	framework.WithImportByID
 }
 
-func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"assignment_id": schema.StringAttribute{
 				Computed: true,
@@ -63,10 +53,8 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"assignment_status": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.AssignmentStatus](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.AssignmentStatus](),
+				Required:   true,
 			},
 			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
@@ -80,27 +68,31 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.S
 			names.AttrNamespace: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString(defaultIAMPolicyAssignmentNamespace),
+				Default:  stringdefault.StaticString("default"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"policy_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
 			"identities": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[identitiesModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"user": schema.SetAttribute{
+						"group": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
-						"group": schema.SetAttribute{
+						"user": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 						},
@@ -111,223 +103,211 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *iamPolicyAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *iamPolicyAssignmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data iamPolicyAssignmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if data.AWSAccountID.IsUnknown() || data.AWSAccountID.IsNull() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
+	}
+
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceIAMPolicyAssignmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	var input quicksight.CreateIAMPolicyAssignmentInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	// Additional fields.
+	identities, diags := data.Identities.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
 	}
-	awsAccountID, namespace, assignmentName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.Namespace), flex.StringValueFromFramework(ctx, plan.AssignmentName)
-	in := quicksight.CreateIAMPolicyAssignmentInput{
-		AssignmentName:   aws.String(assignmentName),
-		AwsAccountId:     aws.String(awsAccountID),
-		Namespace:        aws.String(namespace),
-		AssignmentStatus: awstypes.AssignmentStatus(plan.AssignmentStatus.ValueString()),
-	}
+	input.Identities = expandIdentities(ctx, identities)
 
-	if !plan.Identities.IsNull() {
-		var identities []identitiesData
-		resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		in.Identities = expandIdentities(ctx, identities)
-	}
-	if !plan.PolicyARN.IsNull() {
-		in.PolicyArn = plan.PolicyARN.ValueStringPointer()
-	}
+	awsAccountID, namespace, assignmentName := aws.ToString(input.AwsAccountId), aws.ToString(input.Namespace), aws.ToString(input.AssignmentName)
+	id := iamPolicyAssignmentCreateResourceID(awsAccountID, namespace, assignmentName)
+	output, err := conn.CreateIAMPolicyAssignment(ctx, &input)
 
-	out, err := conn.CreateIAMPolicyAssignment(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIAMPolicyAssignment, plan.AssignmentName.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIAMPolicyAssignment, plan.AssignmentName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating QuickSight IAM Policy Assignment (%s)", id), err.Error())
+
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, iamPolicyAssignmentCreateResourceID(awsAccountID, namespace, assignmentName))
-	plan.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
+	// Set values for unknowns.
+	data.AssignmentID = fwflex.StringToFramework(ctx, output.AssignmentId)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
 	// wait for IAM to propagate before returning
 	_, err = tfresource.RetryWhenNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIAMPolicyAssignment, plan.AssignmentName.String(), nil),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for QuickSight IAM Policy Assignment (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *iamPolicyAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var state resourceIAMPolicyAssignmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *iamPolicyAssignmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data iamPolicyAssignmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(state.ID.ValueString())
+	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
 	}
 
-	out, err := findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
+	conn := r.Meta().QuickSightClient(ctx)
+
+	output, err := findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionSetting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading QuickSight IAM Policy Assignment (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
-	state.AssignmentName = flex.StringToFramework(ctx, out.AssignmentName)
-	state.AssignmentStatus = flex.StringValueToFramework(ctx, out.AssignmentStatus)
-	state.AWSAccountID = flex.StringToFramework(ctx, out.AwsAccountId)
-	identities, d := flattenIdentities(ctx, out.Identities)
-	resp.Diagnostics.Append(d...)
-	state.Identities = identities
-	state.PolicyARN = flex.StringToFramework(ctx, out.PolicyArn)
-	state.Namespace = flex.StringValueToFramework(ctx, namespace)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Additional fields.
+	if len(output.Identities) == 0 {
+		data.Identities = fwtypes.NewListNestedObjectValueOfNull[identitiesModel](ctx)
+	} else {
+		identities, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, flattenIdentities(ctx, output.Identities))
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.Identities = identities
+	}
+	data.Namespace = fwflex.StringValueToFramework(ctx, namespace)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *iamPolicyAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan, state resourceIAMPolicyAssignmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *iamPolicyAssignmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old iamPolicyAssignmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.AssignmentStatus.Equal(state.AssignmentStatus) ||
-		!plan.Identities.Equal(state.Identities) ||
-		!plan.PolicyARN.Equal(state.PolicyARN) {
-		in := quicksight.UpdateIAMPolicyAssignmentInput{
-			AwsAccountId:     plan.AWSAccountID.ValueStringPointer(),
-			Namespace:        plan.Namespace.ValueStringPointer(),
-			AssignmentName:   plan.AssignmentName.ValueStringPointer(),
-			AssignmentStatus: awstypes.AssignmentStatus(plan.AssignmentStatus.ValueString()),
+	conn := r.Meta().QuickSightClient(ctx)
+
+	if !new.AssignmentStatus.Equal(old.AssignmentStatus) ||
+		!new.Identities.Equal(old.Identities) ||
+		!new.PolicyARN.Equal(old.PolicyARN) {
+		var input quicksight.UpdateIAMPolicyAssignmentInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.Identities.IsNull() {
-			var identities []identitiesData
-			resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			in.Identities = expandIdentities(ctx, identities)
+		// Additional fields.
+		identities, diags := new.Identities.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-		if !plan.PolicyARN.IsNull() {
-			in.PolicyArn = plan.PolicyARN.ValueStringPointer()
-		}
+		input.Identities = expandIdentities(ctx, identities)
 
-		out, err := conn.UpdateIAMPolicyAssignment(ctx, &in)
+		output, err := conn.UpdateIAMPolicyAssignment(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameIAMPolicyAssignment, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, resNameIAMPolicyAssignment, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-		plan.AssignmentID = flex.StringToFramework(ctx, out.AssignmentId)
+			response.Diagnostics.AddError(fmt.Sprintf("updating QuickSight IAM Policy Assignment (%s)", new.ID.ValueString()), err.Error())
 
-		resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+			return
+		}
+
+		// Set values for unknowns.
+		new.AssignmentID = fwflex.StringToFramework(ctx, output.AssignmentId)
+
+		response.Diagnostics.Append(response.State.Set(ctx, new)...)
 	}
 }
 
-func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var state resourceIAMPolicyAssignmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data iamPolicyAssignmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(state.ID.ValueString())
+	awsAccountID, namespace, assignmentName, err := iamPolicyAssignmentParseResourceID(data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
 	}
 
-	_, err = conn.DeleteIAMPolicyAssignment(ctx, &quicksight.DeleteIAMPolicyAssignmentInput{
+	conn := r.Meta().QuickSightClient(ctx)
+
+	input := quicksight.DeleteIAMPolicyAssignmentInput{
 		AssignmentName: aws.String(assignmentName),
 		AwsAccountId:   aws.String(awsAccountID),
 		Namespace:      aws.String(namespace),
-	})
+	}
+	_, err = conn.DeleteIAMPolicyAssignment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting QuickSight IAM Policy Assignment (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
 	// wait for IAM to propagate before returning
 	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionDeleting, resNameIAMPolicyAssignment, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for QuickSight IAM Policy Assignment (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
 func findIAMPolicyAssignmentByThreePartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace, assignmentName string) (*awstypes.IAMPolicyAssignment, error) {
-	input := &quicksight.DescribeIAMPolicyAssignmentInput{
+	input := quicksight.DescribeIAMPolicyAssignmentInput{
 		AssignmentName: aws.String(assignmentName),
 		AwsAccountId:   aws.String(awsAccountID),
 		Namespace:      aws.String(namespace),
 	}
 
-	return findIAMPolicyAssignment(ctx, conn, input)
+	return findIAMPolicyAssignment(ctx, conn, &input)
 }
 
 func findIAMPolicyAssignment(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeIAMPolicyAssignmentInput) (*awstypes.IAMPolicyAssignment, error) {
@@ -370,62 +350,54 @@ func iamPolicyAssignmentParseResourceID(id string) (string, string, string, erro
 	return parts[0], parts[1], parts[2], nil
 }
 
-var (
-	identitiesAttrTypes = map[string]attr.Type{
-		"user":  types.SetType{ElemType: types.StringType},
-		"group": types.SetType{ElemType: types.StringType},
-	}
+type iamPolicyAssignmentResourceModel struct {
+	framework.WithRegionModel
+	AssignmentID     types.String                                     `tfsdk:"assignment_id"`
+	AssignmentName   types.String                                     `tfsdk:"assignment_name"`
+	AssignmentStatus fwtypes.StringEnum[awstypes.AssignmentStatus]    `tfsdk:"assignment_status"`
+	AWSAccountID     types.String                                     `tfsdk:"aws_account_id"`
+	ID               types.String                                     `tfsdk:"id"`
+	Identities       fwtypes.ListNestedObjectValueOf[identitiesModel] `tfsdk:"identities" autoflex:"-"`
+	Namespace        types.String                                     `tfsdk:"namespace"`
+	PolicyARN        fwtypes.ARN                                      `tfsdk:"policy_arn"`
+}
+
+type identitiesModel struct {
+	Group fwtypes.SetOfString `tfsdk:"group"`
+	User  fwtypes.SetOfString `tfsdk:"user"`
+}
+
+const (
+	identitiesUserKey  = "user"
+	identitiesGroupKey = "group"
 )
 
-type resourceIAMPolicyAssignmentData struct {
-	AssignmentID     types.String `tfsdk:"assignment_id"`
-	AssignmentName   types.String `tfsdk:"assignment_name"`
-	AssignmentStatus types.String `tfsdk:"assignment_status"`
-	AWSAccountID     types.String `tfsdk:"aws_account_id"`
-	ID               types.String `tfsdk:"id"`
-	Identities       types.List   `tfsdk:"identities"`
-	Namespace        types.String `tfsdk:"namespace"`
-	PolicyARN        types.String `tfsdk:"policy_arn"`
-}
-
-type identitiesData struct {
-	User  types.Set `tfsdk:"user"`
-	Group types.Set `tfsdk:"group"`
-}
-
-func expandIdentities(ctx context.Context, tfList []identitiesData) map[string][]string {
-	if len(tfList) == 0 {
+func expandIdentities(ctx context.Context, tfObject *identitiesModel) map[string][]string {
+	if tfObject == nil {
 		return nil
 	}
-	tfObj := tfList[0]
 
 	apiObject := map[string][]string{}
-	if !tfObj.User.IsNull() {
-		apiObject[identitiesUserKey] = flex.ExpandFrameworkStringValueSet(ctx, tfObj.User)
+
+	if !tfObject.Group.IsNull() {
+		apiObject[identitiesGroupKey] = fwflex.ExpandFrameworkStringValueSet(ctx, tfObject.Group)
 	}
-	if !tfObj.Group.IsNull() {
-		apiObject[identitiesGroupKey] = flex.ExpandFrameworkStringValueSet(ctx, tfObj.Group)
+	if !tfObject.User.IsNull() {
+		apiObject[identitiesUserKey] = fwflex.ExpandFrameworkStringValueSet(ctx, tfObject.User)
 	}
+
 	return apiObject
 }
 
-func flattenIdentities(ctx context.Context, apiObject map[string][]string) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: identitiesAttrTypes}
-
+func flattenIdentities(ctx context.Context, apiObject map[string][]string) *identitiesModel {
 	if len(apiObject) == 0 {
-		return types.ListNull(elemType), diags
+		return nil
 	}
 
-	obj := map[string]attr.Value{
-		"user":  flex.FlattenFrameworkStringValueSet(ctx, apiObject[identitiesUserKey]),
-		"group": flex.FlattenFrameworkStringValueSet(ctx, apiObject[identitiesGroupKey]),
+	tfObject := &identitiesModel{
+		Group: fwflex.FlattenFrameworkStringValueSetOfString(ctx, apiObject[identitiesGroupKey]),
+		User:  fwflex.FlattenFrameworkStringValueSetOfString(ctx, apiObject[identitiesUserKey]),
 	}
 
-	objVal, d := types.ObjectValue(identitiesAttrTypes, obj)
-	diags.Append(d...)
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+	return tfObject
 }

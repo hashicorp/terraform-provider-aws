@@ -61,6 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -129,7 +130,7 @@ var (
 //
 // PreCheck(t) must be called before using this provider instance.
 var (
-	Provider *schema.Provider = errs.Must(provider.New(context.Background()))
+	Provider *schema.Provider = errs.Must(sdkv2.NewProvider(context.Background()))
 )
 
 type ProviderFunc func() *schema.Provider
@@ -232,6 +233,12 @@ func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, p
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
+func ProtoV5FactoriesPlusProvidersThird(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
+	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate, ProviderNameThird)
+}
+
 func ProtoV5FactoriesNamedAlternate(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
 
@@ -314,6 +321,7 @@ func PreCheck(ctx context.Context, t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
+		Provider.TerraformVersion = "1.0.0"
 		diags := Provider.Configure(ctx, terraformsdk.NewResourceConfigRaw(nil))
 		if err := sdkdiag.DiagnosticsError(diags); err != nil {
 			t.Fatalf("configuring provider: %s", err)
@@ -1221,8 +1229,14 @@ func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 }
 
 func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	PreCheckSSOAdminInstancesWithRegion(ctx, t, Region())
+}
+
+func PreCheckSSOAdminInstancesWithRegion(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
+	// Push region into Context.
+	ctx = conns.NewResourceContext(ctx, "", "", region)
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 	input := ssoadmin.ListInstancesInput{}
 	var instances []ssoadmintypes.InstanceMetadata
@@ -1243,7 +1257,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	}
 
 	if len(instances) == 0 {
-		t.Skip("skipping tests; no SSO Instances found.")
+		t.Skipf("skipping tests; no SSO Instances found in %s.", region)
 	}
 }
 
@@ -1521,6 +1535,19 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 			}
 			log.Printf("[DEBUG] Calling check with provider %q (total: %d)", k, numberOfProviders)
 			if err := f(s, provo); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+type TestCheckWithRegionFunc func(*terraform.State, string) error
+
+func CheckWithRegions(f TestCheckWithRegionFunc, regions ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, region := range regions {
+			if err := f(s, region); err != nil {
 				return err
 			}
 		}
@@ -1843,24 +1870,15 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		outputRaw, err := tfresource.RetryWhenIsA[*acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func() (any, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, arn, aws.ToString(issueCertOutput.CertificateArn))
+		})
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
-		}
-
+		getCertOutput := outputRaw.(*acmpca.GetCertificateOutput)
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
@@ -1913,24 +1931,15 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 
 		// Wait for certificate status to become ISSUED.
-		waiter := acmpca.NewCertificateIssuedWaiter(conn)
-		getCertificateInput := acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
-			CertificateArn:          issueCertOutput.CertificateArn,
-		}
-
-		err = waiter.Wait(ctx, &getCertificateInput, CertificateIssueTimeout)
+		outputRaw, err := tfresource.RetryWhenIsA[*acmpcatypes.RequestInProgressException](ctx, CertificateIssueTimeout, func() (any, error) {
+			return tfacmpca.FindCertificateByTwoPartKey(ctx, conn, rootCertificateAuthorityArn, aws.ToString(issueCertOutput.CertificateArn))
+		})
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.ToString(issueCertOutput.CertificateArn), err)
 		}
 
-		getCertOutput, err := conn.GetCertificate(ctx, &getCertificateInput)
-
-		if err != nil {
-			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
-		}
-
+		getCertOutput := outputRaw.(*acmpca.GetCertificateOutput)
 		importCACertificateInput := acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.ToString(getCertOutput.Certificate)),
@@ -2154,82 +2163,6 @@ func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore,
 			})
 		}
 	}
-}
-
-// TestNoMatchResourceAttr ensures a value matching a regular expression is
-// NOT stored in state for the given name and key combination. Same as resource.TestMatchResourceAttr()
-// except negative.
-func TestNoMatchResourceAttr(name, key string, r *regexp.Regexp) resource.TestCheckFunc {
-	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
-		is, err := primaryInstanceState(s, name)
-		if err != nil {
-			return err
-		}
-
-		return testNoMatchResourceAttr(is, name, key, r)
-	})
-}
-
-// testNoMatchResourceAttr is same as testMatchResourceAttr in
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
-// except negative.
-func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key string, r *regexp.Regexp) error {
-	if r.MatchString(is.Attributes[key]) {
-		return fmt.Errorf(
-			"%s: Attribute '%s' did match %q and should not, got %#v",
-			name,
-			key,
-			r.String(),
-			is.Attributes[key])
-	}
-
-	return nil
-}
-
-// checkIfIndexesIntoTypeSet is copied from
-// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1689
-func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		err := f(s)
-		if err != nil && indexesIntoTypeSet(key) {
-			return fmt.Errorf("Error in test check: %s\nTest check address %q likely indexes into TypeSet\nThis is currently not possible in the SDK", err, key)
-		}
-		return err
-	}
-}
-
-// indexesIntoTypeSet is copied from
-// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1680
-func indexesIntoTypeSet(key string) bool {
-	for _, part := range strings.Split(key, ".") {
-		if i, err := strconv.Atoi(part); err == nil && i > 100 {
-			return true
-		}
-	}
-	return false
-}
-
-// primaryInstanceState is copied from
-// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1672
-func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
-	ms := s.RootModule()
-	return modulePrimaryInstanceState(ms, name)
-}
-
-// modulePrimaryInstanceState is copied from
-// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1645
-func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
-	rs, ok := ms.Resources[name]
-	if !ok {
-		return nil, fmt.Errorf("Not found: %s in %s", name, ms.Path)
-	}
-
-	is := rs.Primary
-	if is == nil {
-		return nil, fmt.Errorf("No primary instance: %s in %s", name, ms.Path)
-	}
-
-	return is, nil
 }
 
 func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {

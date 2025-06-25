@@ -89,7 +89,7 @@ func resourceClusterInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      engineNeptune,
+				Default:      defaultEngine,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			names.AttrEngineVersion: {

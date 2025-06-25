@@ -30,19 +30,19 @@ import (
 )
 
 // @FrameworkResource("aws_redshift_logging", name="Logging")
-func newResourceLogging(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceLogging{}, nil
+func newLoggingResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &loggingResource{}, nil
 }
 
 const (
 	ResNameLogging = "Logging"
 )
 
-type resourceLogging struct {
-	framework.ResourceWithConfigure
+type loggingResource struct {
+	framework.ResourceWithModel[loggingResourceModel]
 }
 
-func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *loggingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrBucketName: schema.StringAttribute{
@@ -54,7 +54,7 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrClusterIdentifier)),
 			"log_destination_type": schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.LogDestinationType](),
@@ -76,10 +76,10 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceLogging) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *loggingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceLoggingData
+	var plan loggingResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,10 +118,10 @@ func (r *resourceLogging) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceLogging) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *loggingResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceLoggingData
+	var state loggingResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -149,10 +149,10 @@ func (r *resourceLogging) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceLogging) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *loggingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan, state resourceLoggingData
+	var plan, state loggingResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -196,10 +196,10 @@ func (r *resourceLogging) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *loggingResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceLoggingData
+	var state loggingResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,9 +228,9 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func (r *resourceLogging) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+func (r *loggingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), req, resp)
 }
 
 func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*redshift.DescribeLoggingStatusOutput, error) {
@@ -263,7 +263,8 @@ func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*re
 	return out, nil
 }
 
-type resourceLoggingData struct {
+type loggingResourceModel struct {
+	framework.WithRegionModel
 	BucketName         types.String                                    `tfsdk:"bucket_name"`
 	ClusterIdentifier  types.String                                    `tfsdk:"cluster_identifier"`
 	ID                 types.String                                    `tfsdk:"id"`

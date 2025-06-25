@@ -87,7 +87,6 @@ func resourceEIP() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.DomainType](),
-				ConflictsWith:    []string{"vpc"},
 			},
 			"instance": {
 				Type:     schema.TypeString,
@@ -139,14 +138,6 @@ func resourceEIP() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				Deprecated:    "vpc is deprecated. Use domain instead.",
-				ConflictsWith: []string{names.AttrDomain},
-			},
 		},
 	}
 }
@@ -169,10 +160,6 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v := d.Get(names.AttrDomain); v != nil && v.(string) != "" {
 		input.Domain = types.DomainType(v.(string))
-	}
-
-	if v := d.Get("vpc"); v != nil && v.(bool) {
-		input.Domain = types.DomainTypeVpc
 	}
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
@@ -263,7 +250,6 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if v := aws.ToString(address.PublicIp); v != "" {
 		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
-	d.Set("vpc", address.Domain == types.DomainTypeVpc)
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.

@@ -33,7 +33,7 @@ func newDeliveryDestinationPolicyResource(context.Context) (resource.ResourceWit
 }
 
 type deliveryDestinationPolicyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliveryDestinationPolicyResourceModel]
 }
 
 func (r *deliveryDestinationPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -200,6 +200,7 @@ func findDeliveryDestinationPolicy(ctx context.Context, conn *cloudwatchlogs.Cli
 }
 
 type deliveryDestinationPolicyResourceModel struct {
+	framework.WithRegionModel
 	DeliveryDestinationName   types.String      `tfsdk:"delivery_destination_name"`
 	DeliveryDestinationPolicy fwtypes.IAMPolicy `tfsdk:"delivery_destination_policy"`
 }

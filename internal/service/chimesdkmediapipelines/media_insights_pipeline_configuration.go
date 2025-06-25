@@ -42,6 +42,8 @@ var (
 
 // @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration", name="Media Insights Pipeline Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
 func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
@@ -49,10 +51,6 @@ func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
 		ReadWithoutTimeout:   resourceMediaInsightsPipelineConfigurationRead,
 		UpdateWithoutTimeout: resourceMediaInsightsPipelineConfigurationUpdate,
 		DeleteWithoutTimeout: resourceMediaInsightsPipelineConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		// Resource creation/update/deletion is atomic and synchronous with the API calls. The timeouts for
 		// create and update are dominated by timeout waiting for IAM role changes to propagate.

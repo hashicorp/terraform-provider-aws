@@ -585,7 +585,7 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.name`)),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.region`)),
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{

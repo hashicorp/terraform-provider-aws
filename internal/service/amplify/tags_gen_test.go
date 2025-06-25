@@ -11,6 +11,6 @@ import (
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfamplify.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfamplify.ServicePackage(ctx), resourceAddress, knownValue)
 }

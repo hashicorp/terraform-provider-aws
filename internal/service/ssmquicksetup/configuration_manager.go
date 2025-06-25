@@ -34,8 +34,8 @@ import (
 
 // @FrameworkResource("aws_ssmquicksetup_configuration_manager", name="Configuration Manager")
 // @Tags(identifierAttribute="manager_arn")
-func newResourceConfigurationManager(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceConfigurationManager{}
+func newConfigurationManagerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &configurationManagerResource{}
 
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultUpdateTimeout(20 * time.Minute)
@@ -48,12 +48,12 @@ const (
 	ResNameConfigurationManager = "Configuration Manager"
 )
 
-type resourceConfigurationManager struct {
-	framework.ResourceWithConfigure
+type configurationManagerResource struct {
+	framework.ResourceWithModel[configurationManagerResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceConfigurationManager) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *configurationManagerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
@@ -125,10 +125,10 @@ func (r *resourceConfigurationManager) Schema(ctx context.Context, req resource.
 	}
 }
 
-func (r *resourceConfigurationManager) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *configurationManagerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSMQuickSetupClient(ctx)
 
-	var plan resourceConfigurationManagerModel
+	var plan configurationManagerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,10 +177,10 @@ func (r *resourceConfigurationManager) Create(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceConfigurationManager) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *configurationManagerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSMQuickSetupClient(ctx)
 
-	var state resourceConfigurationManagerModel
+	var state configurationManagerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,10 +207,10 @@ func (r *resourceConfigurationManager) Read(ctx context.Context, req resource.Re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceConfigurationManager) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *configurationManagerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().SSMQuickSetupClient(ctx)
 
-	var plan, state resourceConfigurationManagerModel
+	var plan, state configurationManagerResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -274,10 +274,10 @@ func (r *resourceConfigurationManager) Update(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceConfigurationManager) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *configurationManagerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSMQuickSetupClient(ctx)
 
-	var state resourceConfigurationManagerModel
+	var state configurationManagerResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -310,7 +310,7 @@ func (r *resourceConfigurationManager) Delete(ctx context.Context, req resource.
 	}
 }
 
-func (r *resourceConfigurationManager) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *configurationManagerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("manager_arn"), req, resp)
 }
 
@@ -409,7 +409,8 @@ func findConfigurationManagerByID(ctx context.Context, conn *ssmquicksetup.Clien
 	return out, nil
 }
 
-type resourceConfigurationManagerModel struct {
+type configurationManagerResourceModel struct {
+	framework.WithRegionModel
 	ConfigurationDefinition fwtypes.ListNestedObjectValueOf[configurationDefinitionModel] `tfsdk:"configuration_definition"`
 	Description             types.String                                                  `tfsdk:"description"`
 	ManagerARN              types.String                                                  `tfsdk:"manager_arn"`

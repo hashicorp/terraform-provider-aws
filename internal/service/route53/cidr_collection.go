@@ -38,7 +38,7 @@ func newCIDRCollectionResource(context.Context) (resource.ResourceWithConfigure,
 }
 
 type cidrCollectionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[cidrCollectionResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }

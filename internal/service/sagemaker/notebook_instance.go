@@ -49,15 +49,6 @@ func resourceNotebookInstance() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"accelerator_types": {
-				Deprecated: "accelerator_types is deprecated. Use instance_type instead.",
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.NotebookInstanceAcceleratorType](),
-				},
-			},
 			"additional_code_repositories": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -179,10 +170,6 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("accelerator_types"); ok && v.(*schema.Set).Len() > 0 {
-		input.AcceleratorTypes = flex.ExpandStringyValueSet[awstypes.NotebookInstanceAcceleratorType](v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
 		input.AdditionalCodeRepositories = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -251,7 +238,6 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("accelerator_types", flex.FlattenStringyValueSet[awstypes.NotebookInstanceAcceleratorType](notebookInstance.AcceleratorTypes))
 	d.Set("additional_code_repositories", notebookInstance.AdditionalCodeRepositories)
 	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
@@ -283,14 +269,6 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateNotebookInstanceInput{
 			NotebookInstanceName: aws.String(d.Get(names.AttrName).(string)),
-		}
-
-		if d.HasChange("accelerator_types") {
-			if v, ok := d.GetOk("accelerator_types"); ok {
-				input.AcceleratorTypes = flex.ExpandStringyValueSet[awstypes.NotebookInstanceAcceleratorType](v.(*schema.Set))
-			} else {
-				input.DisassociateAcceleratorTypes = aws.Bool(true)
-			}
 		}
 
 		if d.HasChange("additional_code_repositories") {

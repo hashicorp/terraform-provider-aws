@@ -109,12 +109,6 @@ func resourceAddon() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"resolve_conflicts": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				Deprecated:       `resolve_conflicts is deprecated. The resolve_conflicts attribute can't be set to "PRESERVE" on initial resource creation. Use resolve_conflicts_on_create and/or resolve_conflicts_on_update instead.`,
-			},
 			"resolve_conflicts_on_create": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -122,13 +116,11 @@ func resourceAddon() *schema.Resource {
 					types.ResolveConflictsNone,
 					types.ResolveConflictsOverwrite,
 				), false),
-				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"resolve_conflicts_on_update": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ResolveConflicts](),
-				ConflictsWith:    []string{"resolve_conflicts"},
 			},
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
@@ -167,9 +159,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.PodIdentityAssociations = expandAddonPodIdentityAssociations(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("resolve_conflicts"); ok {
-		input.ResolveConflicts = types.ResolveConflicts(v.(string))
-	} else if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
+	if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
 		input.ResolveConflicts = types.ResolveConflicts(v.(string))
 	}
 
@@ -201,7 +191,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.SetId(id)
 
 	if _, err := waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
+		// Creating addon w/o setting resolve_conflicts_on_create to "OVERWRITE"
 		// might result in a failed creation, if unmanaged version of addon is already deployed
 		// and there are configuration conflicts:
 		// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
@@ -291,17 +281,8 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			}
 		}
 
-		var conflictResolutionAttr string
-		var conflictResolution types.ResolveConflicts
-
-		if v, ok := d.GetOk("resolve_conflicts"); ok {
-			conflictResolutionAttr = "resolve_conflicts"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
-		} else if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
-			conflictResolutionAttr = "resolve_conflicts_on_update"
-			conflictResolution = types.ResolveConflicts(v.(string))
-			input.ResolveConflicts = conflictResolution
+		if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
+			input.ResolveConflicts = types.ResolveConflicts(v.(string))
 		}
 
 		// If service account role ARN is already provided, use it. Otherwise, the add-on uses
@@ -318,11 +299,11 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		updateID := aws.ToString(output.Update.Id)
 		if _, err := waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			if conflictResolution != types.ResolveConflictsOverwrite {
-				// Changing addon version w/o setting resolve_conflicts to "OVERWRITE"
+			if input.ResolveConflicts != types.ResolveConflictsOverwrite {
+				// Changing addon version w/o setting resolve_conflicts_on_update to "OVERWRITE"
 				// might result in a failed update if there are conflicts:
 				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
-				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting attribute %q to %q", d.Id(), updateID, err, conflictResolutionAttr, types.ResolveConflictsOverwrite)
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s. Consider setting resolve_conflicts_on_update to %q", d.Id(), updateID, err, types.ResolveConflictsOverwrite)
 			}
 
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) update (%s): %s", d.Id(), updateID, err)

@@ -45,6 +45,7 @@ data "aws_route53_resolver_rules" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name_regex` - (Optional) Regex string to filter resolver rule names.
   The filtering is done locally, so could have a performance impact if the result is large.
   This argument should be used along with other arguments to limit the number of results returned.

@@ -33,6 +33,7 @@ resource "aws_vpc_security_group_egress_rule" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_ipv4` - (Optional) The destination IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) The destination IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.

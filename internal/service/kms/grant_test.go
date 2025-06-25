@@ -368,6 +368,7 @@ func testAccGrantConfig_base(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "test" {
@@ -463,6 +464,7 @@ resource "aws_kms_grant" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "RSA_2048"
@@ -493,6 +495,7 @@ func testAccGrantConfig_crossAccountARN(rName string, operations string) string 
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "test" {

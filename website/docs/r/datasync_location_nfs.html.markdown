@@ -29,6 +29,7 @@ resource "aws_datasync_location_nfs" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mount_options` - (Optional) Configuration block containing mount options used by DataSync to access the NFS Server.
 * `on_prem_config` - (Required) Configuration block containing information for connecting to the NFS File System.
 * `server_hostname` - (Required) Specifies the IP address or DNS name of the NFS server. The DataSync Agent(s) use this to mount the NFS server.

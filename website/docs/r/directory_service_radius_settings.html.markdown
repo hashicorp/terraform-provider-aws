@@ -30,6 +30,7 @@ resource "aws_directory_service_radius_settings" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_protocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directory_id` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
 * `display_label` - (Required) Display label.

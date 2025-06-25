@@ -24,16 +24,14 @@ import (
 )
 
 // @SDKResource("aws_acmpca_policy", name="Policy")
+// @ArnIdentity("resource_arn")
+// @Testing(generator=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyPut,
 		DeleteWithoutTimeout: resourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: {

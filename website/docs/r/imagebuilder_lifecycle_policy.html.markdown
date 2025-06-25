@@ -75,6 +75,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) description for the lifecycle policy.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Lifecycle Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -87,6 +88,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclusion_rules` - (Optional) Additional rules to specify resources that should be exempt from policy actions.
 
 ### action
@@ -97,12 +99,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `include_resources` - (Optional) Specifies the resources that the lifecycle policy applies to. Detailed below.
 
 ### include_resources
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amis` - (Optional) Specifies whether the lifecycle action should apply to distributed AMIs.
 * `containers` - (Optional) Specifies whether the lifecycle action should apply to distributed containers.
 * `snapshots` - (Optional) Specifies whether the lifecycle action should apply to snapshots associated with distributed AMIs.
@@ -116,6 +120,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retain_at_least` - (Optional) For age-based filters, this is the number of resources to keep on hand after the lifecycle DELETE action is applied. Impacted resources are only deleted if you have more than this number of resources. If you have fewer resources than this number, the impacted resource is not deleted.
 * `unit` - (Optional) Defines the unit of time that the lifecycle policy uses to determine impacted resources. This is required for age-based rules. Valid values: `DAYS`, `WEEKS`, `MONTHS` or `YEARS`.
 
@@ -123,6 +128,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amis` - (Optional) Lists configuration values that apply to AMIs that Image Builder should exclude from the lifecycle action. Detailed below.
 * `tag_map` - (Optional) Contains a list of tags that Image Builder uses to skip lifecycle actions for Image Builder image resources that have them.
 
@@ -130,6 +136,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `is_public` - (Optional) Configures whether public AMIs are excluded from the lifecycle action.
 * `last_launched` - (Optional) Specifies configuration details for Image Builder to exclude the most recent resources from lifecycle actions. Detailed below.
 * `regions` - (Optional) Configures AWS Regions that are excluded from the lifecycle action.
@@ -147,6 +154,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `recipe` - (Optional) A list of recipe that are used as selection criteria for the output images that the lifecycle policy applies to. Detailed below.
 * `tag_map` - (Optional) A list of tags that are used as selection criteria for the Image Builder image resources that the lifecycle policy applies to.
 

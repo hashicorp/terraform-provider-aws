@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,17 +27,16 @@ import (
 )
 
 // @SDKResource("aws_ecs_capacity_provider", name="Capacity Provider")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @ArnFormat("capacity-provider/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
 		ReadWithoutTimeout:   resourceCapacityProviderRead,
 		UpdateWithoutTimeout: resourceCapacityProviderUpdate,
 		DeleteWithoutTimeout: resourceCapacityProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceCapacityProviderImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -249,19 +247,6 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
-}
-
-func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	d.Set(names.AttrName, d.Id())
-	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Service:   "ecs",
-		Resource:  "capacity-provider/" + d.Id(),
-	}.String())
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func partitionFromConn(conn *ecs.Client) string {

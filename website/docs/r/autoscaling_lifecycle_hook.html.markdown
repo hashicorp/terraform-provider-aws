@@ -58,6 +58,7 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the lifecycle hook.
 * `autoscaling_group_name` - (Required) Name of the Auto Scaling group to which you want to assign the lifecycle hook
 * `default_result` - (Optional) Defines the action the Auto Scaling group should take when the lifecycle hook timeout elapses or if an unexpected failure occurs. The value for this parameter can be either CONTINUE or ABANDON. The default value for this parameter is ABANDON.

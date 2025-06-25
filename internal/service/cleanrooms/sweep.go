@@ -141,7 +141,7 @@ func sweepMemberships(region string) error {
 			id := aws.ToString(c.Id)
 
 			log.Printf("[INFO] Deleting Cleanrooms Membership: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceMembership, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMembershipResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

@@ -10,17 +10,20 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbcmdataexports "github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,6 +51,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "export.0.export_arn", "bcm-data-exports", endpoints.UsEast1RegionID, regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern)),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
@@ -373,6 +377,60 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 	})
 }
 
+func TestAccBCMDataExportsExport_upgradeFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var export bcmdataexports.GetExportOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bcmdataexports_export.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
+		CheckDestroy: testAccCheckExportDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccExportConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccExportConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
@@ -382,7 +440,7 @@ func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -409,7 +467,7 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
-		resp, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.BCMDataExports, create.ErrActionCheckingExistence, tfbcmdataexports.ResNameExport, rs.Primary.ID, err)

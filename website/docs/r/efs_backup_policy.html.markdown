@@ -31,6 +31,7 @@ resource "aws_efs_backup_policy" "policy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Required) The ID of the EFS file system.
 * `backup_policy` - (Required) A backup_policy object (documented below).
 

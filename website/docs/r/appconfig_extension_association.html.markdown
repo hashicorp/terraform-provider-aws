@@ -63,6 +63,7 @@ resource "aws_appconfig_extension_association" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `extension_arn` - (Required) The ARN of the extension defined in the association.
 * `resource_arn` - (Optional) The ARN of the application, configuration profile, or environment to associate with the extension.
 * `parameters` - (Optional) The parameter names and values defined for the association.

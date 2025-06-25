@@ -24,6 +24,10 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"subnetIDs":          testAccVerifiedAccessEndpoint_subnetIDs,
 			"cidr":               testAccVerifiedAccessEndpoint_cidr,
 			"rds":                testAccVerifiedAccessEndpoint_rds,
+			"portRangeTCP":       testAccVerifiedAccessEndpoint_portRangeTCP,
+			"portTCP":            testAccVerifiedAccessEndpoint_portTCP,
+			"portHTTP":           testAccVerifiedAccessEndpoint_portHTTP,
+			"portHTTPS":          testAccVerifiedAccessEndpoint_portHTTPS,
 		},
 		"Group": {
 			acctest.CtBasic:      testAccVerifiedAccessGroup_basic,

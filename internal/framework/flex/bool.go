@@ -6,7 +6,6 @@ package flex
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -36,10 +35,4 @@ func BoolToFramework(ctx context.Context, v *bool) types.Bool {
 // BoolValueToFramework converts a bool value to a Framework Bool value.
 func BoolValueToFramework(ctx context.Context, v bool) types.Bool {
 	return types.BoolValue(v)
-}
-
-// BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.
-// A nil bool pointer is converted to a false Bool.
-func BoolToFrameworkLegacy(_ context.Context, v *bool) types.Bool {
-	return types.BoolValue(aws.ToBool(v))
 }

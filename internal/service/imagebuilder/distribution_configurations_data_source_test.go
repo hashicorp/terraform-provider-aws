@@ -50,7 +50,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "test-{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 

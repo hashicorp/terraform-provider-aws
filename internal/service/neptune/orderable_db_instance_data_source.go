@@ -33,7 +33,7 @@ func dataSourceOrderableDBInstance() *schema.Resource {
 			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  engineNeptune,
+				Default:  defaultEngine,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,

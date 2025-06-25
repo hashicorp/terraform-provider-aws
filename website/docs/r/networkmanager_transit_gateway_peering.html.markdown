@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_transit_gateway_peering"
 description: |-
-  Creates a peering connection between an AWS Cloud WAN core network and an AWS Transit Gateway.
+  Manages a Network Manager transit gateway peering connection.
 ---
 
 # Resource: aws_networkmanager_transit_gateway_peering
 
-Creates a peering connection between an AWS Cloud WAN core network and an AWS Transit Gateway.
+Manages a Network Manager transit gateway peering connection. Creates a peering connection between an AWS Cloud WAN core network and an AWS Transit Gateway.
 
 ## Example Usage
 
@@ -21,25 +21,35 @@ resource "aws_networkmanager_transit_gateway_peering" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `core_network_id` - (Required) The ID of a core network.
+* `core_network_id` - (Required) ID of a core network.
+* `transit_gateway_arn` - (Required) ARN of the transit gateway for the peering request.
+
+The following arguments are optional:
+
 * `tags` - (Optional) Key-value tags for the peering. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `transit_gateway_arn` - (Required) The ARN of the transit gateway for the peering request.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Peering Amazon Resource Name (ARN).
-* `core_network_arn` - The ARN of the core network.
-* `edge_location` - The edge location for the peer.
+* `arn` - Peering ARN.
+* `core_network_arn` - ARN of the core network.
+* `edge_location` - Edge location for the peer.
 * `id` - Peering ID.
-* `owner_account_id` - The ID of the account owner.
-* `peering_type` - The type of peering. This will be `TRANSIT_GATEWAY`.
-* `resource_arn` - The resource ARN of the peer.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `transit_gateway_peering_attachment_id` - The ID of the transit gateway peering attachment.
+* `owner_account_id` - ID of the account owner.
+* `peering_type` - Type of peering. This will be `TRANSIT_GATEWAY`.
+* `resource_arn` - Resource ARN of the peer.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `transit_gateway_peering_attachment_id` - ID of the transit gateway peering attachment.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

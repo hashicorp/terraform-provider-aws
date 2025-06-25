@@ -3,22 +3,22 @@ subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_region"
 description: |-
-    Provides details about a specific service region
+    Provides details about a specific AWS Region
 ---
 
 # Data Source: aws_region
 
-`aws_region` provides details about a specific AWS region.
+`aws_region` provides details about a specific AWS Region.
 
-As well as validating a given region name this resource can be used to
-discover the name of the region configured within the provider. The latter
+As well as validating a given Region name this resource can be used to
+discover the name of the Region configured within the provider. The latter
 can be useful in a child module which is inheriting an AWS provider
 configuration from its parent module.
 
 ## Example Usage
 
 The following example shows how the resource might be used to obtain
-the name of the AWS region configured on the provider.
+the name of the AWS Region configured on the provider.
 
 ```terraform
 data "aws_region" "current" {}
@@ -28,8 +28,10 @@ data "aws_region" "current" {}
 
 This data source supports the following arguments:
 
-* `name` - (Optional) Full name of the region to select.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint` - (Optional) EC2 endpoint of the region to select.
+* `name` - (Optional, **Deprecated**) Full name of the region to select. Use `region` instead.
+* `region` - (Optional) Full name of the region to select (e.g. `us-east-1`)
 
 ## Attribute Reference
 

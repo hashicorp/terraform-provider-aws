@@ -26,6 +26,7 @@ resource "aws_codestarconnections_host" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `provider_endpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.
 * `provider_type` - (Required) The name of the external provider where your third-party code repository is configured.

@@ -109,6 +109,7 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.

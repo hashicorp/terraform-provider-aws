@@ -27,8 +27,8 @@ import (
 )
 
 // @FrameworkResource("aws_opensearch_authorize_vpc_endpoint_access", name="Authorize VPC Endpoint Access")
-func newResourceAuthorizeVPCEndpointAccess(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAuthorizeVPCEndpointAccess{}
+func newAuthorizeVPCEndpointAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &authorizeVPCEndpointAccessResource{}
 
 	return r, nil
 }
@@ -37,13 +37,12 @@ const (
 	ResNameAuthorizeVPCEndpointAccess = "Authorize Vpc Endpoint Access"
 )
 
-type resourceAuthorizeVPCEndpointAccess struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type authorizeVPCEndpointAccessResource struct {
+	framework.ResourceWithModel[authorizeVPCEndpointAccessResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *authorizeVPCEndpointAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account": schema.StringAttribute{
@@ -65,10 +64,10 @@ func (r *resourceAuthorizeVPCEndpointAccess) Schema(ctx context.Context, req res
 	}
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *authorizeVPCEndpointAccessResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var plan resourceAuthorizeVPCEndpointAccessData
+	var plan authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -109,10 +108,10 @@ func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var state resourceAuthorizeVPCEndpointAccessData
+	var state authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -138,10 +137,10 @@ func (r *resourceAuthorizeVPCEndpointAccess) Read(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *authorizeVPCEndpointAccessResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var state resourceAuthorizeVPCEndpointAccessData
+	var state authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -165,7 +164,7 @@ func (r *resourceAuthorizeVPCEndpointAccess) Delete(ctx context.Context, req res
 	}
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
 }
 
@@ -207,7 +206,8 @@ func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Clie
 	return output, nil
 }
 
-type resourceAuthorizeVPCEndpointAccessData struct {
+type authorizeVPCEndpointAccessResourceModel struct {
+	framework.WithRegionModel
 	Account             types.String                                             `tfsdk:"account"`
 	DomainName          types.String                                             `tfsdk:"domain_name"`
 	AuthorizedPrincipal fwtypes.ListNestedObjectValueOf[authorizedPrincipalData] `tfsdk:"authorized_principal"`

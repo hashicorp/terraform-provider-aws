@@ -25,6 +25,7 @@ resource "aws_db_proxy_endpoint" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_proxy_endpoint_name` - (Required) The identifier for the proxy endpoint. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `db_proxy_name` - (Required) The name of the DB proxy associated with the DB proxy endpoint that you create.
 * `vpc_subnet_ids` - (Required) One or more VPC subnet IDs to associate with the new proxy.

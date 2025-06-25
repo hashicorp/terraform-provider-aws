@@ -47,7 +47,7 @@ resource "aws_lambda_permission" "example" {
   function_name  = aws_lambda_function.example.function_name
   principal      = "ivschat.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
-  source_arn     = "arn:aws:ivschat:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:room/*"
+  source_arn     = "arn:aws:ivschat:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:room/*"
 }
 
 resource "aws_s3_bucket" "example" {

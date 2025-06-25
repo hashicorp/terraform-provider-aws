@@ -40,7 +40,7 @@ func newMonitorResource(context.Context) (resource.ResourceWithConfigure, error)
 }
 
 type monitorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[monitorResourceModel]
 	framework.WithImportByID
 }
 
@@ -315,6 +315,7 @@ func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, name s
 }
 
 type monitorResourceModel struct {
+	framework.WithRegionModel
 	AggregationPeriod types.Int64  `tfsdk:"aggregation_period"`
 	ID                types.String `tfsdk:"id"`
 	MonitorARN        types.String `tfsdk:"arn"`

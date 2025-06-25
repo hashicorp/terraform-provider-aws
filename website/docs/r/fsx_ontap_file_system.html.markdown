@@ -60,6 +60,7 @@ resource "aws_fsx_ontap_file_system" "testmultiazgen2" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608` for file systems with deployment_type `SINGLE_AZ_1` and `MULTI_AZ_1`. Valid values are between `1024` and `524288` for `MULTI_AZ_2`. Valid values between `1024` (`1024` per ha pair) and `1048576` for file systems with deployment_type `SINGLE_AZ_2`. For `SINGLE_AZ_2`, the `1048576` (1PB) maximum is only supported when using 2 or more ha_pairs, the maximum is `524288` (512TB) when using 1 ha_pair.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Up to 2 subnets can be provided.
 * `preferred_subnet_id` - (Required) The ID for a subnet. A subnet is a range of IP addresses in your virtual private cloud (VPC).

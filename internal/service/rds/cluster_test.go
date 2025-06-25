@@ -3763,7 +3763,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "example" {
-  description = "Terraform acc test %[1]s"
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -4490,7 +4492,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %[1]d"
+  description             = "Terraform acc test %[1]d"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -4980,7 +4984,9 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_kms_key" "test" {
   provider = "awsalternate"
 
-  description = %[3]q
+  description             = %[3]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -5042,7 +5048,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5112,7 +5118,9 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_kms_key" "test" {
   provider = "awsalternate"
 
-  description = %[3]q
+  description             = %[3]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -5180,7 +5188,7 @@ resource "aws_rds_cluster" "alternate" {
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5202,7 +5210,7 @@ resource "aws_rds_cluster" "alternate" {
   kms_key_id           = aws_kms_key.test.arn
   storage_encrypted    = true
   skip_final_snapshot  = true
-  source_region        = data.aws_region.current.name
+  source_region        = data.aws_region.current.region
 
   depends_on = [
     aws_rds_cluster_instance.test,
@@ -5468,7 +5476,7 @@ resource "aws_rds_cluster" "secondary" {
   cluster_identifier        = %[5]q
   db_subnet_group_name      = aws_db_subnet_group.alternate.name
   skip_final_snapshot       = true
-  source_region             = data.aws_region.current.name
+  source_region             = data.aws_region.current.region
   global_cluster_identifier = aws_rds_global_cluster.test.id
   engine                    = aws_rds_global_cluster.test.engine
   engine_version            = aws_rds_global_cluster.test.engine_version
@@ -5573,7 +5581,7 @@ resource "aws_rds_cluster" "secondary" {
   cluster_identifier             = %[5]q
   db_subnet_group_name           = aws_db_subnet_group.alternate.name
   skip_final_snapshot            = true
-  source_region                  = data.aws_region.current.name
+  source_region                  = data.aws_region.current.region
   global_cluster_identifier      = aws_rds_global_cluster.test.id
   enable_global_write_forwarding = true
   engine                         = aws_rds_global_cluster.test.engine
@@ -5688,7 +5696,7 @@ resource "aws_rds_cluster" "secondary" {
   global_cluster_identifier     = aws_rds_global_cluster.test.id
   replication_source_identifier = aws_rds_cluster.primary.arn
   skip_final_snapshot           = true
-  source_region                 = data.aws_region.current.name
+  source_region                 = data.aws_region.current.region
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
@@ -5929,6 +5937,7 @@ func testAccClusterConfig_SnapshotID_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "source" {
@@ -6188,7 +6197,10 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_SnapshotID_encryptedRestore(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
@@ -6527,6 +6539,7 @@ func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {

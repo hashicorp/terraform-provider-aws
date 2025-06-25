@@ -120,13 +120,12 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
+* `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Current Valid values: `neptune`. Conflicts with `source_db_cluster_identifier`.
 * `engine_version` - (Optional) Engine version of the global database. Upgrading the engine version will result in all cluster members being immediately updated and will.
-    * **NOTE:** Upgrading major versions is not supported.
-* `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
-* `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
+* `source_db_cluster_identifier` - (Optional) ARN to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
+* `storage_encrypted` - (Optional, Forces new resources) Whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
 ### Timeouts
 
@@ -140,9 +139,9 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Global Cluster Amazon Resource Name (ARN)
+* `arn` - Global Cluster ARN
 * `global_cluster_members` - Set of objects containing Global Cluster members.
-    * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster.
+    * `db_cluster_arn` - ARN of member DB Cluster.
     * `is_writer` - Whether the member is the primary DB Cluster.
 * `global_cluster_resource_id` - AWS Region-unique, immutable identifier for the global database cluster. This identifier is found in AWS CloudTrail log entries whenever the AWS KMS key for the DB cluster is accessed.
 * `id` - Neptune Global Cluster.
@@ -195,4 +194,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8950ed9539f8cfa73cf920a0d999502a62c1a0cc78e2fc0e44cf362c351b01bc -->
+<!-- cache-key: cdktf-0.20.8 input-28e353a71880fd769e636189652d04dcf2946b9bc933307081a1ed90e38e9908 -->

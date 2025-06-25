@@ -100,6 +100,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_encryption_context` - (Optional) Additional encryption context for the user settings.
 * `associated_portal_arns` - (Optional) List of web portal ARNs to associate with the user settings.
 * `cookie_synchronization_configuration` - (Optional) Configuration that specifies which cookies should be synchronized from the end user's local browser to the remote browser. Detailed below.

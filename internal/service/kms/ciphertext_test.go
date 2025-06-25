@@ -77,8 +77,10 @@ func TestAccKMSCiphertext_Validate_withContext(t *testing.T) {
 
 const testAccCiphertextConfig_basic = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-basic"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_ciphertext" "test" {
@@ -90,8 +92,10 @@ resource "aws_kms_ciphertext" "test" {
 
 const testAccCiphertextConfig_validate = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-validate"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_ciphertext" "test" {
@@ -110,8 +114,10 @@ data "aws_kms_secrets" "test" {
 
 const testAccCiphertextConfig_validateContext = `
 resource "aws_kms_key" "test" {
-  description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
-  is_enabled  = true
+  description             = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_ciphertext" "test" {

@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_identitystore_group: `filter` has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_identitystore_user: `filter` has been removed
+```

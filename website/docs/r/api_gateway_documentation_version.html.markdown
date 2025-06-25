@@ -38,6 +38,7 @@ resource "aws_api_gateway_documentation_part" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `version` - (Required) Version identifier of the API documentation snapshot.
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `description` - (Optional) Description of the API documentation version.

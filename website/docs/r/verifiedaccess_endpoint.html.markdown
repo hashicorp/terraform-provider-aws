@@ -86,6 +86,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_domain` - (Optional) The DNS name for users to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `description` - (Optional) A description for the Verified Access endpoint.
 * `domain_certificate_arn` - (Optional) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.

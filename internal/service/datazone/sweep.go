@@ -34,7 +34,7 @@ func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		for _, da := range page.Items {
 			id := aws.ToString(da.Id)
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDomain, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

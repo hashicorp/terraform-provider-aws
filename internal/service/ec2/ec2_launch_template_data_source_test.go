@@ -41,7 +41,6 @@ func TestAccEC2LaunchTemplateDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_stop", dataSourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrPair(resourceName, "disable_api_termination", dataSourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_optimized", dataSourceName, "ebs_optimized"),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_inference_accelerator.#", dataSourceName, "elastic_inference_accelerator.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "enclave_options.#", dataSourceName, "enclave_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "hibernation_options.#", dataSourceName, "hibernation_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_instance_profile.#", dataSourceName, "iam_instance_profile.#"),
@@ -163,10 +162,6 @@ resource "aws_launch_template" "test" {
       volume_size = 15
       volume_type = "gp3"
     }
-  }
-
-  elastic_inference_accelerator {
-    type = "eia1.medium"
   }
 
   iam_instance_profile {

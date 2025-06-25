@@ -22,6 +22,12 @@ import (
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
+// @Region(global=true)
+// @SingletonIdentity
+// @NoImport
+// @Testing(checkDestroyNoop=true)
+// @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
@@ -70,7 +76,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region(ctx))
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {

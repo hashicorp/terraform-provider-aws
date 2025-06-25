@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_networkmanager_core_network: The `base_policy_region` argument has been removed. Use `base_policy_regions` instead.
+```

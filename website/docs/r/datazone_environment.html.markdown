@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -34,8 +33,8 @@ import (
 
 // @FrameworkResource("aws_iot_billing_group", name="Billing Group")
 // @Tags(identifierAttribute="arn")
-func newResourceBillingGroup(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBillingGroup{}
+func newBillingGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &billingGroupResource{}
 
 	return r, nil
 }
@@ -44,23 +43,17 @@ const (
 	ResNameBillingGroup = "Billing Group"
 )
 
-type resourceBillingGroup struct {
-	framework.ResourceWithConfigure
+type billingGroupResource struct {
+	framework.ResourceWithModel[billingGroupResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *billingGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			"metadata": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[metadataModel](ctx),
-				ElementType: fwtypes.NewObjectTypeOf[metadataModel](ctx),
-				Computed:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"metadata":    framework.ResourceComputedListOfObjectsAttribute[metadataModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -96,9 +89,9 @@ func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.Sche
 	response.Schema = s
 }
 
-func (r *resourceBillingGroup) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *billingGroupResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().IoTClient(ctx)
-	var data resourceBillingGroupData
+	var data billingGroupResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -150,10 +143,10 @@ func (r *resourceBillingGroup) Create(ctx context.Context, request resource.Crea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBillingGroup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *billingGroupResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().IoTClient(ctx)
 
-	var data resourceBillingGroupData
+	var data billingGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -182,10 +175,10 @@ func (r *resourceBillingGroup) Read(ctx context.Context, request resource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceBillingGroup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *billingGroupResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().IoTClient(ctx)
 
-	var old, new resourceBillingGroupData
+	var old, new billingGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -220,10 +213,10 @@ func (r *resourceBillingGroup) Update(ctx context.Context, request resource.Upda
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceBillingGroup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *billingGroupResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().IoTClient(ctx)
 
-	var data resourceBillingGroupData
+	var data billingGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -244,10 +237,6 @@ func (r *resourceBillingGroup) Delete(ctx context.Context, request resource.Dele
 		)
 		return
 	}
-}
-
-func (r *resourceBillingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeBillingGroupOutput, error) {
@@ -275,7 +264,8 @@ func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) 
 	return output, nil
 }
 
-type resourceBillingGroupData struct {
+type billingGroupResourceModel struct {
+	framework.WithRegionModel
 	ARN        types.String                                     `tfsdk:"arn"`
 	ID         types.String                                     `tfsdk:"id" autoflex:",noflatten"`
 	Metadata   fwtypes.ListNestedObjectValueOf[metadataModel]   `tfsdk:"metadata"`

@@ -132,8 +132,11 @@ func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resour
 func testAccDataCatalogEncryptionSettingsConfig_encrypted(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -171,8 +174,11 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 func testAccDataCatalogEncryptionSettingsConfig_encrypted_with_catalog_encryption_service_role(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

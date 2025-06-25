@@ -102,6 +102,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `add_column_name` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
 * `add_trailing_padding_character` - (Optional) Whether to add padding. Default is `false`. (Ignored for source endpoints.)
 * `bucket_folder` - (Optional) S3 object prefix.

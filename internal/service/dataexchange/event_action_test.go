@@ -552,6 +552,7 @@ func testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId string) st
 		s3BucketConfig(bucketName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
+  enable_key_rotation = true
 }
 
 resource "aws_dataexchange_event_action" "test" {

@@ -290,7 +290,7 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
-			if aws.ToString(v.Engine) != engineNeptune {
+			if aws.ToString(v.Engine) != defaultEngine {
 				continue
 			}
 

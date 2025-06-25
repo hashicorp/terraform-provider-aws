@@ -6,6 +6,7 @@
 //go:generate go run ../../generate/listpages/main.go -ListOps=DescribeSpotFleetInstances,DescribeSpotFleetRequestHistory,DescribeVpcBlockPublicAccessExclusions,DescribeVpcEndpointAssociations,DescribeVpcEndpointServices
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run ../../generate/tagstests/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package ec2

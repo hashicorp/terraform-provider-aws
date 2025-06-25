@@ -47,6 +47,7 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.
 * `creator_member_abilities` - (Required - Forces new resource) - The list of member abilities for the creator of the collaboration.  Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbilities).

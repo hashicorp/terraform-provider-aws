@@ -3,7 +3,7 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
-  Generates an Core Network policy document in JSON format
+  Generates a Core Network policy document in JSON format
 ---
 
 # Data Source: aws_networkmanager_core_network_policy_document

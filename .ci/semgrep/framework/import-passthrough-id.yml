@@ -1,0 +1,34 @@
+rules:
+  - id: import-state-passthrough-id
+    languages: [go]
+    message: Prefer `resource.ImportStatePassthroughID` to directly setting attribute
+    paths:
+      include:
+        - internal/service/
+    pattern: $RESP.Diagnostics.Append($RESP.State.SetAttribute(ctx, path.Root($X), $REQ.ID)...)
+    severity: WARNING
+    fix: resource.ImportStatePassthroughID(ctx, path.Root($X), $REQ, $RESP)
+
+  - id: with-import-by-id
+    languages: [go]
+    message: Prefer adding `framework.WithImportByID` to the resource type declaration
+    pattern: |
+      func ($R $TYPE) ImportState(..., $REQ resource.ImportStateRequest, $RESP *resource.ImportStateResponse) {
+        resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), $REQ, $RESP)
+      }
+    severity: WARNING
+
+  - id: redundant-import-state
+    languages: [go]
+    message: Don't declare `ImportState` when embedding `framework.WithImportByID`
+    patterns:
+      - pattern: |
+          type $TYPE struct {
+            ...
+            framework.WithImportByID
+            ...
+          }
+      - pattern-inside: |
+          ...
+          func ($R *$TYPE) ImportState( ... ) { ... }
+    severity: ERROR

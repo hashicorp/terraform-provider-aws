@@ -34,7 +34,10 @@ import (
 
 // @FrameworkResource("aws_rds_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
+// @Testing(identityTest=false)
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -55,9 +58,8 @@ const (
 )
 
 type integrationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[integrationResourceModel]
-	framework.WithImportByID
+	framework.ResourceWithModel[integrationResourceModel]
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
@@ -352,17 +354,18 @@ func integrationError(v awstypes.IntegrationError) error {
 }
 
 type integrationResourceModel struct {
-	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
-	DataFilter                  types.String                     `tfsdk:"data_filter"`
-	ID                          types.String                     `tfsdk:"id"`
-	IntegrationARN              types.String                     `tfsdk:"arn"`
-	IntegrationName             types.String                     `tfsdk:"integration_name"`
-	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
-	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        tftags.Map                       `tfsdk:"tags"`
-	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
-	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
-	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	AdditionalEncryptionContext fwtypes.MapOfString `tfsdk:"additional_encryption_context"`
+	DataFilter                  types.String        `tfsdk:"data_filter"`
+	ID                          types.String        `tfsdk:"id"`
+	IntegrationARN              types.String        `tfsdk:"arn"`
+	IntegrationName             types.String        `tfsdk:"integration_name"`
+	KMSKeyID                    types.String        `tfsdk:"kms_key_id"`
+	SourceARN                   fwtypes.ARN         `tfsdk:"source_arn"`
+	Tags                        tftags.Map          `tfsdk:"tags"`
+	TagsAll                     tftags.Map          `tfsdk:"tags_all"`
+	TargetARN                   fwtypes.ARN         `tfsdk:"target_arn"`
+	Timeouts                    timeouts.Value      `tfsdk:"timeouts"`
 }
 
 func (model *integrationResourceModel) InitFromID() error {

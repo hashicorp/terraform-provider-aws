@@ -50,12 +50,13 @@ resource "aws_rds_cluster" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apply_immediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `availability_zone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
 * `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
-* `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `copy_tags_to_snapshot` - (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Optional, Forces new resource) Specifies the DB subnet group to associate with this DB instance. The default behavior varies depending on whether `db_subnet_group_name` is specified. Please refer to official [AWS documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) to understand how `db_subnet_group_name` and `publicly_accessible` parameters affect DB instance behaviour. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
@@ -88,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_identifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier
-* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
+* `writer` - Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `availability_zone` - Availability zone of the instance
 * `endpoint` - DNS address for this instance. May not be writable
 * `engine` - Database engine

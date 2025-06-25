@@ -36,12 +36,12 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforWindowsFileServerFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
@@ -76,12 +76,12 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforWindowsFileServerFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,12 +105,12 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforWindowsFileServerFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_subdirectory(rName, domainName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -140,12 +140,12 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforWindowsFileServerFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags1(rName, domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -160,7 +160,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags2(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -169,7 +169,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags1(rName, domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -178,7 +178,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationFSxWindowsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationFSxforWindowsFileServerFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -204,7 +204,7 @@ func testAccCheckLocationFSxWindowsDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckLocationFSxWindowsExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxWindowsOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxforWindowsFileServerFileSystemExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxWindowsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

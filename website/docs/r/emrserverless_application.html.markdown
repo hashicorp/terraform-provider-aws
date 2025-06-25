@@ -63,17 +63,18 @@ resource "aws_emrserverless_application" "example" {
 
 This resource supports the following arguments:
 
-* `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
-* `auto_start_configuration` – (Optional) The configuration for an application to automatically start on job submission.
-* `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
-* `image_configuration` – (Optional) The image configuration applied to all worker types.
-* `initial_capacity` – (Optional) The capacity to initialize when the application is created.
-* `interactive_configuration` – (Optional) Enables the interactive use cases to use when running an application.
-* `maximum_capacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
-* `name` – (Required) The name of the application.
-* `network_configuration` – (Optional) The network configuration for customer VPC connectivity.
-* `release_label` – (Required) The EMR release version associated with the application.
-* `type` – (Required) The type of application you want to start, such as `spark` or `hive`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `architecture` - (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
+* `auto_start_configuration` - (Optional) The configuration for an application to automatically start on job submission.
+* `auto_stop_configuration` - (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
+* `image_configuration` - (Optional) The image configuration applied to all worker types.
+* `initial_capacity` - (Optional) The capacity to initialize when the application is created.
+* `interactive_configuration` - (Optional) Enables the interactive use cases to use when running an application.
+* `maximum_capacity` - (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
+* `name` - (Required) The name of the application.
+* `network_configuration` - (Optional) The network configuration for customer VPC connectivity.
+* `release_label` - (Required) The EMR release version associated with the application.
+* `type` - (Required) The type of application you want to start, such as `spark` or `hive`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### auto_start_configuration Arguments

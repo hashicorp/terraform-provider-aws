@@ -39,7 +39,7 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
@@ -231,6 +231,7 @@ func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, servic
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String   `tfsdk:"id"`
 	OperationID types.String   `tfsdk:"operation_id"`
 	ServiceARN  fwtypes.ARN    `tfsdk:"service_arn"`

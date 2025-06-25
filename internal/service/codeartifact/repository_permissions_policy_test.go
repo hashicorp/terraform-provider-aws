@@ -28,12 +28,12 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
@@ -48,7 +48,7 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
@@ -69,12 +69,12 @@ func testAccRepositoryPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
@@ -98,12 +98,12 @@ func testAccRepositoryPermissionsPolicy_owner(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
@@ -128,12 +128,12 @@ func testAccRepositoryPermissionsPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -151,12 +151,12 @@ func testAccRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryPermissionsDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryPermissionsExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -165,7 +165,7 @@ func testAccRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 	})
 }
 
-func testAccCheckRepositoryPermissionsExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckRepositoryPermissionsPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -180,7 +180,7 @@ func testAccCheckRepositoryPermissionsExists(ctx context.Context, n string) reso
 	}
 }
 
-func testAccCheckRepositoryPermissionsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRepositoryPermissionsPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codeartifact_repository_permissions_policy" {
@@ -211,6 +211,7 @@ func testAccRepositoryPermissionsPolicyConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {
@@ -248,6 +249,7 @@ func testAccRepositoryPermissionsPolicyConfig_owner(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {
@@ -286,6 +288,7 @@ func testAccRepositoryPermissionsPolicyConfig_updated(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {
@@ -326,6 +329,7 @@ func testAccRepositoryPermissionsPolicyConfig_order(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {
@@ -362,6 +366,7 @@ func testAccRepositoryPermissionsPolicyConfig_newOrder(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {

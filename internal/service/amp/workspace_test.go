@@ -325,6 +325,7 @@ resource "aws_prometheus_workspace" "test" {
 resource "aws_kms_key" "test" {
   description             = "Test"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }

@@ -6,6 +6,7 @@ package statecheck
 import (
 	"context"
 	"fmt"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -14,6 +15,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 )
 
 var _ statecheck.StateCheck = expectFullTagsCheck{}
@@ -43,12 +45,12 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 
 	tagsSpec := e.tagSpecFinder(ctx, sp, res.Type)
 
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		resp.Error = fmt.Errorf("no tagging specification found for %s type %s", e.entity, res.Type)
 		return
 	}
 
-	identifierAttr := tagsSpec.IdentifierAttribute
+	identifierAttr := tagsSpec.Value().IdentifierAttribute
 	if identifierAttr == "" {
 		resp.Error = fmt.Errorf("no tag identifier attribute defined for %s type %s", e.entity, res.Type)
 		return
@@ -66,10 +68,10 @@ func (e expectFullTagsCheck) CheckState(ctx context.Context, req statecheck.Chec
 	if v, ok := sp.(tftags.ServiceTagLister); ok {
 		err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string)) // Sets tags in Context
 	} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
-		if tagsSpec.ResourceType == "" {
+		if tagsSpec.Value().ResourceType == "" {
 			err = fmt.Errorf("ListTags method for service %s requires ResourceType, but none was set", sp.ServicePackageName())
 		} else {
-			err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.ResourceType) // Sets tags in Context
+			err = v.ListTags(ctx, acctest.Provider.Meta(), identifier.(string), tagsSpec.Value().ResourceType) // Sets tags in Context
 		}
 	} else {
 		err = fmt.Errorf("no ListTags method found for service %s", sp.ServicePackageName())
@@ -115,7 +117,7 @@ func ExpectFullResourceTags(servicePackage conns.ServicePackage, resourceAddress
 	}
 }
 
-func ExpectFullResourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec *types.ServicePackageResourceTags, knownValue knownvalue.Check) expectFullTagsCheck {
+func ExpectFullResourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec unique.Handle[types.ServicePackageResourceTags], knownValue knownvalue.Check) expectFullTagsCheck {
 	return expectFullTagsCheck{
 		base:           NewBase(resourceAddress),
 		knownValue:     knownValue,
@@ -135,7 +137,7 @@ func ExpectFullDataSourceTags(servicePackage conns.ServicePackage, resourceAddre
 	}
 }
 
-func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec *types.ServicePackageResourceTags, knownValue knownvalue.Check) expectFullTagsCheck {
+func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resourceAddress string, tagsSpec unique.Handle[types.ServicePackageResourceTags], knownValue knownvalue.Check) expectFullTagsCheck {
 	return expectFullTagsCheck{
 		base:           NewBase(resourceAddress),
 		knownValue:     knownValue,
@@ -145,16 +147,16 @@ func ExpectFullDataSourceTagsSpecTags(servicePackage conns.ServicePackage, resou
 	}
 }
 
-type tagSpecFinder func(context.Context, conns.ServicePackage, string) *types.ServicePackageResourceTags
+type tagSpecFinder func(context.Context, conns.ServicePackage, string) unique.Handle[types.ServicePackageResourceTags]
 
-func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
+func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec unique.Handle[types.ServicePackageResourceTags]) {
 	for _, r := range sp.FrameworkResources(ctx) {
 		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}
 	}
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		for _, r := range sp.SDKResources(ctx) {
 			if r.TypeName == typeName {
 				tagsSpec = r.Tags
@@ -165,14 +167,14 @@ func findResourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName 
 	return tagsSpec
 }
 
-func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec *types.ServicePackageResourceTags) {
+func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeName string) (tagsSpec unique.Handle[types.ServicePackageResourceTags]) {
 	for _, r := range sp.FrameworkDataSources(ctx) {
 		if r.TypeName == typeName {
 			tagsSpec = r.Tags
 			break
 		}
 	}
-	if tagsSpec == nil {
+	if tfunique.IsHandleNil(tagsSpec) {
 		for _, r := range sp.SDKDataSources(ctx) {
 			if r.TypeName == typeName {
 				tagsSpec = r.Tags
@@ -183,8 +185,8 @@ func findDataSourceTagSpec(ctx context.Context, sp conns.ServicePackage, typeNam
 	return tagsSpec
 }
 
-func identityTagSpec(tagsSpec *types.ServicePackageResourceTags) tagSpecFinder {
-	return func(ctx context.Context, sp conns.ServicePackage, typeName string) *types.ServicePackageResourceTags {
+func identityTagSpec(tagsSpec unique.Handle[types.ServicePackageResourceTags]) tagSpecFinder {
+	return func(ctx context.Context, sp conns.ServicePackage, typeName string) unique.Handle[types.ServicePackageResourceTags] {
 		return tagsSpec
 	}
 }

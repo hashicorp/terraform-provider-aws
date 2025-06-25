@@ -23,25 +23,26 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_role_policies_exclusive", name="Role Policies Exclusive")
-func newResourceRolePoliciesExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceRolePoliciesExclusive{}, nil
+func newRolePoliciesExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &rolePoliciesExclusiveResource{}, nil
 }
 
 const (
 	ResNameRolePoliciesExclusive = "Role Policies Exclusive"
 )
 
-type resourceRolePoliciesExclusive struct {
-	framework.ResourceWithConfigure
+type rolePoliciesExclusiveResource struct {
+	framework.ResourceWithModel[rolePoliciesExclusiveResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRolePoliciesExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *rolePoliciesExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"role_name": schema.StringAttribute{
@@ -51,6 +52,7 @@ func (r *resourceRolePoliciesExclusive) Schema(ctx context.Context, req resource
 				},
 			},
 			"policy_names": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
@@ -61,8 +63,8 @@ func (r *resourceRolePoliciesExclusive) Schema(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceRolePoliciesExclusive) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceRolePoliciesExclusiveData
+func (r *rolePoliciesExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan rolePoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,10 +88,10 @@ func (r *resourceRolePoliciesExclusive) Create(ctx context.Context, req resource
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRolePoliciesExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *rolePoliciesExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
-	var state resourceRolePoliciesExclusiveData
+	var state rolePoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,12 +110,12 @@ func (r *resourceRolePoliciesExclusive) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state.PolicyNames = flex.FlattenFrameworkStringValueSetLegacy(ctx, out)
+	state.PolicyNames = flex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRolePoliciesExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceRolePoliciesExclusiveData
+func (r *rolePoliciesExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state rolePoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -146,7 +148,7 @@ func (r *resourceRolePoliciesExclusive) Update(ctx context.Context, req resource
 // Inline policies defined on this resource but not attached to the role will
 // be added. Policies attached to the role but not configured on this resource
 // will be removed.
-func (r *resourceRolePoliciesExclusive) syncAttachments(ctx context.Context, roleName string, want []string) error {
+func (r *rolePoliciesExclusiveResource) syncAttachments(ctx context.Context, roleName string, want []string) error {
 	conn := r.Meta().IAMClient(ctx)
 
 	have, err := findRolePoliciesByName(ctx, conn, roleName)
@@ -183,7 +185,7 @@ func (r *resourceRolePoliciesExclusive) syncAttachments(ctx context.Context, rol
 	return nil
 }
 
-func (r *resourceRolePoliciesExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *rolePoliciesExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("role_name"), req, resp)
 }
 
@@ -212,7 +214,7 @@ func findRolePoliciesByName(ctx context.Context, conn *iam.Client, roleName stri
 	return policyNames, nil
 }
 
-type resourceRolePoliciesExclusiveData struct {
-	RoleName    types.String `tfsdk:"role_name"`
-	PolicyNames types.Set    `tfsdk:"policy_names"`
+type rolePoliciesExclusiveResourceModel struct {
+	RoleName    types.String        `tfsdk:"role_name"`
+	PolicyNames fwtypes.SetOfString `tfsdk:"policy_names"`
 }

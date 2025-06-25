@@ -36,14 +36,15 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
+* `connection_region` - The AWS Region where the connection is located.
+* `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
-* `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
-* `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
-* `state` - The state of the connection. Possible values include: ordering, requested, pending, available, down, deleting, deleted, rejected, unknown. See [AllocateHostedConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_AllocateHostedConnection.html) for a description of each connection state.
 * `lag_id` - The ID of the LAG.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
 * `location` - The location of the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - The name of the service provider associated with the connection.
-* `region` - The AWS Region where the connection is located.
+* `region` - (**Deprecated**) The AWS Region where the connection is located. Use `connection_region` instead.
+* `state` - The state of the connection. Possible values include: ordering, requested, pending, available, down, deleting, deleted, rejected, unknown. See [AllocateHostedConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_AllocateHostedConnection.html) for a description of each connection state.

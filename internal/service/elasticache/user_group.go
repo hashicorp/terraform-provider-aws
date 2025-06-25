@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,9 +46,12 @@ func resourceUserGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+				),
 				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			names.AttrTags:    tftags.TagsSchema(),

@@ -283,6 +283,8 @@ service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evidently_'
+service/evs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evs_'
 service/finspace:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_finspace_'
 service/finspacedata:

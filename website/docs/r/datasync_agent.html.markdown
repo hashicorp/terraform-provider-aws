@@ -36,7 +36,7 @@ resource "aws_datasync_agent" "example" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "example" {
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
+  service_name       = "com.amazonaws.${data.aws_region.current.region}.datasync"
   vpc_id             = aws_vpc.example.id
   security_group_ids = [aws_security_group.example.id]
   subnet_ids         = [aws_subnet.example.id]
@@ -52,6 +52,7 @@ data "aws_network_interface" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DataSync Agent.
 * `activation_key` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.

@@ -35,6 +35,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
 * `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost on which to create a local snapshot.

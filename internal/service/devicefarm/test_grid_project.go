@@ -25,15 +25,16 @@ import (
 
 // @SDKResource("aws_devicefarm_test_grid_project", name="Test Grid Project")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.TestGridProject")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,
 		ReadWithoutTimeout:   resourceTestGridProjectRead,
 		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
 		DeleteWithoutTimeout: resourceTestGridProjectDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

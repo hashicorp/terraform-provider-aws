@@ -36,8 +36,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront KeyValueStore.
-* `id` - A unique identifier for the KeyValueStore. Same as `name`.
 * `etag` - ETag hash of the KeyValueStore.
+* `id` - A unique identifier for the KeyValueStore.
 
 ## Timeouts
 

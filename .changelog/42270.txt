@@ -1,0 +1,6 @@
+```release-note:breaking-change
+resource/aws_opensearchserverless_security_config: `saml_options` is now a list nested block instead of a single nested block
+```
+```release-note:breaking-change
+data-source/aws_opensearchserverless_security_config: `saml_options` is now a list nested block instead of a single nested block
+```

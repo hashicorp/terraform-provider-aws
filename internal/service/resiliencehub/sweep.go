@@ -32,7 +32,7 @@ func sweepResiliencyPolicy(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, policies := range page.ResiliencyPolicies {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceResiliencyPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResiliencyPolicyResource, client,
 				framework.NewAttribute(names.AttrARN, aws.ToString(policies.PolicyArn)),
 			))
 		}

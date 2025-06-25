@@ -17,36 +17,30 @@ import (
 )
 
 // @FrameworkDataSource("aws_route53profiles_profiles", name="Profiles")
-func newDataSourceProfiles(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceProfiles{}, nil
+func newProfilesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &profilesDataSource{}, nil
 }
 
 const (
 	DSNameProfiles = "Profiles Data Source"
 )
 
-type dataSourceProfiles struct {
-	framework.DataSourceWithConfigure
+type profilesDataSource struct {
+	framework.DataSourceWithModel[profilesDataSourceModel]
 }
 
-func (d *dataSourceProfiles) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *profilesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"profiles": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[profileSummariesData](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[profileSummariesData](ctx),
-				},
-			},
+			"profiles": framework.DataSourceComputedListOfObjectAttribute[profileSummaryModel](ctx),
 		},
 	}
 }
 
-func (d *dataSourceProfiles) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *profilesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().Route53ProfilesClient(ctx)
 
-	var data dataSourceProfilesData
+	var data profilesDataSourceModel
 
 	input := &route53profiles.ListProfilesInput{}
 	var output *route53profiles.ListProfilesOutput
@@ -74,11 +68,12 @@ func (d *dataSourceProfiles) Read(ctx context.Context, req datasource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceProfilesData struct {
-	ProfileSummaries fwtypes.ListNestedObjectValueOf[profileSummariesData] `tfsdk:"profiles"`
+type profilesDataSourceModel struct {
+	framework.WithRegionModel
+	ProfileSummaries fwtypes.ListNestedObjectValueOf[profileSummaryModel] `tfsdk:"profiles"`
 }
 
-type profileSummariesData struct {
+type profileSummaryModel struct {
 	ARN         types.String                             `tfsdk:"arn"`
 	ID          types.String                             `tfsdk:"id"`
 	Name        types.String                             `tfsdk:"name"`

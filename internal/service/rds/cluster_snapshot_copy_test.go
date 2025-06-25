@@ -389,7 +389,9 @@ func testAccClusterSnapshotCopyConfig_kms(rName string) string {
 		testAccClusterSnapshotCopyConfig_encryptedBase(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "test"
+  description             = "test"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster_snapshot_copy" "test" {

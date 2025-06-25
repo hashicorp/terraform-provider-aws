@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,6 +71,11 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIP(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -103,7 +109,14 @@ func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccEIPConfig_basic,
-				PlanOnly:                 true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(ctx, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -794,6 +807,8 @@ resource "aws_eip" "test" {
 }
 `
 
+// The vpc argument was removed in v6.0.0, but this is used to test migration
+// from a V4 configuration where the argument was still present
 const testAccEIPConfig_vpc = `
 resource "aws_eip" "test" {
   vpc = true
@@ -808,7 +823,7 @@ resource "aws_eip" "test" {
 func testAccEIPConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     %[1]q = %[2]q
@@ -1181,7 +1196,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
   tier = "free"
 }
@@ -1189,7 +1204,7 @@ resource "aws_vpc_ipam" "test" {
 resource "aws_vpc_ipam_pool" "test_pool" {
   address_family   = "ipv4"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   description      = "Test Amazon CIDR Pool"
   aws_service      = "ec2"
@@ -1235,7 +1250,7 @@ data "aws_region" current {}
 
 resource "aws_eip" "test" {
   domain               = "vpc"
-  network_border_group = data.aws_region.current.name
+  network_border_group = data.aws_region.current.region
 
   tags = {
     Name = %[1]q

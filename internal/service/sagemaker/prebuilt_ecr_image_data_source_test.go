@@ -442,7 +442,7 @@ data "aws_region" "current" {}
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
   repository_name = %[1]q
   image_tag       = %[2]q
-  region          = data.aws_region.current.name
+  region          = data.aws_region.current.region
 }
 `, repository_name, image_tag))
 }

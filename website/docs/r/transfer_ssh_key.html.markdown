@@ -80,6 +80,7 @@ resource "aws_iam_role_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `server_id` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.

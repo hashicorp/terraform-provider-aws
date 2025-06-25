@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_signer_signing_profile_permission", name="Signing Profile Permission")
-func ResourceSigningProfilePermission() *schema.Resource {
+func resourceSigningProfilePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfilePermissionCreate,
 		ReadWithoutTimeout:   resourceSigningProfilePermissionRead,

@@ -24,4 +24,6 @@ var (
 	FindEventSubscriptionByName       = findEventSubscriptionByName
 	FindGlobalClusterByID             = findGlobalClusterByID
 	FindSubnetGroupByName             = findSubnetGroupByName
+
+	DefaultEngine = defaultEngine
 )

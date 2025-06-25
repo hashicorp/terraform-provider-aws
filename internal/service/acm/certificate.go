@@ -55,17 +55,17 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key, generator=false)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
+// @Testing(tlsKey=true)
+// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

@@ -519,7 +519,10 @@ resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_iam_role" "test" {
   name               = "%[1]s"
@@ -588,7 +591,10 @@ resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_iam_role" "test" {
   name               = "%[1]s"

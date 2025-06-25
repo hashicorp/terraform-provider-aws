@@ -753,7 +753,7 @@ resource "aws_imagebuilder_container_recipe" "test_version1" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/hello-world-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -774,7 +774,7 @@ resource "aws_imagebuilder_container_recipe" "test_version2" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/hello-world-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF

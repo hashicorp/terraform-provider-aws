@@ -14,18 +14,131 @@ Provides a Glue Job resource.
 
 ## Example Usage
 
-### Python Job
+### Python Glue Job
 
 ```terraform
-resource "aws_glue_job" "example" {
-  name         = "example"
-  glue_version = "5.0"
-  role_arn     = aws_iam_role.example.arn
+resource "aws_glue_job" "etl_job" {
+  name              = "example-etl-job"
+  description       = "An example Glue ETL job"
+  role_arn          = aws_iam_role.glue_job_role.arn
+  glue_version      = "5.0"
+  max_retries       = 0
+  timeout           = 2880
+  number_of_workers = 2
+  worker_type       = "G.1X"
+  connections       = [aws_glue_connection.example.name]
+  execution_class   = "STANDARD"
 
   command {
-    script_location = "s3://${aws_s3_bucket.example.bucket}/example.py"
+    script_location = "s3://${aws_s3_bucket.glue_scripts.bucket}/jobs/etl_job.py"
+    name            = "glueetl"
     python_version  = "3"
   }
+
+  notification_property {
+    notify_delay_after = 3 # delay in minutes
+  }
+
+  default_arguments = {
+    "--job-language"                     = "python"
+    "--continuous-log-logGroup"          = "/aws-glue/jobs"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-continuous-log-filter"     = "true"
+    "--enable-metrics"                   = ""
+    "--enable-auto-scaling"              = "true"
+  }
+
+  execution_property {
+    max_concurrent_runs = 1
+  }
+
+  tags = {
+    "ManagedBy" = "AWS"
+  }
+}
+
+# IAM role for Glue jobs
+resource "aws_iam_role" "glue_job_role" {
+  name = "glue-job-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "glue_etl_script" {
+  bucket = aws_s3_bucket.glue_scripts.id
+  key    = "jobs/etl_job.py"
+  source = "jobs/etl_job.py" # Make sure this file exists locally
+}
+
+```
+
+### Pythonshell Job
+
+```terraform
+resource "aws_glue_job" "python_shell_job" {
+  name         = "example-python-shell-job"
+  description  = "An example Python shell job"
+  role_arn     = aws_iam_role.glue_job_role.arn
+  max_capacity = "0.0625"
+  max_retries  = 0
+  timeout      = 2880
+  connections  = [aws_glue_connection.example.name]
+
+  command {
+    script_location = "s3://${aws_s3_bucket.glue_scripts.bucket}/jobs/shell_job.py"
+    name            = "pythonshell"
+    python_version  = "3.9"
+  }
+
+  default_arguments = {
+    "--job-language"                     = "python" # Default is python
+    "--continuous-log-logGroup"          = "/aws-glue/jobs"
+    "--enable-continuous-cloudwatch-log" = "true"
+    "library-set"                        = "analytics" # loads common analytics libraries
+  }
+
+  execution_property {
+    max_concurrent_runs = 1
+  }
+
+  tags = {
+    "ManagedBy" = "AWS"
+  }
+}
+
+# IAM role for Glue jobs
+resource "aws_iam_role" "glue_job_role" {
+  name = "glue-job-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_object" "python_shell_script" {
+  bucket = aws_s3_bucket.glue_scripts.id
+  key    = "jobs/shell_job.py"
+  source = "jobs/shell_job.py" # Make sure this file exists locally
 }
 ```
 
@@ -103,23 +216,25 @@ resource "aws_glue_job" "example" {
 
 This resource supports the following arguments:
 
-* `command` – (Required) The command of the job. Defined below.
-* `connections` – (Optional) The list of connections used for this job.
-* `default_arguments` – (Optional) The map of default arguments for this job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes. For information about how to specify and consume your own Job arguments, see the [Calling AWS Glue APIs in Python](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html) topic in the developer guide. For information about the key-value pairs that AWS Glue consumes to set up your job, see the [Special Parameters Used by AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html) topic in the developer guide.
-* `non_overridable_arguments` – (Optional) Non-overridable arguments for this job, specified as name-value pairs.
-* `description` – (Optional) Description of the job.
-* `execution_property` – (Optional) Execution property of the job. Defined below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `command` - (Required) The command of the job. Defined below.
+* `connections` - (Optional) The list of connections used for this job.
+* `default_arguments` - (Optional) The map of default arguments for this job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes. For information about how to specify and consume your own Job arguments, see the [Calling AWS Glue APIs in Python](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html) topic in the developer guide. For information about the key-value pairs that AWS Glue consumes to set up your job, see the [Special Parameters Used by AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html) topic in the developer guide.
+* `non_overridable_arguments` - (Optional) Non-overridable arguments for this job, specified as name-value pairs.
+* `description` - (Optional) Description of the job.
+* `execution_property` - (Optional) Execution property of the job. Defined below.
 * `glue_version` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `job_mode` - (Optional) Describes how a job was created. Valid values are `SCRIPT`, `NOTEBOOK` and `VISUAL`.
 * `job_run_queuing_enabled` - (Optional) Specifies whether job run queuing is enabled for the job runs for this job. A value of true means job run queuing is enabled for the job runs. If false or not populated, the job runs will not be considered for queueing.
 * `execution_class` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
-* `maintenance_window` – (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
-* `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
-* `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
-* `name` – (Required) The name you assign to this job. It must be unique in your account.
+* `maintenance_window` - (Optional) Specifies the day of the week and hour for the maintenance window for streaming jobs.
+* `max_capacity` - (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `number_of_workers` and `worker_type` arguments instead with `glue_version` `2.0` and above.
+* `max_retries` - (Optional) The maximum number of times to retry this job if it fails.
+* `name` - (Required) The name you assign to this job. It must be unique in your account.
 * `notification_property` - (Optional) Notification property of the job. Defined below.
-* `role_arn` – (Required) The ARN of the IAM role associated with this job.
+* `role_arn` - (Required) The ARN of the IAM role associated with this job.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
+* `timeout` - (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours) for `glueetl` and `pythonshell` jobs, and null (unlimited) for `gluestreaming` jobs.
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `source_control_details` - (Optional) The details for a source control configuration for a job, allowing synchronization of job artifacts to or from a remote repository. Defined below.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, G.2X, or G.025X for Spark jobs. Accepts the value Z.2X for Ray jobs.

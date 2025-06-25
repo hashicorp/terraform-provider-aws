@@ -114,9 +114,9 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 	var addon1, addon2 types.Addon
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_addon.test"
+	dataSourceNameDefault := "data.aws_eks_addon_version.default"
+	dataSourceNameLatest := "data.aws_eks_addon_version.latest"
 	addonName := "vpc-cni"
-	addonVersion1 := "v1.17.1-eksbuild.1"
-	addonVersion2 := "v1.18.5-eksbuild.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
@@ -125,10 +125,10 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonConfig_version(rName, addonName, addonVersion1),
+				Config: testAccAddonConfig_version(rName, addonName, dataSourceNameDefault),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon1),
-					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion1),
+					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceNameDefault, names.AttrVersion),
 				),
 			},
 			{
@@ -138,10 +138,10 @@ func TestAccEKSAddon_addonVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"resolve_conflicts_on_create", "resolve_conflicts_on_update"},
 			},
 			{
-				Config: testAccAddonConfig_version(rName, addonName, addonVersion2),
+				Config: testAccAddonConfig_version(rName, addonName, dataSourceNameLatest),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon2),
-					resource.TestCheckResourceAttr(resourceName, "addon_version", addonVersion2),
+					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceNameLatest, names.AttrVersion),
 				),
 			},
 		},
@@ -173,50 +173,6 @@ func TestAccEKSAddon_preserve(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"preserve"},
-			},
-		},
-	})
-}
-
-func TestAccEKSAddon_deprecated(t *testing.T) {
-	ctx := acctest.Context(t)
-	var addon1, addon2, addon3 types.Addon
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_eks_addon.test"
-	addonName := "vpc-cni"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAddonConfig_deprecated(rName, addonName, string(types.ResolveConflictsNone)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAddonExists(ctx, resourceName, &addon1),
-					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", string(types.ResolveConflictsNone)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
-			},
-			{
-				Config: testAccAddonConfig_deprecated(rName, addonName, string(types.ResolveConflictsOverwrite)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAddonExists(ctx, resourceName, &addon2),
-					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", string(types.ResolveConflictsOverwrite)),
-				),
-			},
-			{
-				Config: testAccAddonConfig_deprecated(rName, addonName, string(types.ResolveConflictsPreserve)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAddonExists(ctx, resourceName, &addon3),
-					resource.TestCheckResourceAttr(resourceName, "resolve_conflicts", string(types.ResolveConflictsPreserve)),
-				),
 			},
 		},
 	})
@@ -309,7 +265,6 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 	emptyConfigurationValues := "{}"
 	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
 	addonName := "vpc-cni"
-	addonVersion := "v1.17.1-eksbuild.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
@@ -318,7 +273,7 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, string(types.ResolveConflictsOverwrite)),
+				Config: testAccAddonConfig_configurationValues(rName, addonName, configurationValues),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
@@ -328,24 +283,24 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"resolve_conflicts"},
+				ImportStateVerifyIgnore: []string{"resolve_conflicts_on_create", "resolve_conflicts_on_update"},
 			},
 			{
-				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, updateConfigurationValues, string(types.ResolveConflictsOverwrite)),
+				Config: testAccAddonConfig_configurationValues(rName, addonName, updateConfigurationValues),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", updateConfigurationValues),
 				),
 			},
 			{
-				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, emptyConfigurationValues, string(types.ResolveConflictsOverwrite)),
+				Config: testAccAddonConfig_configurationValues(rName, addonName, emptyConfigurationValues),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", emptyConfigurationValues),
 				),
 			},
 			{
-				Config:      testAccAddonConfig_configurationValues(rName, addonName, addonVersion, invalidConfigurationValues, string(types.ResolveConflictsOverwrite)),
+				Config:      testAccAddonConfig_configurationValues(rName, addonName, invalidConfigurationValues),
 				ExpectError: regexache.MustCompile(`InvalidParameterException: ConfigurationValue provided in request is not supported`),
 			},
 		},
@@ -593,16 +548,27 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName))
 }
 
-func testAccAddonConfig_version(rName, addonName, addonVersion string) string {
+func testAccAddonConfig_version(rName, addonName, addonVersionDataSourceName string) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
+data "aws_eks_addon_version" "default" {
+  addon_name         = %[2]q
+  kubernetes_version = aws_eks_cluster.test.version
+}
+
+data "aws_eks_addon_version" "latest" {
+  addon_name         = %[2]q
+  kubernetes_version = aws_eks_cluster.test.version
+  most_recent        = true
+}
+
 resource "aws_eks_addon" "test" {
   cluster_name                = aws_eks_cluster.test.name
   addon_name                  = %[2]q
-  addon_version               = %[3]q
+  addon_version               = %[3]s.version
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "OVERWRITE"
 }
-`, rName, addonName, addonVersion))
+`, rName, addonName, addonVersionDataSourceName))
 }
 
 func testAccAddonConfig_preserve(rName, addonName string) string {
@@ -613,16 +579,6 @@ resource "aws_eks_addon" "test" {
   preserve     = true
 }
 `, rName, addonName))
-}
-
-func testAccAddonConfig_deprecated(rName, addonName, resolveConflicts string) string {
-	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
-resource "aws_eks_addon" "test" {
-  cluster_name      = aws_eks_cluster.test.name
-  addon_name        = %[2]q
-  resolve_conflicts = %[3]q
-}
-`, rName, addonName, resolveConflicts))
 }
 
 func testAccAddonConfig_podIdentityAssociation(rName, addonName, serviceAccount string) string {
@@ -734,14 +690,14 @@ resource "aws_eks_addon" "test" {
 `, rName, addonName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAddonConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
+func testAccAddonConfig_configurationValues(rName, addonName, configurationValues string) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
-  cluster_name         = aws_eks_cluster.test.name
-  addon_name           = %[2]q
-  addon_version        = %[3]q
-  configuration_values = %[4]q
-  resolve_conflicts    = %[5]q
+  cluster_name                = aws_eks_cluster.test.name
+  addon_name                  = %[2]q
+  configuration_values        = %[3]q
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
 }
-`, rName, addonName, addonVersion, configurationValues, resolveConflicts))
+`, rName, addonName, configurationValues))
 }

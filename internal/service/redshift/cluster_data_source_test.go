@@ -100,7 +100,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucketName, bucketResourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrS3KeyPrefix, "cluster-logging/"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrS3KeyPrefix, "aws_redshift_logging.test", names.AttrS3KeyPrefix),
 				),
 			},
 		},
@@ -249,16 +249,18 @@ resource "aws_redshift_cluster" "test" {
   master_username     = "foo"
   node_type           = "dc2.large"
   skip_final_snapshot = true
+}
 
-  logging {
-    bucket_name   = aws_s3_bucket.test.id
-    enable        = true
-    s3_key_prefix = "cluster-logging/"
-  }
+resource "aws_redshift_logging" "test" {
+  cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+  bucket_name        = aws_s3_bucket.test.bucket
+  s3_key_prefix      = "cluster-logging/"
 }
 
 data "aws_redshift_cluster" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+
+  depends_on = [aws_redshift_logging.test]
 }
 `, rName)
 }
@@ -288,7 +290,9 @@ data "aws_redshift_cluster" "test" {
 func testAccClusterDataSourceConfig_multiAZEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

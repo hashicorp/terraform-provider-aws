@@ -244,7 +244,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 }
 `, rName)
@@ -307,7 +307,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 
   tags = {
@@ -328,7 +328,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 
   tags = {

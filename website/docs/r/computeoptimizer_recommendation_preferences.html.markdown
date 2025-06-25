@@ -53,6 +53,7 @@ resource "aws_computeoptimizer_recommendation_preferences" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enhanced_infrastructure_metrics` - (Optional) The status of the enhanced infrastructure metrics recommendation preference. Valid values: `Active`, `Inactive`.
 * `external_metrics_preference` - (Optional) The provider of the external metrics recommendation preference. See [External Metrics Preference](#external-metrics-preference) below.
 * `inferred_workload_types` - (Optional) The status of the inferred workload types recommendation preference. Valid values: `Active`, `Inactive`.

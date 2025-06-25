@@ -10,9 +10,14 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -57,6 +62,167 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var integration awstypes.Integration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					waitUntilDBInstanceRebooted(ctx, rName),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, resourceName, &integration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSIntegration_Identity_RegionOverride(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_baseClusterWithInstance_regionOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					waitUntilDBInstanceRebootedWithRegion(ctx, rName, acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+
+			// Import command with appended "@<region>"
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Import command without appended "@<region>"
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Import block with Import ID and appended "@<region>"
+			{
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Import block with Import ID and no appended "@<region>"
+			{
+				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Import block with Resource Identity
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
 			},
 		},
 	})
@@ -190,9 +356,16 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.In
 }
 
 func waitUntilDBInstanceRebooted(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
+	return waitUntilDBInstanceRebootedWithRegion(ctx, instanceIdentifier, acctest.Region())
+}
+
+func waitUntilDBInstanceRebootedWithRegion(ctx context.Context, instanceIdentifier, region string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Wait for rebooting.
 		time.Sleep(60 * time.Second)
+
+		// Push region into Context.
+		ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
 
 		_, err := tfrds.WaitDBInstanceAvailable(ctx, acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx), instanceIdentifier, 30*time.Minute)
 
@@ -317,6 +490,129 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
+func testAccIntegrationConfig_baseClusterWithInstance_regionOverride(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets_RegionOverride(rName, 3, acctest.AlternateRegion()),
+		fmt.Sprintf(`
+locals {
+  cluster_parameters = {
+    "binlog_replication_globaldb" = {
+      value        = "0"
+      apply_method = "pending-reboot"
+    },
+    "binlog_format" = {
+      value        = "ROW"
+      apply_method = "pending-reboot"
+    },
+    "binlog_row_metadata" = {
+      value        = "full"
+      apply_method = "immediate"
+    },
+    "binlog_row_image" = {
+      value        = "full"
+      apply_method = "immediate"
+    },
+    "aurora_enhanced_binlog" = {
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+    "binlog_backup" = {
+      value        = "0"
+      apply_method = "pending-reboot"
+    },
+  }
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_security_group" "test" {
+  region = %[2]q
+
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol  = -1
+    self      = true
+    from_port = 0
+    to_port   = 0
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  region = %[2]q
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  region = %[2]q
+
+  name   = %[1]q
+  family = "aurora-mysql8.0"
+
+  dynamic "parameter" {
+    for_each = local.cluster_parameters
+    content {
+      name         = parameter.key
+      value        = parameter.value["value"]
+      apply_method = parameter.value["apply_method"]
+    }
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  region = %[2]q
+
+  cluster_identifier  = %[1]q
+  engine              = "aurora-mysql"
+  engine_version      = "8.0.mysql_aurora.3.05.2"
+  database_name       = "test"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+
+  vpc_security_group_ids          = [aws_security_group.test.id]
+  db_subnet_group_name            = aws_db_subnet_group.test.name
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+
+  apply_immediately = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  region = %[2]q
+
+  identifier         = %[1]q
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = "db.r6g.large"
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+}
+
+resource "aws_redshift_cluster" "test" {
+  region = %[2]q
+
+  cluster_identifier  = %[1]q
+  availability_zone   = data.aws_availability_zones.available.names[0]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "Mustbe8characters"
+  node_type           = "dc2.large"
+  cluster_type        = "single-node"
+  skip_final_snapshot = true
+}
+`, rName, acctest.AlternateRegion()))
+}
+
 func testAccIntegrationConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_baseClusterWithInstance(rName), fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
@@ -357,7 +653,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
   config_parameter {
     parameter_key   = "require_ssl"
-    parameter_value = "false"
+    parameter_value = "true"
   }
   config_parameter {
     parameter_key   = "search_path"
@@ -400,6 +696,95 @@ resource "aws_redshift_resource_policy" "test" {
 `, rName))
 }
 
+func testAccIntegrationConfig_base_regionOverride(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_baseClusterWithInstance_regionOverride(rName), fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  region = %[2]q
+
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  region = %[2]q
+
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = 8
+
+  publicly_accessible = false
+  subnet_ids          = aws_subnet.test[*].id
+
+  config_parameter {
+    parameter_key   = "enable_case_sensitive_identifier"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "auto_mv"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "datestyle"
+    parameter_value = "ISO, MDY"
+  }
+  config_parameter {
+    parameter_key   = "enable_user_activity_logging"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "max_query_execution_time"
+    parameter_value = "14400"
+  }
+  config_parameter {
+    parameter_key   = "query_group"
+    parameter_value = "default"
+  }
+  config_parameter {
+    parameter_key   = "require_ssl"
+    parameter_value = "true"
+  }
+  config_parameter {
+    parameter_key   = "search_path"
+    parameter_value = "$user, public"
+  }
+  config_parameter {
+    parameter_key   = "use_fips_ssl"
+    parameter_value = "false"
+  }
+}
+
+# The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
+# Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
+resource "aws_redshift_resource_policy" "test" {
+  region = %[2]q
+
+  resource_arn = aws_redshiftserverless_namespace.test.arn
+  policy = jsonencode({
+    Version = "2008-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action   = "redshift:CreateInboundIntegration"
+      Resource = aws_redshiftserverless_namespace.test.arn
+      }, {
+      Effect = "Allow"
+      Principal = {
+        Service = "redshift.amazonaws.com"
+      }
+      Action   = "redshift:AuthorizeInboundIntegration"
+      Resource = aws_redshiftserverless_namespace.test.arn
+      Condition = {
+        StringEquals = {
+          "aws:SourceArn" = aws_rds_cluster.test.arn
+        }
+      }
+    }]
+  })
+}
+`, rName, acctest.AlternateRegion()))
+}
+
 func testAccIntegrationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_rds_integration" "test" {
@@ -417,11 +802,31 @@ resource "aws_rds_integration" "test" {
 `, rName))
 }
 
+func testAccIntegrationConfig_regionOverride(rName string) string {
+	return acctest.ConfigCompose(testAccIntegrationConfig_base_regionOverride(rName), fmt.Sprintf(`
+resource "aws_rds_integration" "test" {
+  region = %[2]q
+
+  integration_name = %[1]q
+  source_arn       = aws_rds_cluster.test.arn
+  target_arn       = aws_redshiftserverless_namespace.test.arn
+
+  depends_on = [
+    aws_rds_cluster.test,
+    aws_redshiftserverless_namespace.test,
+    aws_redshiftserverless_workgroup.test,
+    aws_redshift_resource_policy.test,
+  ]
+}
+`, rName, acctest.AlternateRegion()))
+}
+
 func testAccIntegrationConfig_optional(rName string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.key_policy.json
 }
 

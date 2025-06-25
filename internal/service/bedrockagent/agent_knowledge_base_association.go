@@ -42,7 +42,7 @@ func newAgentKnowledgeBaseAssociationResource(context.Context) (resource.Resourc
 }
 
 type agentKnowledgeBaseAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentKnowledgeBaseAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -263,6 +263,7 @@ func findAgentKnowledgeBaseAssociationByThreePartKey(ctx context.Context, conn *
 }
 
 type agentKnowledgeBaseAssociationResourceModel struct {
+	framework.WithRegionModel
 	AgentID            types.String                                    `tfsdk:"agent_id"`
 	AgentVersion       types.String                                    `tfsdk:"agent_version"`
 	Description        types.String                                    `tfsdk:"description"`

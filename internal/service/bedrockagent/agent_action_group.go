@@ -47,7 +47,7 @@ func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type agentActionGroupResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentActionGroupResourceModel]
 	framework.WithTimeouts
 }
 
@@ -402,7 +402,7 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 }
 
 func (r *agentActionGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	// Set prepare_agent to default value on import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
@@ -435,6 +435,7 @@ func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.
 }
 
 type agentActionGroupResourceModel struct {
+	framework.WithRegionModel
 	ActionGroupID              types.String                                              `tfsdk:"action_group_id"`
 	ActionGroupExecutor        fwtypes.ListNestedObjectValueOf[actionGroupExecutorModel] `tfsdk:"action_group_executor"`
 	ActionGroupName            types.String                                              `tfsdk:"action_group_name"`

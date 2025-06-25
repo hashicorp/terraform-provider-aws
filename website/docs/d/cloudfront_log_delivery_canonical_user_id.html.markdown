@@ -52,10 +52,10 @@ resource "aws_s3_bucket_acl" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Name of the Region whose canonical user ID is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Canonical user ID for the AWS `awslogsdelivery` account in the region.
+* `id` - Canonical user ID for the AWS `awslogsdelivery` account in the Region.

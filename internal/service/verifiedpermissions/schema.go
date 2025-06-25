@@ -10,14 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,72 +30,83 @@ import (
 )
 
 // @FrameworkResource("aws_verifiedpermissions_schema", name="Schema")
-func newResourceSchema(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSchema{}
-
-	return r, nil
+func newSchemaResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &schemaResource{}, nil
 }
 
 const (
 	ResNamePolicyStoreSchema = "Schema"
 )
 
-type resourceSchema struct {
-	framework.ResourceWithConfigure
+type schemaResource struct {
+	framework.ResourceWithModel[schemaResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	s := schema.Schema{
+func (r *schemaResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"namespaces": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+			"definition": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[definitionData](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					names.AttrValue: schema.StringAttribute{
-						CustomType: jsontypes.NormalizedType{},
-						Required:   true,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrValue: schema.StringAttribute{
+							CustomType: jsontypes.NormalizedType{},
+							Required:   true,
+						},
 					},
 				},
 			},
 		},
 	}
-
-	response.Schema = s
 }
 
-func (r *resourceSchema) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *schemaResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := schemaSchemaV0()
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeSchemaStateFromV0,
+		},
+	}
+}
+
+func (r *schemaResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var plan resourceSchemaData
+	var plan schemaResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := &verifiedpermissions.PutSchemaInput{
-		PolicyStoreId: flex.StringFromFramework(ctx, plan.PolicyStoreID),
-		Definition:    expandDefinition(ctx, plan.Definition, &response.Diagnostics),
-	}
-
+	input := verifiedpermissions.PutSchemaInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.PutSchema(ctx, input)
-
+	out, err := conn.PutSchema(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionCreating, ResNamePolicyStoreSchema, plan.PolicyStoreID.ValueString(), err),
@@ -104,25 +115,25 @@ func (r *resourceSchema) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	state := plan
-	state.ID = flex.StringToFramework(ctx, output.PolicyStoreId)
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	plan.ID = flex.StringToFramework(ctx, out.PolicyStoreId)
 
-	state.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, output.Namespaces)
-
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *schemaResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceSchemaData
+	var state schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findSchemaByPolicyStoreID(ctx, conn, state.ID.ValueString())
+	out, err := findSchemaByPolicyStoreID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
@@ -137,45 +148,41 @@ func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	state.PolicyStoreID = flex.StringToFramework(ctx, output.PolicyStoreId)
-	state.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, output.Namespaces)
-	state.Definition = flattenDefinition(ctx, output)
-
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Misalignment between input and output data structures requires manual value assignment
+	definition, d := flattenDefinition(ctx, out)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	state.Definition = definition
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *schemaResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state, plan resourceSchemaData
+	var state, plan schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if !plan.Definition.Equal(state.Definition) {
-		input := &verifiedpermissions.PutSchemaInput{
-			PolicyStoreId: flex.StringFromFramework(ctx, state.ID),
-			Definition:    expandDefinition(ctx, plan.Definition, &response.Diagnostics),
-		}
+		input := verifiedpermissions.PutSchemaInput{}
 
+		response.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.PutSchema(ctx, input)
-
+		_, err := conn.PutSchema(ctx, &input)
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyStoreSchema, state.PolicyStoreID.ValueString(), err),
@@ -185,7 +192,6 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		out, err := findSchemaByPolicyStoreID(ctx, conn, state.ID.ValueString())
-
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyStoreSchema, state.PolicyStoreID.ValueString(), err),
@@ -194,19 +200,28 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		plan.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, out.Namespaces)
-		plan.Definition = flattenDefinition(ctx, out)
+		response.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Misalignment between input and output data structures requires manual value assignment
+		definition, d := flattenDefinition(ctx, out)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		plan.Definition = definition
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *schemaResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
-	var state resourceSchemaData
+	var state schemaResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -215,15 +230,14 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 		names.AttrID: state.ID.ValueString(),
 	})
 
-	input := &verifiedpermissions.PutSchemaInput{
+	input := verifiedpermissions.PutSchemaInput{
 		PolicyStoreId: flex.StringFromFramework(ctx, state.ID),
 		Definition: &awstypes.SchemaDefinitionMemberCedarJson{
 			Value: "{}",
 		},
 	}
 
-	_, err := conn.PutSchema(ctx, input)
-
+	_, err := conn.PutSchema(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionDeleting, ResNamePolicyStoreSchema, state.PolicyStoreID.ValueString(), err),
@@ -233,14 +247,15 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-type resourceSchemaData struct {
-	ID            types.String `tfsdk:"id"`
-	Definition    types.Object `tfsdk:"definition"`
-	Namespaces    types.Set    `tfsdk:"namespaces"`
-	PolicyStoreID types.String `tfsdk:"policy_store_id"`
+type schemaResourceModel struct {
+	framework.WithRegionModel
+	ID            types.String                                    `tfsdk:"id"`
+	Definition    fwtypes.ListNestedObjectValueOf[definitionData] `tfsdk:"definition"`
+	Namespaces    fwtypes.SetOfString                             `tfsdk:"namespaces"`
+	PolicyStoreID types.String                                    `tfsdk:"policy_store_id"`
 }
 
-type definition struct {
+type definitionData struct {
 	Value jsontypes.Normalized `tfsdk:"value"`
 }
 
@@ -267,28 +282,23 @@ func findSchemaByPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Cl
 	return out, nil
 }
 
-func expandDefinition(ctx context.Context, object types.Object, diags *diag.Diagnostics) *awstypes.SchemaDefinitionMemberCedarJson {
-	var de definition
-	diags.Append(object.As(ctx, &de, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-
-	out := &awstypes.SchemaDefinitionMemberCedarJson{
-		Value: de.Value.ValueString(),
-	}
-
-	return out
+func (m definitionData) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	return &awstypes.SchemaDefinitionMemberCedarJson{
+		Value: m.Value.ValueString(),
+	}, diags
 }
 
-func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput) types.Object {
+func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput) (fwtypes.ListNestedObjectValueOf[definitionData], diag.Diagnostics) {
+	var diags diag.Diagnostics
 	if input == nil {
-		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
+		return fwtypes.NewListNestedObjectValueOfNull[definitionData](ctx), diags
 	}
 
-	attributeTypes := fwtypes.AttributeTypesMust[definition](ctx)
-	attrs := map[string]attr.Value{}
-	attrs[names.AttrValue] = jsontypes.NewNormalizedPointerValue(input.Schema)
+	data := []definitionData{
+		{
+			Value: jsontypes.NewNormalizedPointerValue(input.Schema),
+		},
+	}
 
-	return types.ObjectValueMust(attributeTypes, attrs)
+	return fwtypes.NewListNestedObjectValueOfValueSlice(ctx, data)
 }

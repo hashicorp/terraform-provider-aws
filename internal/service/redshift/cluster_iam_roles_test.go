@@ -82,7 +82,7 @@ func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 }
 
 func testAccClusterIAMRolesConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
   path = "/"
@@ -133,7 +133,6 @@ EOF
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
@@ -142,7 +141,7 @@ resource "aws_redshift_cluster" "test" {
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterIAMRolesConfig_basic(rName string) string {

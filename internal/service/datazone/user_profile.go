@@ -33,8 +33,9 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
-func newResourceUserProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserProfile{}
+func newUserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userProfileResource{}
+
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
@@ -45,13 +46,13 @@ const (
 	ResNameUserProfile = "User Profile"
 )
 
-type resourceUserProfile struct {
-	framework.ResourceWithConfigure
+type userProfileResource struct {
+	framework.ResourceWithModel[userProfileResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
 
-func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *userProfileResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
@@ -108,9 +109,9 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 	}
 }
 
-func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *userProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var plan userProfileData
+	var plan userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,9 +162,9 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *userProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state userProfileData
+	var state userProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,10 +192,10 @@ func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state userProfileData
+	var plan, state userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -246,7 +247,7 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *userProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 3 {
@@ -286,7 +287,8 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	return out, nil
 }
 
-type userProfileData struct {
+type userProfileResourceModel struct {
+	framework.WithRegionModel
 	DomainIdentifier types.String                                   `tfsdk:"domain_identifier"`
 	Details          fwtypes.ListNestedObjectValueOf[detailsData]   `tfsdk:"details"`
 	ID               types.String                                   `tfsdk:"id"`

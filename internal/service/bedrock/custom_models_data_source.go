@@ -24,7 +24,7 @@ func newCustomModelsDataSource(context.Context) (datasource.DataSourceWithConfig
 }
 
 type customModelsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[customModelsDataSourceModel]
 }
 
 func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -91,6 +91,7 @@ func findCustomModels(ctx context.Context, conn *bedrock.Client, input *bedrock.
 }
 
 type customModelsDataSourceModel struct {
+	framework.WithRegionModel
 	ID             types.String                                             `tfsdk:"id"`
 	ModelSummaries fwtypes.ListNestedObjectValueOf[customModelSummaryModel] `tfsdk:"model_summaries"`
 }

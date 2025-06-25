@@ -46,8 +46,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDBInstance{}
+func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dbInstanceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -60,13 +60,13 @@ const (
 	ResNameDBInstance = "DB Instance"
 )
 
-type resourceDBInstance struct {
-	framework.ResourceWithConfigure
+type dbInstanceResource struct {
+	framework.ResourceWithModel[dbInstanceResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
@@ -344,7 +344,7 @@ func dbParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.S
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state resourceDBInstanceData
+	var plan, state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -356,10 +356,10 @@ func dbParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.S
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
 
-func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan resourceDBInstanceData
+	var plan dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -415,10 +415,10 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBInstanceData
+	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -450,10 +450,10 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan, state resourceDBInstanceData
+	var plan, state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -507,10 +507,10 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBInstanceData
+	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -543,7 +543,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceDBInstance) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var allocatedStorage types.Int64
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
 	if resp.Diagnostics.HasError() {
@@ -663,7 +663,8 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	return out, nil
 }
 
-type resourceDBInstanceData struct {
+type dbInstanceResourceModel struct {
+	framework.WithRegionModel
 	AllocatedStorage              types.Int64                                                   `tfsdk:"allocated_storage"`
 	ARN                           types.String                                                  `tfsdk:"arn"`
 	AvailabilityZone              types.String                                                  `tfsdk:"availability_zone"`
@@ -687,8 +688,8 @@ type resourceDBInstanceData struct {
 	TagsAll                       tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
 	Username                      types.String                                                  `tfsdk:"username"`
-	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_subnet_ids"`
+	VPCSecurityGroupIDs           fwtypes.SetOfString                                           `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetOfString                                           `tfsdk:"vpc_subnet_ids"`
 }
 
 type logDeliveryConfigurationData struct {

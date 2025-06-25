@@ -4,326 +4,382 @@ package iam
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceGroupPoliciesExclusive,
+			Factory:  newGroupPoliciesExclusiveResource,
 			TypeName: "aws_iam_group_policies_exclusive",
 			Name:     "Group Policies Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceGroupPolicyAttachmentsExclusive,
+			Factory:  newGroupPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_group_policy_attachments_exclusive",
 			Name:     "Group Policy Attachments Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newOrganizationsFeaturesResource,
 			TypeName: "aws_iam_organizations_features",
 			Name:     "Organizations Features",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceRolePoliciesExclusive,
+			Factory:  newRolePoliciesExclusiveResource,
 			TypeName: "aws_iam_role_policies_exclusive",
 			Name:     "Role Policies Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceRolePolicyAttachmentsExclusive,
+			Factory:  newRolePolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_role_policy_attachments_exclusive",
 			Name:     "Role Policy Attachments Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceUserPoliciesExclusive,
+			Factory:  newUserPoliciesExclusiveResource,
 			TypeName: "aws_iam_user_policies_exclusive",
 			Name:     "User Policies Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
-			Factory:  newResourceUserPolicyAttachmentsExclusive,
+			Factory:  newUserPolicyAttachmentsExclusiveResource,
 			TypeName: "aws_iam_user_policy_attachments_exclusive",
 			Name:     "User Policy Attachments Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceAccessKeys,
 			TypeName: "aws_iam_access_keys",
 			Name:     "Access Keys",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
 			Name:     "Account Alias",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceGroup,
 			TypeName: "aws_iam_group",
 			Name:     "Group",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceInstanceProfiles,
 			TypeName: "aws_iam_instance_profiles",
 			Name:     "Instance Profiles",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourcePolicyDocument,
 			TypeName: "aws_iam_policy_document",
 			Name:     "Policy Document",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourcePrincipalPolicySimulation,
 			TypeName: "aws_iam_principal_policy_simulation",
 			Name:     "Principal Policy Simulation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceRoles,
 			TypeName: "aws_iam_roles",
 			Name:     "Roles",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
 			Name:     "Session Context",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
 			Name:     "User SSH Key",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  dataSourceUsers,
 			TypeName: "aws_iam_users",
 			Name:     "Users",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAccessKey,
 			TypeName: "aws_iam_access_key",
 			Name:     "Access Key",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
 			Name:     "Account Alias",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceAccountPasswordPolicy,
 			TypeName: "aws_iam_account_password_policy",
 			Name:     "Account Password Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceGroup,
 			TypeName: "aws_iam_group",
 			Name:     "Group",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceGroupMembership,
 			TypeName: "aws_iam_group_membership",
 			Name:     "Group Membership",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceGroupPolicy,
 			TypeName: "aws_iam_group_policy",
 			Name:     "Group Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceGroupPolicyAttachment,
 			TypeName: "aws_iam_group_policy_attachment",
 			Name:     "Group Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "InstanceProfile",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "OIDCProvider",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Policy",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iam_policy_attachment",
 			Name:     "Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
-			},
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
 		},
 		{
 			Factory:  resourceRolePolicy,
 			TypeName: "aws_iam_role_policy",
 			Name:     "Role Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceRolePolicyAttachment,
 			TypeName: "aws_iam_role_policy_attachment",
 			Name:     "Role Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "SAMLProvider",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceSecurityTokenServicePreferences,
 			TypeName: "aws_iam_security_token_service_preferences",
 			Name:     "Security Token Service Preferences",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "ServerCertificate",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "ServiceLinkedRole",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceServiceSpecificCredential,
 			TypeName: "aws_iam_service_specific_credential",
 			Name:     "Service Specific Credential",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceSigningCertificate,
 			TypeName: "aws_iam_signing_certificate",
 			Name:     "Signing Certificate",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "User",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUserGroupMembership,
 			TypeName: "aws_iam_user_group_membership",
 			Name:     "User Group Membership",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUserLoginProfile,
 			TypeName: "aws_iam_user_login_profile",
 			Name:     "User Login Profile",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUserPolicy,
 			TypeName: "aws_iam_user_policy",
 			Name:     "User Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
 			Name:     "User Policy Attachment",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
 			Name:     "User SSH Key",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "VirtualMFADevice",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -338,6 +394,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*iam.Options){
 		iam.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *iam.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *iam.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

@@ -135,7 +135,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       data_type      = "aws:ec2:image"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 

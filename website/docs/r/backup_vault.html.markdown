@@ -23,6 +23,7 @@ resource "aws_backup_vault" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `force_destroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
 * `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
 * `name` - (Required) Name of the backup vault to create.

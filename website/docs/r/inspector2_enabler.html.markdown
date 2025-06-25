@@ -36,8 +36,9 @@ resource "aws_inspector2_enabler" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_ids` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resource_types` - (Required) Type of resources to scan.

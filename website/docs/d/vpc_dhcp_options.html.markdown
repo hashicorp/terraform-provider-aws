@@ -40,6 +40,7 @@ data "aws_vpc_dhcp_options" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dhcp_options_id` - (Optional) EC2 DHCP Options ID.
 * `filter` - (Optional) List of custom filters as described below.
 

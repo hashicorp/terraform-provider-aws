@@ -33,6 +33,7 @@ resource "aws_amplify_webhook" "master" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for a branch that is part of the Amplify app.
 * `description` - (Optional) Description for a webhook.

@@ -55,7 +55,7 @@ func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithC
 }
 
 type resourceConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceConfigurationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -492,6 +492,7 @@ func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Clie
 }
 
 type resourceConfigurationResourceModel struct {
+	framework.WithRegionModel
 	AllowAssociationToShareableServiceNetwork types.Bool                                                            `tfsdk:"allow_association_to_shareable_service_network"`
 	ARN                                       types.String                                                          `tfsdk:"arn"`
 	ID                                        types.String                                                          `tfsdk:"id"`

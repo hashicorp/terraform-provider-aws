@@ -5,7 +5,6 @@ package datasync
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -28,17 +27,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_efs", name="Location EFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationEfsOutput")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(generator=false)
 func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
 		ReadWithoutTimeout:   resourceLocationEFSRead,
 		UpdateWithoutTimeout: resourceLocationEFSUpdate,
 		DeleteWithoutTimeout: resourceLocationEFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"access_point_arn": {
@@ -190,7 +189,13 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
-	efsFileSystemARN := fmt.Sprintf("arn:%s:elasticfilesystem:%s:%s:file-system/%s", locationARN.Partition, globalIDParts[0], locationARN.AccountID, globalIDParts[1])
+	efsFileSystemARN := arn.ARN{
+		Partition: locationARN.Partition,
+		Service:   "elasticfilesystem",
+		Region:    globalIDParts[0],
+		AccountID: locationARN.AccountID,
+		Resource:  "file-system/" + globalIDParts[1],
+	}.String()
 	d.Set("efs_file_system_arn", efsFileSystemARN)
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)

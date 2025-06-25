@@ -22,14 +22,15 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Required) ID of the Data Catalog. This is typically the AWS account ID.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `data_catalog_encryption_settings` – The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
-* `id` – The ID of the Data Catalog to set the security configuration for.
+* `data_catalog_encryption_settings` - The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
+* `id` - The ID of the Data Catalog to set the security configuration for.
 
 ### data_catalog_encryption_settings
 

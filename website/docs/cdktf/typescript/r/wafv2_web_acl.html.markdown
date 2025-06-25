@@ -498,7 +498,7 @@ This resource supports the following arguments:
 * `captchaConfig` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`captchaConfig`](#captcha_config-block) below for details.
 * `challengeConfig` - (Optional) Specifies how AWS WAF should handle Challenge evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`challengeConfig`](#challenge_config-block) below for details.
 * `customResponseBody` - (Optional) Defines custom response bodies that can be referenced by `customResponse` actions. See [`customResponseBody`](#custom_response_body-block) below for details.
-* `data_protection_config` - (Optional) Specifies data protection to apply to the web request data for the web ACL. This is a web ACL level data protection option. See [`data_protection_config`](#data_protection_config-block) below for details.
+* `dataProtectionConfig` - (Optional) Specifies data protection to apply to the web request data for the web ACL. This is a web ACL level data protection option. See [`dataProtectionConfig`](#data_protection_config-block) below for details.
 * `defaultAction` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`defaultAction`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
 * `name` - (Optional, Forces new resource) Friendly name of the WebACL. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
@@ -524,27 +524,27 @@ Each `customResponseBody` block supports the following arguments:
 * `content` - (Required) Payload of the custom response.
 * `contentType` - (Required) Type of content in the payload that you are defining in the `content` argument. Valid values are `TEXT_PLAIN`, `TEXT_HTML`, or `APPLICATION_JSON`.
 
-### `data_protection_config` Block
+### `dataProtectionConfig` Block
 
-The `data_protection_config` block supports the following arguments:
+The `dataProtectionConfig` block supports the following arguments:
 
-* `data_protection` - (Required) A block for data protection configurations for specific web request field types. See [`data_protection`](#data_protection-block) block for details.
+* `dataProtection` - (Required) A block for data protection configurations for specific web request field types. See [`dataProtection`](#data_protection-block) block for details.
 
-### `data_protection` Block
+### `dataProtection` Block
 
-Each `data_protection` block supports the following arguments:
+Each `dataProtection` block supports the following arguments:
 
 * `action` - (Required) Specifies how to protect the field. Valid values are `SUBSTITUTION` or `HASH`.
 * `field` - (Required) Specifies the field type and optional keys to apply the protection behavior to. See [`field`](#field-block) block below for details.
-* `exclude_rate_based_details` - (Optional) Boolean to specify whether to also exclude any rate-based rule details from the data protection you have enabled for a given field.
-* `exclude_rule_match_details` - (Optional) Boolean to specify whether to also exclude any rule match details from the data protection you have enabled for a given field. AWS WAF logs these details for non-terminating matching rules and for the terminating matching rule.
+* `excludeRateBasedDetails` - (Optional) Boolean to specify whether to also exclude any rate-based rule details from the data protection you have enabled for a given field.
+* `excludeRuleMatchDetails` - (Optional) Boolean to specify whether to also exclude any rule match details from the data protection you have enabled for a given field. AWS WAF logs these details for non-terminating matching rules and for the terminating matching rule.
 
 ### `field` Block
 
 The `field` block supports the following arguments:
 
-* `field_type` - (Required) Specifies the web request component type to protect. Valid Values are `SINGLE_HEADER`, `SINGLE_COOKIE`, `SINGLE_QUERY_ARGUMENT`, `QUERY_STRING`, `BODY`.
-* `field_keys` - (Optional) Array of strings to specify the keys to protect for the specified field type. If you don't specify any key, then all keys for the field type are protected.
+* `fieldType` - (Required) Specifies the web request component type to protect. Valid Values are `SINGLE_HEADER`, `SINGLE_COOKIE`, `SINGLE_QUERY_ARGUMENT`, `QUERY_STRING`, `BODY`.
+* `fieldKeys` - (Optional) Array of strings to specify the keys to protect for the specified field type. If you don't specify any key, then all keys for the field type are protected.
 
 ### `defaultAction` Block
 
@@ -665,6 +665,7 @@ The processing guidance for a Rule, used by AWS WAF to determine whether a web r
 The `statement` block supports the following arguments:
 
 * `andStatement` - (Optional) Logical rule statement used to combine other rule statements with AND logic. See [`andStatement`](#and_statement-block) below for details.
+* `asnMatchStatement` - (Optional) Rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address. See [`asnMatchStatement`](#asn_match_statement-block) below for details.
 * `byteMatchStatement` - (Optional) Rule statement that defines a string match search for AWS WAF to apply to web requests. See [`byteMatchStatement`](#byte_match_statement-block) below for details.
 * `geoMatchStatement` - (Optional) Rule statement used to identify web requests based on country of origin. See [`geoMatchStatement`](#geo_match_statement-block) below for details.
 * `ipSetReferenceStatement` - (Optional) Rule statement used to detect web requests coming from particular IP addresses or address ranges. See [`ipSetReferenceStatement`](#ip_set_reference_statement-block) below for details.
@@ -687,6 +688,15 @@ A logical rule statement used to combine other rule statements with `AND` logic.
 The `andStatement` block supports the following arguments:
 
 * `statement` - (Required) Statements to combine with `AND` logic. You can use any statements that can be nested. See [`statement`](#statement-block) above for details.
+
+### `asnMatchStatement` Block
+
+A rule statement that inspects web traffic based on the Autonomous System Number (ASN) associated with the request's IP address.
+
+The `asnMatchStatement` block supports the following arguments:
+
+* `asnList` - (Required) List of Autonomous System Numbers (ASNs).
+* `forwardedIpConfig` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [`forwardedIpConfig`](#forwarded_ip_config-block) below for more details.
 
 ### `byteMatchStatement` Block
 
@@ -935,7 +945,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `fieldToMatch` block supports the following arguments:
 
-~> **Note** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `ja3Fingerprint`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, `uri_fragment` or `uriPath` can be specified. An empty configuration block `{}` should be used when specifying `allQueryArguments`, `method`, or `queryString` attributes.
+~> **Note** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `ja3Fingerprint`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, `uriFragment` or `uriPath` can be specified. An empty configuration block `{}` should be used when specifying `allQueryArguments`, `method`, or `queryString` attributes.
 
 * `allQueryArguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [`body`](#body-block) below for details.
@@ -949,7 +959,7 @@ The `fieldToMatch` block supports the following arguments:
 * `queryString` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `singleHeader` - (Optional) Inspect a single header. See [`singleHeader`](#single_header-block) below for details.
 * `singleQueryArgument` - (Optional) Inspect a single query argument. See [`singleQueryArgument`](#single_query_argument-block) below for details.
-* `uri_fragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [`uri_fragment`](#uri_fragment-block) below for details.
+* `uriFragment` - (Optional) Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource. See [`uriFragment`](#uri_fragment-block) below for details.
 * `uriPath` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
 
 ### `forwardedIpConfig` Block
@@ -1029,11 +1039,11 @@ The `singleQueryArgument` block supports the following arguments:
 
 * `name` - (Required) Name of the query header to inspect. This setting must be provided as lower case characters.
 
-### `uri_fragment` Block
+### `uriFragment` Block
 
 Inspect the part of a URL that follows the "#" symbol, providing additional information about the resource.
 
-The `uri_fragment` block supports the following arguments:
+The `uriFragment` block supports the following arguments:
 
 * `fallbackBehavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values are `MATCH` (default) and `NO_MATCH`.
 
@@ -1271,4 +1281,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-61c655f379bdfc076ec899a04650d249cf3282e480fa8453470a3f567df368d2 -->
+<!-- cache-key: cdktf-0.20.8 input-2a83f1c599b9f6e519a765ca5bece64ac86a11205b334fe9e1003e6ee3ef6da9 -->

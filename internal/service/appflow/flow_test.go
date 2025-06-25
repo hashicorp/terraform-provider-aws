@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +37,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 				Config: testAccFlowConfig_basic(rName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appflow", regexache.MustCompile(`flow/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "flow/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),

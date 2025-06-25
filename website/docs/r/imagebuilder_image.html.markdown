@@ -28,6 +28,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
@@ -42,6 +43,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
 
@@ -49,6 +51,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_scanning_enabled` - (Optional) Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image. Defaults to `false`.
 * `ecr_configuration` - (Optional) Configuration block with ECR configuration. Detailed below.
 
@@ -56,6 +59,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 
@@ -67,6 +71,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `on_failure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
 * `parallel_group` - (Optional) The parallel group in which to run a test Workflow.
 * `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.

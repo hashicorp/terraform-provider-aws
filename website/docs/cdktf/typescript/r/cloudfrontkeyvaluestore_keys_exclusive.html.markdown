@@ -87,6 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `maxBatchSize` - (Optional) Maximum resource key values pairs that will update in a single API request. AWS has a default quota of 50 keys or a 3 MB payload, whichever is reached first. Defaults to `50`.
 * `resourceKeyValuePair` - (Optional) A list of all resource key value pairs associated with the KeyValueStore.
 See [`resourceKeyValuePair`](#resource_key_value_pair) below.
 
@@ -135,4 +136,4 @@ Using `terraform import`, import AWS CloudFront KeyValueStore Key Value Pairs us
 % terraform import aws_cloudfrontkeyvaluestore_keys_exclusive.example arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7100f8669b34b39c8aae382b1cfd1270ccdaeaf587b413344342e3277116bb79 -->
+<!-- cache-key: cdktf-0.20.8 input-9d4206c2fb5eedbe5aa895264a1ce630fae8caccc816a4b22d49765414ee73dd -->

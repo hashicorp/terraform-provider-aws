@@ -449,7 +449,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "CRITICAL"
@@ -508,7 +508,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "LOW"

@@ -241,7 +241,7 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.name}:12345678-dead-beef-cafe-123456790ab"
+          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.region}:12345678-dead-beef-cafe-123456790ab"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"

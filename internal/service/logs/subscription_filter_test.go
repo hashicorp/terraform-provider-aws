@@ -413,7 +413,7 @@ resource "aws_iam_role" "cloudwatchlogs" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -433,7 +433,7 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
     {
       "Effect": "Allow",
       "Action": "firehose:*",
-      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -481,7 +481,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -710,7 +710,7 @@ resource "aws_iam_role" "test2" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""

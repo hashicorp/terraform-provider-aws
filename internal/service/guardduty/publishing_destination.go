@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_publishing_destination", name="Publishing Destination")
-func ResourcePublishingDestination() *schema.Resource {
+func resourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublishingDestinationCreate,
 		ReadWithoutTimeout:   resourcePublishingDestinationRead,

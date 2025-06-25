@@ -33,6 +33,7 @@ resource "aws_subnet" "alpha" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Required) The ID of the file system for which the mount target is intended.
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
 * `ip_address` - (Optional) The address (within the address range of the specified subnet) at

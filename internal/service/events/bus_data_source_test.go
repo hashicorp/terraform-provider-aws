@@ -100,6 +100,7 @@ data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "key_policy" {

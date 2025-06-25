@@ -15,8 +15,6 @@ To properly capture all REST API configuration in a deployment, this resource mu
 * For REST APIs that are configured via OpenAPI specification ([`aws_api_gateway_rest_api` resource](api_gateway_rest_api.html) `body` argument), no special dependency setup is needed beyond referencing the  `id` attribute of that resource unless additional Terraform resources have further customized the REST API.
 * When the REST API configuration involves other Terraform resources ([`aws_api_gateway_integration` resource](api_gateway_integration.html), etc.), the dependency setup can be done with implicit resource references in the `triggers` argument or explicit resource references using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html). The `triggers` argument should be preferred over `depends_on`, since `depends_on` can only capture dependency ordering and will not cause the resource to recreate (redeploy the REST API) with upstream configuration changes.
 
-!> **WARNING:** We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead of managing an API Gateway Stage via the `stage_name` argument of this resource. When this resource is recreated (REST API redeployment) with the `stage_name` configured, the stage is deleted and recreated. This will cause a temporary service interruption, increase Terraform plan differences, and can require a second Terraform apply to recreate any downstream stage configuration such as associated `aws_api_method_settings` resources.
-
 ~> **NOTE:** Enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) in this resource configuration to properly order redeployments in Terraform. Without enabling `create_before_destroy`, API Gateway can return errors such as `BadRequestException: Active stages pointing to this deployment must be moved or deleted` on recreation.
 
 ## Example Usage
@@ -130,35 +128,17 @@ resource "aws_api_gateway_stage" "example" {
 
 This resource supports the following arguments:
 
-* `canary_settings` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Input configuration for the canary deployment when the deployment is a canary release deployment.
-  See [`canary_settings](#canary_settings-argument-reference) below.
-  Has no effect when `stage_name` is not set.
-* `description` - (Optional) Description of the deployment
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `description` - (Optional) Description of the deployment.
 * `rest_api_id` - (Required) REST API identifier.
-* `stage_description` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Description to set on the stage managed by the `stage_name` argument.
-  Has no effect when `stage_name` is not set.
-* `stage_name` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Name of the stage to create with this deployment.
-  If the specified stage already exists, it will be updated to point to the new deployment.
-  We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
-* `variables` - (Optional) Map to set on the stage managed by the `stage_name` argument.
-
-### `canary_settings` Argument Reference
-
-* `percent_traffic` - Percentage (0.0-100.0) of traffic routed to the canary deployment.
-* `stage_variable_overrides` - Stage variable overrides used for the canary release deployment. They can override existing stage variables or add new stage variables for the canary release deployment. These stage variables are represented as a string-to-string map between stage variable names and their values.
-* `use_stage_cache` - Boolean flag to indicate whether the canary release deployment uses the stage cache or not.
+* `variables` - (Optional) Map to set on the related stage.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the deployment
-* `invoke_url` - **DEPRECATED: Use the `aws_api_gateway_stage` resource instead.** URL to invoke the API pointing to the stage,
-  e.g., `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`
-* `execution_arn` - **DEPRECATED: Use the `aws_api_gateway_stage` resource instead.** Execution ARN to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
-  when allowing API Gateway to invoke a Lambda function,
-  e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j/prod`
 * `created_date` - Creation date of the deployment
 
 ## Import
@@ -178,6 +158,6 @@ Using `terraform import`, import `aws_api_gateway_deployment` using `REST-API-ID
 % terraform import aws_api_gateway_deployment.example aabbccddee/1122334
 ```
 
-The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
+The `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.
 
 The `triggers` argument cannot be imported.

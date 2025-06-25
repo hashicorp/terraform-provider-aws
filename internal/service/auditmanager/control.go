@@ -5,27 +5,26 @@ package auditmanager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,20 +32,17 @@ import (
 
 // @FrameworkResource("aws_auditmanager_control", name="Control")
 // @Tags(identifierAttribute="arn")
-func newResourceControl(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceControl{}, nil
+func newControlResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &controlResource{}, nil
 }
 
-const (
-	ResNameControl = "Control"
-)
-
-type resourceControl struct {
-	framework.ResourceWithConfigure
+type controlResource struct {
+	framework.ResourceWithModel[controlResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *controlResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"action_plan_instructions": schema.StringAttribute{
 				Optional: true,
@@ -76,6 +72,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 		},
 		Blocks: map[string]schema.Block{
 			"control_mapping_sources": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[controlMappingSourceModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 				},
@@ -85,37 +82,24 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 							Optional: true,
 						},
 						"source_frequency": schema.StringAttribute{
-							Optional: true,
+							CustomType: fwtypes.StringEnumType[awstypes.SourceFrequency](),
+							Optional:   true,
 						},
-						"source_id": framework.IDAttribute(),
+						"source_id":      framework.IDAttribute(),
+						"source_keyword": framework.ResourceOptionalComputedListOfObjectsAttribute[sourceKeywordModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 						"source_name": schema.StringAttribute{
 							Required: true,
 						},
 						"source_set_up_option": schema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.SourceSetUpOption](),
+							Required:   true,
 						},
 						names.AttrSourceType: schema.StringAttribute{
-							Required: true,
+							CustomType: fwtypes.StringEnumType[awstypes.SourceType](),
+							Required:   true,
 						},
 						"troubleshooting_text": schema.StringAttribute{
 							Optional: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"source_keyword": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"keyword_input_type": schema.StringAttribute{
-										Required: true,
-									},
-									"keyword_value": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
 						},
 					},
 				},
@@ -124,202 +108,156 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func (r *resourceControl) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *controlResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data controlResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceControlData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input auditmanager.CreateControlInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var cms []controlMappingSourcesData
-	resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &cms, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
-	cmsInput, d := expandControlMappingSourcesCreate(ctx, cms)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateControl(ctx, &input)
 
-	in := auditmanager.CreateControlInput{
-		Name:                  plan.Name.ValueStringPointer(),
-		ControlMappingSources: cmsInput,
-		Tags:                  getTagsIn(ctx),
-	}
-	if !plan.ActionPlanInstructions.IsNull() {
-		in.ActionPlanInstructions = plan.ActionPlanInstructions.ValueStringPointer()
-	}
-	if !plan.ActionPlanTitle.IsNull() {
-		in.ActionPlanTitle = plan.ActionPlanTitle.ValueStringPointer()
-	}
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
-	}
-	if !plan.TestingInformation.IsNull() {
-		in.TestingInformation = plan.TestingInformation.ValueStringPointer()
-	}
-
-	out, err := conn.CreateControl(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameControl, plan.Name.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Control == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameControl, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Audit Manager Control (%s)", name), err.Error())
+
 		return
 	}
 
-	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Control)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	control := output.Control
+	data.ARN = fwflex.StringToFramework(ctx, control.Arn)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, control.ControlMappingSources, &data.ControlMappingSources)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.ID = fwflex.StringToFramework(ctx, control.Id)
+	data.Type = fwflex.StringValueToFramework(ctx, control.Type)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceControl) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceControlData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *controlResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data controlResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindControlByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	output, err := findControlByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.AddWarning(
-			"AWS Resource Not Found During Refresh",
-			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
-		)
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameControl, state.Name.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Control (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceControl) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var plan, state resourceControlData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *controlResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old controlResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.ControlMappingSources.Equal(state.ControlMappingSources) ||
-		!plan.ActionPlanInstructions.Equal(state.ActionPlanInstructions) ||
-		!plan.ActionPlanTitle.Equal(state.ActionPlanTitle) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.TestingInformation.Equal(state.TestingInformation) {
-		var cms []controlMappingSourcesData
-		resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &cms, false)...)
-		if resp.Diagnostics.HasError() {
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	if !new.ActionPlanInstructions.Equal(old.ActionPlanInstructions) ||
+		!new.ActionPlanTitle.Equal(old.ActionPlanTitle) ||
+		!new.ControlMappingSources.Equal(old.ControlMappingSources) ||
+		!new.Description.Equal(old.Description) ||
+		!new.Name.Equal(old.Name) ||
+		!new.TestingInformation.Equal(old.TestingInformation) {
+		var input auditmanager.UpdateControlInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		cmsInput, d := expandControlMappingSourcesUpdate(ctx, cms)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		// Additional fields.
+		input.ControlId = fwflex.StringFromFramework(ctx, new.ID)
 
-		in := &auditmanager.UpdateControlInput{
-			ControlId:             plan.ID.ValueStringPointer(),
-			Name:                  plan.Name.ValueStringPointer(),
-			ControlMappingSources: cmsInput,
-		}
-		if !plan.ActionPlanInstructions.IsNull() {
-			in.ActionPlanInstructions = plan.ActionPlanInstructions.ValueStringPointer()
-		}
-		if !plan.ActionPlanTitle.IsNull() {
-			in.ActionPlanTitle = plan.ActionPlanTitle.ValueStringPointer()
-		}
-		if !plan.Description.IsNull() {
-			in.Description = plan.Description.ValueStringPointer()
-		}
-		if !plan.TestingInformation.IsNull() {
-			in.TestingInformation = plan.TestingInformation.ValueStringPointer()
-		}
+		_, err := conn.UpdateControl(ctx, &input)
 
-		out, err := conn.UpdateControl(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Audit Manager Control (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
-		if out == nil || out.Control == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameControl, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-		state.refreshFromOutput(ctx, out.Control)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceControlData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *controlResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data controlResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.DeleteControl(ctx, &auditmanager.DeleteControlInput{
-		ControlId: state.ID.ValueStringPointer(),
-	})
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	input := auditmanager.DeleteControlInput{
+		ControlId: fwflex.StringFromFramework(ctx, data.ID),
+	}
+	_, err := conn.DeleteControl(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameControl, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Audit Manager Control (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 }
 
-func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan resourceControlData
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-		if resp.Diagnostics.HasError() {
+func (r *controlResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		var data controlResourceModel
+		response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		var planCms []controlMappingSourcesData
-		resp.Diagnostics.Append(plan.ControlMappingSources.ElementsAs(ctx, &planCms, false)...)
-		if resp.Diagnostics.HasError() {
+		controlMappingSources, diags := data.ControlMappingSources.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -327,231 +265,65 @@ func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPla
 		//
 		// Attribute level plan modifiers are applied before resource modifiers, so ID's
 		// previously in state should never be unknown.
-		for _, item := range planCms {
-			if item.SourceID.IsUnknown() {
-				resp.RequiresReplace = []path.Path{path.Root("control_mapping_sources")}
+		for _, controlMappingSource := range controlMappingSources {
+			if controlMappingSource.SourceID.IsUnknown() {
+				response.RequiresReplace = []path.Path{path.Root("control_mapping_sources")}
 			}
 		}
 	}
 }
 
-func FindControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Control, error) {
-	in := &auditmanager.GetControlInput{
+func findControlByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Control, error) {
+	input := auditmanager.GetControlInput{
 		ControlId: aws.String(id),
 	}
-	out, err := conn.GetControl(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetControl(ctx, &input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Control == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Control == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Control, nil
+	return output.Control, nil
 }
 
-var (
-	controlMappingSourceAttrTypes = map[string]attr.Type{
-		"source_description":   types.StringType,
-		"source_frequency":     types.StringType,
-		"source_id":            types.StringType,
-		"source_keyword":       types.ListType{ElemType: types.ObjectType{AttrTypes: sourceKeywordAttrTypes}},
-		"source_name":          types.StringType,
-		"source_set_up_option": types.StringType,
-		names.AttrSourceType:   types.StringType,
-		"troubleshooting_text": types.StringType,
-	}
-
-	sourceKeywordAttrTypes = map[string]attr.Type{
-		"keyword_input_type": types.StringType,
-		"keyword_value":      types.StringType,
-	}
-)
-
-type resourceControlData struct {
-	ActionPlanInstructions types.String `tfsdk:"action_plan_instructions"`
-	ActionPlanTitle        types.String `tfsdk:"action_plan_title"`
-	ARN                    types.String `tfsdk:"arn"`
-	ControlMappingSources  types.Set    `tfsdk:"control_mapping_sources"`
-	Description            types.String `tfsdk:"description"`
-	ID                     types.String `tfsdk:"id"`
-	Name                   types.String `tfsdk:"name"`
-	Tags                   tftags.Map   `tfsdk:"tags"`
-	TagsAll                tftags.Map   `tfsdk:"tags_all"`
-	TestingInformation     types.String `tfsdk:"testing_information"`
-	Type                   types.String `tfsdk:"type"`
+type controlResourceModel struct {
+	framework.WithRegionModel
+	ActionPlanInstructions types.String                                              `tfsdk:"action_plan_instructions"`
+	ActionPlanTitle        types.String                                              `tfsdk:"action_plan_title"`
+	ARN                    types.String                                              `tfsdk:"arn"`
+	ControlMappingSources  fwtypes.SetNestedObjectValueOf[controlMappingSourceModel] `tfsdk:"control_mapping_sources"`
+	Description            types.String                                              `tfsdk:"description"`
+	ID                     types.String                                              `tfsdk:"id"`
+	Name                   types.String                                              `tfsdk:"name"`
+	Tags                   tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                tftags.Map                                                `tfsdk:"tags_all"`
+	TestingInformation     types.String                                              `tfsdk:"testing_information"`
+	Type                   types.String                                              `tfsdk:"type"`
 }
 
-type controlMappingSourcesData struct {
-	SourceDescription   types.String `tfsdk:"source_description"`
-	SourceFrequency     types.String `tfsdk:"source_frequency"`
-	SourceID            types.String `tfsdk:"source_id"`
-	SourceKeyword       types.List   `tfsdk:"source_keyword"`
-	SourceName          types.String `tfsdk:"source_name"`
-	SourceSetUpOption   types.String `tfsdk:"source_set_up_option"`
-	SourceType          types.String `tfsdk:"source_type"`
-	TroubleshootingText types.String `tfsdk:"troubleshooting_text"`
+type controlMappingSourceModel struct {
+	SourceDescription   types.String                                        `tfsdk:"source_description"`
+	SourceFrequency     fwtypes.StringEnum[awstypes.SourceFrequency]        `tfsdk:"source_frequency"`
+	SourceID            types.String                                        `tfsdk:"source_id"`
+	SourceKeyword       fwtypes.ListNestedObjectValueOf[sourceKeywordModel] `tfsdk:"source_keyword"`
+	SourceName          types.String                                        `tfsdk:"source_name"`
+	SourceSetUpOption   fwtypes.StringEnum[awstypes.SourceSetUpOption]      `tfsdk:"source_set_up_option"`
+	SourceType          types.String                                        `tfsdk:"source_type"`
+	TroubleshootingText types.String                                        `tfsdk:"troubleshooting_text"`
 }
 
-type sourceKeywordData struct {
-	KeywordInputType types.String `tfsdk:"keyword_input_type"`
-	KeywordValue     types.String `tfsdk:"keyword_value"`
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceControlData) refreshFromOutput(ctx context.Context, out *awstypes.Control) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	rd.ID = types.StringValue(aws.ToString(out.Id))
-	rd.Name = types.StringValue(aws.ToString(out.Name))
-	cms, d := flattenControlMappingSources(ctx, out.ControlMappingSources)
-	diags.Append(d...)
-	rd.ControlMappingSources = cms
-
-	rd.ActionPlanInstructions = flex.StringToFramework(ctx, out.ActionPlanInstructions)
-	rd.ActionPlanTitle = flex.StringToFramework(ctx, out.ActionPlanTitle)
-	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.TestingInformation = flex.StringToFramework(ctx, out.TestingInformation)
-	rd.ARN = flex.StringToFramework(ctx, out.Arn)
-	rd.Type = types.StringValue(string(out.Type))
-
-	setTagsOut(ctx, out.Tags)
-
-	return diags
-}
-
-func expandControlMappingSourcesCreate(ctx context.Context, tfList []controlMappingSourcesData) ([]awstypes.CreateControlMappingSource, diag.Diagnostics) {
-	var ccms []awstypes.CreateControlMappingSource
-	var diags diag.Diagnostics
-
-	for _, item := range tfList {
-		new := awstypes.CreateControlMappingSource{
-			SourceName:        item.SourceName.ValueStringPointer(),
-			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
-			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
-		}
-
-		if !item.SourceDescription.IsNull() {
-			new.SourceDescription = item.SourceDescription.ValueStringPointer()
-		}
-		if !item.SourceFrequency.IsNull() {
-			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
-		}
-		if !item.SourceKeyword.IsNull() {
-			var sk []sourceKeywordData
-			diags.Append(item.SourceKeyword.ElementsAs(ctx, &sk, false)...)
-			new.SourceKeyword = expandSourceKeyword(sk)
-		}
-		if !item.TroubleshootingText.IsNull() {
-			new.TroubleshootingText = item.TroubleshootingText.ValueStringPointer()
-		}
-		ccms = append(ccms, new)
-	}
-	return ccms, diags
-}
-
-func expandControlMappingSourcesUpdate(ctx context.Context, tfList []controlMappingSourcesData) ([]awstypes.ControlMappingSource, diag.Diagnostics) {
-	var cms []awstypes.ControlMappingSource
-	var diags diag.Diagnostics
-
-	for _, item := range tfList {
-		new := awstypes.ControlMappingSource{
-			SourceId:          item.SourceID.ValueStringPointer(),
-			SourceName:        item.SourceName.ValueStringPointer(),
-			SourceSetUpOption: awstypes.SourceSetUpOption(item.SourceSetUpOption.ValueString()),
-			SourceType:        awstypes.SourceType(item.SourceType.ValueString()),
-		}
-
-		if !item.SourceDescription.IsNull() {
-			new.SourceDescription = item.SourceDescription.ValueStringPointer()
-		}
-		if !item.SourceFrequency.IsNull() {
-			new.SourceFrequency = awstypes.SourceFrequency(item.SourceFrequency.ValueString())
-		}
-		if !item.SourceKeyword.IsNull() {
-			var sk []sourceKeywordData
-			diags.Append(item.SourceKeyword.ElementsAs(ctx, &sk, false)...)
-			new.SourceKeyword = expandSourceKeyword(sk)
-		}
-		if !item.TroubleshootingText.IsNull() {
-			new.TroubleshootingText = item.TroubleshootingText.ValueStringPointer()
-		}
-		cms = append(cms, new)
-	}
-	return cms, diags
-}
-
-func expandSourceKeyword(tfList []sourceKeywordData) *awstypes.SourceKeyword {
-	if len(tfList) == 0 {
-		return nil
-	}
-	sk := tfList[0]
-	return &awstypes.SourceKeyword{
-		KeywordInputType: awstypes.KeywordInputType(sk.KeywordInputType.ValueString()),
-		KeywordValue:     sk.KeywordValue.ValueStringPointer(),
-	}
-}
-
-func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.ControlMappingSource) (types.Set, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: controlMappingSourceAttrTypes}
-
-	elems := []attr.Value{}
-	for _, source := range apiObject {
-		sk, d := flattenSourceKeyword(ctx, source.SourceKeyword)
-		diags.Append(d...)
-
-		obj := map[string]attr.Value{
-			"source_description":   flex.StringToFramework(ctx, source.SourceDescription),
-			"source_frequency":     flex.StringValueToFramework(ctx, source.SourceFrequency),
-			"source_id":            types.StringValue(aws.ToString(source.SourceId)),
-			"source_keyword":       sk,
-			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
-			"source_set_up_option": types.StringValue(string(source.SourceSetUpOption)),
-			names.AttrSourceType:   types.StringValue(string(source.SourceType)),
-			"troubleshooting_text": flex.StringToFramework(ctx, source.TroubleshootingText),
-		}
-		objVal, d := types.ObjectValue(controlMappingSourceAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
-}
-
-func flattenSourceKeyword(ctx context.Context, apiObject *awstypes.SourceKeyword) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: sourceKeywordAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
-
-	obj := map[string]attr.Value{
-		"keyword_input_type": flex.StringValueToFramework(ctx, apiObject.KeywordInputType),
-		"keyword_value":      types.StringValue(aws.ToString(apiObject.KeywordValue)),
-	}
-	objVal, d := types.ObjectValue(sourceKeywordAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+type sourceKeywordModel struct {
+	KeywordInputType fwtypes.StringEnum[awstypes.KeywordInputType] `tfsdk:"keyword_input_type"`
+	KeywordValue     types.String                                  `tfsdk:"keyword_value"`
 }

@@ -23,12 +23,12 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_instance_access_control_attributes", name="Instance Access Control Attributes")
-func ResourceAccessControlAttributes() *schema.Resource {
+func resourceInstanceAccessControlAttributes() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAccessControlAttributesCreate,
-		ReadWithoutTimeout:   resourceAccessControlAttributesRead,
-		UpdateWithoutTimeout: resourceAccessControlAttributesUpdate,
-		DeleteWithoutTimeout: resourceAccessControlAttributesDelete,
+		CreateWithoutTimeout: resourceInstanceAccessControlAttributesCreate,
+		ReadWithoutTimeout:   resourceInstanceAccessControlAttributesRead,
+		UpdateWithoutTimeout: resourceInstanceAccessControlAttributesUpdate,
+		DeleteWithoutTimeout: resourceInstanceAccessControlAttributesDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -80,7 +80,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 	}
 }
 
-func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceInstanceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -100,14 +100,14 @@ func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(instanceARN)
 
-	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
+	return append(diags, resourceInstanceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceInstanceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	output, err := FindInstanceAttributeControlAttributesByARN(ctx, conn, d.Id())
+	output, err := findInstanceAttributeControlAttributesByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Instance Access Control Attributes %s not found, removing from state", d.Id())
@@ -129,7 +129,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceInstanceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -146,10 +146,10 @@ func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "updating SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
+	return append(diags, resourceInstanceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceInstanceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func FindInstanceAttributeControlAttributesByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeInstanceAccessControlAttributeConfigurationOutput, error) {
+func findInstanceAttributeControlAttributesByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeInstanceAccessControlAttributeConfigurationOutput, error) {
 	input := &ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(arn),
 	}

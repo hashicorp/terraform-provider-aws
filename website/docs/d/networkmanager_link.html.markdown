@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_link"
 description: |-
-  Retrieve information about a link.
+  Provides details about an existing Network Manager link.
 ---
 
 # Data Source:  aws_networkmanager_link
 
-Retrieve information about a link.
+Provides details about an existing Network Manager link.
 
 ## Example Usage
 

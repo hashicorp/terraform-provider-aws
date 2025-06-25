@@ -41,7 +41,7 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type accessGrantResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantResourceModel]
 	framework.WithImportByID
 }
 
@@ -336,6 +336,7 @@ func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 }
 
 type accessGrantResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantARN                    types.String                                                            `tfsdk:"access_grant_arn"`
 	AccessGrantID                     types.String                                                            `tfsdk:"access_grant_id"`
 	AccessGrantsLocationConfiguration fwtypes.ListNestedObjectValueOf[accessGrantsLocationConfigurationModel] `tfsdk:"access_grants_location_configuration"`

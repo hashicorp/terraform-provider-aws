@@ -680,7 +680,7 @@ data "aws_iam_policy_document" "test" {
       "logs:CreateLogGroup"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
     ]
   }
   statement {
@@ -691,7 +691,7 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
     ]
   }
 }
@@ -716,7 +716,7 @@ data "aws_iam_policy_document" "experience" {
       "kendra:DescribeFaq"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
+      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
     ]
   }
 }

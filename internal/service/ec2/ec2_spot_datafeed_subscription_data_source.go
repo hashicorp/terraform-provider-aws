@@ -17,19 +17,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_spot_datafeed_subscription", name="Spot Data Feed Subscription Data Source")
-func newDataSourceSpotDataFeedSubscription(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSpotDataFeedSubscription{}, nil
+func newSpotDataFeedSubscriptionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &spotDataFeedSubscriptionDataSource{}, nil
 }
 
 const (
 	DSNameSpotDataFeedSubscription = "Spot Data Feed Subscription Data Source"
 )
 
-type dataSourceSpotDataFeedSubscription struct {
-	framework.DataSourceWithConfigure
+type spotDataFeedSubscriptionDataSource struct {
+	framework.DataSourceWithModel[spotDataFeedSubscriptionDataSourceModel]
 }
 
-func (d *dataSourceSpotDataFeedSubscription) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *spotDataFeedSubscriptionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrBucket: schema.StringAttribute{
@@ -42,11 +42,11 @@ func (d *dataSourceSpotDataFeedSubscription) Schema(ctx context.Context, req dat
 	}
 }
 
-func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *spotDataFeedSubscriptionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
 	accountID := d.Meta().AccountID(ctx)
 
-	var data dataSourceSpotDataFeedSubscriptionModel
+	var data spotDataFeedSubscriptionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -66,7 +66,8 @@ func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datas
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSpotDataFeedSubscriptionModel struct {
+type spotDataFeedSubscriptionDataSourceModel struct {
+	framework.WithRegionModel
 	Bucket types.String `tfsdk:"bucket"`
 	Prefix types.String `tfsdk:"prefix"`
 }

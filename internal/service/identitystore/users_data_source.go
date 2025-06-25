@@ -20,32 +20,29 @@ import (
 
 // @FrameworkDataSource("aws_identitystore_users", name="Users")
 func newUsersDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &UsersDataSource{}, nil
+	return &usersDataSource{}, nil
 }
 
 const (
 	DSNameUsers = "Users Data Source"
 )
 
-type UsersDataSource struct {
-	framework.DataSourceWithConfigure
+type usersDataSource struct {
+	framework.DataSourceWithModel[usersDataSourceModel]
 }
 
-func (d *UsersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *usersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"identity_store_id": schema.StringAttribute{
 				Required: true,
 			},
-			"users": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[userModel](ctx),
-				Computed:   true,
-			},
+			"users": framework.DataSourceComputedListOfObjectAttribute[userModel](ctx),
 		},
 	}
 }
 
-func (d *UsersDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *usersDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data usersDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -90,6 +87,7 @@ func findUsers(ctx context.Context, conn *identitystore.Client, input *identitys
 }
 
 type usersDataSourceModel struct {
+	framework.WithRegionModel
 	IdentityStoreID types.String                               `tfsdk:"identity_store_id"`
 	Users           fwtypes.ListNestedObjectValueOf[userModel] `tfsdk:"users"`
 }

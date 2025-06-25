@@ -49,7 +49,7 @@ func newServerlessCacheResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type serverlessCacheResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[serverlessCacheResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -535,6 +535,7 @@ func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache.Client, c
 }
 
 type serverlessCacheResourceModel struct {
+	framework.WithRegionModel
 	ARN                    types.String                                           `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimitsModel] `tfsdk:"cache_usage_limits"`
 	CreateTime             timetypes.RFC3339                                      `tfsdk:"create_time"`

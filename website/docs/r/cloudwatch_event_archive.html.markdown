@@ -47,6 +47,7 @@ resource "aws_cloudwatch_event_archive" "order" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 characters.
 * `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.
 * `description` - (Optional) The description of the new event archive.

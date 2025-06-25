@@ -25,6 +25,7 @@ resource "aws_appsync_source_api_association" "test" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the source API being merged.
 * `merged_api_arn` - (Optional) ARN of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
 * `merged_api_id` - (Optional) ID of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.

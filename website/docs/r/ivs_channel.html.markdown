@@ -24,6 +24,7 @@ resource "aws_ivs_channel" "example" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorized` - (Optional) If `true`, channel is private (enabled for playback authorization).
 * `latency_mode` - (Optional) Channel latency mode. Valid values: `NORMAL`, `LOW`.
 * `name` - (Optional) Channel name.

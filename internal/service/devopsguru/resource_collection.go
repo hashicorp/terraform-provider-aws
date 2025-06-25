@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -29,19 +28,20 @@ import (
 )
 
 // @FrameworkResource("aws_devopsguru_resource_collection", name="Resource Collection")
-func newResourceResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceResourceCollection{}, nil
+func newResourceCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceCollectionResource{}, nil
 }
 
 const (
 	ResNameResourceCollection = "Resource Collection"
 )
 
-type resourceResourceCollection struct {
-	framework.ResourceWithConfigure
+type resourceCollectionResource struct {
+	framework.ResourceWithModel[resourceCollectionResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceResourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceCollectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -103,10 +103,10 @@ func (r *resourceResourceCollection) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *resourceResourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceCollectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var plan resourceResourceCollectionData
+	var plan resourceCollectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,10 +155,10 @@ func (r *resourceResourceCollection) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceResourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceCollectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceResourceCollectionData
+	var state resourceCollectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -198,14 +198,14 @@ func (r *resourceResourceCollection) Read(ctx context.Context, req resource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceCollection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceCollectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceResourceCollection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceCollectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceResourceCollectionData
+	var state resourceCollectionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -245,10 +245,6 @@ func (r *resourceResourceCollection) Delete(ctx context.Context, req resource.De
 		)
 		return
 	}
-}
-
-func (r *resourceResourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.ResourceCollectionFilter, error) {
@@ -297,7 +293,8 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	return out.ResourceCollection, nil
 }
 
-type resourceResourceCollectionData struct {
+type resourceCollectionResourceModel struct {
+	framework.WithRegionModel
 	CloudFormation fwtypes.ListNestedObjectValueOf[cloudformationData] `tfsdk:"cloudformation"`
 	ID             types.String                                        `tfsdk:"id"`
 	Tags           fwtypes.ListNestedObjectValueOf[tagsData]           `tfsdk:"tags"`
@@ -305,7 +302,7 @@ type resourceResourceCollectionData struct {
 }
 
 type cloudformationData struct {
-	StackNames fwtypes.ListValueOf[types.String] `tfsdk:"stack_names"`
+	StackNames fwtypes.ListOfString `tfsdk:"stack_names"`
 }
 
 type tagsData struct {

@@ -27,7 +27,7 @@ const (
 
 // @SDKResource("aws_ssmincidents_response_plan", name="Response Plan")
 // @Tags(identifierAttribute="id")
-func ResourceResponsePlan() *schema.Resource {
+func resourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponsePlanCreate,
 		ReadWithoutTimeout:   resourceResponsePlanRead,
