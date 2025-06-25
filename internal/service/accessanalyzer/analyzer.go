@@ -99,7 +99,7 @@ func resourceAnalyzer() *schema.Resource {
 																ForceNew: true,
 																Elem: &schema.Schema{
 																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
+																	ValidateFunc: verify.ValidAccountID,
 																},
 															},
 															"resource_arns": {
@@ -157,7 +157,7 @@ func resourceAnalyzer() *schema.Resource {
 																MaxItems: 2000,
 																Elem: &schema.Schema{
 																	Type:         schema.TypeString,
-																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{12}$`), "Must be a 12-digit account ID"),
+																	ValidateFunc: verify.ValidAccountID,
 																},
 															},
 															names.AttrResourceTags: {
