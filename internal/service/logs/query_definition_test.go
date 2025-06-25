@@ -176,6 +176,38 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 	})
 }
 
+func TestAccLogsQueryDefinition_logGroupARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueryDefinitionConfig_logGroupARNs(queryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v),
+			},
+		},
+	})
+}
+
 func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *types.QueryDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -257,4 +289,29 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "%[1]s-${count.index}"
 }
 `, rName, count)
+}
+
+func testAccQueryDefinitionConfig_logGroupARNs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  log_group_names = [
+    aws_cloudwatch_log_group.test[0].arn,
+    aws_cloudwatch_log_group.test[1].arn,
+  ]
+
+  query_string = <<EOF
+fields @timestamp, @message
+| sort @timestamp desc
+| limit 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+`, rName)
 }
