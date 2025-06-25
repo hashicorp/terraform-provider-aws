@@ -51,11 +51,11 @@ data "archive_file" "example" {
 
 # Lambda function
 resource "aws_lambda_function" "example" {
-  filename         = data.archive_file.example.output_path
-  function_name    = "example_lambda_function"
-  role             = aws_iam_role.example.arn
-  handler          = "index.handler"
-  source_code_hash = data.archive_file.example.output_base64sha256
+  filename                = data.archive_file.example.output_path
+  function_name           = "example_lambda_function"
+  role                    = aws_iam_role.example.arn
+  handler                 = "index.handler"
+  source_code_hash_sha256 = data.archive_file.lambda.output_base64sha256
 
   runtime = "nodejs20.x"
 
@@ -425,7 +425,8 @@ The following arguments are optional:
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
-* `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_code_hash` - (Optional) Virtual attribute used to trigger update when source code changes. **NOTE** Since this is a virtual attribute, it is not refreshed via AWS API calls, and changes made outside of Terraform cannot be detected as drift.
+* `source_code_hash_sha256` – (Optional) Base64-encoded SHA256 hash of the package. **NOTE** This attribute is refreshed using the `CodeSha256` value from the AWS `GetFunction` API response. Changes made outside of Terraform can be detected as drift.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
