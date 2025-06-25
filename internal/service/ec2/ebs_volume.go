@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -189,7 +188,8 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	volume, err := findEBSVolumeByID(ctx, conn, d.Id())
 
@@ -203,14 +203,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
@@ -302,10 +295,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 			func() (any, error) {
-				waiter := ec2.NewSnapshotCompletedWaiter(conn)
-				return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
-					SnapshotIds: []string{snapshotID},
-				}, d.Timeout(schema.TimeoutDelete))
+				return waitSnapshotCompleted(ctx, conn, snapshotID, d.Timeout(schema.TimeoutDelete))
 			},
 			errCodeResourceNotReady)
 
@@ -315,11 +305,12 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
+	input := ec2.DeleteVolumeInput{
+		VolumeId: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (any, error) {
-			return conn.DeleteVolume(ctx, &ec2.DeleteVolumeInput{
-				VolumeId: aws.String(d.Id()),
-			})
+			return conn.DeleteVolume(ctx, &input)
 		},
 		errCodeVolumeInUse)
 
@@ -386,4 +377,8 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 	}
 
 	return nil
+}
+
+func ebsVolumeARN(ctx context.Context, c *conns.AWSClient, volumeID string) string {
+	return c.RegionalARN(ctx, names.EC2, "volume/"+volumeID)
 }

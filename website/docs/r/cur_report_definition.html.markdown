@@ -38,7 +38,7 @@ This resource supports the following arguments:
 * `compression` - (Required) Compression format for report. Valid values are: `GZIP`, `ZIP`, `Parquet`. If `Parquet` is used, then format must also be `Parquet`.
 * `additional_schema_elements` - (Required) A list of schema elements. Valid values are: `RESOURCES`, `SPLIT_COST_ALLOCATION_DATA`, `MANUAL_DISCOUNT_COMPATIBILITY`.
 * `s3_bucket` - (Required) Name of the existing S3 bucket to hold generated reports.
-* `s3_prefix` - (Required) Report path prefix. Limited to 256 characters.
+* `s3_prefix` - (Required) Report path prefix. Limited to 256 characters. May be empty (`""`) but the resource can then not be modified via the AWS Console.
 * `s3_region` - (Required) Region of the existing S3 bucket to hold generated reports.
 * `additional_artifacts` - (Required) A list of additional artifacts. Valid values are: `REDSHIFT`, `QUICKSIGHT`, `ATHENA`. When ATHENA exists within additional_artifacts, no other artifact type can be declared and report_versioning must be `OVERWRITE_REPORT`.
 * `refresh_closed_reports` - (Optional) Set to true to update your reports after they have been finalized if AWS detects charges related to previous months.

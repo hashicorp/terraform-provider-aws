@@ -4,14 +4,65 @@
 package retry
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 //
 // Based on https://github.com/hashicorp/terraform-plugin-sdk/helper/retry/error.go.
 //
+
+var ErrFoundResource = errors.New(`found resource`)
+
+// NotFound returns true if the error represents a "resource not found" condition.
+// Specifically, NotFound returns true if the error or a wrapped error is of type
+// retry.NotFoundError
+func NotFound(err error) bool {
+	// Handle both internal and Plugin SDK V2 error variants
+	var e1 *NotFoundError          // nosemgrep:ci.is-not-found-error
+	var e2 *sdkretry.NotFoundError // nosemgrep:ci.is-not-found-error
+	return errors.As(err, &e1) || errors.As(err, &e2)
+}
+
+// TimedOut returns true if the error represents a "wait timed out" condition.
+// Specifically, TimedOut returns true if the error matches all these conditions:
+//   - err is of type retry.TimeoutError
+//   - TimeoutError.LastError is nil
+func TimedOut(err error) bool {
+	// Handle both internal and Plugin SDK V2 error variants
+	timeoutErr, ok := err.(*TimeoutError)                //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
+	sdkTimeoutErr, sdkOk := err.(*sdkretry.TimeoutError) //nolint:errorlint // Explicitly does *not* match wrapped TimeoutErrors
+	return (ok && timeoutErr.LastError == nil) || (sdkOk && sdkTimeoutErr.LastError == nil)
+}
+
+// SetLastError sets the LastError field on the error if supported.
+// If lastErr is nil it is ignored.
+func SetLastError(err, lastErr error) {
+	// Handle both internal and Plugin SDK V2 error variants
+	switch err := err.(type) { //nolint:errorlint // Explicitly does *not* match down the error tree
+	case *TimeoutError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
+	case *sdkretry.TimeoutError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
+
+	case *UnexpectedStateError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
+	case *sdkretry.UnexpectedStateError:
+		if err.LastError == nil {
+			err.LastError = lastErr
+		}
+	}
+}
 
 type NotFoundError struct {
 	LastError error
