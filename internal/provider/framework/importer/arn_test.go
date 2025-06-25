@@ -67,7 +67,7 @@ func (c mockClient) Region(_ context.Context) string {
 func TestGlobalARN(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalARN
+	f := importer.ARN
 
 	accountID := "123456789012"
 	validARN := arn.ARN{
@@ -255,7 +255,7 @@ func regionalARNIdentitySpec(attrs ...string) inttypes.Identity {
 func TestRegionalARN(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalARN
+	f := importer.ARN
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -452,7 +452,7 @@ func regionalResourceWithGlobalARNFormatIdentitySpec(attrs ...string) inttypes.I
 func TestRegionalARNWithGlobalFormat(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalARNWithGlobalFormat
+	f := importer.ARN
 
 	accountID := "123456789012"
 	defaultRegion := "a-region-1"

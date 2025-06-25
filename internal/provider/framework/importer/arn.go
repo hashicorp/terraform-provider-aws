@@ -15,16 +15,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func GlobalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
-	importByARN(ctx, client, request, identitySpec, response)
+func ARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, _ *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+	arnARN := importByARN(ctx, client, request, identitySpec, response)
+
+	if identitySpec.IsGlobalResource {
+		return
+	} else {
+		if identitySpec.IsGlobalARNFormat {
+			setRegionFromStateOrIdentity(ctx, request, response)
+		} else {
+			setRegionFromARN(ctx, request, arnARN, response)
+		}
+	}
 }
 
-func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
-	arnARN := importByARN(ctx, client, request, identitySpec, response)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+func setRegionFromARN(ctx context.Context, request resource.ImportStateRequest, arnARN arn.ARN, response *resource.ImportStateResponse) {
 	if request.ID != "" {
 		var region types.String
 		response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(names.AttrRegion), &region)...)
@@ -49,12 +54,7 @@ func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportS
 	}
 }
 
-func RegionalARNWithGlobalFormat(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
-	importByARN(ctx, client, request, identitySpec, response)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
+func setRegionFromStateOrIdentity(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	regionPath := path.Root(names.AttrRegion)
 
 	var regionVal string
@@ -77,13 +77,13 @@ func RegionalARNWithGlobalFormat(ctx context.Context, client AWSClient, request 
 		}
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), regionVal)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, regionPath, regionVal)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if identity := response.Identity; identity != nil {
-		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrRegion), regionVal)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, regionPath, regionVal)...)
 	}
 }
 

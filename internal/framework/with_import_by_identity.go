@@ -41,11 +41,11 @@ func (w WithImportByIdentity) ImportState(ctx context.Context, request resource.
 		return
 	}
 
-	if w.identity.IsGlobalResource {
+	if w.identity.IsARN {
+		importer.ARN(ctx, client, request, &w.identity, &w.importSpec, response)
+	} else if w.identity.IsGlobalResource {
 		if w.identity.IsSingleParameter {
 			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-		} else if w.identity.IsARN {
-			importer.GlobalARN(ctx, client, request, &w.identity, &w.importSpec, response)
 		} else {
 			importer.GlobalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 		}
@@ -54,12 +54,6 @@ func (w WithImportByIdentity) ImportState(ctx context.Context, request resource.
 			importer.RegionalSingleton(ctx, client, request, &w.identity, &w.importSpec, response)
 		} else if w.identity.IsSingleParameter {
 			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-		} else if w.identity.IsARN {
-			if w.identity.IsGlobalARNFormat {
-				importer.RegionalARNWithGlobalFormat(ctx, client, request, &w.identity, &w.importSpec, response)
-			} else {
-				importer.RegionalARN(ctx, client, request, &w.identity, &w.importSpec, response)
-			}
 		} else {
 			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 		}
