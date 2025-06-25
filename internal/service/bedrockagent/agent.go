@@ -544,6 +544,16 @@ func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input 
 		})
 }
 
+func manageAgentAssociationWithRetry[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	return tfresource.RetryGWhen[T](ctx, timeout, f,
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "operation can't be performed on Agent when it is in Preparing state. Retry the request when the agent is in a valid state.") {
+				return true, err
+			}
+			return false, err
+		})
+}
+
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
