@@ -11,11 +11,6 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// TODO: Needs a better name
-type ImportByIdentityer interface {
-	SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport)
-}
-
 var _ ImportByIdentityer = &WithImportByARN{}
 
 type WithImportByARN struct {
