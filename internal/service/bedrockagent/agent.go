@@ -537,14 +537,12 @@ func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input 
 		})
 }
 
+// agentOperationWithRetry handles retrying the provided operation when the agent is in
+// a Preparing state
 func agentOperationWithRetry[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	return tfresource.RetryGWhen[T](ctx, timeout, f,
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "operation can't be performed on Agent when it is in Preparing state. Retry the request when the agent is in a valid state.") {
-				return true, err
-			}
-			return false, err
-		})
+	return tfresource.RetryGWhenIsAErrorMessageContains[T, *awstypes.ValidationException](ctx, timeout, f,
+		"in Preparing state",
+	)
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
