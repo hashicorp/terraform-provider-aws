@@ -71,6 +71,9 @@ func ComputedOnlyFromResourceSchema(rs map[string]*schema.Schema) map[string]*sc
 // IAMPolicyDocumentSchemaOptionalComputed returns the standard schema for an optional, computed IAM policy JSON document.
 var IAMPolicyDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaOptionalComputedFunc(SuppressEquivalentIAMPolicyDocuments))
 
+// JSONDocumentSchemaRequired returns the standard schema for an optional, force-new JSON document.
+var JSONDocumentSchemaOptionalForceNew = sync.OnceValue(jsonDocumentSchemaOptionalForceNewFunc(SuppressEquivalentJSONDocuments))
+
 // JSONDocumentSchemaRequired returns the standard schema for a required JSON document.
 var JSONDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentJSONDocuments))
 
@@ -83,6 +86,20 @@ func jsonDocumentSchemaOptionalComputedFunc(diffSuppressFunc schema.SchemaDiffSu
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
+}
+
+func jsonDocumentSchemaOptionalForceNewFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ForceNew:              true,
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      diffSuppressFunc,
 			DiffSuppressOnRefresh: true,

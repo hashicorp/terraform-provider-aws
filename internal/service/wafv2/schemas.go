@@ -1272,6 +1272,64 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 						},
 					},
 				},
+				"aws_managed_rules_anti_ddos_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_side_action_config": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"challenge": {
+											Type:     schema.TypeList,
+											Required: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"exempt_uri_regular_expression": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 5,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"regex_string": {
+																	Type:         schema.TypeString,
+																	Optional:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 512),
+																},
+															},
+														},
+													},
+													"sensitivity": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Default:          awstypes.SensitivityLevelHigh,
+														ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+													},
+													"usage_of_action": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.UsageOfAction](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"sensitivity_to_block": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.SensitivityLevelLow,
+								ValidateDiagFunc: enum.Validate[awstypes.SensitivityToAct](),
+							},
+						},
+					},
+				},
 				"aws_managed_rules_atp_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,

@@ -12,6 +12,9 @@ const (
 )
 
 const (
+	connectionStatusSuccessful = "successful"
+	connectionStatusTesting    = "testing"
+
 	endpointStatusDeleting = "deleting"
 
 	replicationInstanceStatusAvailable = "available"
