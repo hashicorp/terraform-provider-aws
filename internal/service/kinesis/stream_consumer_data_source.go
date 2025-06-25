@@ -15,14 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
-// @Tags(identifierAttribute="arn")
 func dataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
@@ -52,7 +50,6 @@ func dataSourceStreamConsumer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }

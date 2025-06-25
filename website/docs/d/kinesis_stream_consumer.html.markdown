@@ -29,7 +29,6 @@ This data source supports the following arguments:
 * `arn` - (Optional) ARN of the stream consumer.
 * `name` - (Optional) Name of the stream consumer.
 * `stream_arn` - (Required) ARN of the data stream the consumer is registered with.
-* `tags` - Map of tags to assigned to the stream.
 
 ## Attribute Reference
 

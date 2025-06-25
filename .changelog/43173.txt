@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_kinesis_stream_consumer: Add `tags` argument and `tags_all` attribute
-```
-
-```release-note:enhancement
-data-source/aws_kinesis_stream_consumer: Add `tags` attribute
-```
