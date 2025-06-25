@@ -423,18 +423,11 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 		AgentId: aws.String(id),
 	}
 
-	_, err := tfresource.RetryGWhen[*bedrockagent.PrepareAgentOutput](ctx, timeout,
+	_, err := agentOperationWithRetry[*bedrockagent.PrepareAgentOutput](ctx, timeout,
 		func() (*bedrockagent.PrepareAgentOutput, error) {
 			return conn.PrepareAgent(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Prepare operation can't be performed on Agent when it is in Preparing state.") {
-				return true, err
-			}
-			return false, err
-		})
-
-	//_, err := conn.PrepareAgent(ctx, input)
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf("preparing Bedrock Agent (%s): %w", id, err)
@@ -544,7 +537,7 @@ func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input 
 		})
 }
 
-func manageAgentAssociationWithRetry[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+func agentOperationWithRetry[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
 	return tfresource.RetryGWhen[T](ctx, timeout, f,
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "operation can't be performed on Agent when it is in Preparing state. Retry the request when the agent is in a valid state.") {
