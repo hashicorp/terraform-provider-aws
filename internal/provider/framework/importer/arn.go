@@ -22,7 +22,7 @@ func ARN(ctx context.Context, client AWSClient, request resource.ImportStateRequ
 		return
 	} else {
 		if identitySpec.IsGlobalARNFormat {
-			setRegionFromStateOrIdentity(ctx, request, response)
+			setRegionFromStateOrIdentity(ctx, client, request, response)
 		} else {
 			setRegionFromARN(ctx, request, arnARN, response)
 		}
@@ -54,7 +54,7 @@ func setRegionFromARN(ctx context.Context, request resource.ImportStateRequest, 
 	}
 }
 
-func setRegionFromStateOrIdentity(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func setRegionFromStateOrIdentity(ctx context.Context, client AWSClient, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	regionPath := path.Root(names.AttrRegion)
 
 	var regionVal string
@@ -64,16 +64,16 @@ func setRegionFromStateOrIdentity(ctx context.Context, request resource.ImportSt
 			return
 		}
 	} else if identity := request.Identity; identity != nil {
-		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionVal)...)
+		var regionAttr types.String
+		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionAttr)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		if regionVal == "" {
-			response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionVal)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
+		if !regionAttr.IsNull() {
+			regionVal = regionAttr.ValueString()
+		} else {
+			regionVal = client.Region(ctx)
 		}
 	}
 
