@@ -18,9 +18,7 @@ import (
 func ARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, _ *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	arnARN := importByARN(ctx, client, request, identitySpec, response)
 
-	if identitySpec.IsGlobalResource {
-		return
-	} else {
+	if !identitySpec.IsGlobalResource {
 		if identitySpec.IsGlobalARNFormat {
 			setRegionFromStateOrIdentity(ctx, client, request, response)
 		} else {
@@ -59,10 +57,12 @@ func setRegionFromStateOrIdentity(ctx context.Context, client AWSClient, request
 
 	var regionVal string
 	if request.ID != "" {
-		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionVal)...)
+		var regionAttr types.String
+		response.Diagnostics.Append(response.State.GetAttribute(ctx, regionPath, &regionAttr)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+		regionVal = regionAttr.ValueString()
 	} else if identity := request.Identity; identity != nil {
 		var regionAttr types.String
 		response.Diagnostics.Append(identity.GetAttribute(ctx, regionPath, &regionAttr)...)

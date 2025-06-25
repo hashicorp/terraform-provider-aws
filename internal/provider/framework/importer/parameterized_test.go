@@ -48,7 +48,7 @@ func regionalSingleParameterIdentitySpec(name string) inttypes.Identity {
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalSingleParameterized
+	f := importer.SingleParameterized
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -198,7 +198,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalSingleParameterized
+	f := importer.SingleParameterized
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -410,7 +410,7 @@ func globalSingleParameterIdentitySpec(name string) inttypes.Identity {
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalSingleParameterized
+	f := importer.SingleParameterized
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -526,7 +526,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalSingleParameterized
+	f := importer.SingleParameterized
 
 	accountID := "123456789012"
 	region := "a-region-1"
