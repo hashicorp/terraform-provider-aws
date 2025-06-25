@@ -101,10 +101,8 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Amplify Webhook (%s): %s", d.Id(), err)
 	}
 
-	webhookArn := aws.ToString(webhook.WebhookArn)
-
 	d.Set("app_id", webhook.AppId)
-	d.Set(names.AttrARN, webhookArn)
+	d.Set(names.AttrARN, webhook.WebhookArn)
 	d.Set("branch_name", webhook.BranchName)
 	d.Set(names.AttrDescription, webhook.Description)
 	d.Set(names.AttrURL, webhook.WebhookUrl)
