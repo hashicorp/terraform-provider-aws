@@ -2331,9 +2331,13 @@ func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *te
 			{
 				// specify the same configuration when the error occurred
 				// Non-empty plan is expected because S3 key is reset to the previous value after the error
-				Config:             testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_non_exist.zip"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_non_exist.zip"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Error occurred while GetObject. S3 Error Code: NoSuchKey. S3 Error Message: The specified key does not exist."),
 			},
 			{
 				// specify a valid S3 key
