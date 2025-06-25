@@ -723,7 +723,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 				if resource.Identity.IsARN {
 					r.Importer = arnIdentityResourceImporter(resource.Identity)
-				} else if resource.Identity.Singleton {
+				} else if resource.Identity.IsSingleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
 				} else {
 					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
