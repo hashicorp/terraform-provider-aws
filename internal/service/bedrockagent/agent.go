@@ -181,8 +181,8 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.CreateAgentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := bedrockagent.CreateAgentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -190,11 +190,10 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateAgent(ctx, input)
+	output, err := conn.CreateAgent(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent", err.Error())
-
 		return
 	}
 
@@ -202,20 +201,19 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	data.AgentID = fwflex.StringToFramework(ctx, output.Agent.AgentId)
 	data.setID()
 
-	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), timeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) create", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError("creating Agent", err.Error())
-
 			return
 		}
 	}
@@ -240,7 +238,6 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -252,13 +249,11 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", agentID), err.Error())
-
 		return
 	}
 
@@ -339,28 +334,26 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 		}
 
-		_, err := updateAgentWithRetry(ctx, conn, input, r.UpdateTimeout(ctx, new.Timeouts))
+		timeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err := updateAgentWithRetry(ctx, conn, input, timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
-
 			return
 		}
 
-		agent, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		agent, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) update", new.ID.ValueString()), err.Error())
-
 			return
 		}
 
 		if new.PrepareAgent.ValueBool() {
-			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), timeout)
 
 			if err != nil {
 				response.Diagnostics.AddError("updating Agent", err.Error())
-
 				return
 			}
 		}
@@ -393,6 +386,7 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
 	}
+
 	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -401,13 +395,11 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", agentID), err.Error())
-
 		return
 	}
 
 	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
-
 		return
 	}
 }
@@ -419,13 +411,13 @@ func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStat
 }
 
 func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	input := &bedrockagent.PrepareAgentInput{
+	input := bedrockagent.PrepareAgentInput{
 		AgentId: aws.String(id),
 	}
 
 	_, err := agentOperationWithRetry[*bedrockagent.PrepareAgentOutput](ctx, timeout,
 		func() (*bedrockagent.PrepareAgentOutput, error) {
-			return conn.PrepareAgent(ctx, input)
+			return conn.PrepareAgent(ctx, &input)
 		},
 	)
 
@@ -546,11 +538,11 @@ func agentOperationWithRetry[T any](ctx context.Context, timeout time.Duration, 
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
-	input := &bedrockagent.GetAgentInput{
+	input := bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
 
-	output, err := conn.GetAgent(ctx, input)
+	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
