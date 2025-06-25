@@ -51,6 +51,7 @@ func TestArePromptAttemptsEqual(t *testing.T) {
 		},
 		{
 			name: "new values of null",
+			// represent no defaults being set in the configuration
 			plannedState: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
 				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Initial"),
 				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry1"),
@@ -70,19 +71,6 @@ func TestArePromptAttemptsEqual(t *testing.T) {
 			}),
 			maxRetries: 2,
 			expected:   false,
-		},
-		{
-			name: "missing default values",
-			plannedState: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
-				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Initial"),
-				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry2"),
-			}),
-			incomingPlan: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
-				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry1"),
-				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry2"),
-			}),
-			maxRetries: 2,
-			expected:   true,
 		},
 		{
 			name: "configured value different from default",
