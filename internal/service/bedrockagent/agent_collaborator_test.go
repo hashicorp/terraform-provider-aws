@@ -29,7 +29,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	resourceAlias := "aws_bedrockagent_agent_alias.test"
-	resourceSuper := "aws_bedrockagent_agent.test2"
+	resourceSuper := "aws_bedrockagent_agent.test_super"
 	instruction := "tell the other agent what to do"
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
 	description := "basic claude"
@@ -48,7 +48,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_id", resourceSuper, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName+"-first"),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
 					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryToCollaborator)),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_descriptor.0.alias_arn", resourceAlias, "agent_alias_arn"),
@@ -244,7 +244,7 @@ resource "aws_bedrockagent_agent" "test_super" {
 resource "aws_bedrockagent_agent_collaborator" "test" {
   agent_id                   = aws_bedrockagent_agent.test_super.agent_id
   collaboration_instruction  = %[4]q
-  collaborator_name          = %[1]q
+  collaborator_name          = "%[1]s-first"
   relay_conversation_history = "TO_COLLABORATOR"
 
   agent_descriptor {
@@ -255,7 +255,7 @@ resource "aws_bedrockagent_agent_collaborator" "test" {
 resource "aws_bedrockagent_agent_collaborator" "test3" {
   agent_id                   = aws_bedrockagent_agent.test_super.agent_id
   collaboration_instruction  = %[4]q
-  collaborator_name          = %[1]q
+  collaborator_name          = "%[1]s-second"
   relay_conversation_history = "TO_COLLABORATOR"
 
   agent_descriptor {
