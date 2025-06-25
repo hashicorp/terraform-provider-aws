@@ -61,12 +61,6 @@ func resourceTableReplica() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"consistency_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.MultiRegionConsistencyEventual,
-				ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
-			},
 			"deletion_protection_enabled": { // direct to replica
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -136,12 +130,6 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		replicaInput.TableClassOverride = awstypes.TableClass(v.(string))
 	}
 
-	var mrscOption = awstypes.MultiRegionConsistencyEventual
-	// Handle Multi-Region Strong Consistency (MRSC)
-	if v, ok := d.GetOk("consistency_mode"); ok && v.(string) == (string(awstypes.MultiRegionConsistencyStrong)) {
-		mrscOption = awstypes.MultiRegionConsistencyStrong
-	}
-
 	tableName, err := tableNameFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
@@ -152,7 +140,6 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		ReplicaUpdates: []awstypes.ReplicationGroupUpdate{{
 			Create: replicaInput,
 		}},
-		MultiRegionConsistency: mrscOption,
 	}
 
 	err = retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
@@ -277,14 +264,6 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("table_class_override", nil)
 	}
 
-	// Check for MRSC configuration
-	if replica.ReplicaTableClassSummary != nil &&
-		replica.ReplicaTableClassSummary.TableClass == awstypes.TableClassStandard {
-		d.Set("consistency_mode", awstypes.MultiRegionConsistencyStrong)
-	} else {
-		d.Set("consistency_mode", awstypes.MultiRegionConsistencyEventual)
-	}
-
 	return append(diags, resourceTableReplicaReadReplica(ctx, d, meta)...)
 }
 
@@ -368,18 +347,6 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if d.Get(names.AttrKMSKeyARN).(string) != dk {
 			viaMainChanges = true
 			viaMainInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
-		}
-	}
-
-	// Handle MRSC consistency mode changes
-	if d.HasChange("consistency_mode") && !d.IsNewResource() {
-		viaMainChanges = true
-
-		if d.Get("consistency_mode").(string) == (string(awstypes.MultiRegionConsistencyStrong)) {
-			viaMainInput.TableClassOverride = awstypes.TableClassStandard
-		} else {
-			// When changing from STRONGLY_CONSISTENT to EVENTUALLY_CONSISTENT
-			// We need to remove the table class override
 		}
 	}
 
