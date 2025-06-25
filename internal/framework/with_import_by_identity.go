@@ -44,24 +44,26 @@ func (w WithImportByIdentity) ImportState(ctx context.Context, request resource.
 	if w.identity.IsGlobalResource {
 		if w.identity.IsSingleParameter {
 			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-			return
-		} else if !w.identity.IsARN {
+		} else if w.identity.IsARN {
+			importer.GlobalARN(ctx, client, request, &w.identity, &w.importSpec, response)
+		} else {
 			importer.GlobalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-			return
 		}
 	} else {
 		if w.identity.IsSingleton {
 			importer.RegionalSingleton(ctx, client, request, &w.identity, &w.importSpec, response)
-			return
 		} else if w.identity.IsSingleParameter {
 			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-			return
-		} else if !w.identity.IsARN {
+		} else if w.identity.IsARN {
+			if w.identity.IsGlobalARNFormat {
+				importer.RegionalARNWithGlobalFormat(ctx, client, request, &w.identity, &w.importSpec, response)
+			} else {
+				importer.RegionalARN(ctx, client, request, &w.identity, &w.importSpec, response)
+			}
+		} else {
 			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
-			return
 		}
 	}
-	response.Diagnostics.AddError("oh no baby", "what is you doing?")
 }
 
 func (w WithImportByIdentity) IdentitySpec() inttypes.Identity {
