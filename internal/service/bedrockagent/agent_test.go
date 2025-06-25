@@ -656,27 +656,17 @@ resource "aws_bedrock_guardrail" "test" {
 `, rName)
 }
 
-func testAccAgentConfig_withId(id, rName, model, description string, withBase bool) string {
-	agentConfig := fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "%[1]s" {
-  agent_name                  = %[2]q
+func testAccAgentConfig_basic(rName, model, description string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
   agent_resource_role_arn     = aws_iam_role.test_agent.arn
-  description                 = %[4]q
+  description                 = %[3]q
   idle_session_ttl_in_seconds = 500
   instruction                 = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model            = %[3]q
+  foundation_model            = %[2]q
 }
-`, id, rName, model, description)
-
-	if withBase {
-		return acctest.ConfigCompose(testAccAgent_base(rName, model), agentConfig)
-	} else {
-		return agentConfig
-	}
-}
-
-func testAccAgentConfig_basic(rName, model, description string) string {
-	return testAccAgentConfig_withId("test", rName, model, description, true)
+`, rName, model, description))
 }
 
 func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
