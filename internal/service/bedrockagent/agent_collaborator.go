@@ -146,7 +146,16 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	output, err := conn.AssociateAgentCollaborator(ctx, &input)
+	output, err := tfresource.RetryGWhen[*bedrockagent.AssociateAgentCollaboratorOutput](ctx, r.CreateTimeout(ctx, data.Timeouts),
+		func() (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
+			return conn.AssociateAgentCollaborator(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "AssociateAgentCollaborator operation can't be performed when Agent is in Preparing state. Retry the request when the agent is in a valid state.") {
+				return true, err
+			}
+			return false, err
+		})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Collaborator", err.Error())
@@ -240,7 +249,16 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 			return
 		}
 
-		_, err := conn.UpdateAgentCollaborator(ctx, &input)
+		_, err := tfresource.RetryGWhen[*bedrockagent.UpdateAgentCollaboratorOutput](ctx, r.CreateTimeout(ctx, new.Timeouts),
+			func() (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
+				return conn.UpdateAgentCollaborator(ctx, &input)
+			},
+			func(err error) (bool, error) {
+				if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "UpdateAgentCollaborator operation can't be performed when Agent is in Preparing state. Retry the request when the agent is in a valid state.") {
+					return true, err
+				}
+				return false, err
+			})
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Collaborator (%s)", new.ID.ValueString()), err.Error())
@@ -273,7 +291,17 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 		AgentVersion:   data.AgentVersion.ValueStringPointer(),
 		CollaboratorId: data.CollaboratorID.ValueStringPointer(),
 	}
-	_, err := conn.DisassociateAgentCollaborator(ctx, &input)
+
+	_, err := tfresource.RetryGWhen[*bedrockagent.DisassociateAgentCollaboratorOutput](ctx, r.CreateTimeout(ctx, data.Timeouts),
+		func() (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
+			return conn.DisassociateAgentCollaborator(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "DisassociateAgentCollaborator operation can't be performed when Agent is in Preparing state. Retry the request when the agent is in a valid state.") {
+				return true, err
+			}
+			return false, err
+		})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

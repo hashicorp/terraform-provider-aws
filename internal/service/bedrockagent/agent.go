@@ -339,7 +339,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 		}
 
-		_, err := conn.UpdateAgent(ctx, &input)
+		_, err := updateAgentWithRetry(ctx, conn, input, r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
@@ -423,7 +423,18 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 		AgentId: aws.String(id),
 	}
 
-	_, err := conn.PrepareAgent(ctx, input)
+	_, err := tfresource.RetryGWhen[*bedrockagent.PrepareAgentOutput](ctx, timeout,
+		func() (*bedrockagent.PrepareAgentOutput, error) {
+			return conn.PrepareAgent(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Prepare operation can't be performed on Agent when it is in Preparing state.") {
+				return true, err
+			}
+			return false, err
+		})
+
+	//_, err := conn.PrepareAgent(ctx, input)
 
 	if err != nil {
 		return nil, fmt.Errorf("preparing Bedrock Agent (%s): %w", id, err)
@@ -474,7 +485,8 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 		// Set Collaboration to DISABLED so the agent can be prepared
 		updateInput.AgentCollaboration = awstypes.AgentCollaborationDisabled
 
-		_, err = conn.UpdateAgent(ctx, &updateInput)
+		_, err = updateAgentWithRetry(ctx, conn, updateInput, timeout)
+
 		if err != nil {
 			diags.AddError("failed to update agent", err.Error())
 			return diags
@@ -497,7 +509,7 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 
 		// Set Collaboration back to SUPERVISOR
 		updateInput.AgentCollaboration = awstypes.AgentCollaborationSupervisor
-		_, err = conn.UpdateAgent(ctx, &updateInput)
+		_, err = updateAgentWithRetry(ctx, conn, updateInput, timeout)
 		if err != nil {
 			diags.AddError("failed to update agent", err.Error())
 			return diags
@@ -514,6 +526,23 @@ func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockag
 		}
 	}
 	return diags
+}
+
+func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input bedrockagent.UpdateAgentInput, timeout time.Duration) (*bedrockagent.UpdateAgentOutput, error) {
+	return tfresource.RetryGWhen[*bedrockagent.UpdateAgentOutput](ctx, timeout,
+		func() (*bedrockagent.UpdateAgentOutput, error) {
+			return conn.UpdateAgent(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Exceeded the number of retries on OptLock failure. Too many concurrent requests. Retry the request later.") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Update operation can't be performed on Agent when it is in Preparing state. Retry the request when the agent is in a valid state.") {
+				return true, err
+			}
+			return false, err
+		})
+
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
