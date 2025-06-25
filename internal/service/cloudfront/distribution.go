@@ -889,6 +889,10 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"anycast_ip_list_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -1020,6 +1024,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
 	}
 	d.Set("web_acl_id", distributionConfig.WebACLId)
+	if distributionConfig.AnycastIpListId != nil {
+		d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
+	}
 
 	return diags
 }
@@ -1344,6 +1351,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.Aliases = expandAliases(v.(*schema.Set).List())
 	} else {
 		apiObject.Aliases = expandAliases([]any{})
+	}
+
+	if v, ok := d.GetOk("anycast_ip_list_id"); ok {
+		apiObject.AnycastIpListId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("caller_reference"); ok {
