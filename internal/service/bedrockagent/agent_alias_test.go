@@ -339,7 +339,6 @@ resource "aws_bedrockagent_agent_alias" "%[1]s" {
   description      = "Test Alias"
 }
 `, id, rName)
-
 }
 
 func testAccAgentAliasConfig_alias(rName string) string {

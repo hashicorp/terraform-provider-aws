@@ -88,7 +88,7 @@ func TestAccBedrockAgentAgentCollaborator_update(t *testing.T) {
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
-					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName+"-first"),
 					resource.TestCheckResourceAttr(resourceName, "collaboration_instruction", instruction),
 					resource.TestCheckResourceAttr(resourceName, "relay_conversation_history", string(awstypes.RelayConversationHistoryToCollaborator)),
 					resource.TestCheckResourceAttrPair(resourceName, "agent_descriptor.0.alias_arn", resourceAlias, "agent_alias_arn"),
@@ -270,7 +270,7 @@ func testAccAgentCollaboratorConfig_update(rName, model, description, instructio
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, model, description),
 		testAccAgentAliasConfig_alias(rName),
 		fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test2" {
+resource "aws_bedrockagent_agent" "test_super" {
   agent_collaboration         = "SUPERVISOR"
   agent_name                  = "%[1]s-super"
   agent_resource_role_arn     = aws_iam_role.test_agent.arn
@@ -282,7 +282,7 @@ resource "aws_bedrockagent_agent" "test2" {
 }
 
 resource "aws_bedrockagent_agent_collaborator" "test" {
-  agent_id                   = aws_bedrockagent_agent.test2.agent_id
+  agent_id                   = aws_bedrockagent_agent.test_super.agent_id
   collaboration_instruction  = %[4]q
   collaborator_name          = %[1]q
   relay_conversation_history = "DISABLED"

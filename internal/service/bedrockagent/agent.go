@@ -542,7 +542,6 @@ func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input 
 			}
 			return false, err
 		})
-
 }
 
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {

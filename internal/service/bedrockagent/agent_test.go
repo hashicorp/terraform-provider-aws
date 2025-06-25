@@ -657,7 +657,6 @@ resource "aws_bedrock_guardrail" "test" {
 }
 
 func testAccAgentConfig_withId(id, rName, model, description string, withBase bool) string {
-
 	agentConfig := fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "%[1]s" {
   agent_name                  = %[2]q
