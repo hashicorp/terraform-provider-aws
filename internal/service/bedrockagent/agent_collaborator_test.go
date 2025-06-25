@@ -228,8 +228,9 @@ func agentCollaboratorDisappearsStateFunc(ctx context.Context, state *tfsdk.Stat
 func testAccAgentCollaboratorConfig_basic(rName, model, description, instruction string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, model, description),
 		testAccAgentAliasConfig_alias(rName),
+		testAccAgentAliasConfig_basicId("test3", rName+"-collab", model, false),
 		fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test2" {
+resource "aws_bedrockagent_agent" "test_super" {
   agent_collaboration         = "SUPERVISOR"
   agent_name                  = "%[1]s-super"
   agent_resource_role_arn     = aws_iam_role.test_agent.arn
@@ -241,7 +242,7 @@ resource "aws_bedrockagent_agent" "test2" {
 }
 
 resource "aws_bedrockagent_agent_collaborator" "test" {
-  agent_id                   = aws_bedrockagent_agent.test2.agent_id
+  agent_id                   = aws_bedrockagent_agent.test_super.agent_id
   collaboration_instruction  = %[4]q
   collaborator_name          = %[1]q
   relay_conversation_history = "TO_COLLABORATOR"
@@ -250,6 +251,18 @@ resource "aws_bedrockagent_agent_collaborator" "test" {
     alias_arn = aws_bedrockagent_agent_alias.test.agent_alias_arn
   }
 }
+
+resource "aws_bedrockagent_agent_collaborator" "test3" {
+  agent_id                   = aws_bedrockagent_agent.test_super.agent_id
+  collaboration_instruction  = %[4]q
+  collaborator_name          = %[1]q
+  relay_conversation_history = "TO_COLLABORATOR"
+
+  agent_descriptor {
+    alias_arn = aws_bedrockagent_agent_alias.test3.agent_alias_arn
+  }
+}
+
 `, rName, model, description, instruction))
 }
 

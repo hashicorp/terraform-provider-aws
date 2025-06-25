@@ -323,18 +323,27 @@ resource "aws_bedrock_provisioned_model_throughput" "test" {
 `, rName)
 }
 
+func testAccAgentAliasConfig_basicId(id, rName, model string, withBase bool) string {
+	return acctest.ConfigCompose(testAccAgentConfig_withId(id, rName, model, "basic claude", withBase), testAccAgentAliasConfig_aliasId(id, rName))
+}
+
 func testAccAgentAliasConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), testAccAgentAliasConfig_alias(rName))
+	return testAccAgentAliasConfig_basicId("test", rName, "anthropic.claude-v2", true)
+}
+
+func testAccAgentAliasConfig_aliasId(id, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagent_agent_alias" "%[1]s" {
+  agent_alias_name = %[2]q
+  agent_id         = aws_bedrockagent_agent.%[1]s.agent_id
+  description      = "Test Alias"
+}
+`, id, rName)
+
 }
 
 func testAccAgentAliasConfig_alias(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrockagent_agent_alias" "test" {
-  agent_alias_name = %[1]q
-  agent_id         = aws_bedrockagent_agent.test.agent_id
-  description      = "Test Alias"
-}
-`, rName)
+	return testAccAgentAliasConfig_aliasId("test", rName)
 }
 
 func testAccAgentAliasConfig_routing(rName, version string) string {
