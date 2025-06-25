@@ -20,17 +20,17 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *kinesis.Client, identifier string, optFns ...func(*kinesis.Options)) (tftags.KeyValueTags, error) {
-	input := kinesis.ListTagsForStreamInput{
-		StreamName: aws.String(identifier),
+	input := kinesis.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists kinesis service tags and set them in Context.
@@ -67,8 +67,8 @@ func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from kinesis service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from kinesis service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +93,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets kinesis service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -109,34 +109,30 @@ func updateTags(ctx context.Context, conn *kinesis.Client, identifier string, ol
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Kinesis)
 	if len(removedTags) > 0 {
-		for _, removedTags := range removedTags.Chunks(10) {
-			input := kinesis.RemoveTagsFromStreamInput{
-				StreamName: aws.String(identifier),
-				TagKeys:    removedTags.Keys(),
-			}
+		input := kinesis.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     removedTags.Keys(),
+		}
 
-			_, err := conn.RemoveTagsFromStream(ctx, &input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
-			if err != nil {
-				return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-			}
+		if err != nil {
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Kinesis)
 	if len(updatedTags) > 0 {
-		for _, updatedTags := range updatedTags.Chunks(10) {
-			input := kinesis.AddTagsToStreamInput{
-				StreamName: aws.String(identifier),
-				Tags:       updatedTags.IgnoreAWS().Map(),
-			}
+		input := kinesis.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAWS().Map(),
+		}
 
-			_, err := conn.AddTagsToStream(ctx, &input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
-			if err != nil {
-				return fmt.Errorf("tagging resource (%s): %w", identifier, err)
-			}
+		if err != nil {
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 
