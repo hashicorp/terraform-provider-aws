@@ -808,7 +808,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 				importSpec.SetIDAttr = true
 			}
 
-			response := importByIDWithState(ctx, importer.RegionalMultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
+			response := importByIDWithState(ctx, importer.MultipleParameterized, &client, schema, tc.inputID, stateAttrs, identitySchema, identitySpec, &importSpec)
 			if tc.expectError {
 				if !response.Diagnostics.HasError() {
 					t.Fatal("Expected error, got none")
@@ -868,7 +868,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalMultipleParameterized
+	f := importer.MultipleParameterized
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -1086,13 +1086,13 @@ func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identi
 	for _, attrName := range attrNames {
 		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
 	}
-	return inttypes.RegionalParameterizedIdentity(attrs)
+	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalMultipleParameterized
+	f := importer.MultipleParameterized
 
 	accountID := "123456789012"
 
@@ -1232,7 +1232,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalMultipleParameterized
+	f := importer.MultipleParameterized
 
 	accountID := "123456789012"
 
