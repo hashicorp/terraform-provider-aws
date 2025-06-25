@@ -34,7 +34,7 @@ func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithCon
 
 type accountRegistrationResource struct {
 	framework.ResourceWithModel[accountRegistrationResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *accountRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
