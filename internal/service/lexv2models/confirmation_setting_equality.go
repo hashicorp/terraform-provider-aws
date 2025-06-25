@@ -96,6 +96,7 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 			return false, diags
 		}
 
+		pasExists := promptAttemptsSpecificationDefaults(ctx, maxRetries)
 		var hasDefaults, areEqual bool
 		for _, value := range oldPromptAttemptSpecification {
 			key := value.MapBlockKey.ValueString()
@@ -107,7 +108,7 @@ func arePromptAttemptsEqual(ctx context.Context, oldAttempts, newAttempts fwtype
 				areEqual = arePromptAttemptValuesEqual(*newPromptAttemptSpecification[index], *value)
 			}
 
-			_, ok := promptAttemptSpecificationDefaults(ctx, key, maxRetries)
+			_, ok := pasExists(key)
 			hasDefaults = ok
 		}
 
@@ -126,22 +127,23 @@ func arePromptAttemptValuesEqual(oldItem, newItem PromptAttemptsSpecification) b
 		oldItem.TextInputSpecification.Equal(newItem.TextInputSpecification)
 }
 
-// promptAttemptSpecificationDefaults returns the default PromptAttemptsSpecification for a given key
-func promptAttemptSpecificationDefaults(ctx context.Context, key string, maxRetries int64) (*PromptAttemptsSpecification, bool) {
+func promptAttemptsSpecificationDefaults(ctx context.Context, maxRetries int64) func(string) (*PromptAttemptsSpecification, bool) {
 	defaults := map[string]*PromptAttemptsSpecification{
 		"Initial": defaultPromptAttemptsSpecification(ctx, "Initial"),
 	}
 
-	for i := 1; i <= int(maxRetries); i++ {
-		k := fmt.Sprintf("Retry%d", i)
+	for i := range maxRetries {
+		k := fmt.Sprintf("Retry%d", i+1)
 		defaults[k] = defaultPromptAttemptsSpecification(ctx, PromptAttemptsType(k))
 	}
 
-	if val, ok := defaults[key]; ok {
-		return val, true
-	}
+	return func(key string) (*PromptAttemptsSpecification, bool) {
+		if val, ok := defaults[key]; ok {
+			return val, true
+		}
 
-	return nil, false
+		return nil, false
+	}
 }
 
 func defaultPromptAttemptsSpecification(ctx context.Context, mapBlockKey PromptAttemptsType) *PromptAttemptsSpecification {

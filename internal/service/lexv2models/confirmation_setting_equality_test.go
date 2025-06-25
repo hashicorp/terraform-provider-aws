@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 )
@@ -82,6 +83,51 @@ func TestArePromptAttemptsEqual(t *testing.T) {
 			}),
 			maxRetries: 2,
 			expected:   true,
+		},
+		{
+			name: "configured value different from default",
+			plannedState: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
+				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Initial"),
+				tflexv2models.DefaultPromptAttemptsSpecification(ctx, "Retry1"),
+			}),
+			incomingPlan: fwtypes.NewSetNestedObjectValueOfSliceMust[tflexv2models.PromptAttemptsSpecification](ctx, []*tflexv2models.PromptAttemptsSpecification{
+				{
+					MapBlockKey: fwtypes.StringEnumValue(tflexv2models.PromptAttemptsType("Initial")),
+					AllowedInputTypes: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tflexv2models.AllowedInputTypes{
+						{
+							AllowAudioInput: fwflex.BoolValueToFramework(ctx, true),
+							AllowDTMFInput:  fwflex.BoolValueToFramework(ctx, true),
+						},
+					}),
+					AllowInterrupt: fwflex.BoolValueToFramework(ctx, false),
+					AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tflexv2models.AudioAndDTMFInputSpecification{
+						{
+							StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 4000), //nolint:mnd
+							AudioSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tflexv2models.AudioSpecification{
+								{
+									EndTimeoutMs: fwflex.Int64ValueToFramework(ctx, 640),   //nolint:mnd
+									MaxLengthMs:  fwflex.Int64ValueToFramework(ctx, 15000), //nolint:mnd
+								},
+							}),
+							DTMFSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tflexv2models.DTMFSpecification{
+								{
+									DeletionCharacter: fwflex.StringValueToFramework(ctx, "*"),
+									EndCharacter:      fwflex.StringValueToFramework(ctx, "#"),
+									EndTimeoutMs:      fwflex.Int64ValueToFramework(ctx, 5000), //nolint:mnd
+									MaxLength:         fwflex.Int64ValueToFramework(ctx, 513),  //nolint:mnd
+								},
+							}),
+						},
+					}),
+					TextInputSpecification: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*tflexv2models.TextInputSpecification{
+						{
+							StartTimeoutMs: fwflex.Int64ValueToFramework(ctx, 30000), //nolint:mnd
+						},
+					}),
+				},
+			}),
+			maxRetries: 2,
+			expected:   false,
 		},
 	}
 
