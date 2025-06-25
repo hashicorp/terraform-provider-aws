@@ -61,12 +61,6 @@ func resourceArchive() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validArchiveName,
-			},
 			"kms_key_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -74,6 +68,12 @@ func resourceArchive() *schema.Resource {
 					validation.StringLenBetween(0, 2048),
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-/:]*$`), ""),
 				),
+			},
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validArchiveName,
 			},
 			"retention_days": {
 				Type:     schema.TypeInt,
