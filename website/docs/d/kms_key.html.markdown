@@ -55,7 +55,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloud_hsm_cluster_id`: The cluster ID of the AWS CloudHSM cluster that contains the key material for the KMS key.
 * `creation_date`: The date and time when the key was created
 * `custom_key_store_id`: A unique identifier for the custom key store that contains the KMS key.
-* `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
+* `customer_master_key_spec`: See `key_spec`.
 * `deletion_date`: The date and time after which AWS KMS deletes the key. This value is present only when `key_state` is `PendingDeletion`, otherwise this value is 0
 * `description`: The description of the key.
 * `enabled`: Specifies whether the key is enabled. When `key_state` is `Enabled` this value is true, otherwise it is false
