@@ -16,7 +16,7 @@ type ImportByIdentityer interface {
 	SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport)
 }
 
-var _ ImportByIdentityer = &WithImportByParameterizedIdentity{}
+var _ ImportByIdentityer = &WithImportByIdentity{}
 
 type WithImportByIdentity struct {
 	identity   inttypes.Identity
@@ -41,9 +41,23 @@ func (w WithImportByIdentity) ImportState(ctx context.Context, request resource.
 		return
 	}
 
-	if !w.identity.IsGlobalResource {
+	if w.identity.IsGlobalResource {
+		if w.identity.IsSingleParameter {
+			importer.GlobalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		} else if !w.identity.IsARN {
+			importer.GlobalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		}
+	} else {
 		if w.identity.IsSingleton {
 			importer.RegionalSingleton(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		} else if w.identity.IsSingleParameter {
+			importer.RegionalSingleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
+			return
+		} else if !w.identity.IsARN {
+			importer.RegionalMultipleParameterized(ctx, client, request, &w.identity, &w.importSpec, response)
 			return
 		}
 	}

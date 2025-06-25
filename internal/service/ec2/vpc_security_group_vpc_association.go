@@ -53,7 +53,7 @@ type securityGroupVPCAssociationResource struct {
 	framework.ResourceWithModel[securityGroupVPCAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
-	framework.WithImportByParameterizedIdentity
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupVPCAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
