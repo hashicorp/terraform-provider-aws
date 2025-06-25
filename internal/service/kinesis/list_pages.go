@@ -31,3 +31,22 @@ func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.L
 	}
 	return nil
 }
+
+func listTagsForStreamPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListTagsForStreamInput, fn func(*kinesis.ListTagsForStreamOutput, bool) bool) error {
+	for {
+		output, err := conn.ListTagsForStream(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := !aws.ToBool(output.HasMoreTags)
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		if n := len(output.Tags); n > 0 {
+			input.ExclusiveStartTagKey = output.Tags[n-1].Key
+		}
+	}
+	return nil
+}
