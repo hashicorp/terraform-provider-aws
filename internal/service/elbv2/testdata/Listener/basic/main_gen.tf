@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lb_listener" "test" {
-{{- template "region" }}
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
@@ -8,12 +10,9 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
-
-{{- template "tags" . }}
 }
 
 resource "aws_lb" "test" {
-{{- template "region" }}
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -24,7 +23,6 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-{{- template "region" }}
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
@@ -43,7 +41,6 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_security_group" "test" {
-{{- template "region" }}
   name        = var.rName
   description = "Used for ALB Testing"
   vpc_id      = aws_vpc.test.id
@@ -63,4 +60,38 @@ resource "aws_security_group" "test" {
   }
 }
 
-{{ template "acctest.ConfigVPCWithSubnets" 2 }}
+# acctest.ConfigVPCWithSubnets(rName, 2)
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
