@@ -247,6 +247,7 @@ var (
 
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
@@ -254,10 +255,6 @@ func resourceTopic() *schema.Resource {
 		ReadWithoutTimeout:   resourceTopicRead,
 		UpdateWithoutTimeout: resourceTopicUpdate,
 		DeleteWithoutTimeout: resourceTopicDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceTopicCustomizeDiff,
 
