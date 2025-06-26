@@ -415,7 +415,7 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 		AgentId: aws.String(id),
 	}
 
-	_, err := agentOperationWithRetry[*bedrockagent.PrepareAgentOutput](ctx, timeout,
+	_, err := retryOpIfPreparing[*bedrockagent.PrepareAgentOutput](ctx, timeout,
 		func() (*bedrockagent.PrepareAgentOutput, error) {
 			return conn.PrepareAgent(ctx, &input)
 		},
@@ -529,9 +529,11 @@ func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input 
 		})
 }
 
-// agentOperationWithRetry handles retrying the provided operation when the agent is in
-// a Preparing state
-func agentOperationWithRetry[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+// retryOpIfPreparing retries the provided operation when an error message indicates
+// the agent is in a Preparing state
+//
+// Use this to wrap operations which may run concurrently against the same agent.
+func retryOpIfPreparing[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
 	return tfresource.RetryGWhenIsAErrorMessageContains[T, *awstypes.ValidationException](ctx, timeout, f,
 		"in Preparing state",
 	)
