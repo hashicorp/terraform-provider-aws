@@ -177,6 +177,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "BucketObject",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      bucketObjectImportID{},
+			},
 		},
 		{
 			Factory:  resourceBucketObjectLockConfiguration,
@@ -241,6 +249,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Object",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      objectImportID{},
+			},
 		},
 		{
 			Factory:  resourceObjectCopy,

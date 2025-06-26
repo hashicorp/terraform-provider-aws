@@ -96,7 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Gateway",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

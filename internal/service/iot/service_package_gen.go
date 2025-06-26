@@ -94,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Event Configurations",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},
@@ -104,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Indexing Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

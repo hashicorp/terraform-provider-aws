@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,15 +25,15 @@ import (
 )
 
 // @SDKResource("aws_iam_role_policy_attachment", name="Role Policy Attachment")
+// @IdentityAttribute("role")
+// @IdentityAttribute("policy_arn")
+// @IdAttrFormat("{role}/{policy_arn}")
+// @ImportIDHandler("rolePolicyAttachmentImportID")
 func resourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceRolePolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceRolePolicyAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRolePolicyAttachmentImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"policy_arn": {
@@ -63,8 +62,7 @@ func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
+	d.SetId(createRolePolicyAttachmentImportID(d))
 
 	return append(diags, resourceRolePolicyAttachmentRead(ctx, d, meta)...)
 }
@@ -104,22 +102,6 @@ func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
-}
-
-func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <role-name>/<policy_arn>", d.Id())
-	}
-
-	roleName := idParts[0]
-	policyARN := idParts[1]
-
-	d.Set(names.AttrRole, roleName)
-	d.Set("policy_arn", policyARN)
-	d.SetId(fmt.Sprintf("%s-%s", roleName, policyARN))
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
@@ -204,4 +186,27 @@ func findAttachedRolePolicies(ctx context.Context, conn *iam.Client, input *iam.
 	}
 
 	return output, nil
+}
+
+func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
+	return (rolePolicyAttachmentImportID{}).Create(d)
+}
+
+type rolePolicyAttachmentImportID struct{}
+
+func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+}
+
+func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)
+	}
+
+	result := map[string]string{
+		names.AttrRole: parts[0],
+		"policy_arn":   parts[1],
+	}
+	return id, result, nil
 }

@@ -91,7 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Account Public Access Block",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

@@ -217,6 +217,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_vpc_security_group_vpc_association",
 			Name:     "Security Group VPC Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity(
+				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
+				inttypes.StringIdentityAttribute("security_group_id", true),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      securityGroupVPCAssociationImportID{},
+			},
 		},
 	}
 }
@@ -884,7 +892,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "EBS Snapshot Block Public Access",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},
@@ -1051,7 +1059,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Serial Console Access",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},
