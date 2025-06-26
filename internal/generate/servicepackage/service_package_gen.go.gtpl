@@ -283,6 +283,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						},
+						{{- if $value.HasV6_0SDKv2Fix }}
+							inttypes.WithV6_0SDKv2Fix(),
+						{{ end -}}
 						),
 					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
@@ -295,8 +298,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- else }}
 						Identity: inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }}
-							{{- end -}}
+								{{ .Name }},
+							{{- end }}
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
 						),
 					{{- end }}
 				{{- else if $value.ARNIdentity }}
