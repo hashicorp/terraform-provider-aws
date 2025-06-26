@@ -37,7 +37,9 @@ resource "aws_acmpca_certificate" "test" {
 }
 
 resource "aws_workspacesweb_trust_store" "test" {
-  certificate_list = [aws_acmpca_certificate.test.certificate]
+  certificate {
+    body = aws_acmpca_certificate.test.certificate
+  }
 
   tags = var.resource_tags
 }
