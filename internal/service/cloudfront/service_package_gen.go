@@ -26,6 +26,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Origin Access Control",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
+		{
+			Factory: newResourceInvalidation,
+			Name:    "Invalidation",
+		},
 	}
 }
 
