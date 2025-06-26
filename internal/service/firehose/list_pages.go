@@ -12,9 +12,9 @@ import (
 
 // Custom Kinesis Firehose service lister functions using the same format as generated code.
 
-func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Client, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error {
+func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Client, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool, optFns ...func(*firehose.Options)) error {
 	for {
-		output, err := conn.ListDeliveryStreams(ctx, input)
+		output, err := conn.ListDeliveryStreams(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

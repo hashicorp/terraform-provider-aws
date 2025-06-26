@@ -12,9 +12,9 @@ import (
 
 // Custom Kinesis service lister functions using the same format as generated code.
 
-func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListShardsInput, fn func(*kinesis.ListShardsOutput, bool) bool) error {
+func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListShardsInput, fn func(*kinesis.ListShardsOutput, bool) bool, optFns ...func(*kinesis.Options)) error {
 	for {
-		output, err := conn.ListShards(ctx, input)
+		output, err := conn.ListShards(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
