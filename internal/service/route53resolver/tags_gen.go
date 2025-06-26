@@ -23,14 +23,22 @@ func listTags(ctx context.Context, conn *route53resolver.Client, identifier stri
 	input := route53resolver.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+	var output []awstypes.Tag
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	pages := route53resolver.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists route53resolver service tags and set them in Context.
