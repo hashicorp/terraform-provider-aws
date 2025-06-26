@@ -467,13 +467,24 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.Client, arn string) 
 	return output, nil
 }
 
-func policyTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListPolicyTags(ctx, &iam.ListPolicyTagsInput{
+func policyTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListPolicyTagsInput{
 		PolicyArn: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListPolicyTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
 	}
 
-	return output.Tags, nil
+	return output, nil
 }
