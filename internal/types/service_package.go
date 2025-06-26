@@ -105,6 +105,7 @@ type Identity struct {
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
+	IsMutable              bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -310,6 +311,12 @@ type IdentityOptsFunc func(opts *Identity)
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IdentityDuplicateAttrs = attrs
+	}
+}
+
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
 	}
 }
 
