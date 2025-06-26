@@ -63,7 +63,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		"{{ .RetryErrorMessage }}",
 	)
 	{{ else }}
+	{{ if .ServiceTagsMap }}
+	output := make(map[string]string)
+	{{- else }}
 	var output []awstypes.{{ or .TagType2 .TagType }}
+	{{- end }}
 
 	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, &input)
 	for pages.HasMorePages() {
@@ -89,9 +93,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.{{ .ListTagsOutTagsElem }} {
-			output = append(output, v)
-		}
+	{{ if .ServiceTagsMap }}
+		maps.Copy(output, page.{{ .ListTagsOutTagsElem }})
+	{{- else }}
+		output = append(output, page.{{ .ListTagsOutTagsElem }}...)
+	{{- end }}
 	}
 	{{- end }}
 
