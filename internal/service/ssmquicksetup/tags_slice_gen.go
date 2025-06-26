@@ -47,8 +47,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// TagsSlice returns ssmquicksetup service tags.
-func TagsSlice(tags tftags.KeyValueTags) []awstypes.TagEntry {
+// svcTagsSlice returns ssmquicksetup service tags.
+func svcTagsSlice(tags tftags.KeyValueTags) []awstypes.TagEntry {
 	result := make([]awstypes.TagEntry, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -78,7 +78,7 @@ func keyValueTagsSlice(ctx context.Context, tags []awstypes.TagEntry) tftags.Key
 // nil is returned if there are no input tags.
 func getTagsInSlice(ctx context.Context) []awstypes.TagEntry {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := TagsSlice(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTagsSlice(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
