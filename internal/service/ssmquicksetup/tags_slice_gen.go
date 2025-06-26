@@ -26,7 +26,7 @@ func listTags(ctx context.Context, conn *ssmquicksetup.Client, identifier string
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTagsSlice(ctx, output.Tags), nil
+	return keyValueTagsSlice(ctx, output.Tags), nil
 }
 
 // ListTags lists ssmquicksetup service tags and set them in Context.
@@ -63,8 +63,8 @@ func TagsSlice(tags tftags.KeyValueTags) []awstypes.TagEntry {
 	return result
 }
 
-// KeyValueTagsSlice creates tftags.KeyValueTags from ssmquicksetup service tags.
-func KeyValueTagsSlice(ctx context.Context, tags []awstypes.TagEntry) tftags.KeyValueTags {
+// keyValueTagsSlice creates tftags.KeyValueTags from ssmquicksetup service tags.
+func keyValueTagsSlice(ctx context.Context, tags []awstypes.TagEntry) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -89,6 +89,6 @@ func getTagsInSlice(ctx context.Context) []awstypes.TagEntry {
 // setTagsOutSlice sets ssmquicksetup service tags in Context.
 func setTagsOutSlice(ctx context.Context, tags []awstypes.TagEntry) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTagsSlice(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTagsSlice(ctx, tags))
 	}
 }
