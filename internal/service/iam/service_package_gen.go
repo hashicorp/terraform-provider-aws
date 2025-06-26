@@ -144,6 +144,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
@@ -288,7 +289,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "SAMLProvider",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
