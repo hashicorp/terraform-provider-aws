@@ -73,7 +73,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 			return !lastPage
 		}
 
+	{{ if .ServiceTagsMap }}
+		maps.Copy(output, page.{{ .ListTagsOutTagsElem }})
+	{{- else }}
 		output = append(output, page.{{ .ListTagsOutTagsElem }}...)
+	{{- end }}
 
 		return !lastPage
 	}, optFns...)
