@@ -24,6 +24,7 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
 	}
+
 	var output []awstypes.Tag
 
 	pages := ssoadmin.NewListTagsForResourcePaginator(conn, &input)
@@ -34,9 +35,7 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

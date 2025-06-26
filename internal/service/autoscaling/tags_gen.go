@@ -65,6 +65,7 @@ func listTags(ctx context.Context, conn *autoscaling.Client, identifier, resourc
 			},
 		},
 	}
+
 	var output []awstypes.TagDescription
 
 	pages := autoscaling.NewDescribeTagsPaginator(conn, &input)
@@ -75,9 +76,7 @@ func listTags(ctx context.Context, conn *autoscaling.Client, identifier, resourc
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return KeyValueTags(ctx, output, identifier, resourceType), nil

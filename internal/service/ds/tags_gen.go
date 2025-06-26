@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *directoryservice.Client, identifier str
 	input := directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := directoryservice.NewListTagsForResourcePaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *directoryservice.Client, identifier str
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

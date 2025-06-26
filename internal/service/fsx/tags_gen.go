@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *fsx.Client, identifier string, optFns .
 	input := fsx.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := fsx.NewListTagsForResourcePaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *fsx.Client, identifier string, optFns .
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *keyspaces.Client, identifier string, op
 	input := keyspaces.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := keyspaces.NewListTagsForResourcePaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *keyspaces.Client, identifier string, op
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

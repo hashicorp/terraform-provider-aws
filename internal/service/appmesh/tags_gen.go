@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optF
 	input := appmesh.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+
 	var output []awstypes.TagRef
 
 	pages := appmesh.NewListTagsForResourcePaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optF
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil
