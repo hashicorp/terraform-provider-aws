@@ -24,14 +24,22 @@ func listTags(ctx context.Context, conn *ssoadmin.Client, identifier, resourceTy
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
 	}
+	var output []awstypes.Tag
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	pages := ssoadmin.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists ssoadmin service tags and set them in Context.
