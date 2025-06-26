@@ -47,7 +47,7 @@ func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type viewResource struct {
 	framework.ResourceWithModel[viewResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
