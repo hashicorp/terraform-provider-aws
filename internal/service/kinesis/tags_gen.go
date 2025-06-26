@@ -24,13 +24,23 @@ func listTags(ctx context.Context, conn *kinesis.Client, identifier string, optF
 		StreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
+	var output []awstypes.Tag
+
+	err := listTagsForStreamPages(ctx, conn, &input, func(page *kinesis.ListTagsForStreamOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Tags...)
+
+		return !lastPage
+	}, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists kinesis service tags and set them in Context.
