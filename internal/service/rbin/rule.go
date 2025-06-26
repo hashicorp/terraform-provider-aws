@@ -56,15 +56,10 @@ func ResourceRule() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrResourceTags: {
+			"exclude_resource_tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
-				MaxItems: 50,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_tag_key": {
@@ -79,31 +74,11 @@ func ResourceRule() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{names.AttrResourceTags},
 			},
-			names.AttrResourceType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ResourceType](),
-			},
-			names.AttrRetentionPeriod: {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"retention_period_value": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 365),
-						},
-						"retention_period_unit": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
-						},
-					},
-				},
+			names.AttrID: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"lock_configuration": {
 				Type:     schema.TypeList,
@@ -133,13 +108,58 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
+			"lock_end_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"lock_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"lock_end_time": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrResourceTags: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_tag_key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 127),
+						},
+						"resource_tag_value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 256),
+						},
+					},
+				},
+				ConflictsWith: []string{"exclude_resource_tags"},
+			},
+			names.AttrResourceType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ResourceType](),
+			},
+			names.AttrRetentionPeriod: {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"retention_period_value": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 365),
+						},
+						"retention_period_unit": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
+						},
+					},
+				},
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -167,6 +187,10 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if _, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(d.Get(names.AttrDescription).(string))
+	}
+
+	if v, ok := d.GetOk("exclude_resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+		in.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
@@ -220,6 +244,10 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	d.Set(names.AttrResourceType, string(out.ResourceType))
 	d.Set(names.AttrStatus, string(out.Status))
 
+	if err := d.Set("exclude_resource_tags", flattenResourceTags(out.ExcludeResourceTags)); err != nil {
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+	}
+
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
@@ -246,8 +274,23 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		update = true
 	}
 
+	if d.HasChanges("exclude_resource_tags") {
+		v := d.Get("exclude_resource_tags")
+		if v == nil || v.(*schema.Set).Len() == 0 {
+			in.ExcludeResourceTags = []types.ResourceTag{}
+		} else {
+			in.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
+		}
+		update = true
+	}
+
 	if d.HasChanges(names.AttrResourceTags) {
-		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
+		v := d.Get(names.AttrResourceTags)
+		if v == nil || v.(*schema.Set).Len() == 0 {
+			in.ResourceTags = []types.ResourceTag{}
+		} else {
+			in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+		}
 		update = true
 	}
 
