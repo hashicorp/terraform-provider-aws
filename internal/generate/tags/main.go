@@ -180,7 +180,6 @@ type TemplateData struct {
 	TagKeyType                 string
 	TagOp                      string
 	TagOpBatchSize             int
-	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
 	TagType                    string
@@ -244,7 +243,6 @@ func main() {
 	}
 
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
-	tagPackage := awsPkg
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
 		AWSService:        awsPkg,
@@ -281,7 +279,6 @@ func main() {
 		TagKeyType:                 *tagKeyType,
 		TagOp:                      *tagOp,
 		TagOpBatchSize:             *tagOpBatchSize,
-		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
 		TagResTypeElemType:         *tagResTypeElemType,
 		TagType:                    *tagType,
@@ -318,13 +315,6 @@ func main() {
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
-		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-sdk-go	service package does not need to be imported
-		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
-			templateData.AWSService = ""
-			templateData.TagPackage = ""
-		}
-
 		if err := d.BufferTemplate("header", templateBody.header, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
