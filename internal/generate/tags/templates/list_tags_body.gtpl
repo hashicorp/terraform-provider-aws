@@ -2,7 +2,7 @@
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, optFns ...func(*{{ .AWSService }}.Options)) (tftags.KeyValueTags, error) {
-	input := {{ .TagPackage  }}.{{ .ListTagsOp }}Input{
+	input := {{ .AWSService }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []awstypes.Filter{
 			{
@@ -27,37 +27,35 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	}
 {{- if .ListTagsOpPaginated }}
     {{- if .RetryTagOps }}
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 			var output []awstypes.{{ or .TagType2 .TagType }}
 
-			pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, &input)
+			pages := {{ .AWSService }}.New{{ .ListTagsOp }}Paginator(conn, &input)
 			for pages.HasMorePages() {
 				page, err := pages.NextPage(ctx, optFns...)
 
 			{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
-					if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-						return nil, &retry.NotFoundError{
-							LastError:   err,
-							LastRequest: &input,
-						}
+				if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+					return nil, &retry.NotFoundError{
+						LastError:   err,
+						LastRequest: &input,
 					}
+				}
 			{{- else if ( .ParentNotFoundErrCode ) }}
-					if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-						return nil, &retry.NotFoundError{
-							LastError:   err,
-							LastRequest: &input,
-						}
+				if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+					return nil, &retry.NotFoundError{
+						LastError:   err,
+						LastRequest: &input,
 					}
+				}
 			{{- end }}
 
 				if err != nil {
 					return tftags.New(ctx, nil), err
 				}
 
-				for _, v := range page.{{ .ListTagsOutTagsElem }} {
-					output = append(output, v)
-				}
+				output = append(output, page.{{ .ListTagsOutTagsElem }}...)
 			}
 		},
 		"{{ .RetryErrorMessage }}",
@@ -69,24 +67,55 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	var output []awstypes.{{ or .TagType2 .TagType }}
 	{{- end }}
 
-	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, &input)
+	{{ if .ListTagsOpPaginatorCustom }}
+	err := {{ .ListTagsOp | FirstLower }}Pages(ctx, conn, &input, func(page *{{ .AWSService }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.{{ .ListTagsOutTagsElem }}...)
+
+		return !lastPage
+	}, optFns...)
+
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+	if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+	if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+	{{- end }}
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+	{{- else }}
+	pages := {{ .AWSService }}.New{{ .ListTagsOp }}Paginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
-			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				}
+		if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
 			}
+		}
 	{{- else if ( .ParentNotFoundErrCode ) }}
-			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				}
+		if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
 			}
+		}
 	{{- end }}
 
 		if err != nil {
@@ -100,13 +129,14 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	{{- end }}
 	}
 	{{- end }}
+	{{- end }}
 
 	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 {{- else }}
 
     {{ if .RetryTagOps }}
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
 		},
 		"{{ .RetryErrorMessage }}",
@@ -116,19 +146,19 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	{{- end }}
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
-			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				}
-			}
+	if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
 	{{- else if ( .ParentNotFoundErrCode ) }}
-			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				}
-			}
+	if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
 	{{- end }}
 
 	if err != nil {

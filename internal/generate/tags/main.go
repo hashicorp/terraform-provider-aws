@@ -69,6 +69,7 @@ var (
 	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
+	listTagsOpPaginatorCustom  = flag.Bool("ListTagsOpPaginatorCustom", false, "whether ListTagsOp has a custom paginator")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 
 	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
@@ -161,6 +162,7 @@ type TemplateData struct {
 	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
+	ListTagsOpPaginatorCustom  bool
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
@@ -261,6 +263,7 @@ func main() {
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,
+		ListTagsOpPaginatorCustom:  *listTagsOpPaginatorCustom,
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
