@@ -151,7 +151,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	setTagsOutS3(ctx, tagsS3(tags))
+	setTagsOutS3(ctx, svcTagsS3(tags))
 
 	return diags
 }
@@ -286,7 +286,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 			AccountId: aws.String(parsedArn.AccountID),
 			Bucket:    aws.String(identifier),
 			Tagging: &types.Tagging{
-				TagSet: tagsS3(newTags.Merge(ignoredTags)),
+				TagSet: svcTagsS3(newTags.Merge(ignoredTags)),
 			},
 		}
 

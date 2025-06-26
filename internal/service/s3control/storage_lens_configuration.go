@@ -458,7 +458,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	setTagsOutS3(ctx, tagsS3(tags))
+	setTagsOutS3(ctx, svcTagsS3(tags))
 
 	return diags
 }

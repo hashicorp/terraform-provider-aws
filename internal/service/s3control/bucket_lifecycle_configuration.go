@@ -417,11 +417,11 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []any) *types.Lifecyc
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = &tagsS3(tftags.New(ctx, v))[0]
+			apiObject.Tag = &svcTagsS3(tftags.New(ctx, v))[0]
 		} else {
 			apiObject.And = &types.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   tagsS3(tftags.New(ctx, v)),
+				Tags:   svcTagsS3(tftags.New(ctx, v)),
 			}
 			apiObject.Prefix = nil
 		}

@@ -12,8 +12,8 @@ import (
 
 // []*SERVICE.Tag handling
 
-// tagsS3 returns s3control service tags.
-func tagsS3(tags tftags.KeyValueTags) []awstypes.S3Tag {
+// svcTagsS3 returns s3control service tags.
+func svcTagsS3(tags tftags.KeyValueTags) []awstypes.S3Tag {
 	result := make([]awstypes.S3Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -43,7 +43,7 @@ func keyValueTagsS3(ctx context.Context, tags []awstypes.S3Tag) tftags.KeyValueT
 // nil is returned if there are no input tags.
 func getTagsInS3(ctx context.Context) []awstypes.S3Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := tagsS3(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTagsS3(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
