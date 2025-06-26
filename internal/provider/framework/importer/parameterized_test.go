@@ -691,7 +691,7 @@ func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Iden
 	for _, attrName := range attrNames {
 		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
 	}
-	return inttypes.RegionalParameterizedIdentity(attrs...)
+	return inttypes.RegionalParameterizedIdentity(attrs)
 }
 
 func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
@@ -1086,7 +1086,7 @@ func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identi
 	for _, attrName := range attrNames {
 		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
 	}
-	return inttypes.RegionalParameterizedIdentity(attrs...)
+	return inttypes.RegionalParameterizedIdentity(attrs)
 }
 
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {

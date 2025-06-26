@@ -177,9 +177,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "BucketObject",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			},
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
@@ -249,9 +250,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Object",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			},
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,

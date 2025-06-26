@@ -217,10 +217,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_vpc_security_group_vpc_association",
 			Name:     "Security Group VPC Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrVPCID, true),
 				inttypes.StringIdentityAttribute("security_group_id", true),
-			),
+			}),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      securityGroupVPCAssociationImportID{},
