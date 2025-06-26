@@ -447,7 +447,6 @@ func testAccApp_JobConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				//TODO
 				Config: testAccAppConfig_jobConfig(rName, "LARGE_16GB"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
