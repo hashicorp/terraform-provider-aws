@@ -289,7 +289,7 @@ func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]any) *
 	var tags []types.Tag
 
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok {
-		tags = Tags(tftags.New(ctx, v))
+		tags = svcTags(tftags.New(ctx, v))
 	}
 
 	apiObject := &types.IntelligentTieringFilter{}
