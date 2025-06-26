@@ -23,14 +23,22 @@ func listTags(ctx context.Context, conn *costexplorer.Client, identifier string,
 	input := costexplorer.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+	var output []awstypes.ResourceTag
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	pages := costexplorer.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.ResourceTags {
+			output = append(output, v)
+		}
 	}
 
-	return keyValueTags(ctx, output.ResourceTags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists ce service tags and set them in Context.
