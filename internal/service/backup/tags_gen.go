@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -23,22 +22,14 @@ func listTags(ctx context.Context, conn *backup.Client, identifier string, optFn
 	input := backup.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-	var output []awstypes.Tag
 
-	pages := backup.NewListTagsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx, optFns...)
+	output, err := conn.ListTags(ctx, &input, optFns...)
 
-		if err != nil {
-			return tftags.New(ctx, nil), err
-		}
-
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+	if err != nil {
+		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTags(ctx, output), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists backup service tags and set them in Context.
