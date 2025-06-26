@@ -2302,6 +2302,43 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_sourceCodeHashSHA256(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf1, conf2 lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_source_code_hash_sha256_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_sourceCodeHashSHA256(funcName, "lambdatest"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_sourceCodeHashSHA256(funcName, "lambdatest_modified"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf2),
+					testAccCheckSourceCodeHashSHA256Updated(&conf1, &conf2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -2485,6 +2522,18 @@ func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error 
 	}
 
 	return w.Flush()
+}
+
+func testAccCheckSourceCodeHashSHA256Updated(conf1, conf2 *lambda.GetFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		c1 := conf1.Configuration
+		c2 := conf2.Configuration
+
+		if *c1.CodeSha256 == *c2.CodeSha256 {
+			return fmt.Errorf("Expected source code hash to be updated, but it is still %s", *c1.CodeSha256)
+		}
+		return nil
+	}
 }
 
 func createTempFile(prefix string) (string, *os.File, error) {
@@ -4066,6 +4115,21 @@ resource "aws_lambda_function" "test" {
   skip_destroy  = true
 }
 `, rName))
+}
+
+func testAccFunctionConfig_sourceCodeHashSHA256(rName, zipFileName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                = "test-fixtures/%[2]s.zip"
+  function_name           = %[1]q
+  role                    = aws_iam_role.iam_for_lambda.arn
+  handler                 = "exports.example"
+  runtime                 = "nodejs20.x"
+  source_code_hash_sha256 = filebase64sha256("test-fixtures/%[2]s.zip")
+}
+`, rName, zipFileName))
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
