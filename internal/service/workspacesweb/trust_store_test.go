@@ -39,15 +39,67 @@ func TestAccWorkSpacesWebTrustStore_basic(t *testing.T) {
 				Config: testAccTrustStoreConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
-					resource.TestCheckResourceAttr(resourceName, "certificate_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{"certificate_list"},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "trust_store_arn"),
+				ImportStateVerifyIdentifierAttribute: "trust_store_arn",
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trustStore awstypes.TrustStore
+	resourceName := "aws_workspacesweb_trust_store.test"
+	//caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustStoreConfig_multipleCerts(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.thumbprint"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "trust_store_arn"),
 				ImportStateVerifyIdentifierAttribute: "trust_store_arn",
 			},
@@ -103,14 +155,20 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 				Config: testAccTrustStoreConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
-					resource.TestCheckResourceAttr(resourceName, "certificate_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{"certificate_list"},
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "trust_store_arn"),
 				ImportStateVerifyIdentifierAttribute: "trust_store_arn",
 			},
@@ -118,14 +176,26 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 				Config: testAccTrustStoreConfig_updatedAdd(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
-					resource.TestCheckResourceAttr(resourceName, "certificate_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.thumbprint"),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIgnore:              []string{"certificate_list"},
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "trust_store_arn"),
 				ImportStateVerifyIdentifierAttribute: "trust_store_arn",
 			},
@@ -133,7 +203,14 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 				Config: testAccTrustStoreConfig_updatedRemove(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
-					resource.TestCheckResourceAttr(resourceName, "certificate_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
 				),
 			},
 		},
@@ -234,7 +311,24 @@ func testAccTrustStoreConfig_basic() string {
 		testAccTrustStoreConfig_acmBase(),
 		`
 resource "aws_workspacesweb_trust_store" "test" {
-  certificate_list = [aws_acmpca_certificate.test1.certificate]
+  certificate {
+  		body = aws_acmpca_certificate.test1.certificate
+	}
+}
+`)
+}
+
+func testAccTrustStoreConfig_multipleCerts() string {
+	return acctest.ConfigCompose(
+		testAccTrustStoreConfig_acmBase(),
+		`
+resource "aws_workspacesweb_trust_store" "test" {
+  certificate {
+  		body = aws_acmpca_certificate.test1.certificate
+	}
+  certificate {
+  		body = aws_acmpca_certificate.test2.certificate
+	}
 }
 `)
 }
@@ -244,7 +338,12 @@ func testAccTrustStoreConfig_updatedAdd() string {
 		testAccTrustStoreConfig_acmBase(),
 		`
 resource "aws_workspacesweb_trust_store" "test" {
-  certificate_list = [aws_acmpca_certificate.test1.certificate, aws_acmpca_certificate.test2.certificate]
+  certificate {
+  		body = aws_acmpca_certificate.test1.certificate
+	}
+  certificate {
+  		body = aws_acmpca_certificate.test2.certificate
+	}
 }
 `)
 }
@@ -254,7 +353,9 @@ func testAccTrustStoreConfig_updatedRemove() string {
 		testAccTrustStoreConfig_acmBase(),
 		`
 resource "aws_workspacesweb_trust_store" "test" {
-  certificate_list = [aws_acmpca_certificate.test2.certificate]
+  certificate {
+  		body = aws_acmpca_certificate.test2.certificate
+	}
 }
 `)
 }
