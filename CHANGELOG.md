@@ -2,8 +2,12 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.stateful_rule_group_reference.deep_threat_inspection` attribute ([#43137](https://github.com/hashicorp/terraform-provider-aws/issues/43137))
+* resource/aws_accessanalyzer_analyzer: Add `configuration.internal_access` argument ([#43138](https://github.com/hashicorp/terraform-provider-aws/issues/43138))
+* resource/aws_amplify_app: Add `job_config` argument ([#43136](https://github.com/hashicorp/terraform-provider-aws/issues/43136))
 * resource/aws_cloudtrail: Support `errorCode`, `eventType`, `sessionCredentialFromConsole`, and `vpcEndpointId` as valid values for `advanced_event_selector.field_selector.field` ([#43091](https://github.com/hashicorp/terraform-provider-aws/issues/43091))
 * resource/aws_cloudtrail_event_data_store: Support `errorCode`, `eventType`, `sessionCredentialFromConsole`, and `vpcEndpointId` as valid values for `advanced_event_selector.field_selector.field` ([#43091](https://github.com/hashicorp/terraform-provider-aws/issues/43091))
+* resource/aws_cloudwatch_event_archive: Add `kms_key_identifier` argument ([#43139](https://github.com/hashicorp/terraform-provider-aws/issues/43139))
 * resource/aws_cloudwatch_log_group: Support `DELIVERY` as a valid value for `log_group_class` ([#42658](https://github.com/hashicorp/terraform-provider-aws/issues/42658))
 * resource/aws_codebuild_project: Add `environment.docker_server` configuration block ([#42982](https://github.com/hashicorp/terraform-provider-aws/issues/42982))
 * resource/aws_eks_pod_identity_association: Add `disable_session_tags` and `target_role_arn` arguments and `external_id` attribute ([#42979](https://github.com/hashicorp/terraform-provider-aws/issues/42979))
@@ -12,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_glue_job: Support `job_mode` argument ([#42607](https://github.com/hashicorp/terraform-provider-aws/issues/42607))
 * resource/aws_kms_key: Support `HMAC_224`, `HMAC_384`, `HMAC_512`, `ML_DSA_44`, `ML_DSA_65`, and `ML_DSA_87` as valid values for `customer_master_key_spec` ([#43128](https://github.com/hashicorp/terraform-provider-aws/issues/43128))
 * resource/aws_lightsail_instance_public_ports: `-1` is now a valid value for `port_info.from_port` and `port_info.to_port` ([#37703](https://github.com/hashicorp/terraform-provider-aws/issues/37703))
+* resource/aws_networkfirewall_firewall_policy: Add `firewall_policy.stateful_rule_group_reference.deep_threat_inspection` argument ([#43137](https://github.com/hashicorp/terraform-provider-aws/issues/43137))
 * resource/aws_s3tables_table: Add `metadata` argument ([#43112](https://github.com/hashicorp/terraform-provider-aws/issues/43112))
 * resource/aws_wafv2_web_acl: Add `aws_managed_rules_anti_ddos_rule_set` to `managed_rule_group_configs` configuration block in support of L7 DDoS protection ([#43149](https://github.com/hashicorp/terraform-provider-aws/issues/43149))
 
