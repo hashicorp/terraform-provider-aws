@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1186,7 +1187,6 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnCreate_NoVersio
 			{
 				Config:      testAccGlobalReplicationGroupConfig_param(rName, primaryReplicationGroupId, "6.2", "default.redis6.x"),
 				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
-				PlanOnly:    true,
 			},
 		},
 	})
@@ -1273,10 +1273,22 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
-				PlanOnly: true,
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1442,7 +1454,6 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_NoVersio
 			{
 				Config:      testAccGlobalReplicationGroupConfig_param(rName, primaryReplicationGroupId, "6.2", "default.redis6.x"),
 				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
-				PlanOnly:    true,
 			},
 		},
 	})
@@ -1477,7 +1488,6 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_MinorUpg
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "6.0", "6.2", "default.redis6.x"),
 				ExpectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
-				PlanOnly:    true,
 			},
 		},
 	})
@@ -1513,7 +1523,6 @@ func TestAccElastiCacheGlobalReplicationGroup_UpdateParameterGroupName(t *testin
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionCustomParam(rName, primaryReplicationGroupId, "5.0.6", "6.2", parameterGroupName, "redis6.x"),
 				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
-				PlanOnly:    true,
 			},
 		},
 	})

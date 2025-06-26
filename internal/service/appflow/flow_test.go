@@ -274,10 +274,6 @@ func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "task.#", "1"),
 				),
 			},
-			{
-				Config:   testAccFlowConfig_task_mapAll(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -328,10 +324,6 @@ func TestAccAppFlowFlow_metadataCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.1", "EXECUTION_ID"),
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.#", "2"),
 				),
-			},
-			{
-				Config:   testAccFlowConfig_metadata_catalog(rName),
-				PlanOnly: true,
 			},
 		},
 	})

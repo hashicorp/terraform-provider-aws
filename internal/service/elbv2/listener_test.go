@@ -2186,6 +2186,11 @@ func TestAccELBV2Listener_redirectWithTargetGroupARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -2194,9 +2199,15 @@ func TestAccELBV2Listener_redirectWithTargetGroupARN(t *testing.T) {
 						VersionConstraint: "5.36.0",
 					},
 				},
-				Config:             testAccListenerConfig_redirectWithTargetGroupARN(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccListenerConfig_redirectWithTargetGroupARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
