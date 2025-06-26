@@ -43,14 +43,22 @@ func listTags(ctx context.Context, conn *transfer.Client, identifier string, opt
 	input := transfer.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
+	var output []awstypes.Tag
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	pages := transfer.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.Tags {
+			output = append(output, v)
+		}
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists transfer service tags and set them in Context.
