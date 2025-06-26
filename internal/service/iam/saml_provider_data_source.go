@@ -82,7 +82,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("valid_until", nil)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -61,16 +61,16 @@ func instanceProfileCreateTags(ctx context.Context, conn *iam.Client, identifier
 		return nil
 	}
 
-	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return instanceProfileUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func instanceProfileKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func instanceProfilekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := instanceProfileTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
@@ -113,16 +113,16 @@ func openIDConnectProviderCreateTags(ctx context.Context, conn *iam.Client, iden
 		return nil
 	}
 
-	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func openIDConnectProviderkeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := openIDConnectProviderTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // policyUpdateTags updates IAM Policy tags.
@@ -165,16 +165,16 @@ func policyCreateTags(ctx context.Context, conn *iam.Client, identifier string, 
 		return nil
 	}
 
-	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return policyUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func policyKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func policykeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := policyTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // roleUpdateTags updates IAM role tags.
@@ -217,16 +217,16 @@ func roleCreateTags(ctx context.Context, conn *iam.Client, identifier string, ta
 		return nil
 	}
 
-	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return roleUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func roleKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func rolekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := roleTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // samlProviderUpdateTags updates IAM SAML Provider tags.
@@ -269,7 +269,7 @@ func samlProviderCreateTags(ctx context.Context, conn *iam.Client, identifier st
 		return nil
 	}
 
-	return samlProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return samlProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 // serverCertificateUpdateTags updates IAM Server Certificate tags.
@@ -312,16 +312,16 @@ func serverCertificateCreateTags(ctx context.Context, conn *iam.Client, identifi
 		return nil
 	}
 
-	return serverCertificateUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return serverCertificateUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func serverCertificateKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func serverCertificatekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := serverCertificateTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // userUpdateTags updates IAM user tags.
@@ -364,16 +364,16 @@ func userCreateTags(ctx context.Context, conn *iam.Client, identifier string, ta
 		return nil
 	}
 
-	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return userUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func userKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func userkeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := userTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // virtualMFADeviceUpdateTags updates IAM Virtual MFA Device tags.
@@ -416,16 +416,16 @@ func virtualMFADeviceCreateTags(ctx context.Context, conn *iam.Client, identifie
 		return nil
 	}
 
-	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func virtualMFADeviceKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+func virtualMFADevicekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := virtualMFADeviceTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // updateTags updates iam service tags.
@@ -469,16 +469,16 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	)
 	switch resourceType {
 	case "InstanceProfile":
-		tags, err = instanceProfileKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = instanceProfilekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "OIDCProvider":
-		tags, err = openIDConnectProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = openIDConnectProviderkeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "Policy":
-		tags, err = policyKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = policykeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "Role":
-		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = rolekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "ServiceLinkedRole":
 		var roleName string
@@ -486,16 +486,16 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		if err != nil {
 			return err
 		}
-		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), roleName)
+		tags, err = rolekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), roleName)
 
 	case "ServerCertificate":
-		tags, err = serverCertificateKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = serverCertificatekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "User":
-		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = userkeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "VirtualMFADevice":
-		tags, err = virtualMFADeviceKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+		tags, err = virtualMFADevicekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	default:
 		return nil
