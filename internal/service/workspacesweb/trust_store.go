@@ -5,20 +5,25 @@ package workspacesweb
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -58,20 +63,45 @@ func (r *trustStoreResource) Schema(ctx context.Context, request resource.Schema
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"certificate_list": schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Required:    true,
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-				},
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"trust_store_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"certificate": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[certificateModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(0),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"body": schema.StringAttribute{
+							Required: true,
+						},
+						"issuer": schema.StringAttribute{
+							Computed: true,
+						},
+						"not_valid_after": schema.StringAttribute{
+							Computed: true,
+						},
+						"not_valid_before": schema.StringAttribute{
+							Computed: true,
+						},
+						"subject": schema.StringAttribute{
+							Computed: true,
+						},
+						"thumbprint": schema.StringAttribute{
+							Computed: true,
+						},
+					},
 				},
 			},
 		},
@@ -93,9 +123,12 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Convert string certificates to byte slices
-	for _, cert := range data.CertificateList.Elements() {
-		// Remove the leading and trailing double quotes. Also remove the literals "\n" to replace with line feeds
-		formatted_cert := strings.ReplaceAll(strings.Trim(cert.String(), "\""), `\n`, "\n")
+	for _, cert := range data.Certificates.Elements() {
+		var certValue certificateModel
+		if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
+			continue
+		}
+		formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
 		input.CertificateList = append(input.CertificateList, []byte(formatted_cert))
 	}
 
@@ -120,6 +153,27 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
+	// Populate certificate details
+	certificates, err := listTrustStoreCertificates(ctx, conn, data.TrustStoreARN.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing WorkSpacesWeb Trust Store Certificates (%s)", data.TrustStoreARN.ValueString()), err.Error())
+		return
+	}
+
+	var d diag.Diagnostics
+	data.Certificates, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	for _, cert := range data.Certificates.Elements() {
+		var certValue certificateModel
+		if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
+			continue
+		}
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -149,6 +203,15 @@ func (r *trustStoreResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
+	// Populate certificate details by merging existing state with computed values
+	certificates, err := listTrustStoreCertificates(ctx, conn, data.TrustStoreARN.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing WorkSpacesWeb Trust Store Certificates (%s)", data.TrustStoreARN.ValueString()), err.Error())
+		return
+	}
+
+	data.Certificates, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -165,36 +228,49 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
-	if !new.CertificateList.Equal(old.CertificateList) {
+	if !new.Certificates.Equal(old.Certificates) {
 		input := &workspacesweb.UpdateTrustStoreInput{
 			TrustStoreArn: aws.String(new.TrustStoreARN.ValueString()),
 			ClientToken:   aws.String(sdkid.UniqueId()),
 		}
 
 		// Handle certificate additions and deletions
-		oldCerts := make(map[string]bool)
-		for _, cert := range old.CertificateList.Elements() {
-			oldCerts[cert.String()] = true
+		oldCerts := make(map[string]string) // cert content -> thumbprint
+		for _, cert := range old.Certificates.Elements() {
+			var certValue certificateModel
+			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
+				continue
+			}
+			oldCerts[base64.StdEncoding.EncodeToString([]byte(certValue.Body.ValueString()))] = certValue.Thumbprint.ValueString()
 		}
 
-		newCerts := make(map[string]bool)
-		for _, cert := range new.CertificateList.Elements() {
-			newCerts[cert.String()] = true
+		newCertContents := make(map[string]bool)
+		for _, cert := range new.Certificates.Elements() {
+			var certValue certificateModel
+			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
+				continue
+			}
+			formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
+			newCertContents[base64.StdEncoding.EncodeToString([]byte(formatted_cert))] = true
 		}
 
 		// Find certificates to add
-		for _, cert := range new.CertificateList.Elements() {
-			if !oldCerts[cert.String()] {
-				formatted_cert := strings.ReplaceAll(strings.Trim(cert.String(), "\""), `\n`, "\n")
+		for _, cert := range new.Certificates.Elements() {
+			var certValue certificateModel
+			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
+				continue
+			}
+			formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
+			certEncoded := base64.StdEncoding.EncodeToString([]byte(formatted_cert))
+			if _, exists := oldCerts[certEncoded]; !exists {
 				input.CertificatesToAdd = append(input.CertificatesToAdd, []byte(formatted_cert))
 			}
 		}
 
-		// Find certificates to delete
-		for _, cert := range old.CertificateList.Elements() {
-			if !newCerts[cert.String()] {
-				formatted_cert := strings.ReplaceAll(strings.Trim(cert.String(), "\""), `\n`, "\n")
-				input.CertificatesToDelete = append(input.CertificatesToDelete, formatted_cert)
+		// Find certificates to delete (by thumbprint)
+		for certEncoded, thumbprint := range oldCerts {
+			if !newCertContents[certEncoded] {
+				input.CertificatesToDelete = append(input.CertificatesToDelete, thumbprint)
 			}
 		}
 
@@ -205,6 +281,27 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 	}
+
+	// Read the updated state to get computed values
+	updatedTrustStore, err := findTrustStoreByARN(ctx, conn, new.TrustStoreARN.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Trust Store (%s) after update", new.TrustStoreARN.ValueString()), err.Error())
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, updatedTrustStore, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Populate certificate details by merging planned data with computed values
+	certificates, err := listTrustStoreCertificates(ctx, conn, new.TrustStoreARN.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing WorkSpacesWeb Trust Store Certificates (%s) after update", new.TrustStoreARN.ValueString()), err.Error())
+		return
+	}
+
+	new.Certificates, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -261,10 +358,61 @@ func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn st
 	return output.TrustStore, nil
 }
 
+func listTrustStoreCertificates(ctx context.Context, conn *workspacesweb.Client, arn string) ([]certificateModel, error) {
+	input := &workspacesweb.ListTrustStoreCertificatesInput{
+		TrustStoreArn: aws.String(arn),
+	}
+
+	var certificates []certificateModel
+	paginator := workspacesweb.NewListTrustStoreCertificatesPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, certSummary := range output.CertificateList {
+			// Get detailed certificate information
+			certInput := &workspacesweb.GetTrustStoreCertificateInput{
+				TrustStoreArn: aws.String(arn),
+				Thumbprint:    certSummary.Thumbprint,
+			}
+
+			certOutput, err := conn.GetTrustStoreCertificate(ctx, certInput)
+			if err != nil {
+				return nil, err
+			}
+			if certOutput.Certificate != nil {
+				cert := certificateModel{
+					Body:           types.StringValue(string(certOutput.Certificate.Body)),
+					Issuer:         types.StringPointerValue(certOutput.Certificate.Issuer),
+					NotValidAfter:  types.StringValue(aws.ToTime(certOutput.Certificate.NotValidAfter).Format(time.RFC3339)),
+					NotValidBefore: types.StringValue(aws.ToTime(certOutput.Certificate.NotValidBefore).Format(time.RFC3339)),
+					Subject:        types.StringPointerValue(certOutput.Certificate.Subject),
+					Thumbprint:     types.StringPointerValue(certOutput.Certificate.Thumbprint),
+				}
+				certificates = append(certificates, cert)
+			}
+		}
+	}
+
+	return certificates, nil
+}
+
 type trustStoreResourceModel struct {
-	AssociatedPortalARNs fwtypes.ListOfString `tfsdk:"associated_portal_arns"`
-	CertificateList      fwtypes.ListOfString `tfsdk:"certificate_list"`
-	Tags                 tftags.Map           `tfsdk:"tags"`
-	TagsAll              tftags.Map           `tfsdk:"tags_all"`
-	TrustStoreARN        types.String         `tfsdk:"trust_store_arn"`
+	AssociatedPortalARNs fwtypes.ListOfString                             `tfsdk:"associated_portal_arns"`
+	Certificates         fwtypes.SetNestedObjectValueOf[certificateModel] `tfsdk:"certificate"`
+	Tags                 tftags.Map                                       `tfsdk:"tags"`
+	TagsAll              tftags.Map                                       `tfsdk:"tags_all"`
+	TrustStoreARN        types.String                                     `tfsdk:"trust_store_arn"`
+}
+
+type certificateModel struct {
+	Body           types.String `tfsdk:"body"`
+	Issuer         types.String `tfsdk:"issuer"`
+	NotValidAfter  types.String `tfsdk:"not_valid_after"`
+	NotValidBefore types.String `tfsdk:"not_valid_before"`
+	Subject        types.String `tfsdk:"subject"`
+	Thumbprint     types.String `tfsdk:"thumbprint"`
 }
