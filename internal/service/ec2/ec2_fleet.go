@@ -1536,8 +1536,9 @@ func flattenSpotOptions(apiObject *awstypes.SpotOptions) map[string]any {
 
 	if v := apiObject.InstancePoolsToUseCount; v != nil {
 		tfMap["instance_pools_to_use_count"] = aws.ToInt32(v)
-	} else if apiObject.AllocationStrategy == awstypes.SpotAllocationStrategyDiversified {
-		// API will omit InstancePoolsToUseCount if AllocationStrategy is diversified, which breaks our Default: 1
+	} else if apiObject.AllocationStrategy != awstypes.SpotAllocationStrategyLowestPrice {
+		// API will omit InstancePoolsToUseCount if AllocationStrategy is not lowestPrice, which breaks our Default: 1
+		// InstancePoolsToUseCount is only valid for lowestPrice allocation strategy according to AWS documentation
 		// Here we just reset it to 1 to prevent removing the Default and setting up a special DiffSuppressFunc.
 		tfMap["instance_pools_to_use_count"] = 1
 	}
