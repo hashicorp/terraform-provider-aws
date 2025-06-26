@@ -30,16 +30,13 @@ import (
 
 // @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
 		ReadWithoutTimeout:   resourceAcceleratorRead,
 		UpdateWithoutTimeout: resourceAcceleratorUpdate,
 		DeleteWithoutTimeout: resourceAcceleratorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
