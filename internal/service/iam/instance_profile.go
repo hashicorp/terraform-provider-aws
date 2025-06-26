@@ -396,9 +396,7 @@ func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier strin
 			return nil, err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return output, nil
