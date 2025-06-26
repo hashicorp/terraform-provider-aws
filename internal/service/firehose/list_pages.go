@@ -28,3 +28,20 @@ func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Client, input 
 	}
 	return nil
 }
+
+func listTagsForDeliveryStreamPages(ctx context.Context, conn *firehose.Client, input *firehose.ListTagsForDeliveryStreamInput, fn func(*firehose.ListTagsForDeliveryStreamOutput, bool) bool, optFns ...func(*firehose.Options)) error {
+	for {
+		output, err := conn.ListTagsForDeliveryStream(ctx, input, optFns...)
+		if err != nil {
+			return err
+		}
+
+		lastPage := !aws.ToBool(output.HasMoreTags)
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.ExclusiveStartTagKey = output.Tags[len(output.Tags)-1].Key
+	}
+	return nil
+}
