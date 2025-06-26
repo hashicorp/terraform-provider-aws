@@ -2689,6 +2689,38 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 	})
 }
 
+func TestAccEC2Fleet_SpotOptions_allocationStrategyPriceCapacityOptimized(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet1 awstypes.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_spotOptionsAllocationStrategy(rName, "price-capacity-optimized"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "price-capacity-optimized"),
+					// instance_pools_to_use_count should be set to 1 for price-capacity-optimized allocation strategy
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleet1 awstypes.FleetData

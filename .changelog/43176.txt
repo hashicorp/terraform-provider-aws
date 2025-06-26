@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_fleet: Fix `instance_pools_to_use_count` drift for non-lowestPrice allocation strategies
+```
