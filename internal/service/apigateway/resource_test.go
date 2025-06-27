@@ -88,6 +88,7 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/42904
 func TestAccAPIGatewayResource_recomputePath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetResourceOutput
