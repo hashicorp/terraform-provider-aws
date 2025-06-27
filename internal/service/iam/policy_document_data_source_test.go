@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -244,8 +245,12 @@ func TestAccIAMPolicyDocumentDataSource_invalidSidValid(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccPolicyDocumentDataSourceConfig_invalidSid,
-				PlanOnly: true,
+				Config: testAccPolicyDocumentDataSourceConfig_invalidSid,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("data.aws_iam_policy_document.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

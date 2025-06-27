@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -70,17 +71,7 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"assume_role_policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"assume_role_policy": sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,17 +109,7 @@ func resourceRole() *schema.Resource {
 								validRolePolicyName,
 							),
 						},
-						names.AttrPolicy: {
-							Type:                  schema.TypeString,
-							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:          verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-							DiffSuppressOnRefresh: true,
-							StateFunc: func(v any) string {
-								json, _ := verify.LegacyPolicyNormalize(v)
-								return json
-							},
-						},
+						names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(), // semantically required but syntactically optional to allow empty inline_policy
 					},
 				},
 				DiffSuppressFunc: func(k, _, _ string, d *schema.ResourceData) bool {
