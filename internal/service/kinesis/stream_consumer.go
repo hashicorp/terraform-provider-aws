@@ -18,12 +18,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+// @Tags(identifierAttribute="arn")
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
@@ -54,6 +56,8 @@ func resourceStreamConsumer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -66,6 +70,10 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &kinesis.RegisterStreamConsumerInput{
 		ConsumerName: aws.String(name),
 		StreamARN:    aws.String(d.Get(names.AttrStreamARN).(string)),
+	}
+
+	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	output, err := conn.RegisterStreamConsumer(ctx, input)
