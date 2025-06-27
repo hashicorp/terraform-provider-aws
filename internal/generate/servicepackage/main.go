@@ -615,7 +615,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
