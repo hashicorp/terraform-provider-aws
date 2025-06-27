@@ -153,15 +153,19 @@ func TestGlobalARN(t *testing.T) {
 				schema = globalARNWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
@@ -356,17 +360,21 @@ func TestRegionalARN(t *testing.T) {
 				schema = regionalARNWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec, &importSpec)
 			case "IDWithState":
-				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
@@ -562,19 +570,23 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 				schema = regionalResourceWithGlobalARNFormatWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
 				stateAttrs := map[string]string{
 					"region": tc.inputRegion,
 				}
-				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"region": tc.inputRegion,
 					"arn":    tc.inputARN,
 				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {

@@ -25,7 +25,12 @@ var regionalSingletonSchema = schema.Schema{
 }
 
 func regionalSingletonImporter(identitySpec inttypes.Identity) (importer framework.WithImportRegionalSingleton) {
-	importer.SetIdentitySpec(identitySpec)
+	importer.SetIdentitySpec(
+		identitySpec,
+		inttypes.FrameworkImport{
+			WrappedImport: true,
+		},
+	)
 	return
 }
 

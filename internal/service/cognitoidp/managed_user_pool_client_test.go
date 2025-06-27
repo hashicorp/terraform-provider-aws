@@ -1038,6 +1038,11 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("allowed_oauth_flows"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("code"),
@@ -1068,8 +1073,15 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccManagedUserPoolClientConfig_nulls(rName),
-				PlanOnly: true,
+				Config: testAccManagedUserPoolClientConfig_nulls(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1127,8 +1139,6 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 			},
 			{
 				Config: testAccManagedUserPoolClientConfig_emptySets(rName),
-				// This currently shows a diff of "null -> []"
-				// PlanOnly: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 				),

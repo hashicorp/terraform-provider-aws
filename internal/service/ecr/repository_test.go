@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -175,6 +176,11 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -183,9 +189,12 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 			},
 			{
 				// Test that the removal of the non-default image_scanning_configuration causes plan changes
-				Config:             testAccRepositoryConfig_basic(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccRepositoryConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				// Test attribute update
@@ -195,12 +204,23 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				// Test that the removal of the default image_scanning_configuration doesn't cause any plan changes
-				Config:             testAccRepositoryConfig_basic(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccRepositoryConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -271,16 +291,25 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRepositoryConfig_encryptionAES256(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
-					testAccCheckRepositoryNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -289,8 +318,15 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 			},
 			{
 				// Test that the removal of the default encryption_configuration doesn't cause any plan changes
-				Config:   testAccRepositoryConfig_basic(rName),
-				PlanOnly: true,
+				Config: testAccRepositoryConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -364,16 +400,6 @@ func testAccCheckRepositoryRecreated(i, j *types.Repository) resource.TestCheckF
 	return func(s *terraform.State) error {
 		if aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was not recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckRepositoryNotRecreated(i, j *types.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
-	return func(s *terraform.State) error {
-		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
-			return fmt.Errorf("ECR repository was recreated")
 		}
 
 		return nil
