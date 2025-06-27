@@ -2001,6 +2001,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),
@@ -2010,6 +2011,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),
@@ -2044,6 +2046,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),
@@ -2053,6 +2056,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 						}),
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNThirdRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),
@@ -2105,6 +2109,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),
@@ -2140,6 +2145,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrARN:            tfknownvalue.RegionalARNAlternateRegionExact("dynamodb", "table/"+rName),
+							"consistency_mode":       knownvalue.StringExact("EVENTUAL"),
 							names.AttrKMSKeyARN:      knownvalue.StringExact(""),
 							"point_in_time_recovery": knownvalue.Bool(false),
 							names.AttrPropagateTags:  knownvalue.Bool(false),

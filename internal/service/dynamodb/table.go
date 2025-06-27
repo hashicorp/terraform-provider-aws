@@ -1489,7 +1489,6 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			if !ok {
 				continue
 			}
-
 			var replicaInput = &awstypes.CreateReplicationGroupMemberAction{}
 
 			if v, ok := tfMap["region_name"].(string); ok && v != "" {
@@ -1574,6 +1573,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 
 			if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
+
 				return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 			}
 
@@ -2897,14 +2897,14 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
 
-// Helper function to check if a replica has MRSC enabled
-func replicaHasMRSC(replica *awstypes.ReplicaDescription) bool {
-	if replica == nil {
-		return false
-	}
+// // Helper function to check if a replica has MRSC enabled
+// func replicaHasMRSC(replica *awstypes.ReplicaDescription) bool {
+// 	if replica == nil {
+// 		return false
+// 	}
 
-	// For MRSC, check if the replica has the STANDARD table class
-	// Since the AWS SDK doesn't expose TableClassSummary directly in ReplicaDescription,
-	// we need to infer it from other properties
-	return replica.ProvisionedThroughputOverride != nil
-}
+// 	// For MRSC, check if the replica has the STANDARD table class
+// 	// Since the AWS SDK doesn't expose TableClassSummary directly in ReplicaDescription,
+// 	// we need to infer it from other properties
+// 	return replica.ProvisionedThroughputOverride != nil
+// }
