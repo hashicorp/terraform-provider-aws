@@ -1197,7 +1197,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		inputCASG.Tags = svcTags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		inputCASG.Tags = svcTags(keyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1412,7 +1412,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
-	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(keyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
@@ -1574,8 +1574,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-		oldTags := svcTags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
-		newTags := svcTags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
+		oldTags := svcTags(keyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
+		newTags := svcTags(keyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
 
 		if err := updateTags(ctx, conn, d.Id(), TagResourceTypeGroup, oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags for Auto Scaling Group (%s): %s", d.Id(), err)

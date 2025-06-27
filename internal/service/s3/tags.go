@@ -70,7 +70,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
 			Tagging: &awstypes.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: svcTags(newTags.Merge(ignoredTags)),
 			},
 		}
 
@@ -137,7 +137,7 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &awstypes.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: svcTags(newTags.Merge(ignoredTags)),
 			},
 		}
 

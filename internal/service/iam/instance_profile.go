@@ -382,15 +382,24 @@ func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, 
 	return err
 }
 
-func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListInstanceProfileTags(ctx, &iam.ListInstanceProfileTagsInput{
+func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListInstanceProfileTagsInput{
 		InstanceProfileName: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListInstanceProfileTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }
 
 type invalidParameterValueError struct {

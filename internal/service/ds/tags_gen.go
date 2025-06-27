@@ -24,13 +24,20 @@ func listTags(ctx context.Context, conn *directoryservice.Client, identifier str
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := directoryservice.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists ds service tags and set them in Context.

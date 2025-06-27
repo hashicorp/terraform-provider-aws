@@ -4,6 +4,7 @@ package kinesisvideo
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
@@ -23,13 +24,23 @@ func listTags(ctx context.Context, conn *kinesisvideo.Client, identifier string,
 		StreamARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
+	output := make(map[string]string)
+
+	err := listTagsForStreamPages(ctx, conn, &input, func(page *kinesisvideo.ListTagsForStreamOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		maps.Copy(output, page.Tags)
+
+		return !lastPage
+	}, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists kinesisvideo service tags and set them in Context.

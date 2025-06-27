@@ -278,7 +278,7 @@ func expandAnalyticsFilter(ctx context.Context, m map[string]any) types.Analytic
 
 	var tags []types.Tag
 	if v, ok := m[names.AttrTags]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {

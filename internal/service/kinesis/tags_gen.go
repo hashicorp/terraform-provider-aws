@@ -24,13 +24,23 @@ func listTags(ctx context.Context, conn *kinesis.Client, identifier string, optF
 		StreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(ctx, &input, optFns...)
+	var output []awstypes.Tag
+
+	err := listTagsForStreamPages(ctx, conn, &input, func(page *kinesis.ListTagsForStreamOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Tags...)
+
+		return !lastPage
+	}, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists kinesis service tags and set them in Context.
@@ -67,8 +77,8 @@ func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from kinesis service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from kinesis service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +103,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets kinesis service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 

@@ -183,7 +183,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ShardCount = aws.Int32(int32(d.Get("shard_count").(int)))
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
 		input.Tags = tags
 	}
 

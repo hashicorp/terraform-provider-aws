@@ -51,8 +51,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// SvcTags returns acm service tags.
-func SvcTags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns acm service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -82,7 +82,7 @@ func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := SvcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -111,7 +111,7 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 	if len(removedTags) > 0 {
 		input := acm.RemoveTagsFromCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           SvcTags(removedTags),
+			Tags:           svcTags(removedTags),
 		}
 
 		_, err := conn.RemoveTagsFromCertificate(ctx, &input, optFns...)
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *acm.Client, identifier string, oldTag
 	if len(updatedTags) > 0 {
 		input := acm.AddTagsToCertificateInput{
 			CertificateArn: aws.String(identifier),
-			Tags:           SvcTags(updatedTags),
+			Tags:           svcTags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToCertificate(ctx, &input, optFns...)
