@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.226.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.227.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/fms v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/glue v1.115.0
@@ -146,13 +146,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.18.3
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/kms v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.7
+	github.com/aws/aws-sdk-go-v2/service/kms v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.8
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.4
@@ -195,7 +195,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/polly v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.34.5
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.26.3
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.86.2
 	github.com/aws/aws-sdk-go-v2/service/ram v1.30.6
@@ -262,7 +262,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.4
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.57.2
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/xray v1.31.7
 	github.com/aws/smithy-go v1.22.4
