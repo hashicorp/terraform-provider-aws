@@ -268,8 +268,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrName,
 				ResourceType:        "Role",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceRolePolicy,
