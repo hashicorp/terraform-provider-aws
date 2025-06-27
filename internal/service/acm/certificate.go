@@ -160,6 +160,12 @@ func resourceCertificate() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
 							ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 						},
+						"export": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.CertificateExportDisabled,
+							ValidateDiagFunc: enum.Validate[types.CertificateExport](),
+						},
 					},
 				},
 			},
@@ -623,6 +629,10 @@ func expandCertificateOptions(tfMap map[string]any) *types.CertificateOptions {
 		apiObject.CertificateTransparencyLoggingPreference = types.CertificateTransparencyLoggingPreference(v)
 	}
 
+	if v, ok := tfMap["export"].(string); ok && v != "" {
+		apiObject.Export = types.CertificateExport(v)
+	}
+
 	return apiObject
 }
 
@@ -634,6 +644,10 @@ func flattenCertificateOptions(apiObject *types.CertificateOptions) map[string]a
 	tfMap := map[string]any{}
 
 	tfMap["certificate_transparency_logging_preference"] = apiObject.CertificateTransparencyLoggingPreference
+
+	if apiObject.Export != "" {
+		tfMap["export"] = apiObject.Export
+	}
 
 	return tfMap
 }
