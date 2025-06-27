@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
 // @Tags(identifierAttribute="arn", resourceType="SAMLProvider")
-// @Testing(name="SAMLProvider")
+// @Testing(tagsTest=false)
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,

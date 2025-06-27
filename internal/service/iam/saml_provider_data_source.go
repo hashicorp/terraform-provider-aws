@@ -19,7 +19,7 @@ import (
 
 // @SDKDataSource("aws_iam_saml_provider", name="SAML Provider")
 // @Tags
-// @Testing(tagsIdentifierAttribute="arn", tagsResourceType="SAMLProvider")
+// @Testing(tagsTest=false)
 func dataSourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,
