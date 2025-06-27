@@ -29,6 +29,26 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 	}
 }
 
+func statusTableWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.WarmThroughput == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.WarmThroughput.Status), nil
+	}
+}
+
 func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)
@@ -110,6 +130,26 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 		}
 
 		return output, string(output.IndexStatus), nil
+	}
+}
+
+func statusGSIWarmThroughput(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.WarmThroughput == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.WarmThroughput.Status), nil
 	}
 }
 
