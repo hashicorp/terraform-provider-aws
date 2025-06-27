@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -85,7 +84,17 @@ func resourcePolicy() *schema.Resource {
 				Default:  "/",
 				ForceNew: true,
 			},
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+			names.AttrPolicy: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v any) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			"policy_id": {
 				Type:     schema.TypeString,
 				Computed: true,

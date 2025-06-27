@@ -325,7 +325,10 @@ func TestAccIAMPolicy_diffs(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -663,7 +666,7 @@ resource "aws_iam_policy" "test" {
 func testAccPolicyConfig_policyDuplicateKeys(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
-  name = %q
+  name = %[1]q
 
   policy = <<EOF
 {
