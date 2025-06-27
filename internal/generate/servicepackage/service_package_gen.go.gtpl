@@ -328,9 +328,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- else if $value.SingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalSingletonIdentity(),
+						Identity: inttypes.GlobalSingletonIdentity(
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+						),
 					{{- else }}
-						Identity: inttypes.RegionalSingletonIdentity(),
+						Identity: inttypes.RegionalSingletonIdentity(
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+						),
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}
