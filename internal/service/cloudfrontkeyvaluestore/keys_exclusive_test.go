@@ -367,11 +367,6 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_itemRemainsAfterValueChange(t *
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
 					testCheckMultipleKeyValuePairs(keys, newValues, resourceName),
 				),
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "key_value_store_arn"),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "key_value_store_arn",
 			},
 		},
 	})
