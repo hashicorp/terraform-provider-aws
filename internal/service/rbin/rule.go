@@ -63,8 +63,32 @@ func ResourceRule() *schema.Resource {
 			names.AttrResourceTags: {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				MaxItems: 50,
+				ConflictsWith: []string{
+					"exclude_resource_tags",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_tag_key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 127),
+						},
+						"resource_tag_value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 256),
+						},
+					},
+				},
+			},
+			"exclude_resource_tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 5,
+				ConflictsWith: []string{
+					names.AttrResourceTags,
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_tag_key": {
@@ -172,6 +196,9 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
+	if v, ok := d.GetOk("exclude_resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+		in.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
+	}
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
@@ -223,6 +250,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
+	if err := d.Set("exclude_resource_tags", flattenResourceTags(out.ExcludeResourceTags)); err != nil {
+		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+	}
 
 	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
 		return create.AppendDiagError(diags, names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
@@ -248,6 +278,10 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	if d.HasChanges(names.AttrResourceTags) {
 		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
+		update = true
+	}
+	if d.HasChanges("exclude_resource_tags") {
+		in.ExcludeResourceTags = expandResourceTags(d.Get("exclude_resource_tags").(*schema.Set).List())
 		update = true
 	}
 
@@ -451,7 +485,7 @@ func expandResourceTag(tfMap map[string]any) *types.ResourceTag {
 
 func expandResourceTags(tfList []any) []types.ResourceTag {
 	if len(tfList) == 0 {
-		return nil
+		return []types.ResourceTag{}
 	}
 
 	var s []types.ResourceTag
