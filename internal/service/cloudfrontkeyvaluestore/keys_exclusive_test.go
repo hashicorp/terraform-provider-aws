@@ -362,7 +362,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_itemRemainsAfterValueChange(t *
 				),
 			},
 			{
-				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
+				Config: testAccKeysExclusiveConfig_basic(keys, newValues, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
 					testCheckMultipleKeyValuePairs(keys, newValues, resourceName),
