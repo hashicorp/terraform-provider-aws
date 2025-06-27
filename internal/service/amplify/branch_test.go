@@ -213,6 +213,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_skew_protection", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
@@ -383,6 +384,7 @@ resource "aws_amplify_branch" "test" {
   enable_notification           = true
   enable_performance_mode       = true
   enable_pull_request_preview   = false
+  enable_skew_protection        = true
   framework                     = "React"
   pull_request_environment_name = "testpr1"
   stage                         = "DEVELOPMENT"
