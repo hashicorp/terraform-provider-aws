@@ -28,8 +28,8 @@ func svcS3Tags(tags tftags.KeyValueTags) []awstypes.S3Tag {
 	return result
 }
 
-// keyValueS3Tags creates tftags.KeyValueTags from s3control service tags.
-func keyValueS3Tags(ctx context.Context, tags []awstypes.S3Tag) tftags.KeyValueTags {
+// keyValueTagsFromS3Tags creates tftags.KeyValueTags from s3control service tags.
+func keyValueTagsFromS3Tags(ctx context.Context, tags []awstypes.S3Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -54,6 +54,6 @@ func getS3TagsIn(ctx context.Context) []awstypes.S3Tag {
 // setS3TagsOut sets s3control service tags in Context.
 func setS3TagsOut(ctx context.Context, tags []awstypes.S3Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(keyValueS3Tags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTagsFromS3Tags(ctx, tags))
 	}
 }

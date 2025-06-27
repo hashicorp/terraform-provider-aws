@@ -506,7 +506,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap[names.AttrTags] = keyValueS3Tags(ctx, v).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsFromS3Tags(ctx, v).IgnoreAWS().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
@@ -514,7 +514,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap[names.AttrTags] = keyValueS3Tags(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsFromS3Tags(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
 		}
 	}
 

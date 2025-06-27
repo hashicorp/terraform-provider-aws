@@ -99,7 +99,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(aws.ToString(output.BucketArn))
 
-	if tags := keyValueS3Tags(ctx, getS3TagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTagsFromS3Tags(ctx, getS3TagsIn(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -257,7 +257,7 @@ func bucketListTags(ctx context.Context, conn *s3control.Client, identifier stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueS3Tags(ctx, output.TagSet), nil
+	return keyValueTagsFromS3Tags(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.

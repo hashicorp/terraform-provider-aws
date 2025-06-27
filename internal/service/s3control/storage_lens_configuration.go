@@ -405,7 +405,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
-		Tags:      storageLensTags(keyValueS3Tags(ctx, getS3TagsIn(ctx))),
+		Tags:      storageLensTags(keyValueTagsFromS3Tags(ctx, getS3TagsIn(ctx))),
 	}
 
 	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
