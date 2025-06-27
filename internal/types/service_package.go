@@ -239,8 +239,8 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	return identity
 }
 
-func GlobalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -255,9 +255,15 @@ func GlobalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -272,6 +278,11 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 

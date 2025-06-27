@@ -124,11 +124,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
+						Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),
+						}),
 					{{- else }}
 						Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
@@ -272,11 +272,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
+						Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
-						),
+						}),
 					{{- else }}
 						Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}

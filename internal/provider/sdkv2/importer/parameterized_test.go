@@ -767,7 +767,7 @@ func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identi
 	for _, attrName := range attrNames {
 		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
 	}
-	return inttypes.GlobalParameterizedIdentity(attrs...)
+	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
