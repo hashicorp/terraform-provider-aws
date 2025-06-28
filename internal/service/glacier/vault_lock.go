@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,18 +48,7 @@ func resourceVaultLock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ForceNew:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequiredForceNew(),
 			"vault_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -79,13 +69,12 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	vaultName := d.Get("vault_name").(string)
-	input := &glacier.InitiateVaultLockInput{
+	input := glacier.InitiateVaultLockInput{
 		AccountId: aws.String("-"),
 		Policy: &types.VaultLockPolicy{
 			Policy: aws.String(policy),
@@ -93,7 +82,7 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta a
 		VaultName: aws.String(vaultName),
 	}
 
-	output, err := conn.InitiateVaultLock(ctx, input)
+	output, err := conn.InitiateVaultLock(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glacier Vault Lock (%s): %s", vaultName, err)
@@ -102,19 +91,19 @@ func resourceVaultLockCreate(ctx context.Context, d *schema.ResourceData, meta a
 	d.SetId(vaultName)
 
 	if d.Get("complete_lock").(bool) {
-		input := &glacier.CompleteVaultLockInput{
+		input := glacier.CompleteVaultLockInput{
 			LockId:    output.LockId,
 			VaultName: aws.String(vaultName),
 		}
 
-		_, err := conn.CompleteVaultLock(ctx, input)
+		_, err := conn.CompleteVaultLock(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "completing Glacier Vault Lock (%s): %s", d.Id(), err)
 		}
 
-		if err := waitVaultLockComplete(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Glacier Vault Lock (%s) completion: %s", d.Id(), err)
+		if err := waitVaultLockLocked(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glacier Vault Lock (%s) complete: %s", d.Id(), err)
 		}
 	}
 
@@ -141,7 +130,6 @@ func resourceVaultLockRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("vault_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -156,9 +144,10 @@ func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glacier Vault Lock: %s", d.Id())
-	_, err := conn.AbortVaultLock(ctx, &glacier.AbortVaultLockInput{
+	input := glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.AbortVaultLock(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -172,12 +161,12 @@ func resourceVaultLockDelete(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string) (*glacier.GetVaultLockOutput, error) {
-	input := &glacier.GetVaultLockInput{
+	input := glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
 		VaultName: aws.String(name),
 	}
 
-	output, err := conn.GetVaultLock(ctx, input)
+	output, err := conn.GetVaultLock(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -213,7 +202,7 @@ func statusLockState(ctx context.Context, conn *glacier.Client, name string) ret
 	}
 }
 
-func waitVaultLockComplete(ctx context.Context, conn *glacier.Client, name string) error {
+func waitVaultLockLocked(ctx context.Context, conn *glacier.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{lockStateInProgress},
 		Target:  []string{lockStateLocked},
