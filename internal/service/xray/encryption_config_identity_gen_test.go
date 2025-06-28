@@ -23,8 +23,9 @@ func testAccXRayEncryptionConfig_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccXRayEncryptionConfig_Identity_Basic,
-		"RegionOverride": testAccXRayEncryptionConfig_Identity_RegionOverride,
+		acctest.CtBasic:    testAccXRayEncryptionConfig_Identity_Basic,
+		"ExistingResource": testAccXRayEncryptionConfig_Identity_ExistingResource,
+		"RegionOverride":   testAccXRayEncryptionConfig_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
