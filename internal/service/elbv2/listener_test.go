@@ -1516,17 +1516,17 @@ func TestAccELBV2Listener_Protocol_httpsTohttp(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_iam_server_certificate.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationOff),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
@@ -1546,10 +1546,10 @@ func TestAccELBV2Listener_Protocol_httpsTohttp(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "application"),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
 					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrCertificateARN),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckNoResourceAttr(resourceName, "ssl_policy"),
@@ -3969,10 +3969,10 @@ resource "aws_lb_listener" "test" {
   }
 }
 resource "aws_lb" "test" {
-  name            			 = %[1]q
-  internal        			 = false
-  security_groups 			 = [aws_security_group.test.id]
-  subnets         			 = aws_subnet.test[*].id
+  name                       = %[1]q
+  internal                   = false
+  security_groups            = [aws_security_group.test.id]
+  subnets                    = aws_subnet.test[*].id
   idle_timeout               = 30
   enable_deletion_protection = false
   tags = {
