@@ -23,8 +23,9 @@ func testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial(t *testing.T) 
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic,
-		"RegionOverride": testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride,
+		acctest.CtBasic:    testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic,
+		"ExistingResource": testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource,
+		"RegionOverride":   testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

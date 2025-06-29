@@ -185,6 +185,7 @@ type ResourceDatum struct {
 	IdentityDuplicateAttrs            []string
 	ImportIDHandler                   string
 	SetIDAttribute                    bool
+	HasV6_0SDKv2Fix                   bool
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -476,6 +477,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.SetIDAttribute = b
 					}
 				}
+
+			// TODO: allow underscore?
+			case "V60SDKv2Fix":
+				d.HasV6_0SDKv2Fix = true
 			}
 		}
 	}
@@ -610,7 +615,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.

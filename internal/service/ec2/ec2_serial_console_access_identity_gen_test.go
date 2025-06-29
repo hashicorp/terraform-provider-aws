@@ -21,7 +21,8 @@ func testAccEC2SerialConsoleAccess_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccEC2SerialConsoleAccess_Identity_Basic,
+		acctest.CtBasic:    testAccEC2SerialConsoleAccess_Identity_Basic,
+		"ExistingResource": testAccEC2SerialConsoleAccess_Identity_ExistingResource,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

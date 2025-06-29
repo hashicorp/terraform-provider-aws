@@ -44,6 +44,7 @@ const (
 // @Tags(identifierAttribute="name", resourceType="Role")
 // @IdentityAttribute("name")
 // @WrappedImport(false)
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 // @Testing(idAttrDuplicates="name")
 func resourceRole() *schema.Resource {

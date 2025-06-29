@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
 // @ArnFormat("flow/{name}", attribute="arn")
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 // @Testing(idAttrDuplicates="name")
 func resourceFlow() *schema.Resource {

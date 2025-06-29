@@ -427,6 +427,10 @@ func (d ResourceDatum) IsRegionalSingleton() bool {
 	return d.isSingleton && !d.IsGlobal
 }
 
+func (d ResourceDatum) IsSingleton() bool {
+	return d.isSingleton
+}
+
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
 }

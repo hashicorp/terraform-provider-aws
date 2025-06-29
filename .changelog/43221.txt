@@ -1,0 +1,7 @@
+```release-note:bug
+many resource types: Fixes "Unexpected Identity Change" errors when refreshing resources created or refreshed by v6.0.
+```
+
+```release-note:bug
+resource/aws_appflow_connector_profile: Fixes error refreshing resource state.
+```
