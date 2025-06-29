@@ -51,6 +51,7 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_skew_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
