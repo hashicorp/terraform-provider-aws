@@ -1,5 +1,5 @@
 ---
-subcategory: "Prometheus"
+subcategory: "AMP (Managed Prometheus)"
 layout: "aws"
 page_title: "AWS: aws_prometheus_query_logging_configuration"
 description: |-
@@ -28,7 +28,7 @@ resource "aws_prometheus_query_logging_configuration" "example" {
     cloudwatch_logs {
       log_group_arn = "${aws_cloudwatch_log_group.example.arn}:*"
     }
-    
+
     filters {
       qsp_threshold = 1000
     }
