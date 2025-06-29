@@ -1864,6 +1864,65 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_Protocol_tlsTotcp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var listener1 awstypes.Listener
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_protocolTLS(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
+					resource.TestCheckResourceAttr(resourceName, "alpn_policy", tfelbv2.AlpnPolicyHTTP2Preferred),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_protocolTLS_To_TCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "alpn_policy", tfelbv2.AlpnPolicyHTTP2Preferred),
+					resource.TestCheckNoResourceAttr(resourceName, "aws_acm_certificate.test"),
+					resource.TestCheckNoResourceAttr(resourceName, "ssl_policy"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2Listener_redirect(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -4437,6 +4496,54 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_protocolTLS_To_TCP(rName string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  certificate_arn   = aws_acm_certificate.test.arn
+  load_balancer_arn = aws_lb.test.arn
+  port              = "80"
+  protocol          = "TCP"
+  alpn_policy       = "HTTP2Preferred"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccListenerConfig_redirect(rName string) string {
