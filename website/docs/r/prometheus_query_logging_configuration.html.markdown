@@ -38,21 +38,21 @@ resource "aws_prometheus_query_logging_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `workspace_id` - (Required) The ID of the AMP workspace for which to configure query logging.
-* `destinations` - (Required) Configuration block for the logging destinations. Detailed below.
+* `destinations` - (Required) Configuration block for the logging destinations. See [`destinations`](#destinations).
 
-The `destinations` block supports the following:
+### `destinations`
 
-* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. Detailed below.
-* `filters` - (Optional) A list of filter configurations that specify which logs should be sent to the destination. Detailed below.
+* `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs`](#cloudwatch_logs).
+* `filters` - (Required) A list of filter configurations that specify which logs should be sent to the destination. See [`filters`](#filters).
 
-The `cloudwatch_logs` block supports the following:
+#### `cloudwatch_logs`
 
 * `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent.
 
-The `filters` block supports the following:
+### `filters`
 
 * `qsp_threshold` - (Required) The Query Samples Processed (QSP) threshold above which queries will be logged. Queries processing more samples than this threshold will be captured in logs.
 

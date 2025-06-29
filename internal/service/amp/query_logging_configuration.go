@@ -71,7 +71,7 @@ func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request 
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"cloudwatch_logs": schema.ListNestedBlock{
+						names.AttrCloudWatchLogs: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudwatchLogsModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
@@ -242,11 +242,11 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 	conn := r.Meta().AMPClient(ctx)
 
 	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
-
-	_, err := conn.DeleteQueryLoggingConfiguration(ctx, &amp.DeleteQueryLoggingConfigurationInput{
+	input := amp.DeleteQueryLoggingConfigurationInput{
 		WorkspaceId: aws.String(workspaceID),
-	})
-
+		ClientToken: aws.String(sdkid.UniqueId()),
+	}
+	_, err := conn.DeleteQueryLoggingConfiguration(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
