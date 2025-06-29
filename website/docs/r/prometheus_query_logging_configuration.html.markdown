@@ -62,16 +62,19 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Query Logging Configuration, which is the workspace ID.
 
 ## Import
 
-AMP Query Logging Configuration can be imported using the workspace ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Query Logging Configuration using the workspace ID. For example:
 
-```
-$ terraform import aws_prometheus_query_logging_configuration.example ws-12345678-90ab-cdef-1234-567890abcdef
+```terraform
+import {
+  to = aws_prometheus_query_logging_configuration.example
+  id = "ws-12345678-90ab-cdef-1234-567890abcdef"
+}
 ```
 
 ## Timeouts
