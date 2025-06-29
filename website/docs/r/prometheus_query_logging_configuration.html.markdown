@@ -60,7 +60,7 @@ The following arguments are optional:
 
 * `qsp_threshold` - (Required) The Query Samples Processed (QSP) threshold above which queries will be logged. Queries processing more samples than this threshold will be captured in logs.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
