@@ -43,6 +43,10 @@ This resource supports the following arguments:
 * `workspace_id` - (Required) The ID of the AMP workspace for which to configure query logging.
 * `destinations` - (Required) Configuration block for the logging destinations. See [`destinations`](#destinations).
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### `destinations`
 
 * `cloudwatch_logs` - (Required) Configuration block for CloudWatch Logs destination. See [`cloudwatch_logs`](#cloudwatch_logs).
@@ -52,7 +56,7 @@ This resource supports the following arguments:
 
 * `log_group_arn` - (Required) The ARN of the CloudWatch log group to which query logs will be sent.
 
-### `filters`
+#### `filters`
 
 * `qsp_threshold` - (Required) The Query Samples Processed (QSP) threshold above which queries will be logged. Queries processing more samples than this threshold will be captured in logs.
 

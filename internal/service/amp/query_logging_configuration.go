@@ -267,7 +267,7 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 func (r *queryLoggingConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
 	// Also set the ID to the workspace ID
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.QueryLoggingConfigurationMetadata, error) {
