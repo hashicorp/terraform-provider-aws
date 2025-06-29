@@ -60,20 +60,6 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 	})
 }
 
-func testAccQueryDefinitionImportStateID(ctx context.Context, v *types.QueryDefinition) resource.ImportStateIdFunc {
-	return func(*terraform.State) (string, error) {
-		id := arn.ARN{
-			AccountID: acctest.AccountID(ctx),
-			Partition: acctest.Partition(),
-			Region:    acctest.Region(),
-			Service:   "logs",
-			Resource:  fmt.Sprintf("query-definition:%s", aws.ToString(v.QueryDefinitionId)),
-		}
-
-		return id.String(), nil
-	}
-}
-
 func TestAccLogsQueryDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.QueryDefinition
@@ -206,6 +192,20 @@ func TestAccLogsQueryDefinition_logGroupARNs(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccQueryDefinitionImportStateID(ctx context.Context, v *types.QueryDefinition) resource.ImportStateIdFunc {
+	return func(*terraform.State) (string, error) {
+		id := arn.ARN{
+			AccountID: acctest.AccountID(ctx),
+			Partition: acctest.Partition(),
+			Region:    acctest.Region(),
+			Service:   "logs",
+			Resource:  fmt.Sprintf("query-definition:%s", aws.ToString(v.QueryDefinitionId)),
+		}
+
+		return id.String(), nil
+	}
 }
 
 func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *types.QueryDefinition) resource.TestCheckFunc {
