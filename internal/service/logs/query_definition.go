@@ -51,8 +51,11 @@ func resourceQueryDefinition() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validLogGroupName,
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validLogGroupName,
+						verify.ValidARN,
+					),
 				},
 			},
 			"query_definition_id": {
