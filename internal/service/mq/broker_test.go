@@ -1644,7 +1644,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers))
 				},
 				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
-				PlanOnly:           true,
+				PlanOnly:           true, // OK
 				ExpectNonEmptyPlan: true,
 			},
 		},
