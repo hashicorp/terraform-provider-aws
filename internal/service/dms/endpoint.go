@@ -562,7 +562,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	endpointID := d.Get("endpoint_id").(string)
-	input := &dms.CreateEndpointInput{
+	input := dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
@@ -604,7 +604,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		settings := &awstypes.PostgreSQLSettings{}
@@ -624,7 +624,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 
 		input.PostgreSQLSettings = settings
@@ -657,7 +657,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 
 		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
@@ -687,7 +687,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 	case engineNameRedis:
 		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
@@ -706,7 +706,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 
 		if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -751,7 +751,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 	case engineNameSybase:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
@@ -770,7 +770,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 	case engineNameDB2, engineNameDB2zOS:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
@@ -789,15 +789,15 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, input)
+			expandTopLevelConnectionInfo(d, &input)
 		}
 	default:
-		expandTopLevelConnectionInfo(d, input)
+		expandTopLevelConnectionInfo(d, &input)
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
 		func() (any, error) {
-			return conn.CreateEndpoint(ctx, input)
+			return conn.CreateEndpoint(ctx, &input)
 		})
 
 	if err != nil {
@@ -851,7 +851,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		if d.HasChangesExcept("pause_replication_tasks") {
-			input := &dms.ModifyEndpointInput{
+			input := dms.ModifyEndpointInput{
 				EndpointArn: aws.String(endpointARN),
 			}
 
@@ -902,7 +902,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName)
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameAuroraPostgresql, engineNamePostgres:
@@ -926,7 +926,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameDynamoDB:
@@ -1000,7 +1000,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName)
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameOracle:
@@ -1024,7 +1024,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'oracle')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameRedis:
@@ -1054,7 +1054,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'redshift')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 
 						if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 							tfMap := v.([]any)[0].(map[string]any)
@@ -1102,7 +1102,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameSybase:
@@ -1126,7 +1126,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			case engineNameDB2, engineNameDB2zOS:
@@ -1150,7 +1150,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						input.EngineName = aws.String(engineName) // Must be included (should be 'db2')
 
 						// Update connection info in top-level namespace as well
-						expandTopLevelConnectionInfoModify(d, input)
+						expandTopLevelConnectionInfoModify(d, &input)
 					}
 				}
 			default:
@@ -1175,7 +1175,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			}
 
-			_, err := conn.ModifyEndpoint(ctx, input)
+			_, err := conn.ModifyEndpoint(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s): %s", d.Id(), err)
@@ -1327,7 +1327,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set("service_access_role", "")
 		}
 	case engineNameElasticsearch, engineNameOpenSearch:
-		if err := d.Set("elasticsearch_settings", flattenOpenSearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+		if err := d.Set("elasticsearch_settings", flattenElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("setting elasticsearch_settings: %w", err)
 		}
 	case engineNameKafka:
@@ -1503,11 +1503,11 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 	}
 
 	for _, task := range tasks {
-		testConnectionInput := dms.TestConnectionInput{
+		input := dms.TestConnectionInput{
 			EndpointArn:            aws.String(arn),
 			ReplicationInstanceArn: task.ReplicationInstanceArn,
 		}
-		_, err := conn.TestConnection(ctx, &testConnectionInput)
+		_, err := conn.TestConnection(ctx, &input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "already being tested") {
 			continue
@@ -1517,19 +1517,7 @@ func startEndpointReplicationTasks(ctx context.Context, conn *dms.Client, arn st
 			return fmt.Errorf("testing connection: %w", err)
 		}
 
-		waiter := dms.NewTestConnectionSucceedsWaiter(conn)
-
-		describeConnectionsInput := dms.DescribeConnectionsInput{
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("endpoint-arn"),
-					Values: []string{arn},
-				},
-			},
-		}
-		err = waiter.Wait(ctx, &describeConnectionsInput, maxConnTestWaitTime)
-
-		if err != nil {
+		if _, err := waitConnectionSucceeded(ctx, conn, arn, maxConnTestWaitTime); err != nil {
 			return fmt.Errorf("waiting until test connection succeeds: %w", err)
 		}
 
@@ -1554,7 +1542,7 @@ func findReplicationTasksByEndpointARN(ctx context.Context, conn *dms.Client, ar
 	return findReplicationTasks(ctx, conn, input)
 }
 
-func flattenOpenSearchSettings(settings *awstypes.ElasticsearchSettings) []map[string]any {
+func flattenElasticsearchSettings(settings *awstypes.ElasticsearchSettings) []map[string]any {
 	if settings == nil {
 		return []map[string]any{}
 	}
@@ -2192,9 +2180,72 @@ func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEnd
 	return output, nil
 }
 
+func findConnectionByEndpointARN(ctx context.Context, conn *dms.Client, arn string) (*awstypes.Connection, error) {
+	input := dms.DescribeConnectionsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("endpoint-arn"),
+				Values: []string{arn},
+			},
+		},
+	}
+
+	return findConnection(ctx, conn, &input)
+}
+
+func findConnection(ctx context.Context, conn *dms.Client, input *dms.DescribeConnectionsInput) (*awstypes.Connection, error) {
+	output, err := findConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConnections(ctx context.Context, conn *dms.Client, input *dms.DescribeConnectionsInput) ([]awstypes.Connection, error) {
+	var output []awstypes.Connection
+
+	pages := dms.NewDescribeConnectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Connections...)
+	}
+
+	return output, nil
+}
+
 func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func statusConnection(ctx context.Context, conn *dms.Client, endpointARN string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findConnectionByEndpointARN(ctx, conn, endpointARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2219,6 +2270,24 @@ func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Endpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN string, timeout time.Duration) (*awstypes.Connection, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{connectionStatusTesting},
+		Target:  []string{connectionStatusSuccessful},
+		Refresh: statusConnection(ctx, conn, endpointARN),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Connection); ok {
 		return output, err
 	}
 

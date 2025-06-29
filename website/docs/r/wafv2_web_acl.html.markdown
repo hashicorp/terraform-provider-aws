@@ -819,6 +819,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
 * `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
+* `aws_managed_rules_anti_ddos_rule_set` - (Optional) Configuration for using the anti-DDoS managed rule group. See [`aws_managed_rules_anti_ddos_rule_set`](#aws_managed_rules_anti_ddos_rule_set-block) for more details.
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `login_path` - (Optional, **Deprecated**) The path of the login endpoint for your application.
 * `password_field` - (Optional, **Deprecated**) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
@@ -837,6 +838,19 @@ The `managed_rule_group_configs` block support the following arguments:
 * `registration_page_path` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
 * `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
 * `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
+
+### `aws_managed_rules_anti_ddos_rule_set` Block
+
+* `client_side_action_config` - (Required) Configuration for the request handling that's applied by the managed rule group rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` during a distributed denial of service (DDoS) attack. See [`client_side_action_config`](#client_side_action_config-block) for more details.
+* `sensitivity_to_block` - (Optional) Sensitivity that the rule group rule DDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW` (Default), `MEDIUM`, and `HIGH`.
+
+### `client_side_action_config` Block
+
+* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`.
+    * `exempt_uri_regular_expressions` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge.
+        * `regex_string` - (Optional) Regular expression string.
+    * `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
+    * `usage_of_action` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
 
 ### `aws_managed_rules_atp_rule_set` Block
 

@@ -243,10 +243,6 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
 			},
-			{
-				Config:   testAccS3EndpointConfig_simple(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -298,10 +294,6 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
-			},
-			{
-				Config:   testAccS3EndpointConfig_sourceSimple(rName),
-				PlanOnly: true,
 			},
 			{
 				ResourceName:            resourceName,

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -83,7 +82,7 @@ func (o operation[T]) UntilFoundN(continuousTargetOccurence int) operation[T] {
 			return true, nil
 		}
 
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			targetOccurence = 0
 
 			return true, err
@@ -101,7 +100,7 @@ func (o operation[T]) UntilNotFound() operation[T] {
 			return true, nil
 		}
 
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			return false, nil
 		}
 
@@ -110,7 +109,7 @@ func (o operation[T]) UntilNotFound() operation[T] {
 
 	transform := func(err error) error {
 		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
-			return tfresource.ErrFoundResource
+			return ErrFoundResource
 		}
 
 		return err
@@ -120,11 +119,11 @@ func (o operation[T]) UntilNotFound() operation[T] {
 }
 
 // Run retries an operation until the timeout elapses or predicate indicates otherwise.
-func (o operation[T]) Run(ctx context.Context, timeout time.Duration) (T, error) {
+func (o operation[T]) Run(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
 	// We explicitly don't set a deadline on the context here to maintain compatibility
 	// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
 	var l *backoff.Loop
-	for l = backoff.NewLoop(timeout); l.Continue(ctx); {
+	for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
 		t, err := o.op.Invoke(ctx)
 
 		if retry, err := o.predicate.Invoke(t, err); !retry {

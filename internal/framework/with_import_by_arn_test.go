@@ -49,6 +49,9 @@ var globalARNIdentitySchema = identityschema.Schema{
 func globalARNImporter() (importer framework.WithImportByARN) {
 	importer.SetIdentitySpec(
 		inttypes.GlobalARNIdentity(),
+		inttypes.FrameworkImport{
+			WrappedImport: true,
+		},
 	)
 	return
 }
@@ -58,6 +61,9 @@ func globalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.Wi
 		inttypes.GlobalARNIdentity(
 			inttypes.WithIdentityDuplicateAttrs(attrs...),
 		),
+		inttypes.FrameworkImport{
+			WrappedImport: true,
+		},
 	)
 	return
 }
@@ -365,6 +371,9 @@ var regionalARNIdentitySchema = identityschema.Schema{
 func regionalARNImporter() (importer framework.WithImportByARN) {
 	importer.SetIdentitySpec(
 		inttypes.RegionalARNIdentity(),
+		inttypes.FrameworkImport{
+			WrappedImport: true,
+		},
 	)
 	return
 }
@@ -374,6 +383,9 @@ func regionalARNImporterWithDuplicateAttrs(attrs ...string) (importer framework.
 		inttypes.RegionalARNIdentity(
 			inttypes.WithIdentityDuplicateAttrs(attrs...),
 		),
+		inttypes.FrameworkImport{
+			WrappedImport: true,
+		},
 	)
 	return
 }

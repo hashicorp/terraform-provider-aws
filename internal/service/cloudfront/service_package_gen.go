@@ -43,7 +43,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Key Value Store",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
@@ -198,7 +198,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Real-time Log Config",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 			Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

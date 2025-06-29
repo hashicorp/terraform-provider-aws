@@ -51,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Classification Export Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.Import{
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

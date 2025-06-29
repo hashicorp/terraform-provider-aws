@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package retry
+package retry_test
 
 import (
 	"context"
@@ -9,7 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+var (
+	testBackoffOpts = backoff.WithDelay(backoff.ZeroDelay) // Use 0 delay for testing
 )
 
 type ErrorGenerator struct {
@@ -38,7 +44,7 @@ func NewErrorGenerator(sequence []error) *ErrorGenerator {
 	return g
 }
 
-func NewOpFunc(sequence []error, d time.Duration) OpFunc[any] {
+func NewOpFunc(sequence []error, d time.Duration) retry.OpFunc[any] {
 	g := NewErrorGenerator(sequence)
 
 	return func(ctx context.Context) (any, error) {
@@ -53,7 +59,7 @@ func NewOpFunc(sequence []error, d time.Duration) OpFunc[any] {
 	}
 }
 
-func UntilFoundOpFunc() OpFunc[any] {
+func UntilFoundOpFunc() retry.OpFunc[any] {
 	sequence := []error{
 		tfresource.NewEmptyResultError(nil),
 		tfresource.NewEmptyResultError(nil),
@@ -68,7 +74,7 @@ func UntilFoundOpFunc() OpFunc[any] {
 	return NewOpFunc(sequence, 0)
 }
 
-func UntilFoundSleepOpFunc() OpFunc[any] {
+func UntilFoundSleepOpFunc() retry.OpFunc[any] {
 	sequence := []error{
 		tfresource.NewEmptyResultError(nil),
 		tfresource.NewEmptyResultError(nil),
@@ -80,10 +86,10 @@ func UntilFoundSleepOpFunc() OpFunc[any] {
 		nil,
 	}
 
-	return NewOpFunc(sequence, 1*time.Minute)
+	return NewOpFunc(sequence, 1*time.Second)
 }
 
-func UntilNotFoundOpFunc() OpFunc[any] {
+func UntilNotFoundOpFunc() retry.OpFunc[any] {
 	sequence := []error{
 		nil,
 		nil,
@@ -94,7 +100,7 @@ func UntilNotFoundOpFunc() OpFunc[any] {
 	return NewOpFunc(sequence, 0)
 }
 
-func UntilNotFoundFailureOpFunc() OpFunc[any] {
+func UntilNotFoundFailureOpFunc() retry.OpFunc[any] {
 	sequence := []error{
 		nil,
 		nil,
@@ -132,7 +138,7 @@ func TestUntilFoundN(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(UntilFoundOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute)
+			_, err := retry.Operation(UntilFoundOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -158,7 +164,7 @@ func TestUntilFoundN_timeout(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Minute)
+			_, err := retry.Operation(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow).Run(t.Context(), 2*time.Second, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -171,7 +177,7 @@ func TestUntilNotFound(t *testing.T) {
 
 	testCases := []struct {
 		Name    string
-		Op      OpFunc[any]
+		Op      retry.OpFunc[any]
 		WantErr bool
 	}{
 		{
@@ -189,7 +195,7 @@ func TestUntilNotFound(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := Operation(testCase.Op).UntilNotFound().Run(t.Context(), 2*time.Minute)
+			_, err := retry.Operation(testCase.Op).UntilNotFound().Run(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +70,7 @@ type ServicePackageFrameworkResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   FrameworkImport
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -91,7 +92,7 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   SDKv2Import
 }
 
 type Identity struct {
@@ -99,7 +100,7 @@ type Identity struct {
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
+	IdentityAttribute      string // ARN, Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
@@ -253,7 +254,8 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
-		Attributes: append(baseAttributes, attributes...),
+		IsGlobalResource: true,
+		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
@@ -311,6 +313,26 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-type Import struct {
+type ImportIDParser interface {
+	Parse(id string) (string, map[string]string, error)
+}
+
+type FrameworkImportIDCreator interface {
+	Create(ctx context.Context, state tfsdk.State) string
+}
+
+type FrameworkImport struct {
 	WrappedImport bool
+	ImportID      ImportIDParser // Multi-Parameter
+	SetIDAttr     bool
+}
+
+type SDKv2ImportID interface {
+	Create(d *schema.ResourceData) string
+	ImportIDParser
+}
+
+type SDKv2Import struct {
+	WrappedImport bool
+	ImportID      SDKv2ImportID // Multi-Parameter
 }

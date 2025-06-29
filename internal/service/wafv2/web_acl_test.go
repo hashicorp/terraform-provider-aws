@@ -885,6 +885,90 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 	})
 }
 
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_antiDDosRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_antiDDoSRuleSet(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:              "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.#":                                                                                      "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.sensitivity_to_block":                                                                 "HIGH",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.#":                                                          "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.#":                                              "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.usage_of_action":                              "ENABLED",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.#":              "2",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.0.regex_string": "\\/api\\/",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.1.regex_string": "jpg",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.sensitivity":                                  "MEDIUM",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesAntiDDoSRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_antiDDoSRuleSetWithDefaultSensitivity(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:              "rule-1",
+						"action.#":                  "0",
+						"override_action.#":         "1",
+						"override_action.0.count.#": "0",
+						"override_action.0.none.#":  "1",
+						"statement.#":               "1",
+						"statement.0.managed_rule_group_statement.#": "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.#":                                                                                      "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.sensitivity_to_block":                                                                 "LOW",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.#":                                                          "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.#":                                              "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.usage_of_action":                              "ENABLED",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.#":              "2",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.0.regex_string": "\\/api\\/",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.exempt_uri_regular_expression.1.regex_string": "jpg",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_anti_ddos_rule_set.0.client_side_action_config.0.challenge.0.sensitivity":                                  "HIGH",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesAntiDDoSRuleSet",
+						"statement.0.managed_rule_group_statement.0.rule_action_override.#": "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
@@ -5150,6 +5234,134 @@ resource "aws_wafv2_web_acl" "test" {
               payload_type = "JSON"
               username_field {
                 identifier = "/username"
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_antiDDoSRuleSet(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAntiDDoSRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_anti_ddos_rule_set {
+            client_side_action_config {
+              challenge {
+                usage_of_action = "ENABLED"
+                exempt_uri_regular_expression {
+                  regex_string = "\\/api\\/"
+                }
+                exempt_uri_regular_expression {
+                  regex_string = "jpg"
+                }
+                sensitivity = "MEDIUM"
+              }
+            }
+            sensitivity_to_block = "HIGH"
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_antiDDoSRuleSetWithDefaultSensitivity(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAntiDDoSRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_anti_ddos_rule_set {
+            client_side_action_config {
+              challenge {
+                usage_of_action = "ENABLED"
+                exempt_uri_regular_expression {
+                  regex_string = "\\/api\\/"
+                }
+                exempt_uri_regular_expression {
+                  regex_string = "jpg"
+                }
               }
             }
           }

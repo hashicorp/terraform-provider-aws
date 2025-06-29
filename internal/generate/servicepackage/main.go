@@ -183,6 +183,8 @@ type ResourceDatum struct {
 	WrappedImport                     bool
 	goImports                         []goImport
 	IdentityDuplicateAttrs            []string
+	ImportIDHandler                   string
+	SetIDAttribute                    bool
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -452,6 +454,28 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "NoImport":
 				d.WrappedImport = false
+
+			case "ImportIDHandler":
+				args := common.ParseArgs(m[3])
+				attr := args.Positional[0]
+				if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				} else {
+					d.ImportIDHandler = typeName
+					if importSpec != nil {
+						d.goImports = append(d.goImports, *importSpec)
+					}
+				}
+
+				if attr, ok := args.Keyword["setIDAttribute"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SetIDAttribute = b
+					}
+				}
 			}
 		}
 	}
@@ -586,9 +610,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport":
 				// Handled above.
-			case "ArnFormat", "NoImport", "Testing":
+			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)
@@ -607,4 +631,26 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
+}
+
+func parseIdentifierSpec(s string) (string, *goImport, error) {
+	parts := strings.Split(s, ";")
+	switch len(parts) {
+	case 1:
+		return parts[0], nil, nil
+
+	case 2:
+		return parts[1], &goImport{
+			Path: parts[0],
+		}, nil
+
+	case 3:
+		return parts[2], &goImport{
+			Path:  parts[0],
+			Alias: parts[1],
+		}, nil
+
+	default:
+		return "", nil, fmt.Errorf("invalid generator value: %q", s)
+	}
 }

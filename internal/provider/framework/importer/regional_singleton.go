@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func RegionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	accountIDPath := path.Root(names.AttrAccountID)
 	regionPath := path.Root(names.AttrRegion)
 
