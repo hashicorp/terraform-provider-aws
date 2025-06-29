@@ -5,19 +5,16 @@ package rbin_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
-	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfrbin "github.com/hashicorp/terraform-provider-aws/internal/service/rbin"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -292,46 +289,39 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetRule(ctx, &rbin.GetRuleInput{
-				Identifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfrbin.FindRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.RBin, create.ErrActionCheckingDestroyed, tfrbin.ResNameRule, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("RBin Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRuleExists(ctx context.Context, name string, rbinrule *rbin.GetRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *rbin.GetRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RBinClient(ctx)
 
-		resp, err := conn.GetRule(ctx, &rbin.GetRuleInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfrbin.FindRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.RBin, create.ErrActionCheckingExistence, tfrbin.ResNameRule, rs.Primary.ID, err)
+			return err
 		}
 
-		*rbinrule = *resp
+		*v = *output
 
 		return nil
 	}
