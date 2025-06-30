@@ -44,6 +44,7 @@ This document is designed to enable **AI systems** (and humans) to fully and acc
 - `create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)` → `smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())`
 
 **General Rule:**
+
 - Always pass `ctx` as the first argument, and the diagnostics object as the second.
 - Always pass the error as the third argument.
 - Always pass `smerr.ID` and any available resource ID or context as additional arguments.
@@ -64,10 +65,13 @@ smarterr's `EnrichAppend`, `AddError`, and `Append` take variadic keyvals. Where
 ### 2. Replace All Bare Error Returns
 
 **Before:**
+
 ```go
 return nil, err
 ```
+
 **After:**
+
 ```go
 return nil, smarterr.NewError(err)
 ```
@@ -77,19 +81,25 @@ return nil, smarterr.NewError(err)
 ### 3. Wrap tfresource Helpers
 
 **Before:**
+
 ```go
 return tfresource.AssertSingleValueResult(...)
 ```
+
 **After:**
+
 ```go
 return smarterr.Assert(tfresource.AssertSingleValueResult(...))
 ```
 
 **Before:**
+
 ```go
 return nil, tfresource.NewEmptyResultError(...)
 ```
+
 **After:**
+
 ```go
 return nil, smarterr.NewError(tfresource.NewEmptyResultError(...))
 ```
@@ -99,10 +109,13 @@ return nil, smarterr.NewError(tfresource.NewEmptyResultError(...))
 ### 4. Replace All Direct Diagnostics.Append Calls
 
 **Before:**
+
 ```go
 resp.Diagnostics.Append(...)
 ```
+
 **After:**
+
 ```go
 smerr.EnrichAppend(ctx, &resp.Diagnostics, ...)
 ```
@@ -135,6 +148,7 @@ smerr.EnrichAppend(ctx, &resp.Diagnostics, ...)
 ### 7. Why Wrap Errors?
 
 Wrapping errors with `smarterr.NewError()` captures call stack information at the time of failure. This enables smarterr to:
+
 - Determine subaction (e.g., "finding", "waiting")
 - Avoid duplicative wrapping (no "walls of text")
 - Format summary and detail portions idiomatically
