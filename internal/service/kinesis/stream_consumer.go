@@ -72,6 +72,10 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 		StreamARN:    aws.String(d.Get(names.AttrStreamARN).(string)),
 	}
 
+	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
+	}
+
 	output, err := conn.RegisterStreamConsumer(ctx, input)
 
 	if err != nil {
