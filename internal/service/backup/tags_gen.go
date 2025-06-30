@@ -3,6 +3,7 @@ package backup
 
 import (
 	"context"
+	"maps"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,13 +24,20 @@ func listTags(ctx context.Context, conn *backup.Client, identifier string, optFn
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(ctx, &input, optFns...)
+	output := make(map[string]string)
 
-	if err != nil {
-		return tftags.New(ctx, nil), smarterr.NewError(err)
+	pages := backup.NewListTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		maps.Copy(output, page.Tags)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists backup service tags and set them in Context.

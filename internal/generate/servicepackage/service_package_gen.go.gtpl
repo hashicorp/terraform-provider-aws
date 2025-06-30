@@ -123,8 +123,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					// Parameterized Identity with more than one attribute not supported
-					/*{{- if or $.IsGlobal $value.IsGlobal }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -136,7 +135,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{- end }}*/
+					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
@@ -193,8 +192,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}
-					Import: inttypes.Import{
+					Import: inttypes.FrameworkImport{
 						WrappedImport: true,
+						{{- if ne $value.ImportIDHandler "" }}
+							ImportID: {{ $value.ImportIDHandler }}{},
+						{{- end }}
+						{{- if $value.SetIDAttribute }}
+							SetIDAttr: true,
+						{{- end }}
 					},
 				{{- end }}
 			{{- end }}
@@ -266,8 +271,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	{{- end }}
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
-					// Parameterized Identity with more than one attribute not supported
-					/*{{- if or $.IsGlobal $value.IsGlobal }}
+					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalParameterizedIdentity(
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
@@ -279,7 +283,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
 						),
-					{{- end }}*/
+					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
@@ -316,8 +320,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}
-					Import: inttypes.Import{
+					Import: inttypes.SDKv2Import{
 						WrappedImport: true,
+						{{- if ne $value.ImportIDHandler "" }}
+							ImportID: {{ $value.ImportIDHandler }}{},
+						{{- end }}
 					},
 				{{- end }}
 			{{- end }}

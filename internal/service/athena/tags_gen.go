@@ -24,13 +24,20 @@ func listTags(ctx context.Context, conn *athena.Client, identifier string, optFn
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(ctx, nil), smarterr.NewError(err)
+	pages := athena.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists athena service tags and set them in Context.

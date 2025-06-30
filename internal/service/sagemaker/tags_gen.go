@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *sagemaker.Client, identifier string, op
 	input := sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := sagemaker.NewListTagsPaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *sagemaker.Client, identifier string, op
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

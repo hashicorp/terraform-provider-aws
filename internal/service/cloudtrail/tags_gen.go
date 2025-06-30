@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, o
 	input := cloudtrail.ListTagsInput{
 		ResourceIdList: []string{identifier},
 	}
+
 	var output []awstypes.Tag
 
 	pages := cloudtrail.NewListTagsPaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, o
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.ResourceTagList[0].TagsList {
-			output = append(output, v)
-		}
+		output = append(output, page.ResourceTagList[0].TagsList...)
 	}
 
 	return keyValueTags(ctx, output), nil

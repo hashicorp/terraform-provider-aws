@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *acmpca.Client, identifier string, optFn
 	input := acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := acmpca.NewListTagsPaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *acmpca.Client, identifier string, optFn
 			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

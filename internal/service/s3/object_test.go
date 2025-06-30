@@ -167,7 +167,13 @@ func TestAccS3Object_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccObjectImportByS3URL(resourceName),
 			},
 		},
 	})
@@ -280,7 +286,6 @@ func TestAccS3Object_source(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -310,7 +315,6 @@ func TestAccS3Object_content(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -343,7 +347,6 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -421,7 +424,6 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -700,7 +702,6 @@ func TestAccS3Object_kms(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -734,7 +735,6 @@ func TestAccS3Object_sse(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -786,7 +786,6 @@ func TestAccS3Object_acl(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -834,7 +833,6 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -897,7 +895,6 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1607,7 +1604,6 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
@@ -1734,7 +1730,6 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1819,7 +1814,6 @@ func TestAccS3Object_DirectoryBucket_kmsSSE(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider", names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2123,7 +2117,7 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 	}
 }
 
-func testAccObjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc { // nosemgrep:s3-in-func-name
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

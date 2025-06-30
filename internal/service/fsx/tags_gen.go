@@ -24,13 +24,20 @@ func listTags(ctx context.Context, conn *fsx.Client, identifier string, optFns .
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(ctx, nil), smarterr.NewError(err)
+	pages := fsx.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists fsx service tags and set them in Context.
