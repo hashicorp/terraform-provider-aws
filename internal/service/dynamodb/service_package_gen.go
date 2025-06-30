@@ -98,7 +98,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_dynamodb_table_export",
 			Name:     "Table Export",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
