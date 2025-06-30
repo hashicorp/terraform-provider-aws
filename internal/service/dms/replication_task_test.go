@@ -508,11 +508,11 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_s3ToRDS(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

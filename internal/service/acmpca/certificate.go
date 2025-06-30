@@ -24,13 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -70,17 +69,7 @@ func resourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_passthrough": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"api_passthrough": sdkv2.JSONDocumentSchemaOptionalForceNew(),
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -149,7 +138,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
-	inputI := acmpca.IssueCertificateInput{
+	input := acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(id.UniqueId()),
@@ -161,21 +150,21 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		if err := json.Unmarshal([]byte(v), ap); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		inputI.ApiPassthrough = ap
+		input.ApiPassthrough = ap
 	}
 
 	if v, ok := d.Get("template_arn").(string); ok && v != "" {
-		inputI.TemplateArn = aws.String(v)
+		input.TemplateArn = aws.String(v)
 	}
 
 	if validity, err := expandValidity(d.Get("validity").([]any)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
-		inputI.Validity = validity
+		input.Validity = validity
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (any, error) {
-		return conn.IssueCertificate(ctx, &inputI)
+		return conn.IssueCertificate(ctx, &input)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
 	if err != nil {
@@ -185,11 +174,9 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	inputG := acmpca.GetCertificateInput{
-		CertificateArn:          aws.String(d.Id()),
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-	}
-	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, &inputG, certificateIssueTimeout)
+	_, err = tfresource.RetryWhenIsA[*types.RequestInProgressException](ctx, certificateIssueTimeout, func() (any, error) {
+		return findCertificateByTwoPartKey(ctx, conn, d.Id(), certificateAuthorityARN)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)

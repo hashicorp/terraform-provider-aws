@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -164,6 +165,30 @@ func TestAccKMSKey_hmacKey(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "HMAC_256"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "GENERATE_VERIFY_MAC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_postQuantum(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_postQuantum(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "ML_DSA_65"),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
 				),
 			},
 		},
@@ -861,6 +886,18 @@ resource "aws_kms_key" "test" {
 `, rName)
 }
 
+func testAccKeyConfig_postQuantum(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  key_usage                = "SIGN_VERIFY"
+  customer_master_key_spec = "ML_DSA_65"
+}
+`, rName)
+}
+
 func testAccKeyConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 
@@ -893,7 +930,6 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-  enable_key_rotation     = true
 
   bypass_policy_lockout_safety_check = %[2]t
 

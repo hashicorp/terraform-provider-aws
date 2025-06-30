@@ -99,3 +99,121 @@ variable "AWS_ALTERNATE_SECRET_ACCESS_KEY" {
   default  = null
 }
 {{- end }}
+
+{{ define "acctest.ConfigLambdaBase" -}}
+{{/* Does not include the resource "aws_subnet.subnet_for_lambda_az2" */}}
+# acctest.ConfigLambdaBase
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name = var.rName
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "iam_policy_for_lambda" {
+  name = var.rName
+  role = aws_iam_role.iam_for_lambda.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "SNS:Publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "xray:PutTraceSegments"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_vpc" "vpc_for_lambda" {
+{{- template "region" }}
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+}
+
+resource "aws_subnet" "subnet_for_lambda" {
+{{- template "region" }}
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
+}
+
+resource "aws_security_group" "sg_for_lambda" {
+{{- template "region" }}
+  name        = var.rName
+  description = "Allow all inbound traffic for lambda test"
+  vpc_id      = aws_vpc.vpc_for_lambda.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+data "aws_partition" "current" {}
+
+{{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
+{{- end }}

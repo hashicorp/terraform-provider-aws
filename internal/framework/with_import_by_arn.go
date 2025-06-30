@@ -13,17 +13,19 @@ import (
 
 // TODO: Needs a better name
 type ImportByIdentityer interface {
-	SetIdentitySpec(identity inttypes.Identity)
+	SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport)
 }
 
 var _ ImportByIdentityer = &WithImportByARN{}
 
 type WithImportByARN struct {
-	identity inttypes.Identity
+	identity   inttypes.Identity
+	importSpec inttypes.FrameworkImport
 }
 
-func (w *WithImportByARN) SetIdentitySpec(identity inttypes.Identity) {
+func (w *WithImportByARN) SetIdentitySpec(identity inttypes.Identity, importSpec inttypes.FrameworkImport) {
 	w.identity = identity
+	w.importSpec = importSpec
 }
 
 func (w *WithImportByARN) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -39,10 +41,10 @@ func (w *WithImportByARN) ImportState(ctx context.Context, request resource.Impo
 		return
 	}
 	if w.identity.IsGlobalResource {
-		importer.GlobalARN(ctx, client, request, &w.identity, response)
+		importer.GlobalARN(ctx, client, request, &w.identity, &w.importSpec, response)
 	} else if w.identity.IsGlobalARNFormat {
-		importer.RegionalARNWithGlobalFormat(ctx, client, request, &w.identity, response)
+		importer.RegionalARNWithGlobalFormat(ctx, client, request, &w.identity, &w.importSpec, response)
 	} else {
-		importer.RegionalARN(ctx, client, request, &w.identity, response)
+		importer.RegionalARN(ctx, client, request, &w.identity, &w.importSpec, response)
 	}
 }

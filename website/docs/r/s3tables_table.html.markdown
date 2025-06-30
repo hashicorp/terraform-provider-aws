@@ -32,6 +32,53 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Metadata Schema
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "long"
+          required = true
+        }
+        field {
+          name     = "name"
+          type     = "string"
+          required = true
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = false
+        }
+        field {
+          name     = "price"
+          type     = "decimal(10,2)"
+          required = false
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -54,6 +101,8 @@ The following arguments are optional:
   [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+* `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format.
+  [See `metadata` below](#metadata).
 
 ### `encryption_configuration`
 
@@ -104,6 +153,35 @@ The `iceberg_snapshot_management.settings` object supports the following argumen
   Must be at least `1`.
 * `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep.
   Must be at least `1`.
+
+### `metadata`
+
+The `metadata` configuration block supports the following argument:
+
+* `iceberg` - (Optional) Contains details about the metadata for an Iceberg table. This block defines the schema structure for the Apache Iceberg table format.
+  [See `iceberg` below](#iceberg).
+
+### `iceberg`
+
+The `iceberg` configuration block supports the following argument:
+
+* `schema` - (Required) Schema configuration for the Iceberg table.
+  [See `schema` below](#schema).
+
+### `schema`
+
+The `schema` configuration block supports the following argument:
+
+* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema.
+  [See `field` below](#field).
+
+### `field`
+
+The `field` configuration block supports the following arguments:
+
+* `name` - (Required) The name of the field.
+* `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
+* `required` - (Optional) A Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
 
 ## Attribute Reference
 

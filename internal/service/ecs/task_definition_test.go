@@ -980,6 +980,11 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -989,9 +994,15 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 			{
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
-				Config:             testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
+				Config: testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000, "hostPort": 8000}]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
