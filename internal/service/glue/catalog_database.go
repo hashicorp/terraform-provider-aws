@@ -47,7 +47,7 @@ func resourceCatalogDatabase() *schema.Resource {
 				// Handle the case where create_table_default_permission is configured as an empty block
 				// This is needed to enable Lake Formation-only permissions
 				old, new := diff.GetChange("create_table_default_permission")
-				
+
 				// Check if we have an empty block in the new configuration
 				if new != nil {
 					if newList, ok := new.([]any); ok && len(newList) == 1 {
@@ -60,13 +60,13 @@ func resourceCatalogDatabase() *schema.Resource {
 						}
 					}
 				}
-				
+
 				// Check if we're removing the block entirely
 				if old != nil && len(old.([]any)) > 0 && (new == nil || len(new.([]any)) == 0) {
 					// Block was removed, this should trigger an update
 					return nil
 				}
-				
+
 				return nil
 			},
 		),
