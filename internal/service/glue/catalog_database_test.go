@@ -99,15 +99,24 @@ func TestAccGlueCatalogDatabase_createTablePermissionTransition(t *testing.T) {
 				),
 			},
 			{
+				Config:  testAccCatalogDatabaseConfig_emptyPermission(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					// Empty block should result in the block being present but with 0 permissions
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "0"),
+				),
+			},
+			{
 				Config:  testAccCatalogDatabaseConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					// After removing the block, should have default permissions
+					// After removing the block entirely, AWS keeps the empty permissions from step 2
+					// AWS doesn't automatically restore default permissions once they've been cleared
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "0"),
 				),
 			},
 		},
@@ -551,6 +560,17 @@ resource "aws_glue_catalog_database" "test" {
   }
 }
 `, rName, permission)
+}
+
+func testAccCatalogDatabaseConfig_emptyPermission(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+
+  create_table_default_permission {
+  }
+}
+`, rName)
 }
 
 func testAccCatalogDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
