@@ -1,6 +1,9 @@
 ## 6.2.0 (Unreleased)
 ## 6.1.0 (June 26, 2025)
 
+> [!IMPORTANT]
+> Terraform AWS Provider **v6.1.0** was withdrawn and [removed](https://github.com/hashicorp/terraform-provider-aws/issues/43213) from the Terraform registry shortly after release due to a [significant bug](https://github.com/hashicorp/terraform-provider-aws/issues/43199) that could not be remediated quickly.
+
 ENHANCEMENTS:
 
 * data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.stateful_rule_group_reference.deep_threat_inspection` attribute ([#43137](https://github.com/hashicorp/terraform-provider-aws/issues/43137))
