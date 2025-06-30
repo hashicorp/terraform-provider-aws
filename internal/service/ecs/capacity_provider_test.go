@@ -306,7 +306,7 @@ func TestAccECSCapacityProvider_Identity_ExistingResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`capacity-provider//.+`)),
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`capacity-provider/.+`)),
 					}),
 				},
 			},
