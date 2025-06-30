@@ -22,6 +22,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -1523,6 +1524,11 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1530,9 +1536,15 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccTableConfig_gsiMultipleNonKeyAttributes(rName, reorderedAttributes),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccTableConfig_gsiMultipleNonKeyAttributes(rName, reorderedAttributes),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1557,6 +1569,11 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1572,9 +1589,15 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccTableConfig_timeToLive_unset(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccTableConfig_timeToLive_unset(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1599,6 +1622,11 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -1614,9 +1642,15 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccTableConfig_timeToLive_unset(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccTableConfig_timeToLive_unset(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -2101,6 +2135,11 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{name}"),
 					testAccCheckReplicaTags(ctx, resourceName, acctest.AlternateRegion(), map[string]string{}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2127,6 +2166,11 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{})),
 				},
@@ -2136,6 +2180,11 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2152,8 +2201,15 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccTableConfig_replica1(rName),
-				PlanOnly: true,
+				Config: testAccTableConfig_replica1(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -3252,6 +3308,11 @@ func TestAccDynamoDBTable_tableClassExplicitDefault(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -3259,8 +3320,15 @@ func TestAccDynamoDBTable_tableClassExplicitDefault(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccTableConfig_class(rName, "STANDARD"),
-				PlanOnly: true,
+				Config: testAccTableConfig_class(rName, "STANDARD"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -3331,13 +3399,27 @@ func TestAccDynamoDBTable_tableClass_migrate(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("table_class"), knownvalue.StringExact("")),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccTableConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -4581,7 +4663,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -4612,7 +4694,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 }
 `, rName, sseEnabled))
@@ -4652,7 +4734,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.awsalternate.arn
   }
 
@@ -4695,11 +4777,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 
   server_side_encryption {
@@ -4774,12 +4856,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
     kms_key_arn = aws_kms_key.%[2]s.arn
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
     kms_key_arn = aws_kms_key.%[3]s.arn
   }
 
@@ -4826,12 +4908,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
   }
 }
@@ -4892,13 +4974,13 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name            = data.aws_region.alternate.name
+    region_name            = data.aws_region.alternate.region
     point_in_time_recovery = %[3]t
     kms_key_arn            = aws_kms_key.alternate.arn
   }
 
   replica {
-    region_name            = data.aws_region.third.name
+    region_name            = data.aws_region.third.region
     point_in_time_recovery = %[4]t
     kms_key_arn            = aws_kms_key.third.arn
   }
@@ -4931,12 +5013,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = data.aws_region.alternate.name
+    region_name    = data.aws_region.alternate.region
     propagate_tags = %[4]t
   }
 
   replica {
-    region_name    = data.aws_region.third.name
+    region_name    = data.aws_region.third.region
     propagate_tags = %[5]t
   }
 
@@ -4974,11 +5056,11 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name = data.aws_region.third.region
   }
 }
 `, rName))
@@ -5236,7 +5318,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.alternate.region
   }
 
   stream_enabled   = %[2]t
@@ -5252,28 +5334,23 @@ func testAccTableConfig_replicaDeletionProtection(rName string, deletionProtecti
 data "aws_region" "alternate" {
   provider = "awsalternate"
 }
-
 data "aws_region" "third" {
   provider = "awsthird"
 }
-
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
   stream_enabled   = true
   stream_view_type = "NEW_AND_OLD_IMAGES"
-
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
-
   replica {
     region_name                 = data.aws_region.alternate.name
     deletion_protection_enabled = %[2]t
   }
-
   replica {
     region_name                 = data.aws_region.third.name
     deletion_protection_enabled = %[2]t
