@@ -183,12 +183,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("create_table_default_permission"); ok {
-		permissions := expandDatabasePrincipalPermissions(v.([]any))
-		// Ensure we always set the field, even for empty arrays
-		if permissions == nil {
-			permissions = []awstypes.PrincipalPermissions{}
-		}
-		dbInput.CreateTableDefaultPermissions = permissions
+		dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
 	}
 
 	input := &glue.CreateDatabaseInput{
@@ -301,12 +296,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk("create_table_default_permission"); ok {
-			permissions := expandDatabasePrincipalPermissions(v.([]any))
-			// Ensure we always set the field, even for empty arrays
-			if permissions == nil {
-				permissions = []awstypes.PrincipalPermissions{}
-			}
-			dbInput.CreateTableDefaultPermissions = permissions
+			dbInput.CreateTableDefaultPermissions = expandDatabasePrincipalPermissions(v.([]any))
 		}
 
 		dbUpdateInput.DatabaseInput = dbInput
@@ -467,49 +457,46 @@ func expandDatabasePrincipalPermissions(tfList []any) []awstypes.PrincipalPermis
 		return nil
 	}
 
-	var apiObjects []awstypes.PrincipalPermissions
+	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
-
 		if !ok {
 			continue
 		}
 
-		// Check if this is an empty block (no permissions and no principal)
-		hasPermissions := false
-		if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
-			hasPermissions = true
-		}
-		
-		hasPrincipal := false
-		if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
-			hasPrincipal = true
-		}
-		
-		// If the block is completely empty, we want to send an empty array to AWS
-		// So we don't add any objects to the array, but we don't return nil either
-		if !hasPermissions && !hasPrincipal {
-			// This represents an empty block - we want to send [] to AWS
+		// Skip empty blocks (no permissions and no principal)
+		if isEmptyPermissionBlock(tfMap) {
 			continue
 		}
 
-		apiObject := expandDatabasePrincipalPermission(tfMap)
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandDatabasePrincipalPermission(tfMap))
 	}
 
 	return apiObjects
 }
 
+func isEmptyPermissionBlock(tfMap map[string]any) bool {
+	hasPermissions := false
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
+		hasPermissions = true
+	}
+
+	hasPrincipal := false
+	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
+		hasPrincipal = true
+	}
+
+	return !hasPermissions && !hasPrincipal
+}
+
 func expandDatabasePrincipalPermission(tfMap map[string]any) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{}
 
-	// Check if we have any permissions
 	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Permissions = flex.ExpandStringyValueSet[awstypes.Permission](v)
 	}
 
-	// Check if we have a principal
 	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]any))
 	}
