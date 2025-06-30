@@ -970,23 +970,12 @@ func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 func (r *resourceTransformer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("log_group_identifier"), req, resp)
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
 const (
-	statusNormal        = "Normal"
+	statusNormal = "Normal"
 )
 
 // TIP: ==== WAITERS ====
