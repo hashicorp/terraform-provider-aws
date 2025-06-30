@@ -86,7 +86,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .UntagOp }}Input{
+		input := {{ .AWSService }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
@@ -138,7 +138,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .TagOp }}Input{
+		input := {{ .AWSService }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},

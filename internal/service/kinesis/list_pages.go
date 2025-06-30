@@ -12,9 +12,9 @@ import (
 
 // Custom Kinesis service lister functions using the same format as generated code.
 
-func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListShardsInput, fn func(*kinesis.ListShardsOutput, bool) bool) error {
+func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListShardsInput, fn func(*kinesis.ListShardsOutput, bool) bool, optFns ...func(*kinesis.Options)) error {
 	for {
-		output, err := conn.ListShards(ctx, input)
+		output, err := conn.ListShards(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -32,9 +32,9 @@ func listShardsPages(ctx context.Context, conn *kinesis.Client, input *kinesis.L
 	return nil
 }
 
-func listTagsForStreamPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListTagsForStreamInput, fn func(*kinesis.ListTagsForStreamOutput, bool) bool) error {
+func listTagsForStreamPages(ctx context.Context, conn *kinesis.Client, input *kinesis.ListTagsForStreamInput, fn func(*kinesis.ListTagsForStreamOutput, bool) bool, optFns ...func(*kinesis.Options)) error {
 	for {
-		output, err := conn.ListTagsForStream(ctx, input)
+		output, err := conn.ListTagsForStream(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -44,9 +44,7 @@ func listTagsForStreamPages(ctx context.Context, conn *kinesis.Client, input *ki
 			break
 		}
 
-		if n := len(output.Tags); n > 0 {
-			input.ExclusiveStartTagKey = output.Tags[n-1].Key
-		}
+		input.ExclusiveStartTagKey = output.Tags[len(output.Tags)-1].Key
 	}
 	return nil
 }

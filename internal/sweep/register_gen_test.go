@@ -164,6 +164,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
@@ -343,6 +344,7 @@ func registerSweepers() {
 	ssm.RegisterSweepers()
 	ssmcontacts.RegisterSweepers()
 	ssmincidents.RegisterSweepers()
+	ssmquicksetup.RegisterSweepers()
 	ssoadmin.RegisterSweepers()
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()

@@ -170,6 +170,14 @@ func (d *baseDestination) BufferTemplate(templateName, templateBody string, temp
 
 func parseTemplate(templateName, templateBody string, templateData any, funcMaps ...template.FuncMap) ([]byte, error) {
 	funcMap := template.FuncMap{
+		// FirstLower returns a string with the first character as lower case.
+		"FirstLower": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			r, n := utf8.DecodeRuneInString(s)
+			return string(unicode.ToLower(r)) + s[n:]
+		},
 		// FirstUpper returns a string with the first character as upper case.
 		"FirstUpper": func(s string) string {
 			if s == "" {
