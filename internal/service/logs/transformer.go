@@ -875,30 +875,8 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceTransformerModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -906,7 +884,6 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	// TIP: -- 3. Get the difference between the plan and state, if any
 	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
@@ -914,48 +891,45 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if diff.HasChanges() {
-		var input cloudwatchlogs.UpdateTransformerInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		var input cloudwatchlogs.PutTransformerInput
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdateTransformer(ctx, &input)
+		out, err := conn.PutTransformer(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		if out == nil || out.Transformer == nil {
+		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameTransformer, plan.LogGroupIdentifier.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
-		}
-
-		// TIP: Using the output from the update function, re-set any computed attributes
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		}		
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTransformerUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	transformer, err := waitTransformerUpdated(ctx, conn, plan.LogGroupIdentifier.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForUpdate, ResNameTransformer, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForUpdate, ResNameTransformer, plan.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
+	// PutTransformer returns an empty body, so we propagate the state from the status call
+	resp.Diagnostics.Append(flex.Flatten(ctx, transformer, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
