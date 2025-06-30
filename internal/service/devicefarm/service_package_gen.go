@@ -41,7 +41,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -55,7 +57,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -69,7 +73,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -83,7 +89,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -97,7 +105,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -108,7 +118,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Upload",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
