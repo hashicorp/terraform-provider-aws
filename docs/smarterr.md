@@ -125,12 +125,12 @@ smerr.EnrichAppend(ctx, &resp.Diagnostics, ...)
 ### 5. Framework vs SDKv2: How to Identify
 
 - **Framework-style:**
-  - Uses `github.com/hashicorp/terraform-plugin-framework/resource`
-  - Has `@FrameworkResource` or `@FrameworkDataSource` comments
-  - Defines methods like `Schema`, `Create`, `Read`, `Update`, `Delete`
+    - Uses `github.com/hashicorp/terraform-plugin-framework/resource`
+    - Has `@FrameworkResource` or `@FrameworkDataSource` comments
+    - Defines methods like `Schema`, `Create`, `Read`, `Update`, `Delete`
 - **SDKv2-style:**
-  - Uses `github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema`
-  - Has `@SDKResource` comment and returns `*schema.Resource`
+    - Uses `github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema`
+    - Has `@SDKResource` comment and returns `*schema.Resource`
 
 ---
 
