@@ -27,16 +27,13 @@ import (
 
 // @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
 func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
 		ReadWithoutTimeout:   resourceVPCConnectorRead,
 		UpdateWithoutTimeout: resourceVPCConnectorUpdate,
 		DeleteWithoutTimeout: resourceVPCConnectorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

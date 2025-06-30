@@ -42,7 +42,7 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -337,6 +337,9 @@ func (r *deploymentResource) ModifyPlan(ctx context.Context, request resource.Mo
 		}
 
 		response.Diagnostics.Append(response.Plan.Set(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 }
 
@@ -421,6 +424,7 @@ func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, 
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID      types.String   `tfsdk:"application_id"`
 	ApplicationVersion types.Int64    `tfsdk:"application_version"`
 	DeploymentID       types.String   `tfsdk:"deployment_id"`

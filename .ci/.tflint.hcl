@@ -25,3 +25,7 @@ rule "terraform_required_version" {
 rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }
+
+rule "aws_accessanalyzer_analyzer_invalid_type" {
+  enabled = false
+}

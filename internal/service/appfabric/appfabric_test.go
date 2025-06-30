@@ -21,10 +21,14 @@ func TestAccAppFabric_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AppBundle": {
-			acctest.CtBasic:      testAccAppBundle_basic,
-			acctest.CtDisappears: testAccAppBundle_disappears,
-			"cmk":                testAccAppBundle_cmk,
-			"tags":               testAccAppFabricAppBundle_tagsSerial,
+			acctest.CtBasic:       testAccAppBundle_basic,
+			acctest.CtDisappears:  testAccAppBundle_disappears,
+			"cmk":                 testAccAppBundle_cmk,
+			"tags":                testAccAppFabricAppBundle_tagsSerial,
+			"regionCreateNull":    testAccAppBundle_regionCreateNull,
+			"regionCreateNonNull": testAccAppBundle_regionCreateNonNull,
+			"upgradeFromV5":       testAccAppBundle_upgradeFromV5,
+			"Identity":            testAccAppFabricAppBundle_IdentitySerial,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,

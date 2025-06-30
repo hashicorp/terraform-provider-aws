@@ -201,7 +201,7 @@ data "aws_iam_policy_document" "test" {
       type = "Service"
 
       identifiers = [
-        "servicecatalog.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}",
+        "servicecatalog.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}",
       ]
     }
 

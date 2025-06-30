@@ -42,6 +42,7 @@ resource "aws_rds_shard_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_redundancy` - (Optional) Specifies whether to create standby DB shard groups for the DB shard group. Valid values are:
     * `0` - Creates a DB shard group without a standby DB shard group. This is the default value.
     * `1` - Creates a DB shard group with a standby DB shard group in a different Availability Zone (AZ).

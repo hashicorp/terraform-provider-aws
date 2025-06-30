@@ -27,7 +27,9 @@ import (
 	"github.com/dlclark/regexp2"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -112,7 +114,7 @@ func main() {
 		sourceName = strings.TrimSuffix(sourceName, "_")
 
 		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
-			g.Fatalf("determining provider service name: %w", err)
+			g.Fatalf("determining provider service name: %s", err)
 		} else {
 			resource.ResourceProviderNameUpper = name
 		}
@@ -180,6 +182,11 @@ func main() {
 					g.Fatalf("parsing base Terraform config template: %s", err)
 				}
 
+				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
+				if err != nil {
+					g.Fatalf(err.Error())
+				}
+
 				_, err = tfTemplates.New("body").Parse(configTmpl)
 				if err != nil {
 					g.Fatalf("parsing config template %q: %s", configTmplFile, err)
@@ -238,6 +245,11 @@ func main() {
 				tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
 				if err != nil {
 					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
+
+				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
+				if err != nil {
+					g.Fatalf(err.Error())
 				}
 
 				_, err = tfTemplates.New("body").Parse(configTmpl)
@@ -305,46 +317,57 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
-func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
 	}
 
-	var (
-		service data.ServiceRecord
-		found   bool
-	)
 	for _, svc := range sr.additional {
-		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
+		if match, err := resourceTypeNameMatchesService(typeName, svc); err != nil {
 			return "", err
 		} else if match {
-			service = svc
-			found = true
+			return svc.ProviderNameUpper(), nil
 		}
 	}
 
-	if !found {
-		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
-		if err != nil {
-			return "", err
-		}
-		if match, err := re.MatchString(resource); err != nil {
-			return "", err
+	if match, err := resourceTypeNameMatchesService(typeName, sr.primary); err != nil {
+		return "", err
+	} else if match {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", typeName)
+}
+
+func resourceTypeNameMatchesService(typeName string, sr data.ServiceRecord) (bool, error) {
+	prefixActual := sr.ResourcePrefixActual()
+	if prefixActual != "" {
+		if match, err := resourceTypeNameMatchesPrefix(typeName, prefixActual); err != nil {
+			return false, err
 		} else if match {
-			service = sr.primary
-			found = true
+			return true, nil
 		}
 	}
 
-	if found {
-		return service.ProviderNameUpper(), nil
+	if match, err := resourceTypeNameMatchesPrefix(typeName, sr.ResourcePrefixCorrect()); err != nil {
+		return false, err
+	} else if match {
+		return true, nil
 	}
 
-	return "", fmt.Errorf("No match found for resource type %q", resource)
+	return false, nil
+}
+
+func resourceTypeNameMatchesPrefix(typeName, typePrefix string) (bool, error) {
+	re, err := regexp2.Compile(typePrefix, 0)
+	if err != nil {
+		return false, err
+	}
+	match, err := re.MatchString(typeName)
+	if err != nil {
+		return false, err
+	}
+	return match, err
 }
 
 func (sr serviceRecords) PackageProviderNameUpper() string {
@@ -578,6 +601,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					hasIdentifierAttribute = true
 				}
 
+			case "NoImport":
+				d.NoImport = true
+
 			case "Testing":
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["altRegionProvider"]; ok {
@@ -683,6 +709,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
+				if attr, ok := args.Keyword["preCheckRegion"]; ok {
+					regions := strings.Split(attr, ";")
+					d.PreChecks = append(d.PreChecks, codeBlock{
+						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", strings.Join(tfslices.ApplyToAll(regions, func(s string) string {
+							return endpointsConstOrQuote(s)
+						}), ", ")),
+					})
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
+						},
+					)
+				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -771,7 +810,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					} else {
 						tlsKey = b
@@ -918,4 +957,16 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
+}
+
+func endpointsConstOrQuote(region string) string {
+	var buf strings.Builder
+	buf.WriteString("endpoints.")
+
+	for _, part := range strings.Split(region, "-") {
+		buf.WriteString(strings.Title(part))
+	}
+	buf.WriteString("RegionID")
+
+	return buf.String()
 }

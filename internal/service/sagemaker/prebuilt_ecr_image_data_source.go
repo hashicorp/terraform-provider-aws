@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -720,10 +721,29 @@ var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 }
 
 // @SDKDataSource("aws_sagemaker_prebuilt_ecr_image", name="Prebuilt ECR Image")
+// @Region(validateOverrideInPartition=false)
 func dataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
+
 		Schema: map[string]*schema.Schema{
+			"dns_suffix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"image_tag": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "1",
+			},
+			"registry_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"registry_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -811,51 +831,21 @@ func dataSourcePrebuiltECRImage() *schema.Resource {
 					repositoryXGBoost,
 				}, false),
 			},
-
-			"dns_suffix": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"image_tag": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "1",
-			},
-
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"registry_path": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
 func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
-		region = v.(string)
-	}
 
+	region := meta.(*conns.AWSClient).Region(ctx)
 	suffix := meta.(*conns.AWSClient).DNSSuffix(ctx)
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}
-
 	repo := d.Get(names.AttrRepositoryName).(string)
-
 	var id string
+
 	switch repo {
 	case repositoryBlazingText,
 		repositoryImageClassification,
@@ -949,12 +939,14 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if id == "" {
-		return sdkdiag.AppendErrorf(diags, "no registry ID available for region (%s) and repository (%s)", region, repo)
+		err := &retry.NotFoundError{}
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Prebuilt ECR Image for Region (%s) and repository (%s): %s", region, repo, err)
 	}
 
 	d.SetId(id)
 	d.Set("registry_id", id)
 	d.Set("registry_path", prebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
+
 	return diags
 }
 

@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 )
 
-func listGroupsForUserPages(ctx context.Context, conn *iam.Client, input *iam.ListGroupsForUserInput, fn func(*iam.ListGroupsForUserOutput, bool) bool) error {
+func listGroupsForUserPages(ctx context.Context, conn *iam.Client, input *iam.ListGroupsForUserInput, fn func(*iam.ListGroupsForUserOutput, bool) bool, optFns ...func(*iam.Options)) error {
 	for {
-		output, err := conn.ListGroupsForUser(ctx, input)
+		output, err := conn.ListGroupsForUser(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

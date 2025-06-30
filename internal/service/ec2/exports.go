@@ -31,3 +31,7 @@ var (
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )
+
+type (
+	CustomFilters = customFilters
+)

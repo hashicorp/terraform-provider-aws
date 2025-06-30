@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -34,8 +33,9 @@ import (
 // @FrameworkResource("aws_elasticache_reserved_cache_node", name="Reserved Cache Node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
-func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceReservedCacheNode{}
+func newReservedCacheNodeResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &reservedCacheNodeResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(1 * time.Minute)
@@ -43,14 +43,14 @@ func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-type resourceReservedCacheNode struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceReservedCacheNodeModel]
+type reservedCacheNodeResource struct {
+	framework.ResourceWithModel[reservedCacheNodeResourceModel]
 	framework.WithNoOpDelete
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *reservedCacheNodeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -127,8 +127,8 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 
 // Create is called when the provider must create a new resource.
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
-func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceReservedCacheNodeModel
+func (r *reservedCacheNodeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data reservedCacheNodeResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -171,8 +171,8 @@ func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceReservedCacheNodeModel
+func (r *reservedCacheNodeResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data reservedCacheNodeResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -205,17 +205,14 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
+func (r *reservedCacheNodeResource) flexOpts() []flex.AutoFlexOptionsFunc {
 	return []flex.AutoFlexOptionsFunc{
 		flex.WithFieldNamePrefix("ReservedCacheNode"),
 	}
 }
 
-type resourceReservedCacheNodeModel struct {
+type reservedCacheNodeResourceModel struct {
+	framework.WithRegionModel
 	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`

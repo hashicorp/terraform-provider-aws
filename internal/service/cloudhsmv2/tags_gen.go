@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, o
 	input := cloudhsmv2.ListTagsInput{
 		ResourceId: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := cloudhsmv2.NewListTagsPaginator(conn, &input)
@@ -33,9 +34,7 @@ func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, o
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.TagList {
-			output = append(output, v)
-		}
+		output = append(output, page.TagList...)
 	}
 
 	return keyValueTags(ctx, output), nil

@@ -17,6 +17,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -39,17 +40,14 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
 		UpdateWithoutTimeout: resourceLoadBalancerUpdate,
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffLoadBalancerALB,
@@ -595,12 +593,15 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	if lb.Type == awstypes.LoadBalancerTypeEnumApplication || lb.Type == awstypes.LoadBalancerTypeEnumNetwork {
 		capacity, err := findCapacityReservationByARN(ctx, conn, d.Id())
 
-		if err != nil {
+		switch {
+		case tfawserr.ErrCodeEquals(err, errCodeAccessDenied, errCodeInvalidAction):
+			d.Set("minimum_load_balancer_capacity", nil)
+		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) capacity reservation: %s", d.Id(), err)
-		}
-
-		if err := d.Set("minimum_load_balancer_capacity", flattenMinimumLoadBalancerCapacity(capacity.MinimumLoadBalancerCapacity)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting minimum_load_balancer_capacity: %s", err)
+		default:
+			if err := d.Set("minimum_load_balancer_capacity", flattenMinimumLoadBalancerCapacity(capacity.MinimumLoadBalancerCapacity)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting minimum_load_balancer_capacity: %s", err)
+			}
 		}
 	}
 

@@ -245,6 +245,12 @@ func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 		}
 	}
 
+	// directory buckets do not support status checks
+	// these buckets can never be public so setting to false
+	if tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeUnknownError) {
+		return policy, &types.PolicyStatus{IsPublic: false}, nil
+	}
+
 	if err != nil {
 		return "", nil, err
 	}

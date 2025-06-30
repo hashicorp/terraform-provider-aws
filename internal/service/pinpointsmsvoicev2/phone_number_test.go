@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -129,6 +131,51 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 	})
 }
 
+func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelRole(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	snsTopicName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "updated")
+	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPhoneNumber(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("SIMULATOR")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_enabled"), knownvalue.Bool(true)),
+					//statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_role"), tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(`role/${iamRoleName}`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_role"), tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(fmt.Sprintf(`role/%s`, iamRoleName)))),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleNameUpdated),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("message_type"), knownvalue.StringExact("TRANSACTIONAL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_type"), knownvalue.StringExact("SIMULATOR")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("two_way_channel_role"), tfknownvalue.GlobalARNRegexp("iam", regexache.MustCompile(fmt.Sprintf(`role/%s`, iamRoleNameUpdated))))},
+			},
+		},
+	})
+}
 func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var phoneNumber awstypes.PhoneNumberInformation
@@ -313,6 +360,85 @@ resource "aws_pinpointsmsvoicev2_opt_out_list" "test" {
   name = %[3]q
 }
 `, phoneNumberName, snsTopicName, optOutListName, deletionProtectionEnabled)
+}
+
+func testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "sms-voice.amazonaws.com"
+        },
+        Action   = "SNS:Publish",
+        Resource = "*",
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "test" {
+  name = %[2]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "sms-voice.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "pinpointsmsvoicev2-sns-policy"
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "sns:Publish",
+        ],
+        Resource = aws_sns_topic.test.arn
+      }
+    ]
+  })
+}
+
+resource "aws_pinpointsmsvoicev2_phone_number" "test" {
+  iso_country_code        = "US"
+  message_type            = "TRANSACTIONAL"
+  number_type             = "SIMULATOR"
+  two_way_channel_arn     = aws_sns_topic.test.arn
+  two_way_channel_role    = aws_iam_role.test.arn
+  two_way_channel_enabled = true
+  number_capabilities = [
+    "SMS",
+    "VOICE",
+  ]
+}
+`, snsTopicName, iamRoleName)
 }
 
 func testAccPhoneNumberConfig_tags1(tagKey1, tagValue1 string) string {

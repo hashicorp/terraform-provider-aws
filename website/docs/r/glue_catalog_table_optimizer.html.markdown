@@ -82,8 +82,9 @@ resource "aws_glue_catalog_table_optimizer" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Required) The Catalog ID of the table.
 * `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
 * `database_name` - (Required) The name of the database in the catalog in which the table resides.

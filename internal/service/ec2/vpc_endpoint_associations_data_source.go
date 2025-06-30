@@ -24,7 +24,7 @@ func newVPCEndpointAssociationsDataSource(context.Context) (datasource.DataSourc
 }
 
 type vpcEndpointAssociationsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[vpcEndpointAssociationsDataSourceModel]
 }
 
 func (d *vpcEndpointAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -67,6 +67,7 @@ func (d *vpcEndpointAssociationsDataSource) Read(ctx context.Context, request da
 }
 
 type vpcEndpointAssociationsDataSourceModel struct {
+	framework.WithRegionModel
 	Associations  fwtypes.ListNestedObjectValueOf[vpcEndpointAssociationModel] `tfsdk:"associations"`
 	VPCEndpointID types.String                                                 `tfsdk:"vpc_endpoint_id"`
 }

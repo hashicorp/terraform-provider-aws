@@ -40,18 +40,18 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
-func newResourceMembership(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceMembership{}
+func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &membershipResource{}
 
 	return r, nil
 }
 
-type resourceMembership struct {
-	framework.ResourceWithConfigure
+type membershipResource struct {
+	framework.ResourceWithModel[membershipResourceModel]
 	framework.WithImportByID
 }
 
-func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *membershipResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -198,8 +198,8 @@ func (r *resourceMembership) Schema(ctx context.Context, _ resource.SchemaReques
 	response.Schema = s
 }
 
-func (r *resourceMembership) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -236,8 +236,8 @@ func (r *resourceMembership) Create(ctx context.Context, request resource.Create
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -270,8 +270,8 @@ func (r *resourceMembership) Read(ctx context.Context, request resource.ReadRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceMembership) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var plan, state resourceMembershipData
+func (r *membershipResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan, state membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -318,8 +318,8 @@ func (r *resourceMembership) Update(ctx context.Context, request resource.Update
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceMembership) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceMembershipData
+func (r *membershipResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data membershipResourceModel
 	conn := r.Meta().CleanRoomsClient(ctx)
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -355,7 +355,8 @@ func (r *resourceMembership) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-type resourceMembershipData struct {
+type membershipResourceModel struct {
+	framework.WithRegionModel
 	ARN                             types.String                                                `tfsdk:"arn"`
 	CollaborationARN                types.String                                                `tfsdk:"collaboration_arn"`
 	CollaborationCreatorAccountID   types.String                                                `tfsdk:"collaboration_creator_account_id"`

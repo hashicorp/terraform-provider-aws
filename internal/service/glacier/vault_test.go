@@ -345,7 +345,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
        }
     ]
 }
@@ -381,7 +381,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
+          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
        }
     ]
 }
@@ -440,7 +440,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:CompleteMultipartUpload",
       ]
       Resource = [
-        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
+        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
       ]
     }]
   })
@@ -472,7 +472,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:InitiateMultipartUpload",
         "glacier:AbortMultipartUpload",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
     }]
   })
 }

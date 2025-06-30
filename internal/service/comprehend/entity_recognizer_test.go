@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -536,6 +537,11 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -543,8 +549,15 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccEntityRecognizerConfig_kmsKeyARNs(rName),
-				PlanOnly: true,
+				Config: testAccEntityRecognizerConfig_kmsKeyARNs(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -578,6 +591,11 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -585,8 +603,15 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccEntityRecognizerConfig_kmsKeyIds(rName),
-				PlanOnly: true,
+				Config: testAccEntityRecognizerConfig_kmsKeyIds(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1503,10 +1528,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1579,10 +1606,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1693,10 +1722,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1769,10 +1800,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -2094,7 +2127,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {
@@ -2215,7 +2248,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {

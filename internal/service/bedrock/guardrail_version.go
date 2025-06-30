@@ -41,8 +41,7 @@ func newGuardrailVersionResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type guardrailVersionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[guardrailVersionResourceModel]
+	framework.ResourceWithModel[guardrailVersionResourceModel]
 	framework.WithTimeouts
 }
 
@@ -199,6 +198,7 @@ func (r *guardrailVersionResource) ImportState(ctx context.Context, request reso
 }
 
 type guardrailVersionResourceModel struct {
+	framework.WithRegionModel
 	Description  types.String   `tfsdk:"description"`
 	GuardrailARN fwtypes.ARN    `tfsdk:"guardrail_arn"`
 	SkipDestroy  types.Bool     `tfsdk:"skip_destroy"`

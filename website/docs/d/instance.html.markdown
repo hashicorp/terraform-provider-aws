@@ -32,6 +32,7 @@ data "aws_instance" "foo" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.

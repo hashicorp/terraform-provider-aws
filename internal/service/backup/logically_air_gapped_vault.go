@@ -48,8 +48,7 @@ func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWit
 }
 
 type logicallyAirGappedVaultResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[logicallyAirGappedVaultResourceModel]
+	framework.ResourceWithModel[logicallyAirGappedVaultResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -195,6 +194,7 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 }
 
 type logicallyAirGappedVaultResourceModel struct {
+	framework.WithRegionModel
 	BackupVaultARN   types.String   `tfsdk:"arn"`
 	BackupVaultName  types.String   `tfsdk:"name"`
 	ID               types.String   `tfsdk:"id"`

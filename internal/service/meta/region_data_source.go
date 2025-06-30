@@ -11,8 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -21,6 +23,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_region", name="Region")
+// @Region(validateOverrideInPartition=false)
 func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &regionDataSource{}
 
@@ -28,7 +31,7 @@ func newRegionDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type regionDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[regionDataSourceModel]
 }
 
 func (d *regionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -46,8 +49,9 @@ func (d *regionDataSource) Schema(ctx context.Context, request datasource.Schema
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:           true,
+				Computed:           true,
+				DeprecationMessage: "name is deprecated. Use region instead.",
 			},
 		},
 	}
@@ -75,8 +79,13 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 		region = matchingRegion
 	}
 
-	if !data.Name.IsNull() {
-		name := data.Name.ValueString()
+	var name string
+	if !data.Region.IsNull() {
+		name = data.Region.ValueString()
+	} else if !data.Name.IsNull() {
+		name = data.Name.ValueString()
+	}
+	if name != "" {
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {
@@ -120,11 +129,22 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 	data.Endpoint = fwflex.StringValueToFrameworkLegacy(ctx, regionEndpointEC2.Host)
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
+func (d *regionDataSource) ConfigValidators(context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.Conflicting(
+			path.MatchRoot(names.AttrName),
+			path.MatchRoot(names.AttrRegion),
+		),
+	}
+}
+
 type regionDataSourceModel struct {
+	framework.WithRegionModel
 	Description types.String `tfsdk:"description"`
 	Endpoint    types.String `tfsdk:"endpoint"`
 	ID          types.String `tfsdk:"id"`

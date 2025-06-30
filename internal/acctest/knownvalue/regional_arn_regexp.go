@@ -91,6 +91,15 @@ func RegionalARNFourthRegionRegexp(service string, resource *regexp.Regexp) know
 	return regionalARNRegexp{
 		check:          "RegionalARNFourthRegionRegexp",
 		region:         acctest.FourthRegion(),
+    service:        service,
+    resourceRegexp: resource,
+  }
+}
+
+func RegionalARNRegexpRegion(service, region string, resource *regexp.Regexp) knownvalue.Check {
+	return regionalARNRegexp{
+		check:          "RegionalARNRegexp",
+		region:         region,
 		service:        service,
 		resourceRegexp: resource,
 	}

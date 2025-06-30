@@ -18,7 +18,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,7 +50,9 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
-// @Testing(importIgnore="force_destroy")
+// @IdentityAttribute("bucket")
+// @WrappedImport(false)
+// @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -58,15 +60,23 @@ func resourceBucket() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.RegionalSingleParameterized(ctx, rd, names.AttrBucket, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
+				rd.Set(names.AttrForceDestroy, false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
 			Read:   schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -113,6 +123,10 @@ func resourceBucket() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 				),
+			},
+			"bucket_region": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
@@ -397,10 +411,6 @@ func resourceBucket() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"replication_configuration": {
 				Type:       schema.TypeList,
@@ -707,11 +717,11 @@ func resourceBucket() *schema.Resource {
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
-	region := meta.(*conns.AWSClient).Region(ctx)
-
+	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
@@ -782,7 +792,8 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	_, err := findBucket(ctx, conn, d.Id())
 
@@ -796,14 +807,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "s3",
-		Resource:  d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
+	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 
 	//
@@ -1106,7 +1112,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set("object_lock_configuration", nil)
 		d.Set("object_lock_enabled", nil)
 	default:
-		if partition := meta.(*conns.AWSClient).Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
+		if partition := c.Partition(ctx); partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID {
 			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
 		}
 		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)
@@ -1117,11 +1123,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	//
 	// Bucket Region etc.
 	//
-	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle(ctx)
-	})
+	region, err := findBucketRegion(ctx, c, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1131,7 +1135,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) location: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrRegion, region)
+	d.Set("bucket_region", region)
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(d.Id(), region))
 
 	hostedZoneID, err := hostedZoneIDForRegion(region)
@@ -1619,24 +1623,24 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	return output, nil
 }
 
-func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
+func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
 	optFns = append(slices.Clone(optFns),
 		func(o *s3.Options) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
-			o.UsePathStyle = awsClient.S3UsePathStyle(ctx)
+			o.UsePathStyle = c.S3UsePathStyle(ctx)
 		},
 		func(o *s3.Options) {
 			// By default, GetBucketRegion uses anonymous credentials when doing
 			// a HEAD request to get the bucket region. This breaks in aws-cn regions
 			// when the account doesn't have an ICP license to host public content.
 			// Use the current credentials when getting the bucket region.
-			o.Credentials = awsClient.CredentialsProvider(ctx)
+			o.Credentials = c.CredentialsProvider(ctx)
 		})
 
-	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)
+	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
 		return "", &retry.NotFoundError{
@@ -1663,6 +1667,10 @@ func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duratio
 	}
 
 	return outputRaw.(T), nil
+}
+
+func bucketARN(ctx context.Context, c *conns.AWSClient, bucket string) string {
+	return c.GlobalARNNoAccount(ctx, "s3", bucket)
 }
 
 // https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
@@ -2127,7 +2135,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 
 		var filter *types.LifecycleRuleFilter
 		prefix := tfMap[names.AttrPrefix].(string)
-		if tags := Tags(tftags.New(ctx, tfMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+		if tags := svcTags(tftags.New(ctx, tfMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
 			filter = &types.LifecycleRuleFilter{
 				And: &types.LifecycleRuleAndOperator{
 					Prefix: aws.String(prefix),
@@ -2487,7 +2495,7 @@ func expandBucketReplicationRules(ctx context.Context, tfList []any) []types.Rep
 			tfFilterMap := v[0].(map[string]any)
 			var filter *types.ReplicationRuleFilter
 
-			if tags := Tags(tftags.New(ctx, tfFilterMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+			if tags := svcTags(tftags.New(ctx, tfFilterMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
 				filter = &types.ReplicationRuleFilter{
 					And: &types.ReplicationRuleAndOperator{
 						Prefix: aws.String(tfFilterMap[names.AttrPrefix].(string)),

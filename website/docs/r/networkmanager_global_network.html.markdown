@@ -3,12 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_global_network"
 description: |-
-  Provides a global network resource.
+  Manages a Network Manager Global Network.
 ---
 
 # Resource: aws_networkmanager_global_network
 
-Provides a global network resource.
+Manages a Network Manager Global Network.
+
+Use this resource to create and manage a global network, which is a single private network that acts as the high-level container for your network objects.
 
 ## Example Usage
 
@@ -20,7 +22,7 @@ resource "aws_networkmanager_global_network" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are optional:
 
 * `description` - (Optional) Description of the Global Network.
 * `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -29,8 +31,16 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Global Network Amazon Resource Name (ARN)
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - Global Network ARN.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

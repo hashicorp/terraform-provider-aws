@@ -39,8 +39,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id` and `filter`. Detailed below.
-* `filter` - (Optional, **Deprecated** use the `alternate_identifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
 * `group_id` - (Optional) The identifier for a group in the Identity Store.
 
 -> Exactly one of the above arguments must be provided. Passing both `filter` and `group_id` is allowed for backwards compatibility.
@@ -60,15 +60,6 @@ The `external_id` configuration block supports the following arguments:
 
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
-
-### `filter` Configuration Block
-
-~> The `filter` configuration block has been deprecated. Use `alternate_identifier` instead.
-
-The following arguments are supported by the `filter` configuration block:
-
-* `attribute_path` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `DisplayName` is the only valid attribute path.
-* `attribute_value` - (Required) Value for an attribute.
 
 ### `unique_attribute` Configuration Block
 

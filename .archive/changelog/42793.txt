@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognitoidp_user_pool: Fix crash when the `user_pool_add_ons.advanced_security_additional_flows` block is non-empty, but contains only a single `nil` value.
+```
