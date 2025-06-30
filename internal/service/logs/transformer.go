@@ -934,40 +934,19 @@ func (r *resourceTransformer) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTransformerModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
-	input := logs.DeleteTransformerInput{
-		TransformerId: state.ID.ValueStringPointer(),
+	input := cloudwatchlogs.DeleteTransformerInput{
+		LogGroupIdentifier: state.LogGroupIdentifier.ValueStringPointer(),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteTransformer(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -980,12 +959,11 @@ func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTransformerDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitTransformerDeleted(ctx, conn, state.LogGroupIdentifier.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForDeletion, ResNameTransformer, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionWaitingForDeletion, ResNameTransformer, state.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
