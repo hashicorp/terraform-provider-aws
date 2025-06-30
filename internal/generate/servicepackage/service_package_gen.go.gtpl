@@ -175,6 +175,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 						{{- end -}}
+						{{- if $value.HasV6_0SDKv2Fix }}
+							inttypes.WithV6_0SDKv2Fix(),
+						{{ end -}}
 						),
 				{{- else if $value.SingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
@@ -182,12 +185,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 							{{- end -}}
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
 						),
 					{{ else }}
 						Identity: inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 							{{- end -}}
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
 						),
 					{{- end }}
 				{{- end }}
@@ -321,9 +330,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- end }}
 					{{- else }}
 						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							),
 						{{- else }}
-							Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.RegionalARNIdentity(
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							),
 						{{- end }}
 					{{- end }}
 				{{- else if $value.SingletonIdentity }}
