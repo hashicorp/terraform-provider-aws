@@ -159,7 +159,7 @@ resource "aws_dynamodb_table" "example" {
 }
 
 resource "aws_dynamodb_tag" "example" {
-  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.region, data.aws_region.alternate.name)
+  resource_arn = replace(aws_dynamodb_table.example.arn, data.aws_region.current.name, data.aws_region.alternate.name)
   key          = "Architect"
   value        = "Gigi"
 }
@@ -264,6 +264,7 @@ The following arguments are optional:
   **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
   **Note:** Changing this value will recreate the replica.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
 * `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
