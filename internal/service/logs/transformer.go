@@ -35,16 +35,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_logs_transformer", name="Transformer")
 func newResourceTransformer(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -66,50 +56,6 @@ type resourceTransformer struct {
 	framework.WithTimeouts
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -978,19 +924,6 @@ const (
 	statusNormal = "Normal"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
 func waitTransformerCreated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -1009,10 +942,6 @@ func waitTransformerCreated(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
 func waitTransformerUpdated(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -1031,8 +960,6 @@ func waitTransformerUpdated(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
 func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string, timeout time.Duration) (*cloudwatchlogs.GetTransformerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
@@ -1049,13 +976,6 @@ func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusTransformer(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupIdentifier)
@@ -1278,38 +1198,32 @@ type upperCaseStringModel struct {
 	WithKeys types.List `tfsdk:"with_keys"`
 }
 
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweeper.go
-// as follows:
-//
-//	awsv2.Register("aws_logs_transformer", sweepTransformers)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
 func sweepTransformers(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := logs.ListTransformersInput{}
 	conn := client.LogsClient(ctx)
 	var sweepResources []sweep.Sweepable
 
-	pages := logs.NewListTransformersPaginator(conn, &input)
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, &cloudwatchlogs.DescribeLogGroupsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.Transformers {
+		for _, v := range page.LogGroups {
+			input := cloudwatchlogs.GetTransformerInput{
+				LogGroupIdentifier: v.LogGroupName,
+			}
+			transformer, err := conn.GetTransformer(ctx, &input)
+			if err != nil {
+				return nil, err
+			}
+
+			if transformer == nil || len(transformer.TransformerConfig) == 0 {
+				continue
+			}
+
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTransformer, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TransformerId))),
+				sweepfw.NewAttribute("log_group_identifier", aws.ToString(transformer.LogGroupIdentifier))),
 			)
 		}
 	}
