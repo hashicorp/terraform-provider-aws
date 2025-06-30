@@ -562,7 +562,7 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Supress diff if resource already exists (update) and the new value is empty
+					// Suppress diff if resource already exists (update) and the new value is empty
 					if d.Id() != "" && new == "" {
 						return true
 					}
