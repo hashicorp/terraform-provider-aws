@@ -77,6 +77,43 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogDatabase_createTablePermissionTransition(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_glue_catalog_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogDatabaseConfig_permission(rName, "ALL"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
+				),
+			},
+			{
+				Config:  testAccCatalogDatabaseConfig_basic(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					// After removing the block, should have default permissions
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_database.test"
