@@ -806,7 +806,7 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionReading, ResNameTransformer, state.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
@@ -899,7 +899,7 @@ func (r *resourceTransformer) Delete(ctx context.Context, req resource.DeleteReq
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameTransformer, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameTransformer, state.LogGroupIdentifier.String(), err),
 			err.Error(),
 		)
 		return
