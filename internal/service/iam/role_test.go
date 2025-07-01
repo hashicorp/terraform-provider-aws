@@ -214,120 +214,36 @@ func TestAccIAMRole_diffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffs(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -351,30 +267,22 @@ func TestAccIAMRole_diffsCondition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffsCondition(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffsCondition(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -663,19 +571,41 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccRoleConfig_policyInlineActionOrder(rName),
-				PlanOnly: true,
+				Config: testAccRoleConfig_policyInlineActionOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccRoleConfig_policyInlineActionNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccRoleConfig_policyInlineActionNewOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:             testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})

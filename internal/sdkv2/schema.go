@@ -77,6 +77,9 @@ var IAMPolicyDocumentSchemaOptionalComputed = sync.OnceValue(jsonDocumentSchemaO
 // IAMPolicyDocumentSchemaRequired returns the standard schema for a required IAM policy JSON document.
 var IAMPolicyDocumentSchemaRequired = sync.OnceValue(jsonDocumentSchemaRequiredFunc(SuppressEquivalentIAMPolicyDocuments))
 
+// IAMPolicyDocumentSchemaRequiredForceNew returns the standard schema for a required, force-new IAM policy JSON document.
+var IAMPolicyDocumentSchemaRequiredForceNew = sync.OnceValue(jsonDocumentSchemaRequiredForceNewFunc(SuppressEquivalentIAMPolicyDocuments))
+
 // JSONDocumentSchemaOptionalForceNew returns the standard schema for an optional, force-new JSON document.
 var JSONDocumentSchemaOptionalForceNew = sync.OnceValue(jsonDocumentSchemaOptionalForceNewFunc(SuppressEquivalentJSONDocuments))
 
@@ -129,6 +132,20 @@ func jsonDocumentSchemaRequiredFunc(diffSuppressFunc schema.SchemaDiffSuppressFu
 		return &schema.Schema{
 			Type:                  schema.TypeString,
 			Required:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      diffSuppressFunc,
+			DiffSuppressOnRefresh: true,
+			StateFunc:             NormalizeJsonStringSchemaStateFunc,
+		}
+	}
+}
+
+func jsonDocumentSchemaRequiredForceNewFunc(diffSuppressFunc schema.SchemaDiffSuppressFunc) func() *schema.Schema {
+	return func() *schema.Schema {
+		return &schema.Schema{
+			Type:                  schema.TypeString,
+			Required:              true,
+			ForceNew:              true,
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      diffSuppressFunc,
 			DiffSuppressOnRefresh: true,

@@ -1120,10 +1120,22 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
-				PlanOnly: true,
+				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

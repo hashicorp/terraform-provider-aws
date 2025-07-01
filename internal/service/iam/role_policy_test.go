@@ -155,10 +155,22 @@ func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyExists(ctx, resourceName, &rolePolicy),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccRolePolicyConfig_newOrder(rName),
-				PlanOnly: true,
+				Config: testAccRolePolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
