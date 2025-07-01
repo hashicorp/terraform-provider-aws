@@ -60,6 +60,40 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncLocationObjectStorage_enhanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationObjectStorageConfig_enhanced(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckNoResourceAttr(resourceName, "agent_arns"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI,
+						fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationObjectStorageOutput
@@ -306,6 +340,19 @@ resource "aws_datasync_location_object_storage" "test" {
   server_port     = 8080
 }
 `, rName, domain))
+}
+
+func testAccLocationObjectStorageConfig_enhanced(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTPS"
+  server_port     = 443
+  access_key      = "DUMMYACCESS"
+  secret_key      = "DUMMYSECRET"
+}
+`, rName, domain)
 }
 
 func testAccLocationObjectStorageConfig_baseUpdate(rName string) string {
