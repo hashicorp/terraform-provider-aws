@@ -3239,97 +3239,97 @@ func TestAccDynamoDBTable_Replica_MRSC_Create(t *testing.T) {
 	})
 }
 
-// func TestAccDynamoDBTable_Replica_MRSC_doubleAddCMK(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccDynamoDBTable_Replica_MRSC_doubleAddCMK(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var conf awstypes.TableDescription
-// 	resourceName := "aws_dynamodb_table.test"
-// 	kmsKeyResourceName := "aws_kms_key.test"
-// 	kmsKey1Replica1ResourceName := "aws_kms_key.awsalternate1"
-// 	kmsKey2Replica1ResourceName := "aws_kms_key.awsalternate2"
-// 	kmsKey1Replica2ResourceName := "aws_kms_key.awsthird1"
-// 	kmsKey2Replica2ResourceName := "aws_kms_key.awsthird2"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	kmsKey1Replica1ResourceName := "aws_kms_key.awsalternate1"
+	kmsKey2Replica1ResourceName := "aws_kms_key.awsalternate2"
+	kmsKey1Replica2ResourceName := "aws_kms_key.awsthird1"
+	kmsKey2Replica2ResourceName := "aws_kms_key.awsthird2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckMultipleRegion(t, 3)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
-// 		CheckDestroy:             testAccCheckTableDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_AmazonManagedKey(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
-// 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.StringExact(""),
-// 							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.StringExact(""),
-// 							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_CMKUpdate(rName, "awsalternate1", "awsthird1"),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
-// 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.NotNull(),
-// 							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.NotNull(),
-// 							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), kmsKey1Replica1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(1).AtMapKey(names.AttrKMSKeyARN), kmsKey1Replica2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_CMKUpdate(rName, "awsalternate2", "awsthird2"),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
-// 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.NotNull(),
-// 							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							names.AttrKMSKeyARN: knownvalue.NotNull(),
-// 							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), kmsKey2Replica1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(1).AtMapKey(names.AttrKMSKeyARN), kmsKey2Replica2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-// 				},
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replica_MRSC_AmazonManagedKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.StringExact(""),
+							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.StringExact(""),
+							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_CMKUpdate(rName, "awsalternate1", "awsthird1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
+							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
+							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), kmsKey1Replica1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(1).AtMapKey(names.AttrKMSKeyARN), kmsKey1Replica2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_CMKUpdate(rName, "awsalternate2", "awsthird2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
+							"region_name":       knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
+							"region_name":       knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(0).AtMapKey(names.AttrKMSKeyARN), kmsKey2Replica1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("replica").AtSliceIndex(1).AtMapKey(names.AttrKMSKeyARN), kmsKey2Replica2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
 
 func TestAccDynamoDBTable_Replica_MRSC_pitr(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -3400,146 +3400,146 @@ func TestAccDynamoDBTable_Replica_MRSC_pitr(t *testing.T) {
 	})
 }
 
-// func TestAccDynamoDBTable_Replica_MRSC_pitrKMS(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccDynamoDBTable_Replica_MRSC_pitrKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var conf, replica1, replica2, replica3, replica4 awstypes.TableDescription
-// 	resourceName := "aws_dynamodb_table.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var conf, replica1, replica2, replica3, replica4 awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckMultipleRegion(t, 3)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
-// 		CheckDestroy:             testAccCheckTableDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, false, false),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, true, false),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
-// 					testAccCheckTableNotRecreated(&replica1, &replica3),
-// 					testAccCheckTableNotRecreated(&replica2, &replica4),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(true),
-// 							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, true, true),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
-// 					testAccCheckTableNotRecreated(&replica1, &replica3),
-// 					testAccCheckTableNotRecreated(&replica2, &replica4),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(true),
-// 							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(true),
-// 							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, true, false, true),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
-// 					testAccCheckTableNotRecreated(&replica1, &replica3),
-// 					testAccCheckTableNotRecreated(&replica2, &replica4),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(true),
-// 							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 			{
-// 				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, false, false),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
-// 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
-// 					testAccCheckTableNotRecreated(&replica1, &replica3),
-// 					testAccCheckTableNotRecreated(&replica2, &replica4),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-// 				),
-// 				ConfigStateChecks: []statecheck.StateCheck{
-// 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
-// 						}),
-// 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-// 							"point_in_time_recovery": knownvalue.Bool(false),
-// 							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
-// 						}),
-// 					})),
-// 				},
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(true),
+							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(true),
+							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(true),
+							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, true, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(true),
+							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_replica_MRSC_PITRKMS(rName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"point_in_time_recovery": knownvalue.Bool(false),
+							"region_name":            knownvalue.StringExact(acctest.ThirdRegion()),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
 
 func TestAccDynamoDBTable_Replica_MRSC_tags_updateIsPropagated_oneOfTwo(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -4118,7 +4118,7 @@ func TestAccDynamoDBTable_Replica_MRSC_UnsupportedRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_MRSC_replica_region_unsupported(rName),
+				Config:      testAccTableConfig_MRSC_replica_region_unsupported(rName, "eu-west-1", "eu-central-1"),
 				ExpectError: regexache.MustCompile(`Unsupported Region\(s\) specified for global tables with MultiRegionConsistency set to STRONG`),
 			},
 		},
@@ -5690,7 +5690,7 @@ resource "aws_dynamodb_table" "test_mrsc" {
 `, rName))
 }
 
-func testAccTableConfig_MRSC_replica_region_unsupported(rName string) string {
+func testAccTableConfig_MRSC_replica_region_unsupported(rName string, region1 string, region2 string) string {
 	return acctest.ConfigCompose(
 
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
@@ -5709,16 +5709,16 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name      = "eu-west-1"
+    region_name      = %[2]q
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name      = "eu-central-1"
+    region_name      = %[3]q
     consistency_mode = "STRONG"
   }
 }
-`, rName))
+`, rName, region1, region2))
 }
 
 func testAccTableConfig_MRSC_replica_mixed_consistency_mode(rName string) string {
@@ -5961,53 +5961,6 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccTableConfig_replica_MRSC_AmazonManagedKey(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_region" "third" {
-  provider = "awsthird"
-}
-
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name      = data.aws_region.alternate.name
-    consistency_mode = "STRONG"
-  }
-
-  replica {
-    region_name      = data.aws_region.third.name
-    consistency_mode = "STRONG"
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  timeouts {
-    create = "20m"
-    update = "20m"
-    delete = "20m"
-  }
-}
-`, rName))
-}
-
-func testAccTableConfig_MRSC_replicaAmazonManagedKey(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`

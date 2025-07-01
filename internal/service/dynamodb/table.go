@@ -930,7 +930,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if table.MultiRegionConsistency != "" {
 		mrc = table.MultiRegionConsistency
 	}
-	replicas = addReplicaMultiRegionConsistency(d.Get("replica").(*schema.Set), replicas, mrc)
+	replicas = addReplicaMultiRegionConsistency(replicas, mrc)
 
 	if err := d.Set("replica", replicas); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "replica", err)
@@ -1363,7 +1363,6 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 }
 
 func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, create bool, timeout time.Duration) error {
-
 	// Duplicating this for MRSC Adoption. If using MRSC and CreateReplicationGroupMemberAction list isn't initiated for at least 2 replicas
 	// then the update table action will fail with
 	// "Unsupported table replica count for global tables with MultiRegionConsistency set to STRONG"
@@ -1380,7 +1379,6 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			if ok && v == (string(awstypes.MultiRegionConsistencyStrong)) {
 				numReplicasMRSC += 1
 			}
-
 		}
 	}
 	log.Printf("[DEBUG] numReplicas: (%d), numReplicasMRSC: (%d)\n", numReplicas, numReplicasMRSC)
@@ -1476,9 +1474,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
 			}
 		}
-
 	} else {
-
 		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]any)
 
@@ -1528,7 +1524,6 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 						},
 					},
 				}
-
 			}
 
 			err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
@@ -1569,7 +1564,6 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 
 			if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout, replicaDelayDefault); err != nil {
-
 				return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 			}
 
@@ -1577,10 +1571,8 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
 				return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
 			}
-
 		}
 	}
-
 	return nil
 }
 
@@ -2054,11 +2046,8 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return fmt.Errorf("waiting for replica (%s) deletion: %w", regionName, err)
 			}
 		}
-
 		return nil
-
 	} else {
-
 		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]any)
 
@@ -2131,7 +2120,6 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		}
 		return g.Wait().ErrorOrNil()
 	}
-
 }
 
 func replicaPITR(ctx context.Context, conn *dynamodb.Client, tableName string, region string) (bool, error) {
@@ -2184,7 +2172,7 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.Client, tableName strin
 	return replicas, nil
 }
 
-func addReplicaMultiRegionConsistency(configReplicas *schema.Set, replicas []any, mode awstypes.MultiRegionConsistency) []any {
+func addReplicaMultiRegionConsistency(replicas []any, mode awstypes.MultiRegionConsistency) []any {
 	// This non-standard approach is needed because MRSC info for a replica
 	// comes from the Table object
 	for i, replicaRaw := range replicas {
