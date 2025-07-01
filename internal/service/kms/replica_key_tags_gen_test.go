@@ -288,8 +288,14 @@ func TestAccKMSReplicaKey_tags_null(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -353,8 +359,14 @@ func TestAccKMSReplicaKey_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
