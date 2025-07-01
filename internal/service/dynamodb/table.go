@@ -1383,7 +1383,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 
 		}
 	}
-	log.Printf("[DEBUG] numReplicas: (%s), numReplicasMRSC: (%s)\n", numReplicas, numReplicasMRSC)
+	log.Printf("[DEBUG] numReplicas: (%d), numReplicasMRSC: (%d)\n", numReplicas, numReplicasMRSC)
 	if numReplicasMRSC > 0 {
 		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
 			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
@@ -1399,7 +1399,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		useMRSC = true
 	}
 
-	log.Printf("[DEBUG] mrscInput: (%s), useMRSC: (%s)\n", mrscInput, useMRSC)
+	log.Printf("[DEBUG] mrscInput: (%s), useMRSC: (%t)\n", mrscInput, useMRSC)
 
 	// if MRSC or MREC is defined and meets the above criteria, then all replicas must be created in a single call to UpdateTable.
 	if useMRSC {

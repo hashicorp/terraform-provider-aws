@@ -5637,17 +5637,17 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
-    consistency_mode = "STRONG"
-  }
-  
-  replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = data.aws_region.fourth.name
+    region_name      = data.aws_region.third.name
+    consistency_mode = "STRONG"
+  }
+
+  replica {
+    region_name      = data.aws_region.fourth.name
     consistency_mode = "STRONG"
   }
 }
@@ -5683,7 +5683,7 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
 }
@@ -5709,12 +5709,12 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = "eu-west-1"
+    region_name      = "eu-west-1"
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = "eu-central-1"
+    region_name      = "eu-central-1"
     consistency_mode = "STRONG"
   }
 }
@@ -5746,12 +5746,12 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
-  
+
   replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.third.name
     consistency_mode = "EVENTUAL"
   }
 }
@@ -5783,12 +5783,12 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "EVENTUAL"
   }
-  
+
   replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.third.name
     consistency_mode = "EVENTUAL"
   }
 }
@@ -5820,12 +5820,12 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
-  
+
   replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.third.name
     consistency_mode = "STRONG"
   }
 }
@@ -5985,12 +5985,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.third.name
     consistency_mode = "STRONG"
   }
 
@@ -6032,12 +6032,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name      = data.aws_region.alternate.name
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = data.aws_region.third.name
+    region_name      = data.aws_region.third.name
     consistency_mode = "STRONG"
   }
 
@@ -6190,14 +6190,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
-    kms_key_arn = aws_kms_key.%[2]s.arn
+    region_name      = data.aws_region.alternate.name
+    kms_key_arn      = aws_kms_key.%[2]s.arn
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = data.aws_region.third.name
-    kms_key_arn = aws_kms_key.%[3]s.arn
+    region_name      = data.aws_region.third.name
+    kms_key_arn      = aws_kms_key.%[3]s.arn
     consistency_mode = "STRONG"
   }
 
@@ -6287,13 +6287,13 @@ resource "aws_dynamodb_table" "test" {
   replica {
     region_name            = data.aws_region.alternate.name
     point_in_time_recovery = %[3]t
-    consistency_mode = "STRONG"
+    consistency_mode       = "STRONG"
   }
 
   replica {
     region_name            = data.aws_region.third.name
     point_in_time_recovery = %[4]t
-    consistency_mode = "STRONG"
+    consistency_mode       = "STRONG"
   }
 }
 `, rName, mainPITR, replica1, replica2))
@@ -6502,14 +6502,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = data.aws_region.alternate.name
-    propagate_tags = %[4]t
+    region_name      = data.aws_region.alternate.name
+    propagate_tags   = %[4]t
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = data.aws_region.third.name
-    propagate_tags = %[5]t
+    region_name      = data.aws_region.third.name
+    propagate_tags   = %[5]t
     consistency_mode = "STRONG"
   }
 
@@ -6867,14 +6867,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = %[2]q
-    propagate_tags = true
+    region_name      = %[2]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = %[3]q
-    propagate_tags = true
+    region_name      = %[3]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
@@ -6903,14 +6903,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = %[2]q
-    propagate_tags = true
+    region_name      = %[2]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = %[3]q
-    propagate_tags = true
+    region_name      = %[3]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
@@ -6941,14 +6941,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = %[2]q
-    propagate_tags = true
+    region_name      = %[2]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = %[3]q
-    propagate_tags = true
+    region_name      = %[3]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
@@ -6979,14 +6979,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = %[2]q
-    propagate_tags = true
+    region_name      = %[2]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = %[3]q
-    propagate_tags = true
+    region_name      = %[3]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
@@ -7019,14 +7019,14 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name    = %[2]q
-    propagate_tags = true
+    region_name      = %[2]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name    = %[3]q
-    propagate_tags = true
+    region_name      = %[3]q
+    propagate_tags   = true
     consistency_mode = "STRONG"
   }
 
