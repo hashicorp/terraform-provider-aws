@@ -1629,10 +1629,11 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "data_replication_primary_broker_arn"},
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Preparation for destruction would require multiple configuration changes
 				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
-				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// and delete operations on the primary cluster out-of-band to ensure remaining
 				// resources will be freed for clean up.
 				PreConfig: func() {
 					// In order to delete, replicated brokers must first be unpaired by setting
@@ -1644,7 +1645,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers))
 				},
 				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
-				PlanOnly:           true, // OK
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
 		},
