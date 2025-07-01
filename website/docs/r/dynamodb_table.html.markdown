@@ -126,12 +126,12 @@ resource "aws_dynamodb_table" "example" {
   }
 
   replica {
-    region_name = "us-east-2"
+    region_name      = "us-east-2"
     consistency_mode = "STRONG"
   }
 
   replica {
-    region_name = "us-west-2"
+    region_name      = "us-west-2"
     consistency_mode = "STRONG"
   }
 }
