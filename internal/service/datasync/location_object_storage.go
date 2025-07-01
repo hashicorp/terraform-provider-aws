@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationObjectStorageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(domainTfVar="domain")
