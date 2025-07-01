@@ -2040,6 +2040,10 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			_, err = conn.UpdateTable(ctx, input)
 		}
 
+		if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return fmt.Errorf("deleting replica(s): %w", err)
+		}
+
 		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]any)
 			if !ok {
