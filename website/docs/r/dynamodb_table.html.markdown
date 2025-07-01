@@ -105,11 +105,12 @@ resource "aws_dynamodb_table" "example" {
 ```
 
 #### Global Tables with Multi-Region Strong Consistency
+
 Multi-Region strong consistency (MRSC) is a new DynamoDB global tables capability available in preview. A global table configured for MRSC provides the ability to perform a strongly consistent read with multi-Region scope. Performing a strongly consistent read on an MRSC table ensures you're always reading the latest version of an item, irrespective of the Region in which you're performing the read.
 
 **Note** Please see detailed information, restrictions, caveats etc on the [AWS Support Page](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/multi-region-strong-consistency-gt.html).
 
-Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables. 
+Consistency Mode (`consistency_mode`) is a new argument on the embedded `replica` that allows you to configure consistency mode for Global Tables.
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -135,7 +136,6 @@ resource "aws_dynamodb_table" "example" {
   }
 }
 ```
-
 
 ### Replica Tagging
 
