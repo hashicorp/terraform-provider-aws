@@ -45,6 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Stream",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
+				ResourceType:        "Stream",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
@@ -54,6 +55,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Name:     "Stream Consumer",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "StreamConsumer",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
@@ -68,6 +70,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Stream",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
+				ResourceType:        "Stream",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
@@ -77,6 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Stream Consumer",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "StreamConsumer",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

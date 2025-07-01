@@ -31,7 +31,7 @@ import (
 )
 
 // @SDKResource("aws_kinesis_stream", name="Stream")
-// @Tags(identifierAttribute="name")
+// @Tags(identifierAttribute="name", resourceType="Stream")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,

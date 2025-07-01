@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
 func dataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
@@ -62,11 +62,11 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 	streamARN := d.Get(names.AttrStreamARN).(string)
-	input := &kinesis.ListStreamConsumersInput{
+	input := kinesis.ListStreamConsumersInput{
 		StreamARN: aws.String(streamARN),
 	}
 
-	consumer, err := findStreamConsumer(ctx, conn, input, func(c *types.Consumer) bool {
+	consumer, err := findStreamConsumer(ctx, conn, &input, func(c *types.Consumer) bool {
 		if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(c.ConsumerName) {
 			return false
 		}
