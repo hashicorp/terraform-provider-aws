@@ -116,10 +116,13 @@ func updateTagsForStream(ctx context.Context, conn *kinesis.Client, identifier s
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
+	const (
+		chunkSize = 10
+	)
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Kinesis)
 	if len(removedTags) > 0 {
-		for _, removedTags := range removedTags.Chunks(10) {
+		for _, removedTags := range removedTags.Chunks(chunkSize) {
 			input := kinesis.RemoveTagsFromStreamInput{
 				StreamName: aws.String(identifier),
 				TagKeys:    removedTags.Keys(),
@@ -136,7 +139,7 @@ func updateTagsForStream(ctx context.Context, conn *kinesis.Client, identifier s
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Kinesis)
 	if len(updatedTags) > 0 {
-		for _, updatedTags := range updatedTags.Chunks(10) {
+		for _, updatedTags := range updatedTags.Chunks(chunkSize) {
 			input := kinesis.AddTagsToStreamInput{
 				StreamName: aws.String(identifier),
 				Tags:       updatedTags.IgnoreAWS().Map(),
