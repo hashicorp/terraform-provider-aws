@@ -355,7 +355,7 @@ func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planm
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state resourceDBClusterData
+	var plan, state dbClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -368,10 +368,10 @@ func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planm
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
 
-func (r *resourceDBCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan resourceDBClusterData
+	var plan dbClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -432,10 +432,10 @@ func (r *resourceDBCluster) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBCluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBClusterData
+	var state dbClusterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -464,10 +464,10 @@ func (r *resourceDBCluster) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan, state resourceDBClusterData
+	var plan, state dbClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -517,10 +517,10 @@ func (r *resourceDBCluster) Update(ctx context.Context, req resource.UpdateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDBCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBClusterData
+	var state dbClusterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -553,7 +553,7 @@ func (r *resourceDBCluster) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceDBCluster) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var allocatedStorage types.Int64
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
 	if resp.Diagnostics.HasError() {
