@@ -10,6 +10,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix `Unexpected Identity Change` errors for numerous resource types when refreshing resources created or refreshed by Terraform AWS Provider v6.0.0 ([#43221](https://github.com/hashicorp/terraform-provider-aws/issues/43221))
+* resource/aws_appflow_connector_profile: Fixes error refreshing resource state. ([#43221](https://github.com/hashicorp/terraform-provider-aws/issues/43221))
 * resource/aws_cloudwatch_query_definition: Support ARNs as valid values for `log_group_names` ([#43183](https://github.com/hashicorp/terraform-provider-aws/issues/43183))
 
 ## 6.1.0 (June 26, 2025)
