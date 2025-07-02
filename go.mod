@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.131.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.51.2
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.228.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.229.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
@@ -217,8 +217,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.24.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.82.0
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.199.0
