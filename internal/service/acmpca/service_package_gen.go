@@ -54,7 +54,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceCertificateAuthority,
@@ -65,7 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceCertificateAuthorityCertificate,
@@ -73,7 +77,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Certificate Authority Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed("certificate_authority_arn",
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -90,7 +96,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN,
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
