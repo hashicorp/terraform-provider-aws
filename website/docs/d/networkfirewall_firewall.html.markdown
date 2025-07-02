@@ -52,6 +52,9 @@ One or more of these arguments is required.
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the firewall.
+* `availability_zone_change_protection` - Indicates whether the firewall is protected against changes to its Availability Zone configuration.
+* `availability_zone_mapping` - Set of Availability Zones where the firewall endpoints are created for a transit gateway-attached firewall.
+    * `availability_zone_id` - The ID of the Availability Zone where the firewall endpoint is located.
 * `delete_protection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
 * `enabled_analysis_types` - Set of types for which to collect analysis metrics.
@@ -73,6 +76,10 @@ This data source exports the following attributes in addition to the arguments a
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
+    * `transit_gateway_attachment_sync_state` - Set of transit gateway configured for use by the firewall.
+        * `attachment_id` - The unique identifier of the transit gateway attachment.
+        * `status_message` - A message providing additional information about the current status.
+        * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
 * `subnet_change_protection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
@@ -80,4 +87,6 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_id` - The unique identifier for the subnet.
 * `tags` - Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_token` - String token used when updating a firewall.
+* `transit_gateway_id` - The unique identifier of the transit gateway associated with this firewall.
+* `transit_gateway_owner_account_id` - The AWS account ID that owns the transit gateway.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
