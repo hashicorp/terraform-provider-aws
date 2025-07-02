@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-// Custom S3 tag service update functions using the same format as generated code.
+// Custom S3 tag functions using the same format as generated code.
 
 func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
