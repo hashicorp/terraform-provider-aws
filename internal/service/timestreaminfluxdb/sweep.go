@@ -34,7 +34,7 @@ func sweepDBClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 		}
 
 		for _, v := range page.Items {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDBCluster, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDBClusterResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
 			))
 		}
