@@ -304,7 +304,7 @@ The following arguments are optional:
   Tag changes on the global table are propagated to replicas.
   Changing from `true` to `false` on a subsequent `apply` leaves replica tags as-is and no longer manages them.
 * `region_name` - (Required) Region name of the replica.
-* `consistency_mode` (Preview) - (Optional) Whether this global table will be using `STRONG` consistency mode or `EVENTUAL` consistency mode. Default value is `EVENTUAL`.
+* `consistency_mode` - (Optional) Whether this global table will be using `STRONG` consistency mode or `EVENTUAL` consistency mode. Default value is `EVENTUAL`.
 
 ### `server_side_encryption`
 
