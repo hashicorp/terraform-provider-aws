@@ -113,7 +113,6 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationObjectStorageInput{
-		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
@@ -138,6 +137,10 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk("server_protocol"); ok {
 		input.ServerProtocol = awstypes.ObjectStorageServerProtocol(v.(string))
+	}
+
+	if v, ok := d.GetOk("agent_arns"); ok {
+		input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	output, err := conn.CreateLocationObjectStorage(ctx, input)

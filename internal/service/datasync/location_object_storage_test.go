@@ -349,8 +349,6 @@ resource "aws_datasync_location_object_storage" "test" {
   bucket_name     = %[1]q
   server_protocol = "HTTPS"
   server_port     = 443
-  access_key      = "DUMMYACCESS"
-  secret_key      = "DUMMYSECRET"
 }
 `, rName, domain)
 }
