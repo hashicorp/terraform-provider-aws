@@ -67,6 +67,8 @@ This data source exports the following attributes in addition to the arguments a
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
+            * `status` - The current status of the firewall endpoint instantiation in the subnet.
+            * `status_message` - It populates this with the reason for the error or failure and how to resolve it.  A FAILED status indicates a non-recoverable state, and a ERROR status indicates an issue that you can fix.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
     * `capacity_usage_summary` - Aggregated count of all resources used by reference sets in a firewall.
