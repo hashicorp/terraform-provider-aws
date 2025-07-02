@@ -43,6 +43,7 @@ func isDirectoryBucket(bucket string) bool {
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
+// @Testing(importIgnore="force_destroy")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 

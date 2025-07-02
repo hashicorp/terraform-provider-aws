@@ -69,6 +69,9 @@ func TestAccS3DirectoryBucket_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectoryBucket/tags/"),
@@ -118,6 +121,9 @@ func TestAccS3DirectoryBucket_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectoryBucket/tags/"),
@@ -161,6 +167,9 @@ func TestAccS3DirectoryBucket_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectoryBucket/tags/"),
@@ -192,6 +201,9 @@ func TestAccS3DirectoryBucket_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -252,6 +264,7 @@ func TestAccS3DirectoryBucket_tags_null(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -301,6 +314,7 @@ func TestAccS3DirectoryBucket_tags_EmptyMap(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -381,6 +395,9 @@ func TestAccS3DirectoryBucket_tags_AddOnUpdate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -439,6 +456,9 @@ func TestAccS3DirectoryBucket_tags_EmptyTag_OnCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectoryBucket/tags/"),
@@ -470,6 +490,9 @@ func TestAccS3DirectoryBucket_tags_EmptyTag_OnCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -565,6 +588,9 @@ func TestAccS3DirectoryBucket_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/DirectoryBucket/tags/"),
@@ -608,6 +634,9 @@ func TestAccS3DirectoryBucket_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -697,6 +726,9 @@ func TestAccS3DirectoryBucket_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -754,6 +786,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -801,6 +836,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -844,6 +882,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -877,6 +918,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -944,6 +988,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1003,6 +1050,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1036,6 +1086,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1101,6 +1154,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1160,6 +1216,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1211,6 +1270,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_overlapping(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1300,6 +1362,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_updateToProviderOnly(t *testing.T
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1388,6 +1453,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_updateToResourceOnly(t *testing.T
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1453,6 +1521,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1510,6 +1581,9 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1577,6 +1651,7 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_nullOverlappingResourceTag(t *tes
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1647,6 +1722,7 @@ func TestAccS3DirectoryBucket_tags_DefaultTags_nullNonOverlappingResourceTag(t *
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1702,6 +1778,9 @@ func TestAccS3DirectoryBucket_tags_ComputedTag_OnCreate(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1798,6 +1877,9 @@ func TestAccS3DirectoryBucket_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -1884,6 +1966,9 @@ func TestAccS3DirectoryBucket_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
