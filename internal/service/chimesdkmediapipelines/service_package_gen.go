@@ -33,7 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceMediaInsightsPipelineConfiguration,
+			Factory:  resourceMediaInsightsPipelineConfiguration,
 			TypeName: "aws_chimesdkmediapipelines_media_insights_pipeline_configuration",
 			Name:     "Media Insights Pipeline Configuration",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -41,7 +41,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
