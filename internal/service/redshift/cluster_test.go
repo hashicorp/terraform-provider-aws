@@ -344,13 +344,6 @@ func TestAccRedshiftCluster_publiclyAccessible_default(t *testing.T) {
 				),
 			},
 			{
-				// plan should not empty because the default value has changed and will for an update unless explicitly set
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
-				PlanOnly:                 true,
-				ExpectNonEmptyPlan:       true,
-			},
-			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_publiclyAccessible_default(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1410,10 +1403,6 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)

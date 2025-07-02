@@ -1258,6 +1258,11 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Confirm that `replicas` is populated after refreshing source
@@ -1276,8 +1281,15 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1432,6 +1444,11 @@ func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName: resourceName,
@@ -1447,8 +1464,15 @@ func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccInstanceConfig_ReplicateSourceDB_basic(rName),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

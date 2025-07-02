@@ -299,8 +299,14 @@ func TestAccIAMServerCertificate_tags_null(t *testing.T) {
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -368,8 +374,14 @@ func TestAccIAMServerCertificate_tags_EmptyMap(t *testing.T) {
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

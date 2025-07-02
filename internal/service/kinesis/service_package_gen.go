@@ -40,16 +40,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
 	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceStream,
+			Factory:  dataSourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrName,
+				ResourceType:        "Stream",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "StreamConsumer",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -62,6 +70,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "Stream",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrName,
+				ResourceType:        "Stream",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
@@ -69,7 +78,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Factory:  resourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
 			Name:     "Stream Consumer",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "StreamConsumer",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
