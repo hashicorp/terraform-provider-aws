@@ -1,5 +1,5 @@
 ```release-note:bug
-many resource types: Fixes "Unexpected Identity Change" errors when refreshing resources created or refreshed by v6.0.
+provider: Fix `Unexpected Identity Change` errors for numerous resource types when refreshing resources created or refreshed by Terraform AWS Provider v6.0.0
 ```
 
 ```release-note:bug
