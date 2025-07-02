@@ -91,6 +91,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceServiceNetworkServiceAssociations,
+			TypeName: "aws_vpclattice_service_network_service_associations",
+			Name:     "Service Network Service Associations",
+		},
 	}
 }
 
