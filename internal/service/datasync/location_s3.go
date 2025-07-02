@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_datasync_location_s3", name="Location S3")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationS3Output")
 // @Testing(preCheck="testAccPreCheck")
 func resourceLocationS3() *schema.Resource {

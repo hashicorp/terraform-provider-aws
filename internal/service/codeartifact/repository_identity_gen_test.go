@@ -23,8 +23,9 @@ func testAccCodeArtifactRepository_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccCodeArtifactRepository_Identity_Basic,
-		"RegionOverride": testAccCodeArtifactRepository_Identity_RegionOverride,
+		acctest.CtBasic:    testAccCodeArtifactRepository_Identity_Basic,
+		"ExistingResource": testAccCodeArtifactRepository_Identity_ExistingResource,
+		"RegionOverride":   testAccCodeArtifactRepository_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

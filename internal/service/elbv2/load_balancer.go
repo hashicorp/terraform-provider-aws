@@ -41,6 +41,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
