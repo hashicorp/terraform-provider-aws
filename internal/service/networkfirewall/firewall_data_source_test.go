@@ -161,6 +161,35 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 		},
 	})
 }
+func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	dataSourceName := "data.aws_networkfirewall_firewall.test"
+	dataSourceCallerIdentity := "data.aws_caller_identity.current"
+	dataSourceAvailabilityZones := "data.aws_availability_zones.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallDataSourceConfig_transitGatewayAttachment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+					resource.TestCheckResourceAttr(dataSourceName, "availability_zone_change_protection", acctest.CtFalse),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "availability_zone_mappings.*.availability_zone_id", dataSourceAvailabilityZones, "zone_ids"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_status.0.transit_gateway_attachment_sync_state.*.attachment_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_owner_account_id", dataSourceCallerIdentity, names.AttrAccountID),
+				),
+			},
+		},
+	})
+}
 
 func testAccFirewallDataSourceDependenciesConfig(rName string) string {
 	return fmt.Sprintf(`
@@ -259,6 +288,38 @@ resource "aws_networkfirewall_firewall" "test" {
 
 data "aws_networkfirewall_firewall" "test" {
   arn  = aws_networkfirewall_firewall.test.arn
+  name = %[1]q
+
+  depends_on = [aws_networkfirewall_firewall.test]
+}
+`, rName))
+}
+
+func testAccFirewallDataSourceConfig_transitGatewayAttachment(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+data "aws_availability_zones" "test" {
+  state = "available"
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                                = %[1]q
+  firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
+  transit_gateway_id                  = aws_ec2_transit_gateway.test.id
+
+  availability_zone_mapping {
+	availability_zone_id = data.aws_availability_zones.test.zone_ids[0]
+  }
+
+  availability_zone_mapping {
+	availability_zone_id = data.aws_availability_zones.test.zone_ids[1]
+  }
+}
+
+data "aws_networkfirewall_firewall" "test" {
   name = %[1]q
 
   depends_on = [aws_networkfirewall_firewall.test]
