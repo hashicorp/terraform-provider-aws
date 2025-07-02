@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
@@ -169,14 +170,15 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		tags tftags.KeyValueTags
 		err  error
 	)
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	switch resourceType {
 	case "Bucket":
-		if isDirectoryBucket(identifier) {
-			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
-		}
 		tags, err = bucketListTags(ctx, conn, identifier)
+
+	case "DirectoryBucket":
+		tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
 
 	case "Object", "ObjectCopy", "BucketObject":
 		var objectARN objectARN
@@ -215,14 +217,15 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 // UpdateTags updates s3 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	switch resourceType {
 	case "Bucket":
-		if isDirectoryBucket(identifier) {
-			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
-		}
 		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+
+	case "DirectoryBucket":
+		return tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 
 	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)
