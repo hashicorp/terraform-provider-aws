@@ -41,7 +41,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "DirectoryBucket",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

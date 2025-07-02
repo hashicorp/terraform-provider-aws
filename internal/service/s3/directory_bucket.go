@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,6 +41,7 @@ func isDirectoryBucket(bucket string) bool {
 }
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
+// @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -81,7 +84,9 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrBucket)),
+			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrBucket)),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
@@ -115,8 +120,12 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 					listvalidator.IsRequired(),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -151,6 +160,8 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 			},
 		},
 	}
+
+	// TODO Tag on Create?
 
 	_, err := conn.CreateBucket(ctx, input)
 
@@ -201,6 +212,8 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	})
 	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
 
+	// TODO setTagsOut?
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -247,7 +260,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 
 // arn returns the ARN of the specified bucket.
 func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string {
-	return r.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", bucket))
+	return r.Meta().RegionalARN(ctx, "s3express", "bucket/"+bucket)
 }
 
 type directoryBucketResourceModel struct {
@@ -258,6 +271,8 @@ type directoryBucketResourceModel struct {
 	ForceDestroy   types.Bool                                         `tfsdk:"force_destroy"`
 	Location       fwtypes.ListNestedObjectValueOf[locationInfoModel] `tfsdk:"location"`
 	ID             types.String                                       `tfsdk:"id"`
+	Tags           tftags.Map                                         `tfsdk:"tags"`
+	TagsAll        tftags.Map                                         `tfsdk:"tags_all"`
 	Type           fwtypes.StringEnum[awstypes.BucketType]            `tfsdk:"type"`
 }
 
