@@ -213,8 +213,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2 h1:FCT/XJTmF+Rs9dpz8raISrEui75j
 github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2/go.mod h1:MFliW2mb4JEqLROEGWnf9o8mEpNjiyieKyOaUqa2ji0=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0 h1:A99gjqZDbdhjtjJVZrmVzVKO2+p3MSg35bDWtbMQVxw=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0/go.mod h1:mWB0GE1bqcVSvpW7OtFA0sKuHk52+IqtnsYU2jUfYAs=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.228.0 h1:lRG/ZlvNdMW1X5xjwTHqNLHSTh8uwlZFbkytGPMOdQc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.228.0/go.mod h1:35jGWx7ECvCwTsApqicFYzZ7JFEnBc6oHUuOQ3xIS54=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.229.0 h1:gmR73Sogww0kmbAi9vDt22FuuQqiDUM5KaoGgcVHYlo=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.229.0/go.mod h1:35jGWx7ECvCwTsApqicFYzZ7JFEnBc6oHUuOQ3xIS54=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1 h1:Bwzh202Aq7/MYnAjXA9VawCf6u+hjwMdoYmZ4HYsdf8=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1/go.mod h1:xZzWl9AXYa6zsLLH41HBFW8KRKJRIzlGmvSM0mVMIX4=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2 h1:XJ/AEFYj9VFPJdF+VFi4SUPEDfz1akHwxxm07JfZJcs=
@@ -455,8 +455,8 @@ github.com/aws/aws-sdk-go-v2/service/route53resolver v1.36.0 h1:gkR6ADqZBV4RzK+F
 github.com/aws/aws-sdk-go-v2/service/route53resolver v1.36.0/go.mod h1:lQW5vqGKTvNpIJ0DVG7dVyJ02OZnSlcLFHgZUpZhEw8=
 github.com/aws/aws-sdk-go-v2/service/rum v1.24.4 h1:PF+oU9cTdUFQ3nW+A2qarZQF5txhjRgu8xUotk6y2BA=
 github.com/aws/aws-sdk-go-v2/service/rum v1.24.4/go.mod h1:0E3Cb8i2piw7fqp157xGd9tKYbc6r+V2UW7sKzNbw/k=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.82.0 h1:JubM8CGDDFaAOmBrd8CRYNr49ZNgEAiLwGwgNMdS0nw=
-github.com/aws/aws-sdk-go-v2/service/s3 v1.82.0/go.mod h1:kUklwasNoCn5YpyAqC/97r6dzTA1SRKJfKq16SXeoDU=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0 h1:5Y75q0RPQoAbieyOuGLhjV9P3txvYgXv2lg0UwJOfmE=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0/go.mod h1:kUklwasNoCn5YpyAqC/97r6dzTA1SRKJfKq16SXeoDU=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.59.0 h1:R1LcmeXQMnPqmB3hzR90GUAM7NTAeW9ivkA8R/eKw/Y=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.59.0/go.mod h1:uZDSKJgJ3w3MOjtuvrYMTI7APdGNycg7srBGzaclI+s=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4 h1:oZjDliGfblCLGHBlw1CTTHaVYB6MkD+ss5AxhqoX1K0=
