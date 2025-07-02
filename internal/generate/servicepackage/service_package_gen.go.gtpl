@@ -175,9 +175,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 						{{- end -}}
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
 						),
 				{{- else if $value.SingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
@@ -185,18 +182,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 							{{- end -}}
-							{{- if $value.HasV6_0SDKv2Fix }}
-								inttypes.WithV6_0SDKv2Fix(),
-							{{ end -}}
 						),
 					{{ else }}
 						Identity: inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
 								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
 							{{- end -}}
-							{{- if $value.HasV6_0SDKv2Fix }}
-								inttypes.WithV6_0SDKv2Fix(),
-							{{ end -}}
 						),
 					{{- end }}
 				{{- end }}
