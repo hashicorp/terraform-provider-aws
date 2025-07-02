@@ -854,7 +854,7 @@ func testAccTrail_migrateV0(t *testing.T) {
 	})
 }
 
-func testAccTrail_Identity_ExistingResource(t *testing.T) {
+func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trail types.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

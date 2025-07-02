@@ -32,6 +32,7 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
+// @Testing(serialize=true)
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,

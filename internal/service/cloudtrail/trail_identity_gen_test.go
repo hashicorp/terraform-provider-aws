@@ -19,14 +19,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudTrailTrail_Identity_Basic(t *testing.T) {
+func testAccCloudTrailTrail_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:    testAccCloudTrailTrail_Identity_Basic,
+		"ExistingResource": testAccCloudTrailTrail_Identity_ExistingResource,
+		"RegionOverride":   testAccCloudTrailTrail_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccCloudTrailTrail_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail
 	resourceName := "aws_cloudtrail.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -102,13 +114,13 @@ func TestAccCloudTrailTrail_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudTrailTrail_Identity_RegionOverride(t *testing.T) {
+func testAccCloudTrailTrail_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudtrail.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
