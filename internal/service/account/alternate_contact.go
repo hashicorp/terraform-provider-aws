@@ -113,7 +113,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 	const (
 		inARow = 2
 	)
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).UntilFoundN(inARow)(ctx, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
@@ -184,7 +184,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "updating Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).If(func(v *types.AlternateContact, err error) (bool, error) {
 		if err != nil {
@@ -227,7 +227,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting Account Alternate Contact (%s): %s", d.Id(), err)
 	}
 
-	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
+	if _, err := retry.Op(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
 	}).UntilNotFound()(ctx, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)

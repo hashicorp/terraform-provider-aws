@@ -44,7 +44,7 @@ func NewErrorGenerator(sequence []error) *ErrorGenerator {
 	return g
 }
 
-func NewOpFunc(sequence []error, d time.Duration) retry.OpFunc[any] {
+func NewOpFunc(sequence []error, d time.Duration) func(context.Context) (any, error) {
 	g := NewErrorGenerator(sequence)
 
 	return func(ctx context.Context) (any, error) {
@@ -59,7 +59,7 @@ func NewOpFunc(sequence []error, d time.Duration) retry.OpFunc[any] {
 	}
 }
 
-func UntilFoundOpFunc() retry.OpFunc[any] {
+func UntilFoundOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
 		tfresource.NewEmptyResultError(nil),
 		tfresource.NewEmptyResultError(nil),
@@ -74,7 +74,7 @@ func UntilFoundOpFunc() retry.OpFunc[any] {
 	return NewOpFunc(sequence, 0)
 }
 
-func UntilFoundSleepOpFunc() retry.OpFunc[any] {
+func UntilFoundSleepOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
 		tfresource.NewEmptyResultError(nil),
 		tfresource.NewEmptyResultError(nil),
@@ -89,7 +89,7 @@ func UntilFoundSleepOpFunc() retry.OpFunc[any] {
 	return NewOpFunc(sequence, 1*time.Second)
 }
 
-func UntilNotFoundOpFunc() retry.OpFunc[any] {
+func UntilNotFoundOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
 		nil,
 		nil,
@@ -100,7 +100,7 @@ func UntilNotFoundOpFunc() retry.OpFunc[any] {
 	return NewOpFunc(sequence, 0)
 }
 
-func UntilNotFoundFailureOpFunc() retry.OpFunc[any] {
+func UntilNotFoundFailureOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
 		nil,
 		nil,
@@ -138,7 +138,7 @@ func TestUntilFoundN(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := retry.Operation(UntilFoundOpFunc()).UntilFoundN(testCase.InARow)(t.Context(), 2*time.Minute, testBackoffOpts)
+			_, err := retry.Op(UntilFoundOpFunc()).UntilFoundN(testCase.InARow)(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -164,7 +164,7 @@ func TestUntilFoundN_timeout(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := retry.Operation(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow)(t.Context(), 2*time.Second, testBackoffOpts)
+			_, err := retry.Op(UntilFoundSleepOpFunc()).UntilFoundN(testCase.InARow)(t.Context(), 2*time.Second, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}
@@ -177,7 +177,7 @@ func TestUntilNotFound(t *testing.T) {
 
 	testCases := []struct {
 		Name    string
-		Op      retry.OpFunc[any]
+		Op      func(context.Context) (any, error)
 		WantErr bool
 	}{
 		{
@@ -195,7 +195,7 @@ func TestUntilNotFound(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := retry.Operation(testCase.Op).UntilNotFound()(t.Context(), 2*time.Minute, testBackoffOpts)
+			_, err := retry.Op(testCase.Op).UntilNotFound()(t.Context(), 2*time.Minute, testBackoffOpts)
 			if gotErr := err != nil; gotErr != testCase.WantErr {
 				t.Errorf("err = %v, want error presence = %v", err, testCase.WantErr)
 			}

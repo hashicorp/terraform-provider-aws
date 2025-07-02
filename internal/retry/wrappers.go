@@ -12,41 +12,17 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-type Op[T any] interface {
-	Invoke(context.Context) (T, error)
-}
-
-type OpFunc[T any] func(context.Context) (T, error)
-
-func (f OpFunc[T]) Invoke(ctx context.Context) (T, error) {
-	return f(ctx)
-}
-
-type Predicate[T any] interface {
-	Invoke(T, error) (bool, error)
-}
-
-type PredicateFunc[T any] func(T, error) (bool, error)
-
-func (f PredicateFunc[T]) Invoke(t T, err error) (bool, error) {
-	return f(t, err)
-}
-
+type opFunc[T any] func(context.Context) (T, error)
+type predicateFunc[T any] func(T, error) (bool, error)
 type runFunc[T any] func(context.Context, time.Duration, ...backoff.Option) (T, error)
 
-type operation[T any] struct {
-	op Op[T]
-}
-
-// Operation returns a new wrapper on top of the specified function.
-func Operation[T any](op OpFunc[T]) operation[T] {
-	return operation[T]{
-		op: op,
-	}
+// Op returns a new wrapper on top of the specified function.
+func Op[T any](op func(context.Context) (T, error)) opFunc[T] {
+	return op
 }
 
 // UntilFoundN retries an operation if it returns a retry.NotFoundError.
-func (o operation[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
+func (o opFunc[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
 	if continuousTargetOccurence < 1 {
 		continuousTargetOccurence = 1
 	}
@@ -76,7 +52,7 @@ func (o operation[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
 	return o.If(predicate)
 }
 
-func (o operation[T]) UntilNotFound() runFunc[T] {
+func (o opFunc[T]) UntilNotFound() runFunc[T] {
 	predicate := func(_ T, err error) (bool, error) {
 		if err == nil {
 			return true, nil
@@ -100,7 +76,7 @@ func (o operation[T]) UntilNotFound() runFunc[T] {
 	}
 }
 
-func (o operation[T]) If(predicate PredicateFunc[T]) runFunc[T] {
+func (o opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 	// The default predicate short-circuits a retry loop if the operation returns any error.
 	if predicate == nil {
 		predicate = func(_ T, err error) (bool, error) {
@@ -113,9 +89,9 @@ func (o operation[T]) If(predicate PredicateFunc[T]) runFunc[T] {
 		// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
 		var l *backoff.Loop
 		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
-			t, err := o.op.Invoke(ctx)
+			t, err := o(ctx)
 
-			if retry, err := predicate.Invoke(t, err); !retry {
+			if retry, err := predicate(t, err); !retry {
 				return t, err
 			}
 		}
