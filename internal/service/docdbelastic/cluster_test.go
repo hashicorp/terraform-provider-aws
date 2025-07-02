@@ -252,7 +252,7 @@ func TestAccDocDBElasticCluster_Identity_ExistingResource(t *testing.T) {
 						VersionConstraint: "5.100.0",
 					},
 				},
-				Config: testAccClusterConfig_identityV5(rName),
+				Config: testAccClusterConfig_basic(rName),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
 				},
@@ -489,31 +489,4 @@ resource "aws_docdbelastic_cluster" "test" {
   }
 }
 `, rName, key1, value1, key2, value2))
-}
-
-func testAccClusterConfig_identityV5(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_docdbelastic_cluster" "test" {
-  name           = %[1]q
-  shard_capacity = 2
-  shard_count    = 1
-
-  admin_user_name     = "testuser"
-  admin_user_password = "testpassword"
-  auth_type           = "PLAIN_TEXT"
-
-  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
-
-  vpc_security_group_ids = [
-    aws_security_group.test.id
-  ]
-
-  subnet_ids = [
-    aws_subnet.test[0].id,
-    aws_subnet.test[1].id
-  ]
-}
-`, rName))
 }
