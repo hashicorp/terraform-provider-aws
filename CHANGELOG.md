@@ -1,4 +1,5 @@
-## 6.2.0 (Unreleased)
+## 6.3.0 (Unreleased)
+## 6.2.0 (July  2, 2025)
 
 ENHANCEMENTS:
 
