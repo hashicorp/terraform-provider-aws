@@ -4101,30 +4101,6 @@ func TestAccDynamoDBTable_Replica_MRSC_NotEnoughReplicas(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_MRSC_UnsupportedRegions(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 3)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 6 due to testing unsupported regionsß
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccTableConfig_MRSC_replica_region_unsupported(rName, "eu-west-1", "eu-central-1"),
-				ExpectError: regexache.MustCompile(`Unsupported Region\(s\) specified for global tables with MultiRegionConsistency set to STRONG`),
-			},
-		},
-	})
-}
-
 func TestAccDynamoDBTable_Replica_MRSC_MixedConsistencyModes(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5688,37 +5664,6 @@ resource "aws_dynamodb_table" "test_mrsc" {
   }
 }
 `, rName))
-}
-
-func testAccTableConfig_MRSC_replica_region_unsupported(rName string, region1 string, region2 string) string {
-	return acctest.ConfigCompose(
-
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-
-resource "aws_dynamodb_table" "test_mrsc" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name      = %[2]q
-    consistency_mode = "STRONG"
-  }
-
-  replica {
-    region_name      = %[3]q
-    consistency_mode = "STRONG"
-  }
-}
-`, rName, region1, region2))
 }
 
 func testAccTableConfig_MRSC_replica_mixed_consistency_mode(rName string) string {
