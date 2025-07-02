@@ -115,7 +115,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 	)
 	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}).UntilFoundN(inARow).Run(ctx, d.Timeout(schema.TimeoutCreate)); err != nil {
+	}).UntilFoundN(inARow)(ctx, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) create: %s", d.Id(), err)
 	}
 
@@ -194,7 +194,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 		equal := email == aws.ToString(v.EmailAddress) && name == aws.ToString(v.Name) && phone == aws.ToString(v.PhoneNumber) && title == aws.ToString(v.Title)
 
 		return !equal, nil
-	}).Run(ctx, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	})(ctx, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) update: %s", d.Id(), err)
 	}
 
@@ -229,7 +229,7 @@ func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData,
 
 	if _, err := retry.Operation(func(ctx context.Context) (*types.AlternateContact, error) {
 		return findAlternateContactByTwoPartKey(ctx, conn, accountID, contactType)
-	}).UntilNotFound().Run(ctx, d.Timeout(schema.TimeoutDelete)); err != nil {
+	}).UntilNotFound()(ctx, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Account Alternate Contact (%s) delete: %s", d.Id(), err)
 	}
 

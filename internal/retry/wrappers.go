@@ -32,39 +32,21 @@ func (f PredicateFunc[T]) Invoke(t T, err error) (bool, error) {
 	return f(t, err)
 }
 
+type runFunc[T any] func(context.Context, time.Duration, ...backoff.Option) (T, error)
+
 type operation[T any] struct {
-	op                Op[T]
-	predicate         Predicate[T]
-	transformRunError func(error) error
+	op Op[T]
 }
 
 // Operation returns a new wrapper on top of the specified function.
 func Operation[T any](op OpFunc[T]) operation[T] {
 	return operation[T]{
 		op: op,
-		// The default predicate short-circuits a retry loop if the operation returns any error.
-		predicate: PredicateFunc[T](func(t T, err error) (bool, error) {
-			return err != nil, err
-		}),
-		// The default error transformer does nothing.
-		transformRunError: func(err error) error { return err },
 	}
 }
 
-func (o operation[T]) withPredicate(predicate Predicate[T]) operation[T] {
-	return operation[T]{op: o.op, predicate: predicate, transformRunError: o.transformRunError}
-}
-
-func (o operation[T]) withTransformRunError(f func(error) error) operation[T] {
-	return operation[T]{op: o.op, predicate: o.predicate, transformRunError: f}
-}
-
-func (o operation[T]) If(predicate PredicateFunc[T]) operation[T] {
-	return o.withPredicate(predicate)
-}
-
 // UntilFoundN retries an operation if it returns a retry.NotFoundError.
-func (o operation[T]) UntilFoundN(continuousTargetOccurence int) operation[T] {
+func (o operation[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
 	if continuousTargetOccurence < 1 {
 		continuousTargetOccurence = 1
 	}
@@ -94,7 +76,7 @@ func (o operation[T]) UntilFoundN(continuousTargetOccurence int) operation[T] {
 	return o.If(predicate)
 }
 
-func (o operation[T]) UntilNotFound() operation[T] {
+func (o operation[T]) UntilNotFound() runFunc[T] {
 	predicate := func(_ T, err error) (bool, error) {
 		if err == nil {
 			return true, nil
@@ -107,37 +89,45 @@ func (o operation[T]) UntilNotFound() operation[T] {
 		return false, err
 	}
 
-	transform := func(err error) error {
+	return func(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
+		t, err := o.If(predicate)(ctx, timeout, opts...)
+
 		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
-			return ErrFoundResource
+			return t, ErrFoundResource
 		}
 
-		return err
+		return t, err
 	}
-
-	return o.If(predicate).withTransformRunError(transform)
 }
 
-// Run retries an operation until the timeout elapses or predicate indicates otherwise.
-func (o operation[T]) Run(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
-	// We explicitly don't set a deadline on the context here to maintain compatibility
-	// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
-	var l *backoff.Loop
-	for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
-		t, err := o.op.Invoke(ctx)
-
-		if retry, err := o.predicate.Invoke(t, err); !retry {
-			return t, err
+func (o operation[T]) If(predicate PredicateFunc[T]) runFunc[T] {
+	// The default predicate short-circuits a retry loop if the operation returns any error.
+	if predicate == nil {
+		predicate = func(_ T, err error) (bool, error) {
+			return err != nil, err
 		}
 	}
 
-	var err error
-	if l.Remaining() == 0 {
-		err = inttypes.ErrDeadlineExceeded
-	} else {
-		err = context.Cause(ctx)
-	}
+	return func(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
+		// We explicitly don't set a deadline on the context here to maintain compatibility
+		// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
+		var l *backoff.Loop
+		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
+			t, err := o.op.Invoke(ctx)
 
-	var zero T
-	return zero, o.transformRunError(err)
+			if retry, err := predicate.Invoke(t, err); !retry {
+				return t, err
+			}
+		}
+
+		var err error
+		if l.Remaining() == 0 {
+			err = inttypes.ErrDeadlineExceeded
+		} else {
+			err = context.Cause(ctx)
+		}
+
+		var zero T
+		return zero, err
+	}
 }
