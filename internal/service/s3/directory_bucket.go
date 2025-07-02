@@ -158,10 +158,9 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 				Name: fwflex.StringFromFramework(ctx, locationInfoData.Name),
 				Type: locationInfoData.Type.ValueEnum(),
 			},
+			Tags: getTagsIn(ctx),
 		},
 	}
-
-	// TODO Tag on Create?
 
 	_, err := conn.CreateBucket(ctx, input)
 
@@ -211,8 +210,6 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		Type: fwtypes.StringEnumValue(output.BucketLocationType),
 	})
 	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
-
-	// TODO setTagsOut?
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
