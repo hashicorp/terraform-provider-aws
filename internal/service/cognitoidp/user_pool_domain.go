@@ -182,6 +182,14 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("managed_login_version") {
 		input.ManagedLoginVersion = aws.Int32(int32(d.Get("managed_login_version").(int)))
+
+		if v, ok := d.GetOk(names.AttrCertificateARN); ok {
+			// If there is a certificate use it as part of the request, this is how AWS distinguishes between custom and prefix domains
+			input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
+				CertificateArn: aws.String(v.(string)),
+			}
+			timeout = 60 * time.Minute // Custom domains take more time to become active.
+		}
 	}
 
 	_, err := conn.UpdateUserPoolDomain(ctx, &input)
