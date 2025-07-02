@@ -324,9 +324,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- else if $value.ARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							),
 						{{- else }}
-							Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.GlobalARNIdentity(
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							),
 						{{- end }}
 					{{- else }}
 						{{- if $value.HasARNAttribute }}
