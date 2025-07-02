@@ -43,7 +43,7 @@ func newDeliveryResource(context.Context) (resource.ResourceWithConfigure, error
 }
 
 type deliveryResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deliveryResourceModel]
 	framework.WithImportByID
 }
 
@@ -91,18 +91,18 @@ func (r *deliveryResource) Schema(ctx context.Context, request resource.SchemaRe
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[s3DeliveryConfigurationModel](ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
+			"s3_delivery_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute(ctx, 1, s3DeliveryConfigurationListOptions, listplanmodifier.UseStateForUnknown()),
 			names.AttrTags:              tftags.TagsAttribute(),
 			names.AttrTagsAll:           tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-var s3DeliveryConfigurationListOptions = []fwtypes.ListNestedObjectOfOption[s3DeliveryConfigurationModel]{
+var s3DeliveryConfigurationListOptions = []fwtypes.NestedObjectOfOption[s3DeliveryConfigurationModel]{
 	fwtypes.WithSemanticEqualityFunc(s3DeliverySemanticEquality),
 }
 
-func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.ListNestedObjectValueOf[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
+func s3DeliverySemanticEquality(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[s3DeliveryConfigurationModel]) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	oldValPtr, di := oldValue.ToPtr(ctx)
@@ -323,8 +323,10 @@ func (r *deliveryResource) Delete(ctx context.Context, request resource.DeleteRe
 func (r *deliveryResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
 		var plan, state deliveryResourceModel
-
 		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -372,6 +374,7 @@ func findDelivery(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 }
 
 type deliveryResourceModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                  `tfsdk:"arn"`
 	DeliveryDestinationARN  fwtypes.ARN                                                   `tfsdk:"delivery_destination_arn"`
 	DeliverySourceName      types.String                                                  `tfsdk:"delivery_source_name"`

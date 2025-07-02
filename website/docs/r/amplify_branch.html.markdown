@@ -155,6 +155,7 @@ resource "aws_sns_topic_subscription" "this" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for the branch.
 * `backend_environment_arn` - (Optional) ARN for a backend environment that is part of an Amplify app.
@@ -166,6 +167,7 @@ This resource supports the following arguments:
 * `enable_notification` - (Optional) Enables notifications for the branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for this branch.
+* `enable_skew_protection` - (Optional) Enables skew protection for the branch.  
 * `environment_variables` - (Optional) Environment variables for the branch.
 * `framework` - (Optional) Framework for the branch.
 * `pull_request_environment_name` - (Optional) Amplify environment name for the pull request.

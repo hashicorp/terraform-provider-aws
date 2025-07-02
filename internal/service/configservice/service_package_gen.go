@@ -4,104 +4,121 @@ package configservice
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
 			Factory:  newRetentionConfigurationResource,
 			TypeName: "aws_config_retention_configuration",
 			Name:     "Retention Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceAggregateAuthorization,
 			TypeName: "aws_config_aggregate_authorization",
 			Name:     "Aggregate Authorization",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  resourceConfigRule,
 			TypeName: "aws_config_config_rule",
 			Name:     "Config Rule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConfigurationAggregator,
 			TypeName: "aws_config_configuration_aggregator",
 			Name:     "Configuration Aggregator",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConfigurationRecorder,
 			TypeName: "aws_config_configuration_recorder",
 			Name:     "Configuration Recorder",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConfigurationRecorderStatus,
 			TypeName: "aws_config_configuration_recorder_status",
 			Name:     "Configuration Recorder Status",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceConformancePack,
 			TypeName: "aws_config_conformance_pack",
 			Name:     "Conformance Pack",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceDeliveryChannel,
 			TypeName: "aws_config_delivery_channel",
 			Name:     "Delivery Channel",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceOrganizationConformancePack,
 			TypeName: "aws_config_organization_conformance_pack",
 			Name:     "Organization Conformance Pack",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceOrganizationCustomPolicyRule,
 			TypeName: "aws_config_organization_custom_policy_rule",
 			Name:     "Organization Custom Policy Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceOrganizationCustomRule,
 			TypeName: "aws_config_organization_custom_rule",
 			Name:     "Organization Custom Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceOrganizationManagedRule,
 			TypeName: "aws_config_organization_managed_rule",
 			Name:     "Organization Managed Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceRemediationConfiguration,
 			TypeName: "aws_config_remediation_configuration",
 			Name:     "Remediation Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -116,6 +133,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*configservice.Options){
 		configservice.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *configservice.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *configservice.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

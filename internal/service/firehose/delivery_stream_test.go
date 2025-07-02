@@ -3778,7 +3778,9 @@ func testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName string) string {
 		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -4176,7 +4178,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4204,7 +4206,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn           = aws_iam_role.firehose.arn
     s3_backup_mode     = "FailedDataOnly"
-    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
     buffering_interval = 900
     buffering_size     = 100
     retry_duration     = 900
@@ -4235,7 +4237,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4281,7 +4283,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn

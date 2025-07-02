@@ -131,6 +131,7 @@ The following arguments are optional:
 * `partition_include_schema_table` - (Optional) Prefixes schema and table names to partition values, when the partition type is primary-key-type. Default is `false`.
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to write to the Kinesis data stream.
 * `stream_arn` - (Optional) ARN of the Kinesis data stream.
+* `use_large_integer_value` - (Optional) Use up to 18 digit int instead of casting ints as doubles, available from AWS DMS version 3.5.4. Default is `false`.
 
 ### mongodb_settings
 
@@ -270,4 +271,4 @@ Using `terraform import`, import endpoints using the `endpoint_id`. For example:
 % terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2231023b97eb6caf4c806b4fb2990e9ea71ca372cfa47732e9535d8308b0db03 -->
+<!-- cache-key: cdktf-0.20.8 input-9b31fec8222c58808ea34632a9c419a6bf1b32c9a6172a79ba157bb9b1f0b463 -->

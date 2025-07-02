@@ -12,6 +12,8 @@ description: |-
 
 Provides a Terraform resource for managing a Contacts Rotation in AWS Systems Manager Incident Manager.
 
+~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -156,8 +158,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** A rotation implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `depends_on` argument for the Terraform Contact Resource.
-
 The following arguments are required:
 
 * `contact_ids` - (Required) Amazon Resource Names (ARNs) of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
@@ -241,4 +241,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `ar
 % terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d1ce08106ca5a606920f9f95d80d05f4f5697a18f454ea743a0ba03973284d4 -->
+<!-- cache-key: cdktf-0.20.8 input-11ce2607c2bd70eae69800fa9ab236aa96308ce2f9eed7c7448ec8f86bcb63bb -->

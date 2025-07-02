@@ -167,7 +167,13 @@ func TestAccS3Object_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccObjectImportByS3URL(resourceName),
 			},
 		},
 	})
@@ -243,11 +249,23 @@ func TestAccS3Object_upgradeFromV4(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccObjectConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -280,7 +298,6 @@ func TestAccS3Object_source(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -310,7 +327,6 @@ func TestAccS3Object_content(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -343,7 +359,6 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -421,7 +436,6 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -700,7 +714,6 @@ func TestAccS3Object_kms(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -734,7 +747,6 @@ func TestAccS3Object_sse(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -786,7 +798,6 @@ func TestAccS3Object_acl(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -834,7 +845,6 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -897,7 +907,6 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1607,7 +1616,6 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
@@ -1661,14 +1669,28 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 				Config: testAccObjectConfig_keyWithSlashes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "/a/b//c///d/////e/"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrKey), knownvalue.StringExact("/a/b//c///d/////e/")),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccObjectConfig_keyWithSlashes(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1734,7 +1756,6 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider"},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -1819,7 +1840,6 @@ func TestAccS3Object_DirectoryBucket_kmsSSE(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider", names.AttrSource},
-				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -2123,7 +2143,7 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 	}
 }
 
-func testAccObjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc { // nosemgrep:s3-in-func-name
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -2531,7 +2551,10 @@ resource "aws_s3_object" "test" {
 
 func testAccObjectConfig_kmsID(rName string, source string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "kms_key_1" {}
+resource "aws_kms_key" "kms_key_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -2993,6 +3016,7 @@ func testAccObjectConfig_bucketKeyEnabled(rName string, content string) string {
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -3014,6 +3038,7 @@ func testAccObjectConfig_bucketBucketKeyEnabled(rName string, content string) st
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {
@@ -3048,6 +3073,7 @@ func testAccObjectConfig_defaultBucketSSE(rName string, content string) string {
 resource "aws_kms_key" "test" {
   description             = "Encrypts test objects"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {

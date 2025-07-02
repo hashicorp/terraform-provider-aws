@@ -16,6 +16,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -440,10 +441,22 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccQueueConfig_policyNewEquivalent(rName),
-				PlanOnly: true,
+				Config: testAccQueueConfig_policyNewEquivalent(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1053,7 +1066,7 @@ resource "aws_sqs_queue" "test" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "sqs:SendMessage",
-      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
+      "Resource": "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:${local.queue_name}",
       "Condition": {
         "ArnEquals": {
           "aws:SourceArn": "${aws_sns_topic.test.arn}"
@@ -1105,7 +1118,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:DeleteMessage",
         "sqs:ListQueues",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn
@@ -1155,7 +1168,7 @@ resource "aws_sqs_queue" "test" {
         "sqs:SendMessage",
         "sqs:DeleteMessage",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:%[1]s"
       Condition = {
         ArnEquals = {
           "aws:SourceArn" = aws_sns_topic.test.arn

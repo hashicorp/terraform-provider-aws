@@ -123,7 +123,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
+		err = roleUpdateTags(ctx, conn, roleName, nil, keyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
 		partition := meta.(*conns.AWSClient).Partition(ctx)

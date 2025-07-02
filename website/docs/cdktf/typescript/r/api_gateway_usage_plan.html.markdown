@@ -93,9 +93,7 @@ resource "aws_api_gateway_usage_plan" "example" {
 
 ## Argument Reference
 
-The API Gateway Usage Plan argument layout is a structure composed of several sub-resources - these resources are laid out below.
-
-### Top-Level Arguments
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the usage plan.
 * `description` - (Optional) Description of a usage plan.
@@ -174,4 +172,4 @@ Using `terraform import`, import AWS API Gateway Usage Plan using the `id`. For 
 % terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-24116054635474bb919fe95d52d6e98ba1ea28094c03b0bd8fe0eab47156f843 -->
+<!-- cache-key: cdktf-0.20.8 input-525d747e296d3cd0aa74b471a212857a05dde585fc2dae40be97691a0a826885 -->

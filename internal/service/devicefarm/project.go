@@ -24,16 +24,16 @@ import (
 
 // @SDKResource("aws_devicefarm_project", name="Project")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.Project")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
 		ReadWithoutTimeout:   resourceProjectRead,
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

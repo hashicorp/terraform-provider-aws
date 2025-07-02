@@ -65,6 +65,7 @@ The following arguments are optional:
 * `instanceTypes` - (Optional) Set of EC2 Instance Types.
 * `keyPair` - (Optional) Name of EC2 Key Pair.
 * `logging` - (Optional) Configuration block with logging settings. Detailed below.
+* `placement` - (Optional) Configuration block with placement settings that define where the instances that are launched from your image will run. Detailed below.
 * `resourceTags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `securityGroupIds` - (Optional) Set of EC2 Security Group identifiers.
 * `snsTopicArn` - (Optional) Amazon Resource Name (ARN) of SNS Topic.
@@ -94,6 +95,15 @@ The following arguments are required:
 The following arguments are optional:
 
 * `s3KeyPrefix` - (Optional) Prefix to use for S3 logs. Defaults to `/`.
+
+### placement
+
+The following arguments are optional:
+
+* `availabilityZone` - (Optional) Availability Zone where your build and test instances will launch.
+* `hostId` - (Optional) ID of the Dedicated Host on which build and test instances run. Conflicts with `hostResourceGroupArn`.
+* `hostResourceGroupArn` - (Optional) ARN of the host resource group in which to launch build and test instances. Conflicts with `hostId`.
+* `tenancy` - (Optional) Placement tenancy of the instance. Valid values: `default`, `dedicated` and `host`.
 
 ## Attribute Reference
 
@@ -137,4 +147,4 @@ Using `terraform import`, import `aws_imagebuilder_infrastructure_configuration`
 % terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-92ce8940a00b3a6132cb84f5e5797b0c5f3f5546af00335b30802f922e76f2ef -->
+<!-- cache-key: cdktf-0.20.8 input-0365fbeb9d806b30ce9ca759291a1a7d157660d825fbe68538725b4f78980e73 -->

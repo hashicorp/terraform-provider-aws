@@ -38,12 +38,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Network Insights Paths. The given filters must match exactly one Network Insights Path
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `networkInsightsPathId` - (Optional) ID of the Network Insights Path to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+Network Insights Paths. The given filters must match exactly one Network Insights Path
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 
@@ -69,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceIp` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-d0e825f8f7364e8eb844ba3b3182f743cfea15f60127fc83f4edc15613641009 -->
+<!-- cache-key: cdktf-0.20.8 input-9a63567edaf2eeb7d58ced21f48437730ece3e2040d1915b1101320f541557f7 -->

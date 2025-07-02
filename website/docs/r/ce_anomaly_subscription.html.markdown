@@ -206,7 +206,7 @@ resource "aws_ce_anomaly_subscription" "realtime_subscription" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
 * `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.

@@ -83,10 +83,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 
@@ -95,6 +97,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the firewall.
 * `deleteProtection` - A flag indicating whether the firewall is protected against deletion.
 * `description` - Description of the firewall.
+* `enabledAnalysisTypes` - Set of types for which to collect analysis metrics.
 * `encryptionConfiguration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `keyId` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
@@ -122,4 +125,4 @@ This data source exports the following attributes in addition to the arguments a
 * `updateToken` - String token used when updating a firewall.
 * `vpcId` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.20.8 input-a59cacdd1e7c3ecd8aa16a8357c1506414a68612594db4e02ba5c59b5dc47f6f -->
+<!-- cache-key: cdktf-0.20.8 input-8e8a896fcb6be35f32016f2fe0c1ff61990a1dd11b6e9e37025aad261b65d234 -->

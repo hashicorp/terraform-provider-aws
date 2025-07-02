@@ -290,12 +290,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the AWS official documentation :
-
-* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
-* [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
-
 This resource supports the following arguments:
 
 * `allocated_storage` - (Optional, Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
@@ -366,6 +360,12 @@ This resource supports the following arguments:
 * `storage_type` - (Optional, Required for Multi-AZ DB cluster) (Forces new for Multi-AZ DB clusters) Specifies the storage type to be associated with the DB cluster. For Aurora DB clusters, `storage_type` modifications can be done in-place. For Multi-AZ DB Clusters, the `iops` argument must also be set. Valid values are: `""`, `aurora-iopt1` (Aurora DB Clusters); `io1`, `io2` (Multi-AZ DB Clusters). Default: `""` (Aurora DB Clusters); `io1` (Multi-AZ DB Clusters).
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate with the Cluster
+
+For more detailed documentation about each argument, refer to
+the AWS official documentation:
+
+* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
+* [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
 ### S3 Import Options
 
@@ -593,4 +593,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-591add295fda0896fd7d3caa0bdfe9d409a727a307cce12b12246d41c1e755ac -->
+<!-- cache-key: cdktf-0.20.8 input-9b899bb658d3a02027d68394a2b68a83ccef9a58593fdca4e8d22bc5c70bf698 -->

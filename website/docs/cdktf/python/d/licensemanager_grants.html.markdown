@@ -41,10 +41,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Custom filter block as described below.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/license-manager/latest/APIReference/API_ListReceivedGrants.html#API_ListReceivedGrants_RequestSyntax).
@@ -79,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - List of all the license grant ARNs found.
 
-<!-- cache-key: cdktf-0.20.8 input-9865dc418cc55462aa5e6fc80f9e8a92e3c35a931c3b06a21d23c361cfa3f823 -->
+<!-- cache-key: cdktf-0.20.8 input-067fb275954d69d83d1895f281becd41829e4fafe9e6810ddaeac02fe2375fbb -->

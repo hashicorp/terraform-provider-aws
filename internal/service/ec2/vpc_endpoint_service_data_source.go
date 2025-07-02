@@ -20,11 +20,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_endpoint_service", name="Endpoint Service")
+// @Tags
+// @Testing(tagsTest=false)
+// @Region(overrideEnabled=false)
 func dataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
@@ -71,8 +75,9 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "region is deprecated. Use service_region instead.",
 			},
 			"service": {
 				Type:          schema.TypeString,
@@ -88,6 +93,10 @@ func dataSourceVPCEndpointService() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"service"},
+			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"service_regions": {
 				Type:     schema.TypeSet,
@@ -117,7 +126,6 @@ func dataSourceVPCEndpointService() *schema.Resource {
 func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
 		Filters: newAttributeFilterList(
@@ -201,22 +209,18 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
 	d.Set(names.AttrARN, arn)
-
 	d.Set(names.AttrAvailabilityZones, sd.AvailabilityZones)
 	d.Set("base_endpoint_dns_names", sd.BaseEndpointDnsNames)
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+	d.Set("private_dns_names", tfslices.ApplyToAll(sd.PrivateDnsNames, func(v awstypes.PrivateDnsDetails) string {
+		return aws.ToString(v.PrivateDnsName)
+	}))
 	d.Set(names.AttrRegion, serviceRegion)
-
-	privateDnsNames := make([]string, len(sd.PrivateDnsNames))
-	for i, privateDnsDetail := range sd.PrivateDnsNames {
-		privateDnsNames[i] = aws.ToString(privateDnsDetail.PrivateDnsName)
-	}
-	d.Set("private_dns_names", privateDnsNames)
-
 	d.Set("service_id", serviceID)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", serviceRegion)
 	if len(sd.ServiceType) > 0 {
 		d.Set("service_type", sd.ServiceType[0].ServiceType)
 	} else {
@@ -225,11 +229,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("supported_ip_address_types", sd.SupportedIpAddressTypes)
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set(names.AttrTags, keyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, sd.Tags)
 
 	return diags
 }

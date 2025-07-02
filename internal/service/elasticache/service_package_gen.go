@@ -4,136 +4,156 @@ package elasticache
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceReservedCacheNodeOffering,
+			Factory:  newReservedCacheNodeOfferingDataSource,
 			TypeName: "aws_elasticache_reserved_cache_node_offering",
 			Name:     "Reserved Cache Node Offering",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newDataSourceServerlessCache,
+			Factory:  newServerlessCacheDataSource,
 			TypeName: "aws_elasticache_serverless_cache",
 			Name:     "Serverless Cache",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceReservedCacheNode,
+			Factory:  newReservedCacheNodeResource,
 			TypeName: "aws_elasticache_reserved_cache_node",
 			Name:     "Reserved Cache Node",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newServerlessCacheResource,
 			TypeName: "aws_elasticache_serverless_cache",
 			Name:     "Serverless Cache",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_elasticache_cluster",
 			Name:     "Cluster",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
 			Name:     "Subnet Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_elasticache_user",
 			Name:     "User",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceCluster,
 			TypeName: "aws_elasticache_cluster",
 			Name:     "Cluster",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceGlobalReplicationGroup,
 			TypeName: "aws_elasticache_global_replication_group",
 			Name:     "Global Replication Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceParameterGroup,
 			TypeName: "aws_elasticache_parameter_group",
 			Name:     "Parameter Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
 			Name:     "Subnet Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceUser,
 			TypeName: "aws_elasticache_user",
 			Name:     "User",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceUserGroup,
 			TypeName: "aws_elasticache_user_group",
 			Name:     "User Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceUserGroupAssociation,
 			TypeName: "aws_elasticache_user_group_association",
 			Name:     "User Group Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -148,6 +168,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*elasticache.Options){
 		elasticache.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *elasticache.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *elasticache.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

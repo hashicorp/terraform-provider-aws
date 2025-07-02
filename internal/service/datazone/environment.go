@@ -35,8 +35,8 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_environment", name="Environment")
-func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironment{}
+func newEnvironmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -49,12 +49,12 @@ const (
 	ResNameEnvironment = "Environment"
 )
 
-type resourceEnvironment struct {
-	framework.ResourceWithConfigure
+type environmentResource struct {
+	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *environmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account_identifier": schema.StringAttribute{
@@ -163,10 +163,10 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceEnvironmentData
+	var plan environmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
@@ -227,10 +227,10 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -267,10 +267,10 @@ func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
-func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *environmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state resourceEnvironmentData
+	var plan, state environmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -320,10 +320,10 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *environmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -361,7 +361,7 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *environmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 {
@@ -475,7 +475,8 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	return out, nil
 }
 
-type resourceEnvironmentData struct {
+type environmentResourceModel struct {
+	framework.WithRegionModel
 	AccountIdentifier    types.String                                                      `tfsdk:"account_identifier"`
 	AccountRegion        types.String                                                      `tfsdk:"account_region"`
 	BlueprintId          types.String                                                      `tfsdk:"blueprint_identifier"`

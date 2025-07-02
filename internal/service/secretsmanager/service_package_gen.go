@@ -4,102 +4,118 @@ package secretsmanager
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
-	return []*types.ServicePackageEphemeralResource{
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
 		{
-			Factory:  newEphemeralRandomPassword,
+			Factory:  newRandomPasswordEphemeralResource,
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newEphemeralSecretVersion,
+			Factory:  newSecretVersionEphemeralResource,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceSecretVersions,
+			Factory:  newSecretVersionsDataSource,
 			TypeName: "aws_secretsmanager_secret_versions",
 			Name:     "Secret Versions",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
 			Factory:  dataSourceRandomPassword,
 			TypeName: "aws_secretsmanager_random_password",
 			Name:     "Random Password",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecret,
 			TypeName: "aws_secretsmanager_secret",
 			Name:     "Secret",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecretRotation,
 			TypeName: "aws_secretsmanager_secret_rotation",
 			Name:     "Secret Rotation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  dataSourceSecrets,
 			TypeName: "aws_secretsmanager_secrets",
 			Name:     "Secrets",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
 			Factory:  resourceSecret,
 			TypeName: "aws_secretsmanager_secret",
 			Name:     "Secret",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSecretPolicy,
 			TypeName: "aws_secretsmanager_secret_policy",
 			Name:     "Secret Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSecretRotation,
 			TypeName: "aws_secretsmanager_secret_rotation",
 			Name:     "Secret Rotation",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  resourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -114,6 +130,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	optFns := []func(*secretsmanager.Options){
 		secretsmanager.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *secretsmanager.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *secretsmanager.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
 		withExtraOptions(ctx, p, config),
 	}
 

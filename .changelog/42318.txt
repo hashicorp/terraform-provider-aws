@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_eks_addon: `resolve_conflicts` has been removed. Use `resolve_conflicts_on_create` and `resolve_conflicts_on_update` instead.
+```

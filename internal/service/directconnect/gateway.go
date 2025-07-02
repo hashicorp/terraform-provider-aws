@@ -27,16 +27,15 @@ import (
 )
 
 // @SDKResource("aws_dx_gateway", name="Gateway")
+// @Region(global=true)
+// @IdentityAttribute("id")
+// @Testing(identityTest=false)
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
 		ReadWithoutTimeout:   resourceGatewayRead,
 		UpdateWithoutTimeout: resourceGatewayUpdate,
 		DeleteWithoutTimeout: resourceGatewayDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {

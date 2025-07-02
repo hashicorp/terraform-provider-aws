@@ -47,8 +47,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-func newResourceDBCluster(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDBCluster{}
+func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dbClusterResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -61,13 +61,13 @@ const (
 	ResNameDBCluster = "DB Cluster"
 )
 
-type resourceDBCluster struct {
-	framework.ResourceWithConfigure
+type dbClusterResource struct {
+	framework.ResourceWithModel[dbClusterResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceDBCluster) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
@@ -673,7 +673,8 @@ func findDBClusterByID(ctx context.Context, conn *timestreaminfluxdb.Client, id 
 	return out, nil
 }
 
-type resourceDBClusterData struct {
+type dbClusterResourceModel struct {
+	framework.WithRegionModel
 	AllocatedStorage              types.Int64                                                            `tfsdk:"allocated_storage"`
 	ARN                           types.String                                                           `tfsdk:"arn"`
 	Bucket                        types.String                                                           `tfsdk:"bucket"`
@@ -697,8 +698,8 @@ type resourceDBClusterData struct {
 	TagsAll                       tftags.Map                                                             `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                         `tfsdk:"timeouts"`
 	Username                      types.String                                                           `tfsdk:"username"`
-	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                                       `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  fwtypes.SetValueOf[types.String]                                       `tfsdk:"vpc_subnet_ids"`
+	VPCSecurityGroupIDs           fwtypes.SetOfString                                                    `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetOfString                                                    `tfsdk:"vpc_subnet_ids"`
 }
 
 type dbClusterLogDeliveryConfigurationData struct {

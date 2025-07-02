@@ -20,11 +20,13 @@ data "aws_route53profiles_profiles" "example" {}
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
 * `profiles` - List of Profiles.
     * `arn` - ARN of the Profile.

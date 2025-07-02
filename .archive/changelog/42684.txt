@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `block_device_mappings.ebs.volume_initialization_rate` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ami: Add `block_device_mappings.ebs["volume_initialization_rate"]` attribute
+```

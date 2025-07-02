@@ -23,6 +23,7 @@ resource "aws_redshift_endpoint_authorization" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account` - (Required) The Amazon Web Services account ID to grant access to.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to grant access to.
 * `force_delete` - (Optional) Indicates whether to force the revoke action. If true, the Redshift-managed VPC endpoints associated with the endpoint authorization are also deleted. Default value is `false`.

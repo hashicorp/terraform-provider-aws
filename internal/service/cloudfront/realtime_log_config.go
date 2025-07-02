@@ -25,16 +25,15 @@ import (
 )
 
 // @SDKResource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
+// @ArnIdentity
+// @ArnFormat("realtime-log-config/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
 func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
 		ReadWithoutTimeout:   resourceRealtimeLogConfigRead,
 		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
 		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

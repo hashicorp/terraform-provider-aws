@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
@@ -33,6 +34,12 @@ func resourceVPCAssociationAuthorization() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -97,7 +104,11 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpc, err := findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	// InvalidPaginationToken errors can manifest when many authorization resources are
+	// managed concurrently. Retry these errors for a short duration.
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidPaginationToken](ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
+		return findVPCAssociationAuthorizationByTwoPartKey(ctx, conn, zoneID, vpcID)
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 VPC Association Authorization %s not found, removing from state", d.Id())
@@ -109,8 +120,9 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCID, vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
+	output := outputRaw.(*awstypes.VPC)
+	d.Set(names.AttrVPCID, output.VPCId)
+	d.Set("vpc_region", output.VPCRegion)
 	d.Set("zone_id", zoneID)
 
 	return diags

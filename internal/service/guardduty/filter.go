@@ -34,7 +34,7 @@ import (
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/guardduty;guardduty.GetFilterOutput")
-func ResourceFilter() *schema.Resource {
+func resourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,
 		ReadWithoutTimeout:   resourceFilterRead,

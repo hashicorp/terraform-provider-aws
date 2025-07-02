@@ -21,19 +21,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_glue_registry", name="Registry")
-func newDataSourceRegistry(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRegistry{}, nil
+func newRegistryDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &registryDataSource{}, nil
 }
 
 const (
 	DSNameRegistry = "Registry Data Source"
 )
 
-type dataSourceRegistry struct {
-	framework.DataSourceWithConfigure
+type registryDataSource struct {
+	framework.DataSourceWithModel[registryDataSourceModel]
 }
 
-func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *registryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -47,10 +47,10 @@ func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRe
 	}
 }
 
-func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *registryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().GlueClient(ctx)
 
-	var data dataSourceRegistryData
+	var data registryDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -97,7 +97,8 @@ func findRegistryByName(ctx context.Context, conn *glue.Client, name string) (*g
 	return output, nil
 }
 
-type dataSourceRegistryData struct {
+type registryDataSourceModel struct {
+	framework.WithRegionModel
 	ARN         types.String `tfsdk:"arn"`
 	Description types.String `tfsdk:"description"`
 	Name        types.String `tfsdk:"name"`

@@ -3,23 +3,25 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_device"
 description: |-
-  Retrieve information about a device.
+  Provides details about an existing Network Manager device.
 ---
 
 # Data Source: aws_networkmanager_device
 
-Retrieve information about a device.
+Provides details about an existing Network Manager device.
 
 ## Example Usage
 
 ```terraform
 data "aws_networkmanager_device" "example" {
-  global_network_id_id = var.global_network_id
-  device_id            = var.device_id
+  global_network_id = var.global_network_id
+  device_id         = var.device_id
 }
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `device_id` - (Required) ID of the device.
 * `global_network_id` - (Required) ID of the global network.

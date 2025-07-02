@@ -63,11 +63,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
-The given filters must match exactly one host whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block. Detailed below.
 * `host_id` - (Optional) ID of the Dedicated Host.
+
+The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
+The given filters must match exactly one host whose data will be exported as attributes.
 
 ### filter
 
@@ -102,4 +104,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2c0dd059868ed5217fac4aec77aa468bafc9f69b8de0b12d682d6625c1850767 -->
+<!-- cache-key: cdktf-0.20.8 input-7bfd834b881dff457de533a1ea3a5ef438581e1e20f821d3f9e7db8bff4beac5 -->

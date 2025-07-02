@@ -46,8 +46,8 @@ const (
 // @FrameworkResource("aws_cloudwatch_contributor_managed_insight_rule", name="Contributor Managed Insight Rule")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func newResourceContributorManagedInsightRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceContributorManagedInsightRule{}
+func newContributorManagedInsightRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &contributorManagedInsightRuleResource{}
 
 	return r, nil
 }
@@ -56,16 +56,11 @@ const (
 	ResNameContributorManagedInsightRule = "Contributor Managed Insight Rule"
 )
 
-type resourceContributorManagedInsightRule struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceContributorManagedInsightRuleData]
+type contributorManagedInsightRuleResource struct {
+	framework.ResourceWithModel[contributorManagedInsightRuleResourceModel]
 }
 
-func (r *resourceContributorManagedInsightRule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_cloudwatch_contributor_managed_insight_rule"
-}
-
-func (r *resourceContributorManagedInsightRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *contributorManagedInsightRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -90,10 +85,10 @@ func (r *resourceContributorManagedInsightRule) Schema(ctx context.Context, req 
 	}
 }
 
-func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var plan resourceContributorManagedInsightRuleData
+	var plan contributorManagedInsightRuleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,10 +164,10 @@ func (r *resourceContributorManagedInsightRule) Create(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceContributorManagedInsightRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *contributorManagedInsightRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var state resourceContributorManagedInsightRuleData
+	var state contributorManagedInsightRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,8 +195,8 @@ func (r *resourceContributorManagedInsightRule) Read(ctx context.Context, req re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new resourceContributorManagedInsightRuleData
+func (r *contributorManagedInsightRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new contributorManagedInsightRuleResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
 	if resp.Diagnostics.HasError() {
@@ -258,10 +253,10 @@ func (r *resourceContributorManagedInsightRule) Update(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceContributorManagedInsightRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *contributorManagedInsightRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
-	var state resourceContributorManagedInsightRuleData
+	var state contributorManagedInsightRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -297,7 +292,7 @@ func (r *resourceContributorManagedInsightRule) Delete(ctx context.Context, req 
 	}
 }
 
-func (r *resourceContributorManagedInsightRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *contributorManagedInsightRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	const resourceIDParts = 2
 	idParts, err := flex.ExpandResourceId(req.ID, resourceIDParts, false)
 	if err != nil {
@@ -322,7 +317,8 @@ func (r *resourceContributorManagedInsightRule) ImportState(ctx context.Context,
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("template_name"), templateName)...)
 }
 
-type resourceContributorManagedInsightRuleData struct {
+type contributorManagedInsightRuleResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                   `tfsdk:"arn"`
 	ResourceArn  types.String                   `tfsdk:"resource_arn"`
 	TemplateName types.String                   `tfsdk:"template_name"`

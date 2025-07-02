@@ -4,6 +4,7 @@ package backup
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
@@ -23,13 +24,20 @@ func listTags(ctx context.Context, conn *backup.Client, identifier string, optFn
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(ctx, &input, optFns...)
+	output := make(map[string]string)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := backup.NewListTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		maps.Copy(output, page.Tags)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists backup service tags and set them in Context.
