@@ -183,7 +183,7 @@ func testAccRepositoryPermissionsPolicy_Disappears_domain(t *testing.T) {
 	})
 }
 
-func testAccRepositoryPermissionsPolicy_Identity_ExistingResource(t *testing.T) {
+func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository_permissions_policy.test"

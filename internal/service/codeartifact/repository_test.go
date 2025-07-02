@@ -288,7 +288,7 @@ func testAccRepository_disappears(t *testing.T) {
 	})
 }
 
-func testAccRepository_Identity_ExistingResource(t *testing.T) {
+func testAccCodeArtifactRepository_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_repository.test"

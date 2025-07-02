@@ -213,7 +213,7 @@ func testAccDomain_MigrateAssetSizeBytesToString(t *testing.T) {
 	})
 }
 
-func testAccDomain_Identity_ExistingResource(t *testing.T) {
+func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
