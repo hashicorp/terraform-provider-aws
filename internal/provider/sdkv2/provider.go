@@ -708,6 +708,10 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			if len(resource.Identity.Attributes) > 0 {
 				r.Identity = newResourceIdentity(resource.Identity)
 
+				if resource.Identity.IsMutable {
+					r.ResourceBehavior.MutableIdentity = true
+				}
+
 				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
 			}
 

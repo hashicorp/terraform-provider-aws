@@ -20,7 +20,8 @@ func testAccEC2ImageBlockPublicAccess_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccEC2ImageBlockPublicAccess_Identity_Basic,
+		acctest.CtBasic:    testAccEC2ImageBlockPublicAccess_Identity_Basic,
+		"ExistingResource": testAccEC2ImageBlockPublicAccess_Identity_ExistingResource,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

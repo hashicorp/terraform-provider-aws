@@ -293,9 +293,12 @@ func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
 	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  {{ template "testname" . }}_Identity_Basic,
+		acctest.CtBasic:    {{ template "testname" . }}_Identity_Basic,
+		{{ if or .IsSingleton (eq .Implementation "sdk") -}}
+			"ExistingResource": {{ template "testname" . }}_Identity_ExistingResource,
+		{{ end -}}
 		{{ if .GenerateRegionOverrideTest -}}
-		"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
+			"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
 		{{ end -}}
 	}
 

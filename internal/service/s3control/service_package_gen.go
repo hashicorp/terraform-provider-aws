@@ -90,7 +90,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_account_public_access_block",
 			Name:     "Account Public Access Block",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
-			Identity: inttypes.GlobalSingletonIdentity(),
+			Identity: inttypes.GlobalSingletonIdentity(
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},

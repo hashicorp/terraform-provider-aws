@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
 // @ArnIdentity("resource_arn")
+// @V60SDKv2Fix
 // @Testing(serialize=true)
 func resourceDomainPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{

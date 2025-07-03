@@ -23,8 +23,9 @@ func testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial(t *testing
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic,
-		"RegionOverride": testAccBedrockModelInvocationLoggingConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:    testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic,
+		"ExistingResource": testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource,
+		"RegionOverride":   testAccBedrockModelInvocationLoggingConfiguration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

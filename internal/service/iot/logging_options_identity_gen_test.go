@@ -22,8 +22,9 @@ func testAccIoTLoggingOptions_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccIoTLoggingOptions_Identity_Basic,
-		"RegionOverride": testAccIoTLoggingOptions_Identity_RegionOverride,
+		acctest.CtBasic:    testAccIoTLoggingOptions_Identity_Basic,
+		"ExistingResource": testAccIoTLoggingOptions_Identity_ExistingResource,
+		"RegionOverride":   testAccIoTLoggingOptions_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

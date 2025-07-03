@@ -13,8 +13,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -189,15 +195,95 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 	})
 }
 
+func TestAccDeviceFarmNetworkProfile_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.NetworkProfile
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_devicefarm_network_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
+			// Currently, DeviceFarm is only supported in us-west-2
+			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
+		CheckDestroy: testAccCheckNetworkProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccNetworkProfileConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccNetworkProfileConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccNetworkProfileConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("devicefarm", regexache.MustCompile(`networkprofile:.+`)),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *awstypes.NetworkProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)

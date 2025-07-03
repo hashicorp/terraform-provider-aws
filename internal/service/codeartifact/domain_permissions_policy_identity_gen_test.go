@@ -22,8 +22,9 @@ func testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic,
-		"RegionOverride": testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride,
+		acctest.CtBasic:    testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic,
+		"ExistingResource": testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource,
+		"RegionOverride":   testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

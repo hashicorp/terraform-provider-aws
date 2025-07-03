@@ -56,6 +56,7 @@ const (
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
