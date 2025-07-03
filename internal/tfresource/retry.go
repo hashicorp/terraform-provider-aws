@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -199,13 +200,13 @@ func RetryGWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx 
 }
 
 // RetryUntilEqual retries the specified function until it returns a value equal to `target`.
-func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error)) (T, error) {
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error), opts ...backoff.Option) (T, error) {
 	t, err := retry.Op(f).If(func(t T, err error) (bool, error) {
 		if err != nil {
 			return false, err
 		}
 		return t != target, nil
-	})(ctx, timeout)
+	})(ctx, timeout, opts...)
 
 	if TimedOut(err) {
 		err = fmt.Errorf("output = %v, want %v", t, target)
