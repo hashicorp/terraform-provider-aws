@@ -136,7 +136,7 @@ func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			return fmt.Errorf("AMP Query Logging Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Prometheus Query Logging Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -54,7 +54,6 @@ type queryLoggingConfigurationResource struct {
 func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"workspace_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -63,8 +62,8 @@ func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request 
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"destinations": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[queryLoggingDestinationModel](ctx),
+			"destination": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[loggingDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.IsRequired(),
@@ -72,7 +71,7 @@ func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request 
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						names.AttrCloudWatchLogs: schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudwatchLogsModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogDestinationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
@@ -139,25 +138,14 @@ func (r *queryLoggingConfigurationResource) Create(ctx context.Context, request 
 	_, err := conn.CreateQueryLoggingConfiguration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating AMP Query Logging Configuration (%s)", workspaceID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating Prometheus Query Logging Configuration (%s)", workspaceID), err.Error())
 
 		return
 	}
 
-	// Set the ID to the workspace ID as per the documentation
-	data.ID = data.WorkspaceID
+	if _, err := waitQueryLoggingConfigurationCreated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Query Logging Configuration (%s) create", workspaceID), err.Error())
 
-	output, err := waitQueryLoggingConfigurationCreated(ctx, conn, workspaceID, r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Query Logging Configuration (%s) create", workspaceID), err.Error())
-
-		return
-	}
-
-	// Update data with any computed values from the API response
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -173,7 +161,8 @@ func (r *queryLoggingConfigurationResource) Read(ctx context.Context, request re
 
 	conn := r.Meta().AMPClient(ctx)
 
-	out, err := findQueryLoggingConfigurationByID(ctx, conn, data.ID.ValueString())
+	workspaceID := fwflex.StringValueFromFramework(ctx, data.WorkspaceID)
+	output, err := findQueryLoggingConfigurationByID(ctx, conn, workspaceID)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -183,12 +172,12 @@ func (r *queryLoggingConfigurationResource) Read(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading AMP Query Logging Configuration (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Prometheus Query Logging Configuration (%s)", workspaceID), err.Error())
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -218,13 +207,13 @@ func (r *queryLoggingConfigurationResource) Update(ctx context.Context, request 
 	_, err := conn.UpdateQueryLoggingConfiguration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating AMP Query Logging Configuration (%s)", workspaceID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Prometheus Query Logging Configuration (%s)", workspaceID), err.Error())
 
 		return
 	}
 
 	if _, err := waitQueryLoggingConfigurationUpdated(ctx, conn, workspaceID, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Query Logging Configuration (%s) update", workspaceID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Query Logging Configuration (%s) update", workspaceID), err.Error())
 
 		return
 	}
@@ -247,18 +236,19 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 		ClientToken: aws.String(sdkid.UniqueId()),
 	}
 	_, err := conn.DeleteQueryLoggingConfiguration(ctx, &input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting AMP Query Logging Configuration (%s)", workspaceID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Prometheus Query Logging Configuration (%s)", workspaceID), err.Error())
 
 		return
 	}
 
 	if _, err := waitQueryLoggingConfigurationDeleted(ctx, conn, workspaceID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for AMP Query Logging Configuration (%s) delete", workspaceID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Prometheus Query Logging Configuration (%s) delete", workspaceID), err.Error())
 
 		return
 	}
@@ -266,8 +256,6 @@ func (r *queryLoggingConfigurationResource) Delete(ctx context.Context, request 
 
 func (r *queryLoggingConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
-	// Also set the ID to the workspace ID
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.QueryLoggingConfigurationMetadata, error) {
@@ -287,7 +275,7 @@ func findQueryLoggingConfigurationByID(ctx context.Context, conn *amp.Client, id
 		return nil, err
 	}
 
-	if output == nil || output.QueryLoggingConfiguration == nil {
+	if output == nil || output.QueryLoggingConfiguration == nil || output.QueryLoggingConfiguration.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -321,9 +309,7 @@ func waitQueryLoggingConfigurationCreated(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		if output.Status != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
-		}
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -342,9 +328,7 @@ func waitQueryLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		if output.Status != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
-		}
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -363,9 +347,7 @@ func waitQueryLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.QueryLoggingConfigurationMetadata); ok {
-		if output.Status != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
-		}
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}
@@ -375,21 +357,20 @@ func waitQueryLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client,
 
 type queryLoggingConfigurationResourceModel struct {
 	framework.WithRegionModel
-	Destinations fwtypes.ListNestedObjectValueOf[queryLoggingDestinationModel] `tfsdk:"destinations"`
-	ID           types.String                                                  `tfsdk:"id"`
-	Timeouts     timeouts.Value                                                `tfsdk:"timeouts"`
-	WorkspaceID  types.String                                                  `tfsdk:"workspace_id"`
+	Destinations fwtypes.ListNestedObjectValueOf[loggingDestinationModel] `tfsdk:"destination"`
+	Timeouts     timeouts.Value                                           `tfsdk:"timeouts"`
+	WorkspaceID  types.String                                             `tfsdk:"workspace_id"`
 }
 
-type queryLoggingDestinationModel struct {
-	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudwatchLogsModel] `tfsdk:"cloudwatch_logs"`
-	Filters        fwtypes.ListNestedObjectValueOf[loggingFilterModel]  `tfsdk:"filters"`
+type loggingDestinationModel struct {
+	CloudwatchLogs fwtypes.ListNestedObjectValueOf[cloudWatchLogDestinationModel] `tfsdk:"cloudwatch_logs"`
+	Filters        fwtypes.ListNestedObjectValueOf[loggingFilterModel]            `tfsdk:"filters"`
 }
 
-type cloudwatchLogsModel struct {
-	LogGroupArn fwtypes.ARN `tfsdk:"log_group_arn"`
+type cloudWatchLogDestinationModel struct {
+	LogGroupARN fwtypes.ARN `tfsdk:"log_group_arn"`
 }
 
 type loggingFilterModel struct {
-	QspThreshold types.Int64 `tfsdk:"qsp_threshold"`
+	QSPThreshold types.Int64 `tfsdk:"qsp_threshold"`
 }
