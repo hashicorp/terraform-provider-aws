@@ -190,9 +190,6 @@ func TestAccCognitoIDPUserPoolDomain_customCustomDomainManagedLoginVersionUpdate
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	acmCertResourceName := "aws_acm_certificate.test"
 	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
-	fmt.Println("In test")
-	fmt.Println(rootDomain)
-	fmt.Println(poolName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
