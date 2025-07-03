@@ -549,9 +549,14 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
+
+  # For v5.100.0
+  availability_zone_relocation_enabled = true
+  publicly_accessible                  = false
+  encrypted                            = true
 }
 `, rName))
 }
@@ -672,7 +677,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
@@ -860,6 +865,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
