@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+//nolint:tparallel
 func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
@@ -52,6 +53,7 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 	}
 }
 
+//nolint:tparallel
 func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
@@ -89,6 +91,7 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	}
 }
 
+//nolint:tparallel
 func TestRetryWhenNewResourceNotFound(t *testing.T) {
 	t.Parallel()
 
@@ -171,6 +174,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 	}
 }
 
+//nolint:tparallel
 func TestRetryWhenNotFound(t *testing.T) {
 	t.Parallel()
 
@@ -228,6 +232,7 @@ func TestRetryWhenNotFound(t *testing.T) {
 	}
 }
 
+//nolint:tparallel
 func TestRetryUntilEqual(t *testing.T) {
 	t.Parallel()
 
@@ -286,6 +291,7 @@ func TestRetryUntilEqual(t *testing.T) {
 	}
 }
 
+//nolint:tparallel
 func TestRetryUntilNotFound(t *testing.T) {
 	t.Parallel()
 
