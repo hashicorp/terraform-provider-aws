@@ -352,6 +352,11 @@ resource "aws_redshift_cluster" "test" {
   node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
+
+  # For v5.100.0
+  availability_zone_relocation_enabled = true
+  publicly_accessible                  = false
+  encrypted                            = true
 }
 `, rName))
 }
