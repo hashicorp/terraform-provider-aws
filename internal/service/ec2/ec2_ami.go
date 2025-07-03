@@ -820,7 +820,7 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []awstypes.
 const imageDeprecationPropagationTimeout = 2 * time.Minute
 
 func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.Client, imageID, expectedValue string) error {
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {
@@ -847,7 +847,7 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 	}
 	expected = expected.Round(time.Minute)
 
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {
@@ -878,7 +878,7 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 }
 
 func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, imageID string) error {
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {

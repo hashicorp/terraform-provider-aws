@@ -71,7 +71,7 @@ func waitTagsPropagedForResource(ctx context.Context, conn *dynamodb.Client, id 
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {

@@ -6,7 +6,7 @@ func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, 
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := {{ .ListTagsFunc }}(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {

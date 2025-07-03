@@ -357,7 +357,7 @@ func waitForNoTrustStoreAssociations(ctx context.Context, conn *elasticloadbalan
 		TrustStoreArn: aws.String(arn),
 	}
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, 0, func(ctx context.Context) (int, error) {
 		associations, err := findTrustStoreAssociations(ctx, conn, input)
 
 		if tfresource.NotFound(err) {

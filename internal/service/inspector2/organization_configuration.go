@@ -191,7 +191,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, target *awstypes.AutoEnable, timeout time.Duration) (*inspector2.DescribeOrganizationConfigurationOutput, error) { //nolint:unparam
 	var output *inspector2.DescribeOrganizationConfigurationOutput
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, true, func() (bool, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, true, func(ctx context.Context) (bool, error) {
 		var err error
 		output, err = findOrganizationConfiguration(ctx, conn)
 
