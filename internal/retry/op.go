@@ -22,7 +22,7 @@ func Op[T any](op func(context.Context) (T, error)) opFunc[T] {
 }
 
 // UntilFoundN retries an operation if it returns a retry.NotFoundError.
-func (o opFunc[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
+func (op opFunc[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
 	if continuousTargetOccurence < 1 {
 		continuousTargetOccurence = 1
 	}
@@ -49,10 +49,10 @@ func (o opFunc[T]) UntilFoundN(continuousTargetOccurence int) runFunc[T] {
 		return false, err
 	}
 
-	return o.If(predicate)
+	return op.If(predicate)
 }
 
-func (o opFunc[T]) UntilNotFound() runFunc[T] {
+func (op opFunc[T]) UntilNotFound() runFunc[T] {
 	predicate := func(_ T, err error) (bool, error) {
 		if err == nil {
 			return true, nil
@@ -66,7 +66,7 @@ func (o opFunc[T]) UntilNotFound() runFunc[T] {
 	}
 
 	return func(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
-		t, err := o.If(predicate)(ctx, timeout, opts...)
+		t, err := op.If(predicate)(ctx, timeout, opts...)
 
 		if TimedOut(err) {
 			return t, ErrFoundResource
@@ -76,7 +76,7 @@ func (o opFunc[T]) UntilNotFound() runFunc[T] {
 	}
 }
 
-func (o opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
+func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 	// The default predicate short-circuits a retry loop if the operation returns any error.
 	if predicate == nil {
 		predicate = func(_ T, err error) (bool, error) {
@@ -89,7 +89,7 @@ func (o opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 		// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
 		var l *backoff.Loop
 		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
-			t, err := o(ctx)
+			t, err := op(ctx)
 
 			if retry, err := predicate(t, err); !retry {
 				return t, err
@@ -105,7 +105,8 @@ func (o opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 
 		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
 			err = &TimeoutError{
-				LastError:     err,
+				// LastError must be nil for `TimedOut` to return true.
+				// LastError:     err,
 				LastState:     "retryableerror",
 				Timeout:       timeout,
 				ExpectedState: []string{"success"},

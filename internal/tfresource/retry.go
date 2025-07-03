@@ -198,40 +198,20 @@ func RetryGWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx 
 	})
 }
 
-// RetryUntilEqual retries the specified function until it returns a value equal to `t`.
-func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
-	var output T
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-
-		output, err = f()
-
+// RetryUntilEqual retries the specified function until it returns a value equal to `target`.
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error)) (T, error) {
+	t, err := retry.Op(f).If(func(t T, err error) (bool, error) {
 		if err != nil {
-			return sdkretry.NonRetryableError(err)
+			return false, err
 		}
-
-		if output != t {
-			return sdkretry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
-		}
-
-		return nil
-	})
+		return t != target, nil
+	})(ctx, timeout)
 
 	if TimedOut(err) {
-		output, err = f()
-
-		if err == nil && output != t {
-			err = fmt.Errorf("output = %v, want %v", output, t)
-		}
+		err = fmt.Errorf("output = %v, want %v", t, target)
 	}
 
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return output, nil
+	return t, err
 }
 
 // RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
