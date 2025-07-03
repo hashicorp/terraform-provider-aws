@@ -68,6 +68,18 @@ func testAccDataLake_basic(t *testing.T) {
 	})
 }
 
+func testAccDataLake_IdentitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		"Basic":            testAccDataLake_Identity_Basic,
+		"ExistingResource": testAccDataLake_Identity_ExistingResource,
+		"RegionOverride":   testAccDataLake_Identity_RegionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func testAccDataLake_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
