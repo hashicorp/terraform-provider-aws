@@ -62,7 +62,7 @@ func (r *queryLoggingConfigurationResource) Schema(ctx context.Context, request 
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"destination": schema.ListNestedBlock{
+			names.AttrDestination: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[loggingDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
