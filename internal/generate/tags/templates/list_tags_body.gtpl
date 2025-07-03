@@ -37,22 +37,22 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 			{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 				if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-					return nil, &retry.NotFoundError{
+					return nil, smarterr.NewError(&retry.NotFoundError{
 						LastError:   err,
 						LastRequest: &input,
-					}
+					})
 				}
 			{{- else if ( .ParentNotFoundErrCode ) }}
 				if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-					return nil, &retry.NotFoundError{
+					return nil, smarterr.NewError(&retry.NotFoundError{
 						LastError:   err,
 						LastRequest: &input,
-					}
+					})
 				}
 			{{- end }}
 
 				if err != nil {
-					return tftags.New(ctx, nil), err
+					return tftags.New(ctx, nil), smarterr.NewError(err)
 				}
 
 				output = append(output, page.{{ .ListTagsOutTagsElem }}...)
@@ -108,22 +108,22 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 		if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
-			}
+			})
 		}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 		if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
-			}
+			})
 		}
 	{{- end }}
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
 	{{ if .ServiceTagsMap }}
@@ -151,22 +151,22 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 	if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
-		}
+		})
 	}
 	{{- else if ( .ParentNotFoundErrCode ) }}
 	if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
-		}
+		})
 	}
 	{{- end }}
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
@@ -180,7 +180,7 @@ func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta a
 	tags, err :=  {{ .ListTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
