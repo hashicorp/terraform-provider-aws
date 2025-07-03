@@ -68,6 +68,10 @@ func dataSourceDistribution() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"anycast_ip_list_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -98,6 +102,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 	d.Set(names.AttrStatus, distribution.Status)
 	d.Set("web_acl_id", distributionConfig.WebACLId)
+	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
 
 	return diags
 }

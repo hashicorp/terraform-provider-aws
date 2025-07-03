@@ -297,6 +297,7 @@ resource "aws_cloudwatch_log_delivery" "example" {
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
+* `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
