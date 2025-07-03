@@ -221,6 +221,7 @@ resource "aws_redshift_cluster" "test" {
   node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
+
   availability_zone_relocation_enabled = false
 }
 
