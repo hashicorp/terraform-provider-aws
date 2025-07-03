@@ -37,10 +37,9 @@ func TestAccAMPQueryLoggingConfiguration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLoggingConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination.0.cloudwatch_logs.0.log_group_arn"),
@@ -49,9 +48,11 @@ func TestAccAMPQueryLoggingConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
 			},
 		},
 	})
@@ -82,9 +83,11 @@ func TestAccAMPQueryLoggingConfiguration_withFilters(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "workspace_id"),
+				ImportStateVerifyIdentifierAttribute: "workspace_id",
 			},
 		},
 	})
@@ -126,7 +129,7 @@ func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -136,7 +139,7 @@ func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			return fmt.Errorf("Prometheus Query Logging Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Prometheus Query Logging Configuration %s still exists", rs.Primary.Attributes["workspace_id"])
 		}
 
 		return nil
@@ -152,7 +155,7 @@ func testAccCheckQueryLoggingConfigurationExists(ctx context.Context, n string, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
-		output, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
 		if err != nil {
 			return err
