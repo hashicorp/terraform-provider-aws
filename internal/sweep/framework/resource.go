@@ -8,12 +8,15 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type attribute struct {
@@ -74,7 +77,31 @@ func (sr *sweepResource) Delete(ctx context.Context, optFns ...tfresource.Option
 
 	tflog.Info(ctx, "Sweeping resource")
 
-	return deleteResource(ctx, state, resource)
+	err = deleteResource(ctx, state, resource)
+
+	if errs.Contains(err, "Value Conversion Error") {
+		// Hack for per-resource Region override.
+		// Inject a top-level region attribute into the schema and retry.
+		schema := state.Schema.(rschema.Schema)
+		schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
+			Optional: true,
+			Computed: true,
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
+			Schema: schema,
+		}
+		for _, attr := range sr.attributes {
+			d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
+			if d.HasError() {
+				return fwdiag.DiagnosticsError(d)
+			}
+		}
+
+		err = deleteResource(ctx, state, resource)
+	}
+
+	return err
 }
 
 func deleteResource(ctx context.Context, state tfsdk.State, resource fwresource.Resource) error {

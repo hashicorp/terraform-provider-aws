@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_codebuild_report_group", name="Report Group")
 // @Tags
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("report-group/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
 // @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")

@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(checkDestroyNoop=true)
 // @Testing(generator=false)

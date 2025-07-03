@@ -41,7 +41,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "DirectoryBucket",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -111,8 +115,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrBucket,
 				ResourceType:        "Bucket",
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceBucketAccelerateConfiguration,
@@ -177,10 +183,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "BucketObject",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
-			),
+			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      bucketObjectImportID{},
@@ -249,10 +255,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Object",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity(
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 				inttypes.StringIdentityAttribute(names.AttrBucket, true),
 				inttypes.StringIdentityAttribute(names.AttrKey, true),
-			),
+			}),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      objectImportID{},

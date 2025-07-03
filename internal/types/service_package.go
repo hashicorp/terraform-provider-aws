@@ -105,6 +105,7 @@ type Identity struct {
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
+	IsMutable              bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -120,7 +121,7 @@ func (i Identity) HasInherentRegion() bool {
 	return false
 }
 
-func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -138,6 +139,11 @@ func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -206,8 +212,8 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
@@ -225,10 +231,16 @@ func RegionalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -243,9 +255,15 @@ func GlobalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -260,6 +278,11 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -310,6 +333,12 @@ type IdentityOptsFunc func(opts *Identity)
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IdentityDuplicateAttrs = attrs
+	}
+}
+
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
 	}
 }
 

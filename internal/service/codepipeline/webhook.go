@@ -28,6 +28,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @ArnFormat("webhook:{name}")
+// @V60SDKv2Fix
 // @Testing(identityTest=false)
 func resourceWebhook() *schema.Resource {
 	return &schema.Resource{

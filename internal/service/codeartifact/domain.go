@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_codeartifact_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("domain/{domain}")
 // @Testing(serialize=true)
 func resourceDomain() *schema.Resource {

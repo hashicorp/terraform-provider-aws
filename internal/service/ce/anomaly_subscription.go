@@ -33,6 +33,7 @@ const (
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalySubscription")
 // @Testing(identityTest=false)
 func resourceAnomalySubscription() *schema.Resource {
