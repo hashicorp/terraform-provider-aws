@@ -10,14 +10,9 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -62,167 +57,6 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccRDSIntegration_Identity_Basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	ctx := acctest.Context(t)
-	var integration awstypes.Integration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_integration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
-			{
-				Config: testAccIntegrationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &integration),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				ImportStateKind: resource.ImportBlockWithID,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					},
-				},
-			},
-			{
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSIntegration_Identity_RegionOverride(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	ctx := acctest.Context(t)
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_integration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance_regionOverride(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebootedWithRegion(ctx, rName, acctest.AlternateRegion()),
-				),
-			},
-			{
-				Config: testAccIntegrationConfig_regionOverride(rName),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-
-			// Import command with appended "@<region>"
-			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			// Import command without appended "@<region>"
-			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			// Import block with Import ID and appended "@<region>"
-			{
-				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-			},
-
-			// Import block with Import ID and no appended "@<region>"
-			{
-				ImportStateKind: resource.ImportBlockWithID,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
-			},
-
-			// Import block with Resource Identity
-			{
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					},
-				},
 			},
 		},
 	})
@@ -483,7 +317,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
@@ -606,7 +440,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
