@@ -515,7 +515,7 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckDBInstances(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
