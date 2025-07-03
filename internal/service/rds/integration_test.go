@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,12 +35,6 @@ func TestAccRDSIntegration_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -79,12 +72,6 @@ func TestAccRDSIntegration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
-			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &integration),
@@ -113,12 +100,6 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccIntegrationConfig_baseClusterWithInstance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					waitUntilDBInstanceRebooted(ctx, rName),
-				),
-			},
 			{
 				Config: testAccIntegrationConfig_optional(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -186,24 +167,6 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *awstypes.In
 		*v = *output
 
 		return nil
-	}
-}
-
-func waitUntilDBInstanceRebooted(ctx context.Context, instanceIdentifier string) resource.TestCheckFunc {
-	return waitUntilDBInstanceRebootedWithRegion(ctx, instanceIdentifier, acctest.Region())
-}
-
-func waitUntilDBInstanceRebootedWithRegion(ctx context.Context, instanceIdentifier, region string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// Wait for rebooting.
-		time.Sleep(60 * time.Second)
-
-		// Push region into Context.
-		ctx = conns.NewResourceContext(ctx, "AppFabric", "aws_appfabric_app_bundle", region)
-
-		_, err := tfrds.WaitDBInstanceAvailable(ctx, acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx), instanceIdentifier, 30*time.Minute)
-
-		return err
 	}
 }
 
@@ -416,6 +379,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
@@ -471,6 +435,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
