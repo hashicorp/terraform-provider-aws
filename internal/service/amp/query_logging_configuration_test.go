@@ -41,11 +41,11 @@ func TestAccAMPQueryLoggingConfiguration_basic(t *testing.T) {
 					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, workspaceResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "destinations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destinations.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "destinations.0.cloudwatch_logs.0.log_group_arn"),
-					resource.TestCheckResourceAttr(resourceName, "destinations.0.filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destinations.0.filters.0.qsp_threshold", "500"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination.0.cloudwatch_logs.0.log_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.0.qsp_threshold", "500"),
 				),
 			},
 			{
@@ -76,9 +76,9 @@ func TestAccAMPQueryLoggingConfiguration_withFilters(t *testing.T) {
 				Config: testAccQueryLoggingConfigurationConfig_withFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "destinations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destinations.0.filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destinations.0.filters.0.qsp_threshold", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.0.qsp_threshold", "1000"),
 				),
 			},
 			{
@@ -177,7 +177,7 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_prometheus_query_logging_configuration" "test" {
   workspace_id = aws_prometheus_workspace.test.id
 
-  destinations {
+  destination {
     cloudwatch_logs {
       log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
     }
@@ -203,7 +203,7 @@ resource "aws_cloudwatch_log_group" "test" {
 resource "aws_prometheus_query_logging_configuration" "test" {
   workspace_id = aws_prometheus_workspace.test.id
 
-  destinations {
+  destination {
     cloudwatch_logs {
       log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
     }
