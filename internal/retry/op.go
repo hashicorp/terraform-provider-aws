@@ -68,7 +68,7 @@ func (o opFunc[T]) UntilNotFound() runFunc[T] {
 	return func(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
 		t, err := o.If(predicate)(ctx, timeout, opts...)
 
-		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+		if TimedOut(err) {
 			return t, ErrFoundResource
 		}
 
@@ -101,6 +101,15 @@ func (o opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 			err = inttypes.ErrDeadlineExceeded
 		} else {
 			err = context.Cause(ctx)
+		}
+
+		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+			err = &TimeoutError{
+				LastError:     err,
+				LastState:     "retryableerror",
+				Timeout:       timeout,
+				ExpectedState: []string{"success"},
+			}
 		}
 
 		var zero T
