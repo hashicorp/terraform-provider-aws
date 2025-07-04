@@ -46,6 +46,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceMalwareScanSettings,
 			TypeName: "aws_guardduty_malware_scan_settings",
 			Name:     "Malware Scan Settings",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newMemberDetectorFeatureResource,
