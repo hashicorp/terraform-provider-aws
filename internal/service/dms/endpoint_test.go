@@ -3651,7 +3651,7 @@ resource "aws_redshift_cluster" "test" {
   cluster_type       = "single-node"
   encrypted          = true
 
-  skip_final_snapshot                 = true
+  skip_final_snapshot = true
 }
 
 data "aws_partition" "current" {}
