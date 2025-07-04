@@ -24,7 +24,7 @@ func Singleton(ctx context.Context, client AWSClient, request resource.ImportSta
 	}
 }
 
-func regionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+func regionalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, _ *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	accountIDPath := path.Root(names.AttrAccountID)
 	regionPath := path.Root(names.AttrRegion)
 
@@ -74,7 +74,7 @@ func regionalSingleton(ctx context.Context, client AWSClient, request resource.I
 	}
 }
 
-func globalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
+func globalSingleton(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, _ *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	accountIDPath := path.Root(names.AttrAccountID)
 
 	accountIDVal := client.AccountID(ctx)
