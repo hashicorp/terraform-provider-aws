@@ -296,7 +296,7 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionReading, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return

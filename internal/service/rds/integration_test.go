@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -308,6 +310,70 @@ func TestAccRDSIntegration_optional(t *testing.T) {
 	})
 }
 
+func TestAccRDSIntegration_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_integration.test"
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.RDSServiceID),
+		CheckDestroy: testAccCheckIntegrationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccIntegrationConfig_basic(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccIntegrationConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccIntegrationConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
@@ -483,9 +549,14 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
+
+  # For v5.100.0
+  availability_zone_relocation_enabled = true
+  publicly_accessible                  = false
+  encrypted                            = true
 }
 `, rName))
 }
@@ -606,7 +677,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "Mustbe8characters"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
@@ -794,6 +865,7 @@ resource "aws_rds_integration" "test" {
 
   depends_on = [
     aws_rds_cluster.test,
+    aws_rds_cluster_instance.test,
     aws_redshiftserverless_namespace.test,
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,

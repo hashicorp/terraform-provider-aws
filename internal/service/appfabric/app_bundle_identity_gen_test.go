@@ -23,8 +23,9 @@ func testAccAppFabricAppBundle_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccAppFabricAppBundle_Identity_Basic,
-		"RegionOverride": testAccAppFabricAppBundle_Identity_RegionOverride,
+		acctest.CtBasic:    testAccAppFabricAppBundle_Identity_Basic,
+		"ExistingResource": testAccAppFabricAppBundle_Identity_ExistingResource,
+		"RegionOverride":   testAccAppFabricAppBundle_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
