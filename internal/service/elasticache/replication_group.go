@@ -124,9 +124,9 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			names.AttrEngine: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 				ValidateDiagFunc: validation.AllDiag(
 					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
 					// While the existing validator makes it technically possible to provide an
