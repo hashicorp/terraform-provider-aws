@@ -134,7 +134,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource(t 
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("resource_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource(t 
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("resource_arn")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrResourceARN)),
 				},
 			},
 		},
