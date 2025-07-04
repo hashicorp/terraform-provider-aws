@@ -8,6 +8,9 @@ BUG FIXES:
 * resource/aws_bedrockagent_agent_knowledge_base_association: Retry `operation can't be performed on Agent when it is in Preparing state.` errors during agent knowledge base creation and disassociation ([#43232](https://github.com/hashicorp/terraform-provider-aws/issues/43232))
 * resource/aws_cognito_user_pool_domain: Correctly update `managed_login_version` for custom Cognito domains ([#43252](https://github.com/hashicorp/terraform-provider-aws/issues/43252))
 
+ENHANCEMENTS:
+
+
 ## 6.2.0 (July  2, 2025)
 
 ENHANCEMENTS:

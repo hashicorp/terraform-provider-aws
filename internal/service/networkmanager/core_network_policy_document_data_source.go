@@ -787,6 +787,14 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetwork
 	}
 	apiObject.EdgeLocations = el
 
+	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
+		apiObject.SecurityGroupReferencingSupport = v
+	}
+
+	if v, ok := tfMap["dns_support"].(bool); ok {
+		apiObject.DnsSupport = v
+	}
+
 	return apiObject, nil
 }
 
