@@ -51,7 +51,7 @@ func regionalSingletonIdentitySpec(attrs ...string) inttypes.Identity {
 func TestRegionalSingleton(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalSingleton
+	f := importer.Singleton
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -248,6 +248,172 @@ func TestRegionalSingleton(t *testing.T) {
 					}
 					if e, a := tc.expectedRegion, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
 						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
+					}
+				}
+			}
+		})
+	}
+}
+
+var globalSingletonSchema = schema.Schema{
+	Attributes: map[string]schema.Attribute{
+		"attr": schema.StringAttribute{
+			Optional: true,
+		},
+	},
+}
+
+func globalSingletonIdentitySpec(attrs ...string) inttypes.Identity {
+	var opts []inttypes.IdentityOptsFunc
+	if len(attrs) > 0 {
+		opts = append(opts, inttypes.WithIdentityDuplicateAttrs(attrs...))
+	}
+	return inttypes.GlobalSingletonIdentity(opts...)
+}
+
+func TestGlobalSingleton(t *testing.T) {
+	t.Parallel()
+
+	f := importer.Singleton
+
+	accountID := "123456789012"
+	region := "a-region-1"
+
+	testCases := map[string]struct {
+		importMethod        string // "ImportID" or "Identity"
+		inputAccountID      string
+		duplicateAttrs      []string
+		noIdentity          bool
+		expectedAccountID   string
+		expectError         bool
+		expectedErrorPrefix string
+	}{
+		"ImportID_Valid_AccountID": {
+			importMethod:      "ImportID",
+			inputAccountID:    accountID,
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+		"ImportID_Valid_AcceptsAnything": {
+			importMethod:   "ImportID",
+			inputAccountID: "some value",
+			expectError:    false,
+		},
+		"ImportID_Valid_NoIdentity": {
+			importMethod:      "ImportID",
+			inputAccountID:    accountID,
+			noIdentity:        true,
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+
+		"Identity_Valid_ExplicitAccountID": {
+			importMethod:      "Identity",
+			inputAccountID:    accountID,
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+		"Identity_Valid_NoExplicitAttributes": {
+			importMethod:      "Identity",
+			inputAccountID:    "",
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+		"Identity_Invalid_WrongAccountID": {
+			importMethod:        "Identity",
+			inputAccountID:      "987654321098",
+			expectError:         true,
+			expectedErrorPrefix: "Provider configured with Account ID",
+		},
+
+		"DuplicateAttrs_ImportID_Valid": {
+			importMethod:      "ImportID",
+			duplicateAttrs:    []string{"attr"},
+			inputAccountID:    accountID,
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+
+		"DuplicateAttrs_Identity_Valid": {
+			importMethod:      "Identity",
+			duplicateAttrs:    []string{"attr"},
+			inputAccountID:    accountID,
+			expectedAccountID: accountID,
+			expectError:       false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+
+			client := mockClient{
+				accountID: accountID,
+				region:    region,
+			}
+
+			identitySpec := globalSingletonIdentitySpec(tc.duplicateAttrs...)
+
+			var identitySchema *identityschema.Schema
+			if !tc.noIdentity {
+				identitySchema = ptr(identity.NewIdentitySchema(identitySpec))
+			}
+
+			schema := globalSingletonSchema
+
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
+			var response resource.ImportStateResponse
+			switch tc.importMethod {
+			case "ImportID":
+				response = importByID(ctx, f, &client, schema, tc.inputAccountID, identitySchema, identitySpec, &importSpec)
+
+			case "Identity":
+				identityAttrs := make(map[string]string, 1)
+				if tc.inputAccountID != "" {
+					identityAttrs["account_id"] = tc.inputAccountID
+				}
+				identity := identityFromSchema(ctx, identitySchema, identityAttrs)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
+			}
+
+			if tc.expectError {
+				if !response.Diagnostics.HasError() {
+					t.Fatal("Expected error, got none")
+				}
+				if tc.expectedErrorPrefix != "" && !strings.HasPrefix(response.Diagnostics[0].Detail(), tc.expectedErrorPrefix) {
+					t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+				}
+				return
+			}
+
+			if response.Diagnostics.HasError() {
+				t.Fatalf("Unexpected error: %s", fwdiag.DiagnosticsError(response.Diagnostics))
+			}
+
+			// Check attr value
+			var expectedAttrValue string
+			if slices.Contains(tc.duplicateAttrs, "attr") {
+				expectedAttrValue = tc.expectedAccountID
+			}
+			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
+				t.Errorf("expected `attr` to be %q, got %q", e, a)
+			}
+
+			// Check identity
+			if tc.noIdentity {
+				if response.Identity != nil {
+					t.Error("Identity should not be set")
+				}
+			} else {
+				if identity := response.Identity; identity == nil {
+					t.Error("Identity should be set")
+				} else {
+					if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
+						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
 					}
 				}
 			}
