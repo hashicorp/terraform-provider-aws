@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Importing AWS ECS Service pulls ARN instead of revision family and version.
+```
