@@ -320,9 +320,10 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 
 func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf awstypes.LoadBalancer
+	var alb, nlb awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.test"
+	albResourceName := "aws_lb.test"
+	nlbResourceName := "aws_lb.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -333,13 +334,20 @@ func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					testAccCheckLoadBalancerExists(ctx, albResourceName, &alb),
+					resource.TestCheckResourceAttr(albResourceName, names.AttrName, rName),
 				),
 			},
 			{
-				Config:      testAccLoadBalancerConfig_duplicateName(rName),
+				Config:      testAccLoadBalancerConfig_duplicateName(rName, "application"),
 				ExpectError: regexache.MustCompile(`already exists`),
+			},
+			{
+				Config: testAccLoadBalancerConfig_duplicateName(rName, "network"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, nlbResourceName, &nlb),
+					resource.TestCheckResourceAttr(nlbResourceName, names.AttrName, rName),
+				),
 			},
 		},
 	})
@@ -2648,18 +2656,19 @@ resource "aws_lb" "test" {
 `, rName, namePrefix))
 }
 
-func testAccLoadBalancerConfig_duplicateName(rName string) string {
+func testAccLoadBalancerConfig_duplicateName(rName string, loadBalancerType string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_lb" "test2" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
+  load_balancer_type = %[2]q
 
   idle_timeout               = 30
   enable_deletion_protection = false
 }
-`, rName))
+`, rName, loadBalancerType))
 }
 
 func testAccLoadBalancerConfig_IPAMPools_basic(rName string) string {
