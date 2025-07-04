@@ -513,6 +513,10 @@ func (d *mockForceNewDiffer) Get(key string) any {
 	return d.old
 }
 
+func (d *mockForceNewDiffer) GetOk(key string) (any, bool) {
+	return "", false
+}
+
 func (d *mockForceNewDiffer) HasChange(key string) bool {
 	return d.hasChange || d.old != d.new
 }
