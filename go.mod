@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.16.2
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.35.2
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.229.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.230.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.76.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.4
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.27.2
@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.17.5
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.52.2
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.5.9
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.27.3
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.199.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.9
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7
@@ -260,7 +260,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/waf v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.63.1
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.27.4
