@@ -437,6 +437,9 @@ func resourceService() *schema.Resource {
 			"task_definition": {
 				Type:     schema.TypeString,
 				Optional: true,
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return oldValue == familyAndRevisionFromTaskDefinitionARN(newValue)
+				},
 			},
 			names.AttrTriggers: {
 				Type:     schema.TypeMap,
@@ -1409,12 +1412,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// you can specify only parameters that aren't controlled at the task set level
 	// hence TaskDefinition will not be set by aws sdk
 	if service.TaskDefinition != nil {
-		// Save task definition in the same format.
-		if arn.IsARN(d.Get("task_definition").(string)) {
-			d.Set("task_definition", service.TaskDefinition)
-		} else {
-			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
-		}
+		d.Set("task_definition", service.TaskDefinition)
 	}
 	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
 
