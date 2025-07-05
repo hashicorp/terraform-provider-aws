@@ -708,6 +708,10 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			if len(resource.Identity.Attributes) > 0 {
 				r.Identity = newResourceIdentity(resource.Identity)
 
+				if resource.Identity.IsMutable {
+					r.ResourceBehavior.MutableIdentity = true
+				}
+
 				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
 			}
 
@@ -722,7 +726,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				} else if resource.Identity.Singleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
 				} else {
-					r.Importer = newParameterizedIdentityImporter(resource.Identity)
+					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
 				}
 			}
 

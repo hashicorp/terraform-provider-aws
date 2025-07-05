@@ -30,6 +30,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			"Description":              testAccApp_Description,
 			"EnvironmentVariables":     testAccApp_EnvironmentVariables,
 			"IamServiceRole":           testAccApp_IAMServiceRole,
+			"JobConfig":                testAccApp_JobConfig,
 			"Name":                     testAccApp_Name,
 			"Repository":               testAccApp_Repository,
 		},

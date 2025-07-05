@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_codeartifact_repository_permissions_policy", name="Repository Permissions Policy")
 // @ArnIdentity("resource_arn")
+// @V60SDKv2Fix
 // @Testing(serialize=true)
 func resourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -45,17 +46,7 @@ func resourceRepositoryPermissionsPolicy() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"policy_document": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"policy_document": sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"policy_revision": {
 				Type:     schema.TypeString,
 				Optional: true,

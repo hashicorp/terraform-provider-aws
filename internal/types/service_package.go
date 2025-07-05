@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +70,7 @@ type ServicePackageFrameworkResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   FrameworkImport
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -91,7 +92,7 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   SDKv2Import
 }
 
 type Identity struct {
@@ -99,11 +100,12 @@ type Identity struct {
 	Singleton              bool   // Singleton
 	ARN                    bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
+	IdentityAttribute      string // ARN, Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
+	IsMutable              bool
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -119,7 +121,7 @@ func (i Identity) HasInherentRegion() bool {
 	return false
 }
 
-func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -137,6 +139,11 @@ func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -205,8 +212,8 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
@@ -224,10 +231,16 @@ func RegionalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -242,9 +255,15 @@ func GlobalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -253,11 +272,17 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
-		Attributes: append(baseAttributes, attributes...),
+		IsGlobalResource: true,
+		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -311,6 +336,32 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-type Import struct {
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+type ImportIDParser interface {
+	Parse(id string) (string, map[string]string, error)
+}
+
+type FrameworkImportIDCreator interface {
+	Create(ctx context.Context, state tfsdk.State) string
+}
+
+type FrameworkImport struct {
 	WrappedImport bool
+	ImportID      ImportIDParser // Multi-Parameter
+	SetIDAttr     bool
+}
+
+type SDKv2ImportID interface {
+	Create(d *schema.ResourceData) string
+	ImportIDParser
+}
+
+type SDKv2Import struct {
+	WrappedImport bool
+	ImportID      SDKv2ImportID // Multi-Parameter
 }

@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_datasync_location_smb", name="Location SMB")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationSmbOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="password")

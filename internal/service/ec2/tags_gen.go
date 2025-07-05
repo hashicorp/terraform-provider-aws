@@ -63,6 +63,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 			},
 		},
 	}
+
 	var output []awstypes.TagDescription
 
 	pages := ec2.NewDescribeTagsPaginator(conn, &input)
@@ -73,9 +74,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil

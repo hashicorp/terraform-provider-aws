@@ -181,8 +181,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_glue_resource_policy",
 			Name:     "Resource Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingletonIdentity(),
-			Import: inttypes.Import{
+			Identity: inttypes.RegionalSingletonIdentity(
+				inttypes.WithV6_0SDKv2Fix(),
+			),
+			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
 		},

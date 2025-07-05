@@ -42,6 +42,7 @@ func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigur
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -251,11 +252,14 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	output, err := conn.CreateAgentActionGroup(ctx, input)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+
+	output, err := retryOpIfPreparing[*bedrockagent.CreateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.CreateAgentActionGroupOutput, error) {
+		return conn.CreateAgentActionGroup(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Action Group", err.Error())
-
 		return
 	}
 
@@ -270,9 +274,8 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	data.ID = types.StringValue(id)
 
 	if data.PrepareAgent.ValueBool() {
-		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
-
 			return
 		}
 	}
@@ -331,6 +334,8 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
+	timeout := r.UpdateTimeout(ctx, new.Timeouts)
+
 	if !new.ActionGroupExecutor.Equal(old.ActionGroupExecutor) ||
 		!new.ActionGroupName.Equal(old.ActionGroupName) ||
 		!new.ActionGroupState.Equal(old.ActionGroupState) ||
@@ -344,7 +349,9 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 			return
 		}
 
-		_, err := conn.UpdateAgentActionGroup(ctx, input)
+		_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.UpdateAgentActionGroupOutput, error) {
+			return conn.UpdateAgentActionGroup(ctx, input)
+		})
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Action Group (%s)", new.ID.ValueString()), err.Error())
@@ -356,14 +363,12 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	output, err := findAgentActionGroupByThreePartKey(ctx, conn, new.ActionGroupID.ValueString(), new.AgentID.ValueString(), new.AgentVersion.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Action Group (%s)", new.ID.ValueString()), err.Error())
-
 		return
 	}
 
 	if new.PrepareAgent.ValueBool() {
-		if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		if _, err := prepareAgent(ctx, conn, new.AgentID.ValueString(), timeout); err != nil {
 			response.Diagnostics.AddError("preparing Agent", err.Error())
-
 			return
 		}
 	}
@@ -388,7 +393,12 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 		AgentVersion:           fwflex.StringFromFramework(ctx, data.AgentVersion),
 		SkipResourceInUseCheck: data.SkipResourceInUseCheck.ValueBool(),
 	}
-	_, err := conn.DeleteAgentActionGroup(ctx, &input)
+
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+
+	_, err := retryOpIfPreparing[*bedrockagent.DeleteAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.DeleteAgentActionGroupOutput, error) {
+		return conn.DeleteAgentActionGroup(ctx, &input)
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -396,8 +406,14 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Action Group (%s)", data.ID.ValueString()), err.Error())
-
 		return
+	}
+
+	if data.PrepareAgent.ValueBool() {
+		if _, err := prepareAgent(ctx, conn, data.AgentID.ValueString(), timeout); err != nil {
+			response.Diagnostics.AddError("preparing Agent", err.Error())
+			return
+		}
 	}
 }
 

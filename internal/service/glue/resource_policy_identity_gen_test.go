@@ -22,8 +22,9 @@ func testAccGlueResourcePolicy_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccGlueResourcePolicy_Identity_Basic,
-		"RegionOverride": testAccGlueResourcePolicy_Identity_RegionOverride,
+		acctest.CtBasic:    testAccGlueResourcePolicy_Identity_Basic,
+		"ExistingResource": testAccGlueResourcePolicy_Identity_ExistingResource,
+		"RegionOverride":   testAccGlueResourcePolicy_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

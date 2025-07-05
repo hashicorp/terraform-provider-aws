@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func GlobalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func GlobalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	importByARN(ctx, client, request, identitySpec, response)
 }
 
-func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	arnARN := importByARN(ctx, client, request, identitySpec, response)
 	if response.Diagnostics.HasError() {
 		return
@@ -49,7 +49,7 @@ func RegionalARN(ctx context.Context, client AWSClient, request resource.ImportS
 	}
 }
 
-func RegionalARNWithGlobalFormat(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse) {
+func RegionalARNWithGlobalFormat(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
 	importByARN(ctx, client, request, identitySpec, response)
 	if response.Diagnostics.HasError() {
 		return

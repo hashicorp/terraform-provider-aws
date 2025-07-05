@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_cloudtrail_event_data_store", name="Event Data Store")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,

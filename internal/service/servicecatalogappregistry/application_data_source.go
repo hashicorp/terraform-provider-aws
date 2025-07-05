@@ -75,7 +75,7 @@ func (d *applicationDataSource) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 
 	// Transparent tagging doesn't work for DataSource yet
-	data.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
+	data.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMapLegacy(ctx, keyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -15,8 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -67,6 +73,11 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -74,8 +85,15 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_Mode_singleLabel(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_Mode_singleLabel(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -423,6 +441,11 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -430,8 +453,15 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -466,6 +496,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexache.MustCompile(`s3://.+/outputs`)),
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexache.MustCompile(`s3://.+/outputs/[0-9A-Za-z-]+/output/output.tar.gz`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -473,8 +508,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs/"),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs/"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -508,6 +550,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -515,8 +562,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -550,6 +604,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -557,8 +616,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -592,6 +658,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", names.AttrName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -599,8 +670,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -634,6 +712,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -641,8 +724,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -885,6 +975,11 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -892,8 +987,15 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_kmsKeyARNs(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_kmsKeyARNs(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -927,6 +1029,11 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -934,8 +1041,15 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_kmsKeyIds(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_kmsKeyIds(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1377,6 +1491,92 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 	})
 }
 
+func TestAccComprehendDocumentClassifier_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.ComprehendServiceID),
+		CheckDestroy: testAccCheckDocumentClassifierDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccDocumentClassifierConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccDocumentClassifierConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDocumentClassifierConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDocumentClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
@@ -1439,16 +1639,6 @@ func testAccCheckDocumentClassifierExists(ctx context.Context, name string, docu
 		return nil
 	}
 }
-
-// func testAccCheckDocumentClassifierRecreated(before, after *types.DocumentClassifierProperties) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if documentClassifierIdentity(before, after) {
-// 			return fmt.Errorf("Comprehend Document Classifier not recreated")
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccCheckDocumentClassifierNotRecreated(before, after *types.DocumentClassifierProperties) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

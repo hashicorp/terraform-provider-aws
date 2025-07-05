@@ -22,8 +22,15 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,7 +113,73 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", names.AttrForceDestroy},
+				ImportStateIdFunc:       testAccBucketObjectImportByS3URL(resourceName),
+			},
+		},
+	})
+}
+
+// Resource Identity was added in v6.1
+func TestAccS3BucketObject_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccBucketObjectConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketObjectConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+						names.AttrKey:       knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrKey)),
+				},
 			},
 		},
 	})
@@ -139,7 +212,6 @@ func TestAccS3BucketObject_source(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -170,7 +242,6 @@ func TestAccS3BucketObject_content(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, "content_base64", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -204,7 +275,6 @@ func TestAccS3BucketObject_etagEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -285,7 +355,6 @@ func TestAccS3BucketObject_sourceHashTrigger(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -346,7 +415,7 @@ func TestAccS3BucketObject_nonVersioned(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
+			},
 		},
 	})
 }
@@ -395,7 +464,7 @@ func TestAccS3BucketObject_updates(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
+			},
 		},
 	})
 }
@@ -487,7 +556,7 @@ func TestAccS3BucketObject_updatesWithVersioning(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
+			},
 		},
 	})
 }
@@ -565,7 +634,6 @@ func TestAccS3BucketObject_kms(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -600,7 +668,6 @@ func TestAccS3BucketObject_sse(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrSource, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -652,7 +719,6 @@ func TestAccS3BucketObject_acl(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -700,7 +766,6 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"acl", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -764,7 +829,6 @@ func TestAccS3BucketObject_storageClass(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "acl", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName),
 			},
 		},
 	})
@@ -837,7 +901,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrContent, "acl", names.AttrForceDestroy},
-				ImportStateIdFunc:       testAccBucketObjectImportStateIdFunc(resourceName)},
+			},
 		},
 	})
 }
@@ -1348,7 +1412,7 @@ func testAccCheckBucketObjectExists(ctx context.Context, n string, v *s3.GetObje
 	}
 }
 
-func testAccBucketObjectImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccBucketObjectImportByS3URL(resourceName string) resource.ImportStateIdFunc { // nosemgrep:s3-in-func-name
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

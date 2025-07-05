@@ -378,6 +378,7 @@ type ResourceDatum struct {
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
+	IDAttrFormat                string
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -424,6 +425,10 @@ func (d ResourceDatum) IsGlobalSingleton() bool {
 
 func (d ResourceDatum) IsRegionalSingleton() bool {
 	return d.isSingleton && !d.IsGlobal
+}
+
+func (d ResourceDatum) IsSingleton() bool {
+	return d.isSingleton
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
@@ -657,6 +662,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							d.isARNFormatGlobal = triBooleanFalse
 						}
 					}
+				}
+
+			case "IdAttrFormat":
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) > 0 {
+					d.IDAttrFormat = args.Positional[0]
 				}
 
 			case "MutableIdentity":
