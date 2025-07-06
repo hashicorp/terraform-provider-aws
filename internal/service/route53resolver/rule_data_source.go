@@ -29,6 +29,12 @@ func dataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"delegation_record": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
 			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
