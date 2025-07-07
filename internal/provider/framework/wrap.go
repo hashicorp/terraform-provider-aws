@@ -44,11 +44,32 @@ type wrappedDataSource struct {
 	spec               *inttypes.ServicePackageFrameworkDataSource
 }
 
-func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
-	inner, _ := spec.Factory(context.TODO())
+func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, dataSourceValidateRegion())
+		}
+		interceptors = append(interceptors, dataSourceSetRegionInState())
+	}
+
+	if !tfunique.IsHandleNil(spec.Tags) {
+		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
+	}
+
+	inner, _ := spec.Factory(nil)
 	return &wrappedDataSource{
 		inner:              inner,
-		opts:               opts,
+		opts:               wrappedDataSourceOptions{interceptors: interceptors},
 		servicePackageName: servicePackageName,
 		spec:               spec,
 	}

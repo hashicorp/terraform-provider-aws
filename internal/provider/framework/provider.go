@@ -394,32 +394,8 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
-			var isRegionOverrideEnabled bool
-			if regionSpec := dataSourceSpec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
-			}
-
-			var interceptors interceptorInvocations
-
-			if isRegionOverrideEnabled {
-				v := dataSourceSpec.Region.Value()
-
-				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
-					interceptors = append(interceptors, dataSourceValidateRegion())
-				}
-				interceptors = append(interceptors, dataSourceSetRegionInState())
-			}
-
-			if !tfunique.IsHandleNil(dataSourceSpec.Tags) {
-				interceptors = append(interceptors, dataSourceTransparentTagging(dataSourceSpec.Tags))
-			}
-
-			opts := wrappedDataSourceOptions{
-				interceptors: interceptors,
-			}
-			p.dataSources = append(p.dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(dataSourceSpec, servicePackageName, opts)
+			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
+				return newWrappedDataSource(dataSourceSpec, servicePackageName)
 			})
 		}
 
