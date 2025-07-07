@@ -393,23 +393,16 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 	for sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
 
-		for _, v := range sp.FrameworkDataSources(ctx) {
-			inner, err := v.Factory(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", v.TypeName, err))
-				continue
-			}
-
+		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
 			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if regionSpec := dataSourceSpec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := v.Region.Value()
+				v := dataSourceSpec.Region.Value()
 
 				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
 				if v.IsValidateOverrideInPartition {
@@ -418,17 +411,16 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, dataSourceSetRegionInState())
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
-				interceptors = append(interceptors, dataSourceTransparentTagging(v.Tags))
+			if !tfunique.IsHandleNil(dataSourceSpec.Tags) {
+				interceptors = append(interceptors, dataSourceTransparentTagging(dataSourceSpec.Tags))
 			}
 
 			opts := wrappedDataSourceOptions{
 				interceptors:       interceptors,
 				servicePackageName: servicePackageName,
-				spec:               v,
 			}
 			p.dataSources = append(p.dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(inner, opts)
+				return newWrappedDataSource(dataSourceSpec, opts)
 			})
 		}
 
