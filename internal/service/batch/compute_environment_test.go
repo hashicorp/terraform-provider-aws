@@ -1594,6 +1594,107 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/39470.
+func TestAccBatchComputeEnvironment_updateLaunchTemplateID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+
+	user_data1 := "foo"
+	user_data2 := "bar"
+
+	initialTemplateContent := fmt.Sprintf(`
+			locals {
+			  user_data_foo = <<-EOF
+					Content-Type: multipart/mixed; boundary="//"
+					MIME-Version: 1.0
+
+					--//
+					Content-Type: text/x-shellscript; charset="us-ascii"
+					MIME-Version: 1.0
+					Content-Transfer-Encoding: 7bit
+					Content-Disposition: attachment; filename="userdata.txt"
+
+					#!/bin/bash
+					echo hello
+					echo %[2]q
+					--//--
+					EOF
+			}
+
+		   resource "aws_launch_template" "test" {
+			 name = %[1]q
+			 user_data = base64encode(local.user_data_foo)
+		   }
+   `, rName, user_data1)
+
+	updatedTemplateContent := fmt.Sprintf(`
+			locals {
+			  user_data_foo = <<-EOF
+					Content-Type: multipart/mixed; boundary="//"
+					MIME-Version: 1.0
+
+					--//
+					Content-Type: text/x-shellscript; charset="us-ascii"
+					MIME-Version: 1.0
+					Content-Transfer-Encoding: 7bit
+					Content-Disposition: attachment; filename="userdata.txt"
+
+					#!/bin/bash
+					echo hello
+					echo %[2]q
+					--//--
+					EOF
+			}
+
+		   resource "aws_launch_template" "test" {
+			 name = %[1]q
+			 user_data = base64encode(local.user_data_foo)
+		   }
+   `, rName, user_data2)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					initialTemplateContent,
+					testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, `aws_launch_template.test.latest_version`),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_name", ""),
+				),
+			},
+			// Swap to version 2 of the launch template
+			{
+				Config: acctest.ConfigCompose(
+					updatedTemplateContent,
+					testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, `aws_launch_template.test.latest_version`),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_name", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -2962,6 +3063,42 @@ resource "aws_batch_compute_environment" "test" {
     launch_template {
       launch_template_id = aws_launch_template.test.id
       version            = %[2]q
+    }
+
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "SPOT"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName, version))
+}
+
+func testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName string, version string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = [
+      "c4.large",
+    ]
+
+    launch_template {
+      launch_template_id = aws_launch_template.test.id
+      version            = %[2]s
     }
 
     max_vcpus = 16
