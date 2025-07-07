@@ -834,12 +834,14 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
+
 	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 
 	table, err := findTableByName(ctx, conn, d.Id())
 
@@ -907,7 +909,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	sse := flattenTableServerSideEncryption(table.SSEDescription)
-	sse = clearSSEDefaultKey(ctx, meta.(*conns.AWSClient), sse)
+	sse = clearSSEDefaultKey(ctx, c, sse)
 
 	if err := d.Set("server_side_encryption", sse); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "server_side_encryption", err)
@@ -924,9 +926,9 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	replicas = addReplicaTagPropagates(d.Get("replica").(*schema.Set), replicas)
-	replicas = clearReplicaDefaultKeys(ctx, meta.(*conns.AWSClient), replicas)
+	replicas = clearReplicaDefaultKeys(ctx, c, replicas)
 
-	var mrc = awstypes.MultiRegionConsistencyEventual
+	mrc := awstypes.MultiRegionConsistencyEventual
 	if table.MultiRegionConsistency != "" {
 		mrc = table.MultiRegionConsistency
 	}
@@ -1367,21 +1369,21 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 	// then the update table action will fail with
 	// "Unsupported table replica count for global tables with MultiRegionConsistency set to STRONG"
 	// If this logic can be consolidated for regular Replica creation then this can be refactored
-	var numReplicas = len(tfList)
-	var numReplicasMRSC = 0
-	var useMRSC = false
-	var mrscInput = awstypes.MultiRegionConsistencyStrong
+	numReplicas := len(tfList)
+	numReplicasMRSC := 0
+	useMRSC := false
+	mrscInput := awstypes.MultiRegionConsistencyStrong
+
 	for _, tfMapRaw := range tfList {
 		tfMap, _ := tfMapRaw.(map[string]any)
 
-		log.Printf("[DEBUG] %+v, %+v", tfMap["consistency_mode"].(string), tfMap["region_name"].(string))
 		if v, ok := tfMap["consistency_mode"].(string); ok {
-			if ok && v == (string(awstypes.MultiRegionConsistencyStrong)) {
+			if awstypes.MultiRegionConsistency(v) == awstypes.MultiRegionConsistencyStrong {
 				numReplicasMRSC += 1
 			}
 		}
 	}
-	log.Printf("[DEBUG] numReplicas: (%d), numReplicasMRSC: (%d)\n", numReplicas, numReplicasMRSC)
+
 	if numReplicasMRSC > 0 {
 		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
 			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
@@ -1397,14 +1399,11 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		useMRSC = true
 	}
 
-	log.Printf("[DEBUG] mrscInput: (%s), useMRSC: (%t)\n", mrscInput, useMRSC)
-
 	// if MRSC or MREC is defined and meets the above criteria, then all replicas must be created in a single call to UpdateTable.
 	if useMRSC {
 		var replicaCreates []awstypes.ReplicationGroupUpdate
 		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]any)
-
 			if !ok {
 				continue
 			}
@@ -1423,12 +1422,13 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				Create: replicaInput,
 			})
 		}
+
 		input := &dynamodb.UpdateTableInput{
 			TableName:              aws.String(tableName),
 			ReplicaUpdates:         replicaCreates,
 			MultiRegionConsistency: mrscInput,
 		}
-		log.Printf("[DEBUG] UpdateTableInput (%+v)\n", input)
+
 		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			if err != nil {
@@ -1449,7 +1449,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 			return nil
 		})
-		log.Printf("[DEBUG] UpdateTable Result (%+v)\n", err)
+
 		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTable(ctx, input)
 		}
@@ -1985,7 +1985,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 		}
 
 		if v, ok := tfMap["consistency_mode"].(string); ok {
-			if v == (string(awstypes.MultiRegionConsistencyStrong)) {
+			if awstypes.MultiRegionConsistency(v) == awstypes.MultiRegionConsistencyStrong {
 				replicaDeletes = append(replicaDeletes, awstypes.ReplicationGroupUpdate{
 					Delete: &awstypes.DeleteReplicationGroupMemberAction{
 						RegionName: aws.String(regionName),
@@ -2172,13 +2172,13 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.Client, tableName strin
 	return replicas, nil
 }
 
-func addReplicaMultiRegionConsistency(replicas []any, mode awstypes.MultiRegionConsistency) []any {
+func addReplicaMultiRegionConsistency(replicas []any, mrc awstypes.MultiRegionConsistency) []any {
 	// This non-standard approach is needed because MRSC info for a replica
 	// comes from the Table object
-	for i, replicaRaw := range replicas {
-		replica := replicaRaw.(map[string]any)
-		replica["consistency_mode"] = (string(mode))
-		replicas[i] = replica
+	for i, tfMapRaw := range replicas {
+		tfMap := tfMapRaw.(map[string]any)
+		tfMap["consistency_mode"] = string(mrc)
+		replicas[i] = tfMap
 	}
 
 	return replicas
@@ -2884,15 +2884,3 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
 	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
-
-// // Helper function to check if a replica has MRSC enabled
-// func replicaHasMRSC(replica *awstypes.ReplicaDescription) bool {
-// 	if replica == nil {
-// 		return false
-// 	}
-
-// 	// For MRSC, check if the replica has the STANDARD table class
-// 	// Since the AWS SDK doesn't expose TableClassSummary directly in ReplicaDescription,
-// 	// we need to infer it from other properties
-// 	return replica.ProvisionedThroughputOverride != nil
-// }
