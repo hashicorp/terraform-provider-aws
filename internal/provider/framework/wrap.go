@@ -310,11 +310,9 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 }
 
 type wrappedResourceOptions struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorInvocations
-	typeName         string
-	identity         inttypes.Identity
+	interceptors       interceptorInvocations
+	servicePackageName string
+	spec               *inttypes.ServicePackageFrameworkResource
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -331,17 +329,47 @@ func newWrappedResource(inner resource.ResourceWithConfigure, opts wrappedResour
 	}
 }
 
+// bootstrapContext is run on all wrapped methods before any interceptors.
+func (w *wrappedResource) bootstrapContext(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.opts.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		overrideRegion = target.ValueString()
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.opts.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
+}
+
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
-	response.TypeName = w.opts.typeName
+	response.TypeName = w.opts.spec.TypeName
 
-	if w.opts.identity.IsMutable {
+	if w.opts.spec.Identity.IsMutable {
 		response.ResourceBehavior.MutableIdentity = true
 	}
 }
 
 func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -353,16 +381,16 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("resource model validation error", w.opts.typeName)
+			response.Diagnostics.AddError("resource model validation error", w.opts.spec.TypeName)
 			return
 		}
-	} else if w.opts.typeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
-		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.typeName)
+	} else if w.opts.spec.TypeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.spec.TypeName)
 	}
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Plan.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Plan.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -372,7 +400,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.State.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.State.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -382,7 +410,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Plan.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Plan.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -392,7 +420,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.State.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.State.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -406,7 +434,7 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 		w.meta = v
 	}
 
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -417,7 +445,7 @@ func (w *wrappedResource) Configure(ctx context.Context, request resource.Config
 
 func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	if v, ok := w.inner.(resource.ResourceWithImportState); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -436,7 +464,7 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 }
 
 func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -453,10 +481,10 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	if v, ok := w.inner.(resource.ResourceWithConfigValidators); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"resource":               w.opts.typeName,
+				"resource":               w.opts.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -470,7 +498,7 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 }
 
 func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -483,10 +511,10 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 
 func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	if v, ok := w.inner.(resource.ResourceWithUpgradeState); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
-				"resource":               w.opts.typeName,
+				"resource":               w.opts.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -501,10 +529,10 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 
 func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
-				"resource":               w.opts.typeName,
+				"resource":               w.opts.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -518,7 +546,7 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 }
 
 func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	if len(w.opts.identity.Attributes) > 0 {
-		resp.IdentitySchema = identity.NewIdentitySchema(w.opts.identity)
+	if len(w.opts.spec.Identity.Attributes) > 0 {
+		resp.IdentitySchema = identity.NewIdentitySchema(w.opts.spec.Identity)
 	}
 }

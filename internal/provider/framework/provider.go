@@ -459,24 +459,24 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 		}
 
-		for _, res := range sp.FrameworkResources(ctx) {
-			typeName := res.TypeName
-			inner, err := res.Factory(ctx)
+		for _, resourceSpec := range sp.FrameworkResources(ctx) {
+			typeName := resourceSpec.TypeName
+			inner, err := resourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating resource (%s): %w", resourceSpec.TypeName, err))
 				continue
 			}
 
 			var isRegionOverrideEnabled bool
-			if v := res.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				isRegionOverrideEnabled = true
 			}
 
 			var interceptors interceptorInvocations
 
 			if isRegionOverrideEnabled {
-				v := res.Region.Value()
+				v := resourceSpec.Region.Value()
 
 				interceptors = append(interceptors, resourceInjectRegionAttribute())
 				if v.IsValidateOverrideInPartition {
@@ -485,27 +485,27 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				interceptors = append(interceptors, resourceDefaultRegion())
 				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
 				interceptors = append(interceptors, resourceSetRegionInState())
-				if res.Identity.HasInherentRegion() {
+				if resourceSpec.Identity.HasInherentRegion() {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
 					interceptors = append(interceptors, resourceImportRegion())
 				}
 			}
 
-			if !tfunique.IsHandleNil(res.Tags) {
-				interceptors = append(interceptors, resourceTransparentTagging(res.Tags))
+			if !tfunique.IsHandleNil(resourceSpec.Tags) {
+				interceptors = append(interceptors, resourceTransparentTagging(resourceSpec.Tags))
 			}
 
-			if res.Import.WrappedImport {
-				if res.Import.SetIDAttr {
-					if _, ok := res.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
+			if resourceSpec.Import.WrappedImport {
+				if resourceSpec.Import.SetIDAttr {
+					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
 						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", typeName))
 						continue
 					}
 				}
 				switch v := inner.(type) {
 				case framework.ImportByIdentityer:
-					v.SetIdentitySpec(res.Identity, res.Import)
+					v.SetIdentitySpec(resourceSpec.Identity, resourceSpec.Import)
 
 				default:
 					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))
@@ -514,36 +514,13 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 
 			opts := wrappedResourceOptions{
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
-					var overrideRegion string
-
-					if isRegionOverrideEnabled && getAttribute != nil {
-						var target types.String
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-						if diags.HasError() {
-							return ctx, diags
-						}
-
-						overrideRegion = target.ValueString()
-					}
-
-					ctx = conns.NewResourceContext(ctx, servicePackageName, res.Name, overrideRegion)
-					if c != nil {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						ctx = fwflex.RegisterLogger(ctx)
-					}
-
-					return ctx, diags
-				},
-				interceptors: interceptors,
-				typeName:     typeName,
+				interceptors:       interceptors,
+				servicePackageName: servicePackageName,
+				spec:               resourceSpec,
 			}
-			if len(res.Identity.Attributes) > 0 {
-				opts.identity = res.Identity
-				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(res.Identity.Attributes))
+			if len(resourceSpec.Identity.Attributes) > 0 {
+				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(resourceSpec.Identity.Attributes))
+				opts.spec = resourceSpec
 			}
 
 			p.resources = append(p.resources, func() resource.Resource {
