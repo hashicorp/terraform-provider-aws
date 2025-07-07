@@ -34,7 +34,6 @@ type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (cont
 type wrappedDataSourceOptions struct {
 	interceptors       interceptorInvocations
 	servicePackageName string
-	spec               *inttypes.ServicePackageFrameworkDataSource
 }
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
@@ -42,12 +41,15 @@ type wrappedDataSource struct {
 	inner datasource.DataSourceWithConfigure
 	meta  *conns.AWSClient
 	opts  wrappedDataSourceOptions
+	spec  *inttypes.ServicePackageFrameworkDataSource
 }
 
-func newWrappedDataSource(inner datasource.DataSourceWithConfigure, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
+	inner, _ := spec.Factory(context.TODO())
 	return &wrappedDataSource{
 		inner: inner,
 		opts:  opts,
+		spec:  spec,
 	}
 }
 
@@ -57,7 +59,7 @@ func (w *wrappedDataSource) bootstrapContext(ctx context.Context, getAttribute g
 	var overrideRegion string
 
 	var isRegionOverrideEnabled bool
-	if regionSpec := w.opts.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
 	}
 
@@ -71,7 +73,7 @@ func (w *wrappedDataSource) bootstrapContext(ctx context.Context, getAttribute g
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.opts.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.spec.Name, overrideRegion)
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
@@ -83,7 +85,7 @@ func (w *wrappedDataSource) bootstrapContext(ctx context.Context, getAttribute g
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	// This method does not call down to the inner data source.
-	response.TypeName = w.opts.spec.TypeName
+	response.TypeName = w.spec.TypeName
 }
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -102,11 +104,11 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("data source model validation error", w.opts.spec.TypeName)
+			response.Diagnostics.AddError("data source model validation error", w.spec.TypeName)
 			return
 		}
 	} else {
-		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.spec.TypeName)
+		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.spec.TypeName)
 	}
 }
 
@@ -139,7 +141,7 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"data source":            w.opts.spec.TypeName,
+				"data source":            w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
