@@ -333,7 +333,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontKeyValueStoreKeysExclusive_itemRemainsAfterValueChange(t *testing.T) {
+func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var keys []string
