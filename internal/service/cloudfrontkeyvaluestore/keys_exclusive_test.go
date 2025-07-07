@@ -336,13 +336,9 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
 func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var keys []string
-	var values []string
-	var newValues []string
-	keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-	values = append(values, "Original Value")
-	newValues = append(newValues, "New Value")
-
+	keys := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	values := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	valuesUpdated := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -362,10 +358,10 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKeysExclusiveConfig_basic(keys, newValues, rName),
+				Config: testAccKeysExclusiveConfig_basic(keys, valuesUpdated, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testCheckMultipleKeyValuePairs(keys, newValues, resourceName),
+					testCheckMultipleKeyValuePairs(keys, valuesUpdated, resourceName),
 				),
 			},
 		},
