@@ -32,24 +32,25 @@ type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
 type wrappedDataSourceOptions struct {
-	interceptors       interceptorInvocations
-	servicePackageName string
+	interceptors interceptorInvocations
 }
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
-	inner datasource.DataSourceWithConfigure
-	meta  *conns.AWSClient
-	opts  wrappedDataSourceOptions
-	spec  *inttypes.ServicePackageFrameworkDataSource
+	inner              datasource.DataSourceWithConfigure
+	meta               *conns.AWSClient
+	opts               wrappedDataSourceOptions
+	servicePackageName string
+	spec               *inttypes.ServicePackageFrameworkDataSource
 }
 
-func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
 	inner, _ := spec.Factory(context.TODO())
 	return &wrappedDataSource{
-		inner: inner,
-		opts:  opts,
-		spec:  spec,
+		inner:              inner,
+		opts:               opts,
+		servicePackageName: servicePackageName,
+		spec:               spec,
 	}
 }
 
@@ -73,7 +74,7 @@ func (w *wrappedDataSource) bootstrapContext(ctx context.Context, getAttribute g
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
