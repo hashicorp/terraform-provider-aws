@@ -10,6 +10,7 @@ import (
 	"iter"
 	"log"
 	"slices"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -35,7 +36,7 @@ import (
 )
 
 var (
-	resourceSchemasValidated bool
+	resourceSchemasValidated sync.Once
 )
 
 var (
@@ -65,22 +66,14 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 		servicePackages:    primary.Meta().(*conns.AWSClient).ServicePackages(ctx),
 	}
 
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
 	// Because we try and share resource schemas as much as possible,
 	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := provider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
+	var err error
+	resourceSchemasValidated.Do(func() {
+		err = provider.validateResourceSchemas(ctx)
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if err := provider.initialize(ctx); err != nil {
