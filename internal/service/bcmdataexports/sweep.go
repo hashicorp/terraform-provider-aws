@@ -51,7 +51,7 @@ func sweepExports(region string) error {
 
 			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newExportResource, client,
-				framework.NewAttribute(names.AttrID, id),
+				framework.NewAttribute(names.AttrARN, id),
 			))
 		}
 	}
