@@ -416,11 +416,10 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 
 			opts := wrappedDataSourceOptions{
-				interceptors:       interceptors,
-				servicePackageName: servicePackageName,
+				interceptors: interceptors,
 			}
 			p.dataSources = append(p.dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(dataSourceSpec, opts)
+				return newWrappedDataSource(dataSourceSpec, servicePackageName, opts)
 			})
 		}
 
