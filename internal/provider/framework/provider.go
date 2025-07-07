@@ -394,11 +394,10 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, v := range sp.FrameworkDataSources(ctx) {
-			typeName := v.TypeName
 			inner, err := v.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating data source (%s): %w", v.TypeName, err))
 				continue
 			}
 
@@ -424,32 +423,9 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 
 			opts := wrappedDataSourceOptions{
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
-					var overrideRegion string
-
-					if isRegionOverrideEnabled && getAttribute != nil {
-						var target types.String
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-						if diags.HasError() {
-							return ctx, diags
-						}
-
-						overrideRegion = target.ValueString()
-					}
-
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-					if c != nil {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						ctx = fwflex.RegisterLogger(ctx)
-					}
-
-					return ctx, diags
-				},
-				interceptors: interceptors,
-				typeName:     typeName,
+				interceptors:       interceptors,
+				servicePackageName: servicePackageName,
+				spec:               v,
 			}
 			p.dataSources = append(p.dataSources, func() datasource.DataSource {
 				return newWrappedDataSource(inner, opts)
