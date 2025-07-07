@@ -233,15 +233,15 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	in := &bcmdataexports.CreateExportInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	in := bcmdataexports.CreateExportInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.ResourceTags = getTagsIn(ctx)
 
-	out, err := conn.CreateExport(ctx, in)
+	out, err := conn.CreateExport(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionCreating, ResNameExport, "", err),
@@ -324,15 +324,15 @@ func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		in := bcmdataexports.UpdateExportInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		in.ExportArn = plan.ARN.ValueStringPointer()
 
-		out, err := conn.UpdateExport(ctx, in)
+		out, err := conn.UpdateExport(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), err),
@@ -373,11 +373,11 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	in := &bcmdataexports.DeleteExportInput{
+	in := bcmdataexports.DeleteExportInput{
 		ExportArn: state.ARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteExport(ctx, in)
+	_, err := conn.DeleteExport(ctx, &in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -455,15 +455,14 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 }
 
 func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
-	in := &bcmdataexports.GetExportInput{
+	in := bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
 
-	out, err := conn.GetExport(ctx, in)
+	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
