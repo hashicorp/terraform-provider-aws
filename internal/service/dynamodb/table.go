@@ -1386,13 +1386,13 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 
 	if numReplicasMRSC > 0 {
 		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
-			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
+			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
 		}
 		if numReplicasMRSC == 1 {
-			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency requires exactly 2 replicas. ")
+			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas. ")
 		}
 		if numReplicasMRSC > 2 {
-			return fmt.Errorf("creating replicas: Using MultRegionStrongConsistency supports at most 2 replicas. ")
+			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency supports at most 2 replicas. ")
 		}
 
 		mrscInput = awstypes.MultiRegionConsistencyStrong

@@ -4071,7 +4071,7 @@ func TestAccDynamoDBTable_Replica_MRSC_TooManyReplicas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_count3(rName),
-				ExpectError: regexache.MustCompile(`Using MultRegionStrongConsistency supports at most 2 replicas`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency supports at most 2 replicas`),
 			},
 		},
 	})
@@ -4095,7 +4095,7 @@ func TestAccDynamoDBTable_Replica_MRSC_NotEnoughReplicas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_count1(rName),
-				ExpectError: regexache.MustCompile(`Using MultRegionStrongConsistency requires exactly 2 replicas`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency requires exactly 2 replicas`),
 			},
 		},
 	})
@@ -4119,7 +4119,7 @@ func TestAccDynamoDBTable_Replica_MRSC_MixedConsistencyModes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_mixed_consistency_mode(rName),
-				ExpectError: regexache.MustCompile(`Using MultRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG'`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG'`),
 			},
 		},
 	})
