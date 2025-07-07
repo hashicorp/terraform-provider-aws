@@ -31,17 +31,13 @@ type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 // contextFunc augments Context.
 type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
-type wrappedDataSourceOptions struct {
-	interceptors interceptorInvocations
-}
-
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
 	inner              datasource.DataSourceWithConfigure
 	meta               *conns.AWSClient
-	opts               wrappedDataSourceOptions
 	servicePackageName string
 	spec               *inttypes.ServicePackageFrameworkDataSource
+	interceptors       interceptorInvocations
 }
 
 func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
@@ -69,9 +65,9 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 	inner, _ := spec.Factory(nil)
 	return &wrappedDataSource{
 		inner:              inner,
-		opts:               wrappedDataSourceOptions{interceptors: interceptors},
 		servicePackageName: servicePackageName,
 		spec:               spec,
+		interceptors:       interceptors,
 	}
 }
 
@@ -117,7 +113,7 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.dataSourceSchema(), w.inner.Schema, dataSourceSchemaHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.dataSourceSchema(), w.inner.Schema, dataSourceSchemaHasError, w.meta)(ctx, request, response)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -141,7 +137,7 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.dataSourceRead(), w.inner.Read, dataSourceReadHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.dataSourceRead(), w.inner.Read, dataSourceReadHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
