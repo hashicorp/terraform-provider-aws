@@ -65,6 +65,8 @@ var (
 	FindUserProfileByName                     = findUserProfileByName
 	FindWorkforceByName                       = findWorkforceByName
 	FindWorkteamByName                        = findWorkteamByName
+	ResourceCluster                           = newResourceCluster
+	FindClusterByName                         = findClusterByName
 
 	DecodeAppID                                    = decodeAppID
 	DecodeDeviceId                                 = decodeDeviceId
