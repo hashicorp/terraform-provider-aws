@@ -249,7 +249,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
