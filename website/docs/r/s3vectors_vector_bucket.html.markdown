@@ -1,0 +1,54 @@
+---
+subcategory: "S3 Vectors"
+layout: "aws"
+page_title: "AWS: aws_s3vectors_vector_bucket"
+description: |-
+  Terraform resource for managing an Amazon S3 Vectors Vector Bucket.
+---
+
+# Resource: aws_s3vectors_vector_bucket
+
+Terraform resource for managing an Amazon S3 Vectors Vector Bucket.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_s3vectors_vector_bucket" "example" {
+  vector_bucket_name = "example-bucket"
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `vector_bucket_name` - (Required, Forces new resource) Name of the vector bucket.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `vector_bucket_arn` - ARN of the vector bucket.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Vectors Vector Bucket using the `vector_bucket_arn`. For example:
+
+```terraform
+import {
+  to = aws_s3vectors_vector_bucket.example
+  id = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket"
+}
+```
+
+Using `terraform import`, import S3 Vectors Vector Bucket using the `vector_bucket_arn`. For example:
+
+```console
+% terraform import aws_s3vectors_vector_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
+```
