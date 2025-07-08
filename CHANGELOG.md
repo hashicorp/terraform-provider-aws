@@ -16,6 +16,8 @@ BUG FIXES:
 * resource/aws_bedrockagent_agent_knowledge_base_association: Retry `operation can't be performed on Agent when it is in Preparing state.` errors during agent knowledge base creation and disassociation ([#43232](https://github.com/hashicorp/terraform-provider-aws/issues/43232))
 * resource/aws_cloudfrontkeyvaluestore_keys_exclusive: Fix errant deletion of key value pairs when a value is changed ([#43208](https://github.com/hashicorp/terraform-provider-aws/issues/43208))
 * resource/aws_cognito_user_pool_domain: Correctly update `managed_login_version` for custom Cognito domains ([#43252](https://github.com/hashicorp/terraform-provider-aws/issues/43252))
+* resource/aws_redshift_cluster: Correctly set `availability_zone_relocation_enabled` ([#43270](https://github.com/hashicorp/terraform-provider-aws/issues/43270))
+* resource/aws_ssoadmin_application: Updates value of `arn` when refreshing state. ([#43273](https://github.com/hashicorp/terraform-provider-aws/issues/43273))
 
 ## 6.2.0 (July  2, 2025)
 
