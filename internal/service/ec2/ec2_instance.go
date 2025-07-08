@@ -859,6 +859,24 @@ func resourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"instance_start_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "10m",
+				ValidateFunc: validation.StringMatch(
+					regexache.MustCompile(`^[0-9]+[smh]$`),
+					"must be a valid duration string (e.g., '10m', '1h', '30s')",
+				),
+			},
+			"instance_stop_timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "10m",
+				ValidateFunc: validation.StringMatch(
+					regexache.MustCompile(`^[0-9]+[smh]$`),
+					"must be a valid duration string (e.g., '10m', '1h', '30s')",
+				),
+			},
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -2143,7 +2161,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]any)[0].(map[string]any)); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
-				if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+				stopTimeout := instanceStopTimeout
+				if v, ok := d.GetOk("instance_stop_timeout"); ok {
+					if parsed, err := time.ParseDuration(v.(string)); err == nil {
+						stopTimeout = parsed
+					}
+				}
+				if err := stopInstance(ctx, conn, d.Id(), false, stopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
@@ -2178,7 +2202,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
 
-				if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
+				startTimeout := instanceStartTimeout
+				if v, ok := d.GetOk("instance_start_timeout"); ok {
+					if parsed, err := time.ParseDuration(v.(string)); err == nil {
+						startTimeout = parsed
+					}
+				}
+				if err := startInstance(ctx, conn, d.Id(), true, startTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
