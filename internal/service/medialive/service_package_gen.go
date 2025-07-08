@@ -75,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceMultiplex,
+			Factory:  resourceMultiplex,
 			TypeName: "aws_medialive_multiplex",
 			Name:     "Multiplex",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

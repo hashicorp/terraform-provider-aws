@@ -200,7 +200,7 @@ func sweepMultiplexes(region string) error {
 			id := aws.ToString(multiplex.Id)
 			log.Printf("[INFO] Deleting MediaLive Multiplex: %s", id)
 
-			r := ResourceMultiplex()
+			r := resourceMultiplex()
 			d := r.Data(nil)
 			d.SetId(id)
 
