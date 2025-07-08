@@ -310,20 +310,16 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
-type wrappedResourceOptions struct {
-	servicePackageName string
-}
-
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
 type wrappedResource struct {
-	inner        resource.ResourceWithConfigure
-	meta         *conns.AWSClient
-	opts         wrappedResourceOptions
-	spec         *inttypes.ServicePackageFrameworkResource
-	interceptors interceptorInvocations
+	inner              resource.ResourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageFrameworkResource
+	interceptors       interceptorInvocations
 }
 
-func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, opts wrappedResourceOptions) resource.ResourceWithConfigure {
+func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, servicePackageName string) resource.ResourceWithConfigure {
 	var isRegionOverrideEnabled bool
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
@@ -373,10 +369,10 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, opts wra
 		}
 	}
 	return &wrappedResource{
-		inner:        inner,
-		opts:         opts,
-		spec:         spec,
-		interceptors: interceptors,
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
 	}
 }
 
@@ -400,7 +396,7 @@ func (w *wrappedResource) bootstrapContext(ctx context.Context, getAttribute get
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 		ctx = c.RegisterLogger(ctx)

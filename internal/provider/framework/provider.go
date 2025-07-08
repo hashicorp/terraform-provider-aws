@@ -458,12 +458,8 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		}
 
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
-			opts := wrappedResourceOptions{
-				servicePackageName: servicePackageName,
-			}
-
 			p.resources = append(p.resources, func() resource.Resource {
-				return newWrappedResource(resourceSpec, opts)
+				return newWrappedResource(resourceSpec, servicePackageName)
 			})
 		}
 	}
