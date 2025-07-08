@@ -24,7 +24,6 @@ import (
 )
 
 // @FrameworkResource("aws_s3vectors_vector_bucket", name="VectorBucket")
-// @Tags
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 
@@ -78,6 +77,11 @@ func (r *vectorBucketResource) Create(ctx context.Context, request resource.Crea
 
 		return
 	}
+
+	// Set values for unknowns.
+	data.VectorBucketARN = fwflex.StringValueToFramework(ctx, "arn:aws:s3vectors")
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *vectorBucketResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -90,7 +94,7 @@ func (r *vectorBucketResource) Read(ctx context.Context, request resource.ReadRe
 	conn := r.Meta().S3VectorsClient(ctx)
 
 	arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
-	output, err := findVectorBuckeyByARN(ctx, conn, arn)
+	output, err := findVectorBucketByARN(ctx, conn, arn)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -138,7 +142,7 @@ func (r *vectorBucketResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
-func findVectorBuckeyByARN(ctx context.Context, conn *s3vectors.Client, arn string) (*awstypes.VectorBucket, error) {
+func findVectorBucketByARN(ctx context.Context, conn *s3vectors.Client, arn string) (*awstypes.VectorBucket, error) {
 	input := s3vectors.GetVectorBucketInput{
 		VectorBucketArn: aws.String(arn),
 	}
