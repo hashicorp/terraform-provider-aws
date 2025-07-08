@@ -68,7 +68,7 @@ func sweepChannels(region string) error {
 			id := aws.ToString(channel.Id)
 			log.Printf("[INFO] Deleting MediaLive Channels: %s", id)
 
-			r := ResourceChannel()
+			r := resourceChannel()
 			d := r.Data(nil)
 			d.SetId(id)
 

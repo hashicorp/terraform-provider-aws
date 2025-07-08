@@ -48,7 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceChannel,
+			Factory:  resourceChannel,
 			TypeName: "aws_medialive_channel",
 			Name:     "Channel",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
