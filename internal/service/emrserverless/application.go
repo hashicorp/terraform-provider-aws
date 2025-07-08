@@ -229,6 +229,23 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"application_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"classification": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"properties": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -286,6 +303,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]any)) > 0 {
+		input.RuntimeConfiguration = expandApplicationConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -353,6 +374,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
+	if err := d.Set("application_configuration", flattenApplicationConfiguration(application.RuntimeConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting application_configuration: %s", err)
+	}
+
 	setTagsOut(ctx, application.Tags)
 
 	return diags
@@ -402,6 +427,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("release_label"); ok {
 			input.ReleaseLabel = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("application_configuration"); ok && len(v.([]any)) > 0 {
+			input.RuntimeConfiguration = expandApplicationConfiguration(v.([]any))
 		}
 
 		_, err := conn.UpdateApplication(ctx, input)
@@ -862,4 +891,57 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 	}
 
 	return tfMap
+}
+
+func expandApplicationConfiguration(tfList []any) []types.Configuration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Configuration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.Configuration{}
+
+		if v, ok := tfMap["classification"].(string); ok && v != "" {
+			apiObject.Classification = aws.String(v)
+		}
+
+		if v, ok := tfMap["properties"].(map[string]any); ok && len(v) > 0 {
+			apiObject.Properties = flex.ExpandStringValueMap(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenApplicationConfiguration(apiObjects []types.Configuration) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.Classification; v != nil {
+			tfMap["classification"] = aws.ToString(v)
+		}
+
+		if v := apiObject.Properties; v != nil {
+			tfMap["properties"] = v
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
