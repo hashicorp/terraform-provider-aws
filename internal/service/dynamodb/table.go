@@ -296,7 +296,7 @@ func resourceTable() *schema.Resource {
 						"consistency_mode": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          awstypes.MultiRegionConsistencyEventual,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
 						},
 						names.AttrKMSKeyARN: {
