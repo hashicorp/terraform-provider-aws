@@ -419,7 +419,7 @@ func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (
 }
 
 func waitKeyValidToPropagated(ctx context.Context, conn *kms.Client, id string, validTo string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
