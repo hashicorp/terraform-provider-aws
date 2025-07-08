@@ -24,13 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -460,65 +458,8 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		}
 
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
-			typeName := resourceSpec.TypeName
-			inner, err := resourceSpec.Factory(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource (%s): %w", resourceSpec.TypeName, err))
-				continue
-			}
-
-			var isRegionOverrideEnabled bool
-			if v := resourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
-			}
-
-			var interceptors interceptorInvocations
-
-			if isRegionOverrideEnabled {
-				v := resourceSpec.Region.Value()
-
-				interceptors = append(interceptors, resourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
-					interceptors = append(interceptors, resourceValidateRegion())
-				}
-				interceptors = append(interceptors, resourceDefaultRegion())
-				interceptors = append(interceptors, resourceForceNewIfRegionChanges())
-				interceptors = append(interceptors, resourceSetRegionInState())
-				if resourceSpec.Identity.HasInherentRegion() {
-					interceptors = append(interceptors, resourceImportRegionNoDefault())
-				} else {
-					interceptors = append(interceptors, resourceImportRegion())
-				}
-			}
-
-			if !tfunique.IsHandleNil(resourceSpec.Tags) {
-				interceptors = append(interceptors, resourceTransparentTagging(resourceSpec.Tags))
-			}
-
-			if resourceSpec.Import.WrappedImport {
-				if resourceSpec.Import.SetIDAttr {
-					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
-						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", typeName))
-						continue
-					}
-				}
-				switch v := inner.(type) {
-				case framework.ImportByIdentityer:
-					v.SetIdentitySpec(resourceSpec.Identity, resourceSpec.Import)
-
-				default:
-					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))
-					continue
-				}
-			}
-
 			opts := wrappedResourceOptions{
-				interceptors:       interceptors,
 				servicePackageName: servicePackageName,
-			}
-			if len(resourceSpec.Identity.Attributes) > 0 {
-				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(resourceSpec.Identity.Attributes))
 			}
 
 			p.resources = append(p.resources, func() resource.Resource {
