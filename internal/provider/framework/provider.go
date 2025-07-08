@@ -516,15 +516,13 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			opts := wrappedResourceOptions{
 				interceptors:       interceptors,
 				servicePackageName: servicePackageName,
-				spec:               resourceSpec,
 			}
 			if len(resourceSpec.Identity.Attributes) > 0 {
 				opts.interceptors = append(opts.interceptors, newIdentityInterceptor(resourceSpec.Identity.Attributes))
-				opts.spec = resourceSpec
 			}
 
 			p.resources = append(p.resources, func() resource.Resource {
-				return newWrappedResource(inner, opts)
+				return newWrappedResource(resourceSpec, opts)
 			})
 		}
 	}

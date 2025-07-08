@@ -312,7 +312,6 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 type wrappedResourceOptions struct {
 	interceptors       interceptorInvocations
 	servicePackageName string
-	spec               *inttypes.ServicePackageFrameworkResource
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -320,12 +319,15 @@ type wrappedResource struct {
 	inner resource.ResourceWithConfigure
 	meta  *conns.AWSClient
 	opts  wrappedResourceOptions
+	spec  *inttypes.ServicePackageFrameworkResource
 }
 
-func newWrappedResource(inner resource.ResourceWithConfigure, opts wrappedResourceOptions) resource.ResourceWithConfigure {
+func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, opts wrappedResourceOptions) resource.ResourceWithConfigure {
+	inner, _ := spec.Factory(context.TODO())
 	return &wrappedResource{
 		inner: inner,
 		opts:  opts,
+		spec:  spec,
 	}
 }
 
@@ -335,7 +337,7 @@ func (w *wrappedResource) bootstrapContext(ctx context.Context, getAttribute get
 	var overrideRegion string
 
 	var isRegionOverrideEnabled bool
-	if regionSpec := w.opts.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
 	}
 
@@ -349,7 +351,7 @@ func (w *wrappedResource) bootstrapContext(ctx context.Context, getAttribute get
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.opts.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.spec.Name, overrideRegion)
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
@@ -361,9 +363,9 @@ func (w *wrappedResource) bootstrapContext(ctx context.Context, getAttribute get
 
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
-	response.TypeName = w.opts.spec.TypeName
+	response.TypeName = w.spec.TypeName
 
-	if w.opts.spec.Identity.IsMutable {
+	if w.spec.Identity.IsMutable {
 		response.ResourceBehavior.MutableIdentity = true
 	}
 }
@@ -381,11 +383,11 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("resource model validation error", w.opts.spec.TypeName)
+			response.Diagnostics.AddError("resource model validation error", w.spec.TypeName)
 			return
 		}
-	} else if w.opts.spec.TypeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
-		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.opts.spec.TypeName)
+	} else if w.spec.TypeName != "aws_lexv2models_bot_version" { // Hacky yukkery caused by attribute of type map[string]Object.
+		response.Diagnostics.AddError("missing framework.ResourceValidateModel", w.spec.TypeName)
 	}
 }
 
@@ -484,7 +486,7 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"resource":               w.opts.spec.TypeName,
+				"resource":               w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -514,7 +516,7 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping UpgradeState", map[string]any{
-				"resource":               w.opts.spec.TypeName,
+				"resource":               w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -532,7 +534,7 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping MoveState", map[string]any{
-				"resource":               w.opts.spec.TypeName,
+				"resource":               w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -546,7 +548,7 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 }
 
 func (w *wrappedResource) IdentitySchema(ctx context.Context, req resource.IdentitySchemaRequest, resp *resource.IdentitySchemaResponse) {
-	if len(w.opts.spec.Identity.Attributes) > 0 {
-		resp.IdentitySchema = identity.NewIdentitySchema(w.opts.spec.Identity)
+	if len(w.spec.Identity.Attributes) > 0 {
+		resp.IdentitySchema = identity.NewIdentitySchema(w.spec.Identity)
 	}
 }
