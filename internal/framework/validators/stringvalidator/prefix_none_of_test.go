@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package validators_test
+package stringvalidator_test
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 )
 
 func TestPrefixNoneOfValidator(t *testing.T) {
@@ -74,7 +74,7 @@ func TestPrefixNoneOfValidator(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			validators.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(context.TODO(), req, &res)
+			tfstringvalidator.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(context.TODO(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -106,7 +106,7 @@ func TestPrefixNoneOfValidator_Description(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			v := validators.PrefixNoneOf(test.in...)
+			v := tfstringvalidator.PrefixNoneOf(test.in...)
 
 			got := v.MarkdownDescription(context.Background())
 
