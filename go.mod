@@ -221,6 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.9
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.5
@@ -801,6 +802,8 @@ replace github.com/aws/aws-sdk-go-v2/service/s3control => /Users/kewbank/Downloa
 replace github.com/aws/aws-sdk-go-v2/service/s3outposts => /Users/kewbank/Downloads/aws-sdk-go-v2/service/s3outposts
 
 replace github.com/aws/aws-sdk-go-v2/service/s3tables => /Users/kewbank/Downloads/aws-sdk-go-v2/service/s3tables
+
+replace github.com/aws/aws-sdk-go-v2/service/s3vectors => /Users/kewbank/Downloads/aws-sdk-go-v2/service/s3vectors
 
 replace github.com/aws/aws-sdk-go-v2/service/sagemaker => /Users/kewbank/Downloads/aws-sdk-go-v2/service/sagemaker
 
