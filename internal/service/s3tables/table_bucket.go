@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -80,9 +81,9 @@ func (r *tableBucketResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringMustContainLowerCaseLettersNumbersHypens,
-					stringMustStartWithLetterOrNumber,
-					stringMustEndWithLetterOrNumber,
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHypens,
+					tfstringvalidator.StartsWithLetterOrNumber,
+					tfstringvalidator.EndsWithLetterOrNumber,
 					validators.PrefixNoneOf(
 						"xn--",
 						"sthree-",
