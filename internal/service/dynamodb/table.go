@@ -1290,7 +1290,9 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
 		if err := deleteReplicas(ctx, conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
-			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") {
+			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
+			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
 		}
