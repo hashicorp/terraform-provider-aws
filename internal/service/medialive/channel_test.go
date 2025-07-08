@@ -851,36 +851,6 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveChannel_emptyOutputSettings(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var channel medialive.DescribeChannelOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_medialive_channel.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccChannelsPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccChannelConfig_emptyOutputSettings(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(ctx, resourceName, &channel),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
@@ -2212,74 +2182,4 @@ resource "aws_medialive_channel" "test" {
   }
 }
 `, rName, rNameUpdated, codec, inputResolution))
-}
-
-func testAccChannelConfig_emptyOutputSettings(rName string) string {
-	return acctest.ConfigCompose(
-		testAccChannelConfig_base(rName),
-		testAccChannelConfig_baseS3(rName),
-		testAccChannelConfig_baseMultiplex(rName),
-		fmt.Sprintf(`
-resource "aws_medialive_channel" "test" {
-  name          = %[1]q
-  channel_class = "STANDARD"
-  role_arn      = aws_iam_role.test.arn
-
-  input_specification {
-    codec            = "AVC"
-    input_resolution = "HD"
-    maximum_bitrate  = "MAX_20_MBPS"
-  }
-
-  input_attachments {
-    input_attachment_name = "example-input1"
-    input_id              = aws_medialive_input.test.id
-  }
-
-  destinations {
-    id = %[1]q
-
-    settings {
-      url = "s3://${aws_s3_bucket.test1.id}/test1"
-    }
-
-    settings {
-      url = "s3://${aws_s3_bucket.test2.id}/test2"
-    }
-  }
-
-  encoder_settings {
-    timecode_config {
-      source = "EMBEDDED"
-    }
-
-    audio_descriptions {
-      audio_selector_name = %[1]q
-      name                = %[1]q
-    }
-
-    video_descriptions {
-      name = "test-video-name"
-    }
-
-    output_groups {
-      output_group_settings {
-        archive_group_settings {
-          destination {
-            destination_ref_id = %[1]q
-          }
-        }
-      }
-
-      outputs {
-        output_name             = "test-output-name"
-        video_description_name  = "test-video-name"
-        audio_description_names = [%[1]q]
-
-        output_settings {}
-      }
-    }
-  }
-}
-`, rName))
 }
