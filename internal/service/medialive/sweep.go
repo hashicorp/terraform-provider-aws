@@ -156,7 +156,7 @@ func sweepInputSecurityGroups(region string) error {
 			id := aws.ToString(group.Id)
 			log.Printf("[INFO] Deleting MediaLive Input Security Group: %s", id)
 
-			r := ResourceInputSecurityGroup()
+			r := resourceInputSecurityGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 

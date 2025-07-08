@@ -5,10 +5,12 @@ package medialive
 
 // Exports for use in tests only.
 var (
-	ResourceChannel          = resourceChannel
-	ResourceMultiplexProgram = newMultiplexProgramResource
+	ResourceChannel            = resourceChannel
+	ResourceInputSecurityGroup = resourceInputSecurityGroup
+	ResourceMultiplexProgram   = newMultiplexProgramResource
 
-	FindChannelByID          = findChannelByID
-	FindMultiplexProgramByID = findMultiplexProgramByID
-	ParseMultiplexProgramID  = parseMultiplexProgramID
+	FindChannelByID            = findChannelByID
+	FindInputSecurityGroupByID = findInputSecurityGroupByID
+	FindMultiplexProgramByID   = findMultiplexProgramByID
+	ParseMultiplexProgramID    = parseMultiplexProgramID
 )

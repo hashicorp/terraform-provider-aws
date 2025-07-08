@@ -66,7 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInputSecurityGroup,
+			Factory:  resourceInputSecurityGroup,
 			TypeName: "aws_medialive_input_security_group",
 			Name:     "Input Security Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
