@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3vectors_vector_bucket", name="VectorBucket")
@@ -38,6 +40,13 @@ type vectorBucketResource struct {
 func (r *vectorBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrCreationTime: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"vector_bucket_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -78,8 +87,19 @@ func (r *vectorBucketResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	output, err := findVectorBucketByName(ctx, conn, name)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Vector Bucket (%s)", name), err.Error())
+
+		return
+	}
+
 	// Set values for unknowns.
-	data.VectorBucketARN = fwflex.StringValueToFramework(ctx, "arn:aws:s3vectors")
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -114,6 +134,8 @@ func (r *vectorBucketResource) Read(ctx context.Context, request resource.ReadRe
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *vectorBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -146,7 +168,20 @@ func findVectorBucketByARN(ctx context.Context, conn *s3vectors.Client, arn stri
 	input := s3vectors.GetVectorBucketInput{
 		VectorBucketArn: aws.String(arn),
 	}
-	output, err := conn.GetVectorBucket(ctx, &input)
+
+	return findVectorBucket(ctx, conn, &input)
+}
+
+func findVectorBucketByName(ctx context.Context, conn *s3vectors.Client, name string) (*awstypes.VectorBucket, error) {
+	input := s3vectors.GetVectorBucketInput{
+		VectorBucketName: aws.String(name),
+	}
+
+	return findVectorBucket(ctx, conn, &input)
+}
+
+func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vectors.GetVectorBucketInput) (*awstypes.VectorBucket, error) {
+	output, err := conn.GetVectorBucket(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -168,6 +203,7 @@ func findVectorBucketByARN(ctx context.Context, conn *s3vectors.Client, arn stri
 
 type vectorBucketResourceModel struct {
 	framework.WithRegionModel
-	VectorBucketARN  types.String `tfsdk:"vector_bucket_arn"`
-	VectorBucketName types.String `tfsdk:"vector_bucket_name"`
+	CreationTime     timetypes.RFC3339 `tfsdk:"creation_time"`
+	VectorBucketARN  types.String      `tfsdk:"vector_bucket_arn"`
+	VectorBucketName types.String      `tfsdk:"vector_bucket_name"`
 }

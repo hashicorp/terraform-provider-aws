@@ -34,6 +34,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `creation_time` - Date and time when the vector bucket was created.
 * `vector_bucket_arn` - ARN of the vector bucket.
 
 ## Import
