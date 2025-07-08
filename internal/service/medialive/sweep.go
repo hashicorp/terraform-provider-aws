@@ -112,7 +112,7 @@ func sweepInputs(region string) error {
 			id := aws.ToString(input.Id)
 			log.Printf("[INFO] Deleting MediaLive Input: %s", id)
 
-			r := ResourceInput()
+			r := resourceInput()
 			d := r.Data(nil)
 			d.SetId(id)
 

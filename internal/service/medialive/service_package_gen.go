@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInput,
+			Factory:  resourceInput,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
