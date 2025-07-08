@@ -163,8 +163,8 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
-	data.ApplicationARN = fwflex.StringToFramework(ctx, output.ApplicationArn)
-	data.ID = fwflex.StringToFramework(ctx, output.ApplicationArn)
+	data.ApplicationARN = data.ARN
+	data.ID = data.ARN
 
 	// Read after create to get computed attributes omitted from the create response.
 	app, err := findApplicationByID(ctx, conn, data.ID.ValueString())
@@ -223,10 +223,11 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+	data.ARN = data.ApplicationARN
 
 	// listTags requires both application and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
-	tags, err := listTags(ctx, conn, data.ApplicationARN.ValueString(), data.InstanceARN.ValueString())
+	tags, err := listTags(ctx, conn, data.ARN.ValueString(), data.InstanceARN.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading SSO Application (%s) tags", data.ID.ValueString()), err.Error())
@@ -274,7 +275,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	// updateTags requires both application and instance ARN, so must be called
 	// explicitly rather than with transparent tagging.
 	if oldTagsAll, newTagsAll := old.TagsAll, new.TagsAll; !newTagsAll.Equal(oldTagsAll) {
-		if err := updateTags(ctx, conn, new.ApplicationARN.ValueString(), new.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
+		if err := updateTags(ctx, conn, new.ARN.ValueString(), new.InstanceARN.ValueString(), oldTagsAll, newTagsAll); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating SSO Application (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
@@ -294,7 +295,7 @@ func (r *applicationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	input := ssoadmin.DeleteApplicationInput{
-		ApplicationArn: fwflex.StringFromFramework(ctx, data.ApplicationARN),
+		ApplicationArn: fwflex.StringFromFramework(ctx, data.ARN),
 	}
 	_, err := conn.DeleteApplication(ctx, &input)
 
