@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -310,24 +311,72 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 }
 
 type wrappedResourceOptions struct {
-	interceptors       interceptorInvocations
 	servicePackageName string
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
 type wrappedResource struct {
-	inner resource.ResourceWithConfigure
-	meta  *conns.AWSClient
-	opts  wrappedResourceOptions
-	spec  *inttypes.ServicePackageFrameworkResource
+	inner        resource.ResourceWithConfigure
+	meta         *conns.AWSClient
+	opts         wrappedResourceOptions
+	spec         *inttypes.ServicePackageFrameworkResource
+	interceptors interceptorInvocations
 }
 
 func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, opts wrappedResourceOptions) resource.ResourceWithConfigure {
+	var isRegionOverrideEnabled bool
+	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, resourceValidateRegion())
+		}
+		interceptors = append(interceptors, resourceDefaultRegion())
+		interceptors = append(interceptors, resourceForceNewIfRegionChanges())
+		interceptors = append(interceptors, resourceSetRegionInState())
+		if spec.Identity.HasInherentRegion() {
+			interceptors = append(interceptors, resourceImportRegionNoDefault())
+		} else {
+			interceptors = append(interceptors, resourceImportRegion())
+		}
+	}
+
+	if !tfunique.IsHandleNil(spec.Tags) {
+		interceptors = append(interceptors, resourceTransparentTagging(spec.Tags))
+	}
+
+	if len(spec.Identity.Attributes) > 0 {
+		interceptors = append(interceptors, newIdentityInterceptor(spec.Identity.Attributes))
+	}
+
 	inner, _ := spec.Factory(context.TODO())
+
+	if spec.Import.WrappedImport {
+		if spec.Import.SetIDAttr {
+			if _, ok := spec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
+				panic(fmt.Sprintf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", spec.TypeName))
+			}
+		}
+		switch v := inner.(type) {
+		case framework.ImportByIdentityer:
+			v.SetIdentitySpec(spec.Identity, spec.Import)
+
+		default:
+			panic(fmt.Sprintf("resource type %s: cannot configure importer", spec.TypeName))
+		}
+	}
 	return &wrappedResource{
-		inner: inner,
-		opts:  opts,
-		spec:  spec,
+		inner:        inner,
+		opts:         opts,
+		spec:         spec,
+		interceptors: interceptors,
 	}
 }
 
@@ -377,7 +426,7 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.resourceSchema(), w.inner.Schema, resourceSchemaHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceSchema(), w.inner.Schema, resourceSchemaHasError, w.meta)(ctx, request, response)
 
 	// Validate the resource's model against the schema.
 	if v, ok := w.inner.(framework.ResourceValidateModel); ok {
@@ -398,7 +447,7 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.resourceCreate(), w.inner.Create, resourceCreateHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceCreate(), w.inner.Create, resourceCreateHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -408,7 +457,7 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.resourceRead(), w.inner.Read, resourceReadHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceRead(), w.inner.Read, resourceReadHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -418,7 +467,7 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.resourceUpdate(), w.inner.Update, resourceUpdateHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceUpdate(), w.inner.Update, resourceUpdateHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -428,7 +477,7 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.resourceDelete(), w.inner.Delete, resourceDeleteHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceDelete(), w.inner.Delete, resourceDeleteHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
@@ -454,7 +503,7 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 		}
 
 		ctx = importer.Context(ctx, w.meta)
-		interceptedHandler(w.opts.interceptors.resourceImportState(), v.ImportState, resourceImportStateHasError, w.meta)(ctx, request, response)
+		interceptedHandler(w.interceptors.resourceImportState(), v.ImportState, resourceImportStateHasError, w.meta)(ctx, request, response)
 
 		return
 	}
@@ -478,7 +527,7 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
 		f = v.ModifyPlan
 	}
-	interceptedHandler(w.opts.interceptors.resourceModifyPlan(), f, resourceModifyPlanHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.resourceModifyPlan(), f, resourceModifyPlanHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
