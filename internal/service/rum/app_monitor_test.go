@@ -443,6 +443,7 @@ func testAccAppMonitorConfig_deobfuscationConfiguration(rName, status string) st
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -477,7 +478,7 @@ data "aws_iam_policy_document" "test" {
     condition {
       test     = "StringEquals"
       variable = "aws:SourceArn"
-      values   = ["arn:aws:rum:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:appmonitor/%[1]s"]
+      values   = ["arn:${data.aws_partition.current.partition}:rum:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:appmonitor/%[1]s"]
     }
   }
 }
