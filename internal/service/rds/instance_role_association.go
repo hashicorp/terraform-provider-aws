@@ -148,7 +148,6 @@ func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.Resour
 		FeatureName:          aws.String(d.Get("feature_name").(string)),
 		RoleArn:              aws.String(roleARN),
 	}
-
 	_, err = tfresource.RetryWhenIsA[*types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.RemoveRoleFromDBInstance(ctx, &input)
 	})
