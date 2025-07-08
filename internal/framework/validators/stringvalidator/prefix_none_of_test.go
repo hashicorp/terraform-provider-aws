@@ -4,7 +4,6 @@
 package stringvalidator_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -74,7 +73,7 @@ func TestPrefixNoneOfValidator(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			tfstringvalidator.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(context.TODO(), req, &res)
+			tfstringvalidator.PrefixNoneOf(test.prefixNoneOfValues...).ValidateString(t.Context(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -108,7 +107,7 @@ func TestPrefixNoneOfValidator_Description(t *testing.T) {
 
 			v := tfstringvalidator.PrefixNoneOf(test.in...)
 
-			got := v.MarkdownDescription(context.Background())
+			got := v.MarkdownDescription(t.Context())
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected difference: %s", diff)
