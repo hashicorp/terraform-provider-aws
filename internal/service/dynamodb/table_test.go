@@ -4165,6 +4165,61 @@ func TestAccDynamoDBTable_Replica_MRSC_CreateEventuallyConsistent(t *testing.T) 
 	})
 }
 
+// Test creation before MRSC and upgrade shows no diff.ß
+func TestAccDynamoDBTable_Replica_upgradeV6_2_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		CheckDestroy: testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.2.0",
+					},
+				},
+				Config: testAccTableConfig_replica2_NoMultipleRegionProvider(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTableConfig_replica2_NoMultipleRegionProvider(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_tableClassInfrequentAccess(t *testing.T) {
 	ctx := acctest.Context(t)
 	var table awstypes.TableDescription
@@ -7203,4 +7258,29 @@ resource "aws_dynamodb_table" "test_restore" {
   }
 }
 `, rName))
+}
+
+func testAccTableConfig_replica2_NoMultipleRegionProvider(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = %[2]q
+  }
+
+  replica {
+    region_name = %[3]q
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.ThirdRegion())
 }
