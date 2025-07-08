@@ -45,7 +45,7 @@ func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConf
 
 type trustedTokenIssuerResource struct {
 	framework.ResourceWithModel[trustedTokenIssuerResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *trustedTokenIssuerResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
