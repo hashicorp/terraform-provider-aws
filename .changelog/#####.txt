@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_cloudfront_anycast_ip_list
+```
