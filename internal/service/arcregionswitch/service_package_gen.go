@@ -4,6 +4,7 @@ package arcregionswitch
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -31,7 +32,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
-	return []*inttypes.ServicePackageSDKResource{}
+	return []*inttypes.ServicePackageSDKResource{
+		{
+			Factory:  ResourcePlan,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
