@@ -59,6 +59,32 @@ resource "aws_emrserverless_application" "example" {
 }
 ```
 
+### Monitoring Configuration Usage
+
+```terraform
+resource "aws_emrserverless_application" "example" {
+  name          = "example"
+  release_label = "emr-6.8.0"
+  type          = "spark"
+
+  monitoring_configuration {
+    cloudwatch_logging_configuration {
+      enabled                = true
+      log_group_name         = "/aws/emr-serverless/example"
+      log_stream_name_prefix = "spark-logs"
+      log_types = {
+        "SPARK_DRIVER"   = "STDOUT,STDERR"
+        "SPARK_EXECUTOR" = "STDOUT"
+      }
+    }
+
+    s3_monitoring_configuration {
+      log_uri = "s3://my-bucket/logs/"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -71,6 +97,7 @@ This resource supports the following arguments:
 * `initial_capacity` - (Optional) The capacity to initialize when the application is created.
 * `interactive_configuration` - (Optional) Enables the interactive use cases to use when running an application.
 * `maximum_capacity` - (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
+* `monitoring_configuration` - (Optional) The configuration setting for monitoring.
 * `name` - (Required) The name of the application.
 * `network_configuration` - (Optional) The network configuration for customer VPC connectivity.
 * `release_label` - (Required) The EMR release version associated with the application.
@@ -96,6 +123,24 @@ This resource supports the following arguments:
 * `cpu` - (Required) The maximum allowed CPU for an application.
 * `disk` - (Optional) The maximum allowed disk for an application.
 * `memory` - (Required) The maximum allowed resources for an application.
+
+### monitoring_configuration Arguments
+
+* `cloudwatch_logging_configuration` - (Optional) The Amazon CloudWatch configuration for monitoring logs.
+* `s3_monitoring_configuration` - (Optional) The Amazon S3 configuration for monitoring log publishing.
+
+#### cloudwatch_logging_configuration Arguments
+
+* `enabled` - (Required) Enables CloudWatch logging.
+* `log_group_name` - (Optional) The name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
+* `log_stream_name_prefix` - (Optional) Prefix for the CloudWatch log stream name.
+* `encryption_key_arn` - (Optional) The AWS Key Management Service (KMS) key ARN to encrypt the logs that you store in CloudWatch Logs.
+* `log_types` - (Optional) The types of logs that you want to publish to CloudWatch. If you don't specify any log types, driver STDOUT and STDERR logs will be published to CloudWatch Logs by default. Specify as a map where keys are worker types (`SPARK_DRIVER`, `SPARK_EXECUTOR`, `HIVE_DRIVER`, `TEZ_TASK`) and values are comma-separated log types (`STDOUT`, `STDERR`, `HIVE_LOG`, `TEZ_AM`, `SYSTEM_LOGS`).
+
+#### s3_monitoring_configuration Arguments
+
+* `log_uri` - (Optional) The Amazon S3 destination URI for log publishing.
+* `encryption_key_arn` - (Optional) The KMS key ARN to encrypt the logs published to the given Amazon S3 destination.
 
 ### network_configuration Arguments
 

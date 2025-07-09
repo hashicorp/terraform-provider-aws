@@ -229,6 +229,70 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"monitoring_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_logging_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"log_group_name": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"log_stream_name_prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 512),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"log_types": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"s3_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_uri": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 10280),
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrType: {
@@ -286,6 +350,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -353,6 +421,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
+	if err := d.Set("monitoring_configuration", flattenMonitoringConfiguration(application.MonitoringConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monitoring_configuration: %s", err)
+	}
+
 	setTagsOut(ctx, application.Tags)
 
 	return diags
@@ -402,6 +474,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("release_label"); ok {
 			input.ReleaseLabel = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("monitoring_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.MonitoringConfiguration = expandMonitoringConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.UpdateApplication(ctx, input)
@@ -859,6 +935,176 @@ func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[stri
 
 	if v := apiObject.Memory; v != nil {
 		tfMap["memory"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandMonitoringConfiguration(tfMap map[string]any) *types.MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.MonitoringConfiguration{}
+
+	if v, ok := tfMap["cloudwatch_logging_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.CloudWatchLoggingConfiguration = expandCloudWatchLoggingConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["s3_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.S3MonitoringConfiguration = expandS3MonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenMonitoringConfiguration(apiObject *types.MonitoringConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.CloudWatchLoggingConfiguration; v != nil {
+		tfMap["cloudwatch_logging_configuration"] = []any{flattenCloudWatchLoggingConfiguration(v)}
+	}
+
+	if v := apiObject.S3MonitoringConfiguration; v != nil {
+		tfMap["s3_monitoring_configuration"] = []any{flattenS3MonitoringConfiguration(v)}
+	}
+
+	return []any{tfMap}
+}
+
+func expandCloudWatchLoggingConfiguration(tfMap map[string]any) *types.CloudWatchLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.CloudWatchLoggingConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_stream_name_prefix"].(string); ok && v != "" {
+		apiObject.LogStreamNamePrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["log_types"].(map[string]any); ok && len(v) > 0 {
+		apiObject.LogTypes = expandLogTypes(v)
+	}
+
+	return apiObject
+}
+
+func flattenCloudWatchLoggingConfiguration(apiObject *types.CloudWatchLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap["log_group_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogStreamNamePrefix; v != nil {
+		tfMap["log_stream_name_prefix"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.LogTypes; v != nil {
+		tfMap["log_types"] = flattenLogTypes(v)
+	}
+
+	return tfMap
+}
+
+func expandLogTypes(tfMap map[string]any) map[string][]string {
+	if tfMap == nil {
+		return nil
+	}
+
+	configs := make(map[string][]string)
+
+	for k, v := range tfMap {
+		if str, ok := v.(string); ok {
+			// Split comma-separated values into a slice
+			values := strings.Split(str, ",")
+			for i, val := range values {
+				values[i] = strings.TrimSpace(val)
+			}
+			configs[k] = values
+		}
+	}
+
+	return configs
+}
+
+func flattenLogTypes(apiObject map[string][]string) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	for k, v := range apiObject {
+		if len(v) > 0 {
+			// Join the slice with commas for storage in Terraform state
+			tfMap[k] = strings.Join(v, ",")
+		}
+	}
+
+	return tfMap
+}
+
+func expandS3MonitoringConfiguration(tfMap map[string]any) *types.S3MonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.S3MonitoringConfiguration{}
+
+	if v, ok := tfMap["log_uri"].(string); ok && v != "" {
+		apiObject.LogUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3MonitoringConfiguration(apiObject *types.S3MonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogUri; v != nil {
+		tfMap["log_uri"] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
