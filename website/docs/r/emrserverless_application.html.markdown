@@ -64,7 +64,7 @@ resource "aws_emrserverless_application" "example" {
 ```terraform
 resource "aws_emrserverless_application" "example" {
   name          = "example"
-  release_label = "emr-6.8.0"
+  release_label = "emr-7.1.0"
   type          = "spark"
 
   monitoring_configuration {
@@ -80,6 +80,14 @@ resource "aws_emrserverless_application" "example" {
 
     s3_monitoring_configuration {
       log_uri = "s3://my-bucket/logs/"
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = true
+    }
+
+    prometheus_monitoring_configuration {
+      remote_write_url = "https://prometheus-remote-write-endpoint.example.com/api/v1/write"
     }
   }
 }
@@ -128,6 +136,8 @@ This resource supports the following arguments:
 
 * `cloudwatch_logging_configuration` - (Optional) The Amazon CloudWatch configuration for monitoring logs.
 * `s3_monitoring_configuration` - (Optional) The Amazon S3 configuration for monitoring log publishing.
+* `managed_persistence_monitoring_configuration` - (Optional) The managed log persistence configuration for monitoring logs.
+* `prometheus_monitoring_configuration` - (Optional) The Prometheus configuration for monitoring metrics.
 
 #### cloudwatch_logging_configuration Arguments
 
@@ -141,6 +151,15 @@ This resource supports the following arguments:
 
 * `log_uri` - (Optional) The Amazon S3 destination URI for log publishing.
 * `encryption_key_arn` - (Optional) The KMS key ARN to encrypt the logs published to the given Amazon S3 destination.
+
+#### managed_persistence_monitoring_configuration Arguments
+
+* `enabled` - (Optional) Enables managed log persistence for monitoring logs.
+* `encryption_key_arn` - (Optional) The KMS key ARN to encrypt the logs stored in managed persistence.
+
+#### prometheus_monitoring_configuration Arguments
+
+* `remote_write_url` - (Optional) The Prometheus remote write URL for sending metrics. Only supported in EMR 7.1.0 and later versions.
 
 ### network_configuration Arguments
 
