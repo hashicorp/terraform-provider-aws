@@ -20,7 +20,7 @@ val services = mapOf(
     "apprunner" to ServiceSpec("App Runner"),
     "appstream" to ServiceSpec("AppStream 2.0", vpcLock = true, parallelismOverride = 10),
     "appsync" to ServiceSpec("AppSync"),
-    "arcregionswitch" to ServiceSpec("Application Resilience Controller Region Switch"),
+    "arcregionswitch" to ServiceSpec("Application Recovery Controller Region Switch"),
     "arczonalshift" to ServiceSpec("Application Recovery Controller Zonal Shift"),
     "athena" to ServiceSpec("Athena"),
     "auditmanager" to ServiceSpec("Audit Manager"),
