@@ -4,7 +4,6 @@
 package tags
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -230,7 +229,7 @@ func TestTagMapEquality(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			equals := test.val1.Equal(test.val2)
 
