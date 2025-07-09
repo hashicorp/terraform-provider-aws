@@ -91,7 +91,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource(t *t
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

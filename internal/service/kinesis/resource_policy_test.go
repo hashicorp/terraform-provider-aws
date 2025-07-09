@@ -81,7 +81,7 @@ func TestAccKinesisResourcePolicy_Identity_ExistingResource(t *testing.T) {
 	resourceName := "aws_kinesis_resource_policy.test"
 	providers := make(map[string]*schema.Provider)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

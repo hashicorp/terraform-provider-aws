@@ -332,7 +332,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 	commonName := acctest.RandomDomain()
 	certificateDomain := commonName.RandomSubdomain()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
