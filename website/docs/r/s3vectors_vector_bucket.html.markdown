@@ -44,12 +44,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_s3vectors_vector_bucket.example
-  id = "arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket"
+  id = "TODO"
 }
 ```
 
 Using `terraform import`, import S3 Vectors Vector Bucket using the `vector_bucket_arn`. For example:
 
 ```console
-% terraform import aws_s3vectors_vector_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
+% terraform import aws_s3vectors_vector_bucket.example TODO
 ```

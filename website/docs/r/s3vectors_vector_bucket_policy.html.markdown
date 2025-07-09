@@ -55,5 +55,5 @@ import {
 Using `terraform import`, import S3 Vectors Vector Bucket policy using the `vector_bucket_arn`. For example:
 
 ```console
-% terraform import aws_s3vectors_vector_bucket.example TODO
+% terraform import aws_s3vectors_vector_bucket_policy.example TODO
 ```
