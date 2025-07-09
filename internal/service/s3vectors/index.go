@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +49,26 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"data_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DataType](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"dimension": schema.Int32Attribute{
+				Required: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.RequiresReplace(),
+				},
+			},
+			"distance_metric": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DistanceMetric](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"index_arn": schema.StringAttribute{
@@ -211,8 +233,11 @@ func findIndex(ctx context.Context, conn *s3vectors.Client, input *s3vectors.Get
 
 type indexResourceModel struct {
 	framework.WithRegionModel
-	CreationTime     timetypes.RFC3339 `tfsdk:"creation_time"`
-	IndexARN         types.String      `tfsdk:"index_arn"`
-	IndexName        types.String      `tfsdk:"index_name"`
-	VectorBucketName types.String      `tfsdk:"vector_bucket_name"`
+	CreationTime     timetypes.RFC3339                           `tfsdk:"creation_time"`
+	DataType         fwtypes.StringEnum[awstypes.DataType]       `tfsdk:"data_type"`
+	Dimension        types.Int32                                 `tfsdk:"dimension"`
+	DistanceMetric   fwtypes.StringEnum[awstypes.DistanceMetric] `tfsdk:"distance_metric"`
+	IndexARN         types.String                                `tfsdk:"index_arn"`
+	IndexName        types.String                                `tfsdk:"index_name"`
+	VectorBucketName types.String                                `tfsdk:"vector_bucket_name"`
 }

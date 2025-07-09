@@ -18,6 +18,10 @@ Terraform resource for managing an Amazon S3 Vectors Index.
 resource "aws_s3vectors_index" "example" {
   index_name         = "example-index"
   vector_bucket_name = aws_s3vectors_vector_bucket.example.vector_bucket_name
+
+  data_type       = "float32"
+  dimension       = 2
+  distance_metric = "euclidean"
 }
 ```
 
@@ -25,8 +29,11 @@ resource "aws_s3vectors_index" "example" {
 
 The following arguments are required:
 
-* `index_name` - (Required, Forces new resource) Name of the index.
-* `vector_bucket_name` - (Required, Forces new resource) Name of the vector bucket.
+* `data_type` - (Required, Forces new resource) Data type of the vectors to be inserted into the vector index. Valid values: `float32`.
+* `dimension` - (Required, Forces new resource) Dimensions of the vectors to be inserted into the vector index.
+* `distance_metric` - (Required, Forces new resource) Distance metric to be used for similarity search. Valid values: `cosine`, `euclidean`.
+* `index_name` - (Required, Forces new resource) Name of the vector index.
+* `vector_bucket_name` - (Required, Forces new resource) Name of the vector bucket for the vector index.
 
 The following arguments are optional:
 
@@ -36,8 +43,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `creation_time` - Date and time when the index was created.
-* `index_arn` - ARN of the index.
+* `creation_time` - Date and time when the vector index was created.
+* `index_arn` - ARN of the vector index.
 
 ## Import
 
