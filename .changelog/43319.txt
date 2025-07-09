@@ -1,0 +1,3 @@
+```release-note:new-data-source
+aws_egress_only_internet_gateway
+```
