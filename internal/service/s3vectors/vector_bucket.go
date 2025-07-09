@@ -29,6 +29,7 @@ import (
 )
 
 // @FrameworkResource("aws_s3vectors_vector_bucket", name="Vector Bucket")
+// @ArnIdentity("vector_bucket_arn")
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 
@@ -38,6 +39,7 @@ func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, e
 type vectorBucketResource struct {
 	framework.ResourceWithModel[vectorBucketResourceModel]
 	framework.WithNoUpdate
+	framework.WithImportByARN
 }
 
 func (r *vectorBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

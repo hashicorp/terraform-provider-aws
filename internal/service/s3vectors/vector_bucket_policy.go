@@ -25,6 +25,7 @@ import (
 )
 
 // @FrameworkResource("aws_s3vectors_vector_bucket_policy", name="Vector Bucket Policy")
+// @ArnIdentity("vector_bucket_arn")
 func newVectorBucketPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketPolicyResource{}
 
@@ -33,6 +34,7 @@ func newVectorBucketPolicyResource(context.Context) (resource.ResourceWithConfig
 
 type vectorBucketPolicyResource struct {
 	framework.ResourceWithModel[vectorBucketPolicyResourceModel]
+	framework.WithImportByARN
 }
 
 func (r *vectorBucketPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
