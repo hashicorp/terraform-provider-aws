@@ -9521,3 +9521,38 @@ service "evs" {
   doc_prefix               = ["evs_"]
   brand                    = "Amazon"
 }
+
+service "arcregionswitch" {
+  cli_v2_command {
+    aws_cli_v2_command           = "arc-region-switch"
+    aws_cli_v2_command_no_dashes = "arcregionswitch"
+  }
+
+  go_packages {
+    v1_package = ""
+    v2_package = "arcregionswitch"
+  }
+
+  sdk {
+    id             = "ARC Region Switch"
+    client_version = 2
+    arn_namespace  = "arcregionswitch"
+  }
+
+  names {
+    provider_name_upper = "ARCRegionSwitch"
+    human_friendly      = "Application Resilience Controller Region Switch"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPlans"
+  }
+  
+  resource_prefix {
+    correct = "aws_arcregionswitch_"
+  }
+  
+  provider_package_correct = "arcregionswitch"
+  doc_prefix               = ["arcregionswitch_"]
+  brand                    = "AWS"
+}
