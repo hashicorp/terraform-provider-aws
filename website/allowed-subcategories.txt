@@ -17,8 +17,8 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
+Application Recovery Controller Region Switch
 Application Recovery Controller Zonal Shift
-Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
