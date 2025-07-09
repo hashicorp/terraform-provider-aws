@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix `runtime error: invalid memory address or nil pointer dereference` panics for numerous resource types when modifying `tags` ([#43324](https://github.com/hashicorp/terraform-provider-aws/issues/43324))
 * resource/aws_bedrockagent_agent_action_group: Add missing prepare agent call when deleting an action group ([#43232](https://github.com/hashicorp/terraform-provider-aws/issues/43232))
 * resource/aws_bedrockagent_agent_action_group: Retry `operation can't be performed on Agent when it is in Preparing state.` errors during agent action group base creation, update, and deletion. ([#43232](https://github.com/hashicorp/terraform-provider-aws/issues/43232))
 * resource/aws_bedrockagent_agent_knowledge_base_association: Add missing prepare agent call when deleting a knowledge base association ([#43232](https://github.com/hashicorp/terraform-provider-aws/issues/43232))
