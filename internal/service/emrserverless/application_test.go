@@ -838,6 +838,8 @@ func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.log_group_name", "/aws/emr-serverless/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
 				),
@@ -854,6 +856,10 @@ func TestAccEMRServerlessApplication_monitoringConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.cloudwatch_logging_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.managed_persistence_monitoring_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.prometheus_monitoring_configuration.0.remote_write_url"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitoring_configuration.0.s3_monitoring_configuration.0.log_uri"),
 				),
@@ -875,7 +881,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-6.8.0"
+  release_label = "emr-7.1.0"
   type          = "spark"
 
   monitoring_configuration {
@@ -887,6 +893,10 @@ resource "aws_emrserverless_application" "test" {
         "SPARK_DRIVER" = "STDOUT,STDERR"
         "SPARK_EXECUTOR" = "STDOUT"
       }
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = true
     }
 
     s3_monitoring_configuration {
@@ -910,13 +920,21 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_emrserverless_application" "test" {
   name          = %[1]q
-  release_label = "emr-6.8.0"
+  release_label = "emr-7.1.0"
   type          = "spark"
 
   monitoring_configuration {
     cloudwatch_logging_configuration {
       enabled = false
       log_group_name = aws_cloudwatch_log_group.test.name
+    }
+
+    managed_persistence_monitoring_configuration {
+      enabled = false
+    }
+
+    prometheus_monitoring_configuration {
+      remote_write_url = "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-12345678-1234-1234-1234-123456789012/api/v1/remote_write"
     }
 
     s3_monitoring_configuration {

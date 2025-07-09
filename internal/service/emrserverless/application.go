@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -266,6 +267,47 @@ func resourceApplication() *schema.Resource {
 										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"managed_persistence_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"encryption_key_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"prometheus_monitoring_configuration": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"remote_write_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 10280),
+											validation.StringMatch(
+												regexp.MustCompile(`^https://aps-workspaces\.([a-z]{2}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
+											),
+										),
 									},
 								},
 							},
@@ -955,6 +997,14 @@ func expandMonitoringConfiguration(tfMap map[string]any) *types.MonitoringConfig
 		apiObject.S3MonitoringConfiguration = expandS3MonitoringConfiguration(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["managed_persistence_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ManagedPersistenceMonitoringConfiguration = expandManagedPersistenceMonitoringConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["prometheus_monitoring_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PrometheusMonitoringConfiguration = expandPrometheusMonitoringConfiguration(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -971,6 +1021,14 @@ func flattenMonitoringConfiguration(apiObject *types.MonitoringConfiguration) []
 
 	if v := apiObject.S3MonitoringConfiguration; v != nil {
 		tfMap["s3_monitoring_configuration"] = []any{flattenS3MonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.ManagedPersistenceMonitoringConfiguration; v != nil {
+		tfMap["managed_persistence_monitoring_configuration"] = []any{flattenManagedPersistenceMonitoringConfiguration(v)}
+	}
+
+	if v := apiObject.PrometheusMonitoringConfiguration; v != nil {
+		tfMap["prometheus_monitoring_configuration"] = []any{flattenPrometheusMonitoringConfiguration(v)}
 	}
 
 	return []any{tfMap}
@@ -1105,6 +1163,70 @@ func flattenS3MonitoringConfiguration(apiObject *types.S3MonitoringConfiguration
 
 	if v := apiObject.EncryptionKeyArn; v != nil {
 		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandManagedPersistenceMonitoringConfiguration(tfMap map[string]any) *types.ManagedPersistenceMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ManagedPersistenceMonitoringConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["encryption_key_arn"].(string); ok && v != "" {
+		apiObject.EncryptionKeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenManagedPersistenceMonitoringConfiguration(apiObject *types.ManagedPersistenceMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EncryptionKeyArn; v != nil {
+		tfMap["encryption_key_arn"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func expandPrometheusMonitoringConfiguration(tfMap map[string]any) *types.PrometheusMonitoringConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PrometheusMonitoringConfiguration{}
+
+	if v, ok := tfMap["remote_write_url"].(string); ok && v != "" {
+		apiObject.RemoteWriteUrl = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPrometheusMonitoringConfiguration(apiObject *types.PrometheusMonitoringConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.RemoteWriteUrl; v != nil {
+		tfMap["remote_write_url"] = aws.ToString(v)
 	}
 
 	return tfMap
