@@ -122,6 +122,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 			"studioWebPortalSettings_hiddenAppTypes":   testAccUserProfile_studioWebPortalSettings_hiddenAppTypes,
 			"studioWebPortalSettings_hiddenMlTools":    testAccUserProfile_studioWebPortalSettings_hiddenMlTools,
+			"Identity":                                 testAccSageMakerUserProfile_IdentitySerial,
 		},
 		"Workforce": {
 			acctest.CtDisappears: testAccWorkforce_disappears,
