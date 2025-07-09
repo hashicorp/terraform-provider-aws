@@ -41,8 +41,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Domain": {
 			acctest.CtBasic:                            testAccDomain_basic,
-			acctest.CtDisappears:                       testAccDomain_tags,
-			"tags":                                     testAccDomain_disappears,
+			acctest.CtDisappears:                       testAccDomain_disappears,
+			"tags":                                     testAccDomain_tags,
 			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage":          testAccDomain_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
@@ -97,8 +97,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Space": {
 			acctest.CtBasic:            testAccSpace_basic,
-			acctest.CtDisappears:       testAccSpace_tags,
-			"tags":                     testAccSpace_disappears,
+			acctest.CtDisappears:       testAccSpace_disappears,
+			"tags":                     testAccSpace_tags,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
@@ -111,8 +111,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"UserProfile": {
 			acctest.CtBasic:                            testAccUserProfile_basic,
-			acctest.CtDisappears:                       testAccUserProfile_tags,
-			"tags":                                     testAccUserProfile_disappears,
+			acctest.CtDisappears:                       testAccUserProfile_disappears,
+			"tags":                                     testAccUserProfile_tags,
 			"tensorboardAppSettings":                   testAccUserProfile_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage":          testAccUserProfile_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":                 testAccUserProfile_kernelGatewayAppSettings,
