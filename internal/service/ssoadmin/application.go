@@ -34,6 +34,7 @@ import (
 // @Tags
 // @ArnIdentity(identityDuplicateAttributes="id;application_arn")
 // @ArnFormat(global=true)
+// @IdentityFix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssoadmin;ssoadmin.DescribeApplicationOutput")
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
