@@ -75,7 +75,7 @@ func TestTagMapEquality(t *testing.T) {
 			semanticEquals: false,
 		},
 
-		"set-missing": {
+		"set-missing-different-lengths": {
 			val1: newMapValueMust(
 				map[string]attr.Value{
 					"key1": types.StringValue("value1"),
@@ -84,6 +84,23 @@ func TestTagMapEquality(t *testing.T) {
 			),
 			val2: newMapValueMust(
 				map[string]attr.Value{
+					"key2": types.StringValue("value2"),
+				},
+			),
+			equals:         false,
+			semanticEquals: false,
+		},
+
+		"set-missing-same-lengths": {
+			val1: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			val2: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
 					"key2": types.StringValue("value2"),
 				},
 			),
