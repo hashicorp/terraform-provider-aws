@@ -5,7 +5,7 @@ package cloudfront
 
 // Exports for use in tests only.
 var (
-	ResourceAnycastIPListResource       = newAnycastIPListResource
+	ResourceAnycastIPList               = newAnycastIPListResource
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution

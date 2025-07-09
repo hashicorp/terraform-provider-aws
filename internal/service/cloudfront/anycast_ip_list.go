@@ -33,7 +33,6 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfront_anycast_ip_list", name="Anycast IP List")
-// @ArnIdentity("arn")
 // @Tags(identifierAttribute="arn")
 func newAnycastIPListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anycastIPListResource{}
@@ -43,7 +42,7 @@ func newAnycastIPListResource(context.Context) (resource.ResourceWithConfigure, 
 
 type anycastIPListResource struct {
 	framework.ResourceWithModel[anycastIPListResourceModel]
-	framework.WithImportByIdentity
+	framework.WithImportByID
 }
 
 func (r *anycastIPListResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

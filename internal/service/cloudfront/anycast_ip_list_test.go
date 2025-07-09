@@ -8,10 +8,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,6 +40,19 @@ func TestAccCloudFrontAnycastIPList_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnycastIPListExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("anycast_ips"), knownvalue.ListSizeExact(3)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNRegexp("cloudfront", regexache.MustCompile(`anycast-ip-list/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("etag"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ip_count"), knownvalue.Int32Exact(3)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -44,12 +63,106 @@ func TestAccCloudFrontAnycastIPList_basic(t *testing.T) {
 	})
 }
 
-func testAccAnycastIPListConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudfront_anycast_ip_list" "test" {
-  name = %[1]q
+func TestAccCloudFrontAnycastIPList_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_anycast_ip_list.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnycastIPListConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnycastIPListExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceAnycastIPList, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
 }
-`, rName)
+
+func TestAccCloudFrontAnycastIPList_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_anycast_ip_list.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnycastIPListDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnycastIPListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnycastIPListExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAnycastIPListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnycastIPListExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccAnycastIPListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnycastIPListExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
 }
 
 func testAccCheckAnycastIPListExists(ctx context.Context, n string) resource.TestCheckFunc {
@@ -90,4 +203,40 @@ func testAccCheckAnycastIPListDestroy(ctx context.Context) resource.TestCheckFun
 		}
 		return nil
 	}
+}
+
+func testAccAnycastIPListConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_anycast_ip_list" "test" {
+  name     = %[1]q
+  ip_count = 3
+}
+`, rName)
+}
+
+func testAccAnycastIPListConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_anycast_ip_list" "test" {
+  name     = %[1]q
+  ip_count = 3
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAnycastIPListConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_anycast_ip_list" "test" {
+  name     = %[1]q
+  ip_count = 3
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
