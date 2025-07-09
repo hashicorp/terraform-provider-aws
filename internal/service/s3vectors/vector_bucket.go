@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_s3vectors_vector_bucket", name="VectorBucket")
+// @FrameworkResource("aws_s3vectors_vector_bucket", name="Vector Bucket")
 func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vectorBucketResource{}
 

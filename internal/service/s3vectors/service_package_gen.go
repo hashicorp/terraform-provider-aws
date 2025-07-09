@@ -27,7 +27,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 		{
 			Factory:  newVectorBucketResource,
 			TypeName: "aws_s3vectors_vector_bucket",
-			Name:     "VectorBucket",
+			Name:     "Vector Bucket",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newVectorBucketPolicyResource,
+			TypeName: "aws_s3vectors_vector_bucket_policy",
+			Name:     "Vector Bucket Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
