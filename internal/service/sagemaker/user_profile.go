@@ -1066,7 +1066,6 @@ func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func createUserProfileID(domainID, userProfileName string) string {
 	return domainID + "/" + userProfileName
-
 }
 
 func parseUserProfileID(id string) (string, string, error) {

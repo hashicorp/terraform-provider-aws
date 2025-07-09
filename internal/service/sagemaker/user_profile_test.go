@@ -519,7 +519,6 @@ func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
