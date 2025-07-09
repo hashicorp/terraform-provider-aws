@@ -458,14 +458,16 @@ func TestAccBatchJobDefinition_ContainerProperties_minorUpdate(t *testing.T) {
 				Config: testAccJobDefinitionConfig_containerProperties(rName, "-la"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-definition/{name}:{revision}"), resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-definition/{name}:{revision}"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 				),
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerProperties(rName, "-lah"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-definition/{name}:{revision}"), testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-definition/{name}:{revision}"),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
