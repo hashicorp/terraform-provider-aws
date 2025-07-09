@@ -352,9 +352,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
-					{{ if .MutableIdentity -}}
-						// Resource Identity not supported for Mutable Identity
-					{{ else -}}
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
@@ -381,7 +378,6 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							{{ range .IdentityAttributes -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
 							{{ end }}
-						{{ end -}}
 					{{ end -}}
 				},
 			},
@@ -417,25 +413,21 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				},
 
 				// Step {{ ($step = inc $step) | print  }}: Import block with Resource Identity
-				{{ if .MutableIdentity -}}
-					// Resource Identity not supported for Mutable Identity
-				{{- else -}}
-					{
-						{{ if .UseAlternateAccount -}}
-							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
-						ConfigVariables: config.Variables{ {{ if .Generator }}
-							acctest.CtRName: config.StringVariable(rName),{{ end }}
-							{{ template "AdditionalTfVars" . }}
-						},
-						{{- template "ImportBlockWithResourceIdentityBody" . -}}
-						{{ template "PlannableImportPlanChecks" . }}
-						{{ if ne .PlannableResourceAction "NoOp" -}}
-							ExpectNonEmptyPlan: true,
-						{{ end -}}
+				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . }}
 					},
-				{{- end }}
+					{{- template "ImportBlockWithResourceIdentityBody" . -}}
+					{{ template "PlannableImportPlanChecks" . }}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
+						ExpectNonEmptyPlan: true,
+					{{ end -}}
+				},
 			{{- end }}
 		},
 	})
@@ -479,34 +471,30 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					{{ if .MutableIdentity -}}
-						// Resource Identity not supported for Mutable Identity
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
 					{{ else -}}
-						{{ if .ArnIdentity -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-									names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-								{{ end -}}
-								{{ .ARNAttribute }}: knownvalue.NotNull(),
-							}),
-							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-						{{ else if .IsRegionalSingleton -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-							}),
-						{{ else -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
-								{{ end }}
-							}),
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ . }}: knownvalue.NotNull(),
 							{{ end }}
-						{{ end -}}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{ end }}
 					{{ end -}}
 				},
 			},
@@ -530,22 +518,18 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import command without appended "@<region>"
-					{{ if .MutableIdentity -}}
-						// Importing without appended "@<region>" for Mutable Identity
-					{{- else -}}
-						{
-							{{ if .UseAlternateAccount -}}
-								ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-							{{ end -}}
-							ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-							ConfigVariables: config.Variables{ {{ if .Generator }}
-								acctest.CtRName: config.StringVariable(rName),{{ end }}
-								{{ template "AdditionalTfVars" . -}}
-								"region": config.StringVariable(acctest.AlternateRegion()),
-							},
-							{{- template "ImportCommandWithIDBody" . -}}
+					{
+						{{ if .UseAlternateAccount -}}
+							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+						{{ end -}}
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . -}}
+							"region": config.StringVariable(acctest.AlternateRegion()),
 						},
-					{{- end }}
+						{{- template "ImportCommandWithIDBody" . -}}
+					},
 				{{ end }}
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and appended "@<region>"
@@ -570,31 +554,6 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and no appended "@<region>"
-					{{ if .MutableIdentity -}}
-						// Importing without appended "@<region>" for Mutable Identity
-					{{- else -}}
-						{
-							{{ if .UseAlternateAccount -}}
-								ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-							{{ end -}}
-							ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-							ConfigVariables: config.Variables{ {{ if .Generator }}
-								acctest.CtRName: config.StringVariable(rName),{{ end }}
-								{{ template "AdditionalTfVars" . -}}
-								"region": config.StringVariable(acctest.AlternateRegion()),
-							},
-							{{- template "ImportBlockWithIDBody" . -}}
-							{{ template "PlannableImportCrossRegionPlanChecks" . }}
-							{{ if ne .PlannableResourceAction "NoOp" -}}
-								ExpectNonEmptyPlan: true,
-							{{ end -}}
-						},
-					{{- end }}
-				{{ end }}
-				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
-				{{ if .MutableIdentity -}}
-					// Resource Identity not supported for Mutable Identity
-				{{- else -}}
 					{
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -605,13 +564,30 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							{{ template "AdditionalTfVars" . -}}
 							"region": config.StringVariable(acctest.AlternateRegion()),
 						},
-						{{- template "ImportBlockWithResourceIdentityBody" . -}}
+						{{- template "ImportBlockWithIDBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
 						{{ if ne .PlannableResourceAction "NoOp" -}}
 							ExpectNonEmptyPlan: true,
 						{{ end -}}
 					},
-				{{- end }}
+				{{ end }}
+				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
+				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . -}}
+						"region": config.StringVariable(acctest.AlternateRegion()),
+					},
+					{{- template "ImportBlockWithResourceIdentityBody" . -}}
+					{{ template "PlannableImportCrossRegionPlanChecks" . }}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
+						ExpectNonEmptyPlan: true,
+					{{ end -}}
+				},
 			{{- end }}
 		},
 	})
