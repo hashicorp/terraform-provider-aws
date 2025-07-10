@@ -87,7 +87,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(output.ARN))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretPolicyByID(ctx, conn, d.Id())
 	})
 
