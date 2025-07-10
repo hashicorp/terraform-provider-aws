@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -181,10 +180,43 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Schema(ctx context.Con
 						"accelerator_count":            minMaxInt64(ctx, true),
 						"accelerator_total_memory_mib": minMaxInt64(ctx, true),
 						"baseline_ebs_bandwidth_mbps":  minMaxInt64(ctx, true),
-						"memory_gib_per_vcpu":          minMaxFloat64(ctx),
-						"network_bandwidth_gbps":       minMaxFloat64(ctx),
-						"network_interface_count":      minMaxInt64(ctx, true),
-						"total_local_storage_gb":       minMaxFloat64(ctx),
+						"baseline_performance_factors": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[baselinePerformanceFactorsData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"cpu": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[cpuPerformanceFactorData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"reference": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[performanceFactorReferenceData](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"instance_family": schema.StringAttribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"memory_gib_per_vcpu":     minMaxFloat64(ctx),
+						"network_bandwidth_gbps":  minMaxFloat64(ctx),
+						"network_interface_count": minMaxInt64(ctx, true),
+						"total_local_storage_gb":  minMaxFloat64(ctx),
 					},
 				},
 			},
@@ -196,7 +228,6 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Read(ctx context.Conte
 	var data instanceTypesFromInstanceRequirementsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
-		fmt.Println(resp.Diagnostics)
 		return
 	}
 
@@ -205,7 +236,6 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Read(ctx context.Conte
 	var input ec2.GetInstanceTypesFromInstanceRequirementsInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
-		fmt.Println(resp.Diagnostics)
 		return
 	}
 
@@ -237,29 +267,42 @@ type instanceTypesFromInstanceRequirementsDataSourceModel struct {
 }
 
 type instanceRequirementsData struct {
-	MemoryMiB                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"memory_mib"`
-	VCpuCount                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"vcpu_count"`
-	AcceleratorCount                          fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_count"`
-	AcceleratorManufacturers                  fwtypes.ListOfString                                   `tfsdk:"accelerator_manufacturers"`
-	AcceleratorNames                          fwtypes.ListOfString                                   `tfsdk:"accelerator_names"`
-	AcceleratorTotalMemoryMiB                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_total_memory_mib"`
-	AcceleratorTypes                          fwtypes.ListOfString                                   `tfsdk:"accelerator_types"`
-	AllowedInstanceTypes                      fwtypes.ListOfString                                   `tfsdk:"allowed_instance_types"`
-	BareMetal                                 types.String                                           `tfsdk:"bare_metal"`
-	BaselineEbsBandwidthMbps                  fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"baseline_ebs_bandwidth_mbps"`
-	BurstablePerformance                      types.String                                           `tfsdk:"burstable_performance"`
-	CpuManufacturers                          fwtypes.ListOfString                                   `tfsdk:"cpu_manufacturers"`
-	ExcludedInstanceTypes                     fwtypes.ListOfString                                   `tfsdk:"excluded_instance_types"`
-	InstanceGenerations                       fwtypes.ListOfString                                   `tfsdk:"instance_generations"`
-	LocalStorage                              types.String                                           `tfsdk:"local_storage"`
-	LocalStorageTypes                         fwtypes.ListOfString                                   `tfsdk:"local_storage_types"`
-	MemoryGiBPerVCpu                          fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"memory_gib_per_vcpu"`
-	NetworkBandwidthGbps                      fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"network_bandwidth_gbps"`
-	NetworkInterfaceCount                     fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"network_interface_count"`
-	OnDemandMaxPricePercentageOverLowestPrice types.Int64                                            `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
-	RequireHibernateSupport                   types.Bool                                             `tfsdk:"require_hibernate_support"`
-	SpotMaxPricePercentageOverLowestPrice     types.Int64                                            `tfsdk:"spot_max_price_percentage_over_lowest_price"`
-	TotalLocalStorageGB                       fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"total_local_storage_gb"`
+	MemoryMiB                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"memory_mib"`
+	VCpuCount                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"vcpu_count"`
+	AcceleratorCount                          fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"accelerator_count"`
+	AcceleratorManufacturers                  fwtypes.ListOfString                                            `tfsdk:"accelerator_manufacturers"`
+	AcceleratorNames                          fwtypes.ListOfString                                            `tfsdk:"accelerator_names"`
+	AcceleratorTotalMemoryMiB                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"accelerator_total_memory_mib"`
+	AcceleratorTypes                          fwtypes.ListOfString                                            `tfsdk:"accelerator_types"`
+	AllowedInstanceTypes                      fwtypes.ListOfString                                            `tfsdk:"allowed_instance_types"`
+	BareMetal                                 types.String                                                    `tfsdk:"bare_metal"`
+	BaselineEbsBandwidthMbps                  fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"baseline_ebs_bandwidth_mbps"`
+	BaselinePerformanceFactors                fwtypes.ListNestedObjectValueOf[baselinePerformanceFactorsData] `tfsdk:"baseline_performance_factors"`
+	BurstablePerformance                      types.String                                                    `tfsdk:"burstable_performance"`
+	CpuManufacturers                          fwtypes.ListOfString                                            `tfsdk:"cpu_manufacturers"`
+	ExcludedInstanceTypes                     fwtypes.ListOfString                                            `tfsdk:"excluded_instance_types"`
+	InstanceGenerations                       fwtypes.ListOfString                                            `tfsdk:"instance_generations"`
+	LocalStorage                              types.String                                                    `tfsdk:"local_storage"`
+	LocalStorageTypes                         fwtypes.ListOfString                                            `tfsdk:"local_storage_types"`
+	MemoryGiBPerVCpu                          fwtypes.ListNestedObjectValueOf[minMax[types.Float64]]          `tfsdk:"memory_gib_per_vcpu"`
+	NetworkBandwidthGbps                      fwtypes.ListNestedObjectValueOf[minMax[types.Float64]]          `tfsdk:"network_bandwidth_gbps"`
+	NetworkInterfaceCount                     fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]            `tfsdk:"network_interface_count"`
+	OnDemandMaxPricePercentageOverLowestPrice types.Int64                                                     `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
+	RequireHibernateSupport                   types.Bool                                                      `tfsdk:"require_hibernate_support"`
+	SpotMaxPricePercentageOverLowestPrice     types.Int64                                                     `tfsdk:"spot_max_price_percentage_over_lowest_price"`
+	TotalLocalStorageGB                       fwtypes.ListNestedObjectValueOf[minMax[types.Float64]]          `tfsdk:"total_local_storage_gb"`
+}
+
+type baselinePerformanceFactorsData struct {
+	Cpu fwtypes.ListNestedObjectValueOf[cpuPerformanceFactorData] `tfsdk:"cpu"`
+}
+
+type cpuPerformanceFactorData struct {
+	References fwtypes.ListNestedObjectValueOf[performanceFactorReferenceData] `tfsdk:"reference"`
+}
+
+type performanceFactorReferenceData struct {
+	InstanceFamily types.String `tfsdk:"instance_family"`
 }
 
 type minMax[T comparable] struct {

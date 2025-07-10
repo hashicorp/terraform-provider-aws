@@ -436,6 +436,38 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselineEBSBandwi
 	})
 }
 
+func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselinePerformanceFactors(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceTypesFromInstanceRequirementsDataSourceConfig(
+					`baseline_performance_factors {
+						cpu {
+						  reference {
+						    instance_family = "c6i"
+						  }
+						}
+                     }
+                     memory_mib {
+                       min = 16384
+                     }
+                     vcpu_count {
+                       min = 4
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_burstablePerformance(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"

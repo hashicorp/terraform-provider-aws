@@ -39,7 +39,7 @@ This data source supports the following arguments:
 * `instance_requirements` - (Required) The attribute requirements for the type of instance.
 * `virtualization_types` - (Required) List of virtualization types allowed. Possible values are `hvm` and `paravirtual`
 
-### instance_requirements
+### instance_requirements Argument Reference
 
 This configuration block supports the following:
 
@@ -93,6 +93,10 @@ This configuration block supports the following:
 - `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     - `min` - (Optional) Minimum.
     - `max` - (Optional) Maximum.
+- `baseline_performance_factors` - (Optional) Block describing the baseline performance to consider, using an instance family as a reference. The instance family establishes the lowest acceptable level of performance. Amazon EC2 uses this baseline to guide instance type selection, but there is no guarantee that the selected instance types will always exceed the baseline for every application. Currently, this parameter only supports CPU performance as a baseline performance factor.
+    - `cpu` - (Optional) The CPU performance to consider, using an instance family as the baseline reference.
+        - `reference` - (Optional) Specify an instance family to use as the baseline reference for CPU performance. All instance types that match your specified attributes will be compared against the CPU performance of the referenced instance family, regardless of CPU manufacturer or architecture differences.
+            - `instance_family` - (Optional) The instance family to use as a baseline reference.
 - `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 - `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
