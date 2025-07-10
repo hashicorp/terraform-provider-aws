@@ -17,10 +17,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_memoryMiBAndVcpuC
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -59,10 +56,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorCount(
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -121,10 +115,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorManufa
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -163,10 +154,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorNames(
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -205,10 +193,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorTotalM
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -267,10 +252,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_acceleratorTypes(
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -309,10 +291,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_allowedInstanceTy
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -351,10 +330,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_bareMetal(t *test
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -406,10 +382,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_baselineEBSBandwi
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -468,10 +441,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_burstablePerforma
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -523,10 +493,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_cpuManufacturers(
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -565,10 +532,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_excludedInstanceT
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -607,10 +571,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_instanceGeneratio
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -649,10 +610,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_localStorage(t *t
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -704,10 +662,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_localStorageTypes
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -746,10 +701,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_memoryGiBPerVCPU(
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -808,10 +760,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_networkBandwidthG
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -870,10 +819,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_networkInterfaceC
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -932,10 +878,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_onDemandMaxPriceP
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -961,10 +904,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_requireHibernateS
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1003,10 +943,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_spotMaxPricePerce
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1032,10 +969,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_totalLocalStorage
 	dataSourceName := "data.aws_ec2_instance_types_from_instance_requirements.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1092,7 +1026,7 @@ func TestAccEC2InstanceTypesFromInstanceRequirementsDataSource_totalLocalStorage
 func testAccInstanceTypesFromInstanceRequirementsDataSourceConfig(instanceRequirements string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_instance_types_from_instance_requirements" "test" {
-  architecture_types   = ["x86_64"]
+  architecture_types   = ["x86_64", "arm64"]
   virtualization_types = ["hvm"]
 
   instance_requirements {

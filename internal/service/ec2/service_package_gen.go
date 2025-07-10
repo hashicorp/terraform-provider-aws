@@ -21,13 +21,15 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceInstanceTypesFromInstanceRequirements,
-			Name:    "Instance Types From Instance Requirements",
-		},
-		{
 			Factory:  newCapacityBlockOfferingDataSource,
 			TypeName: "aws_ec2_capacity_block_offering",
 			Name:     "Capacity Block Offering",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newInstanceTypesFromInstanceRequirementsDataSource,
+			TypeName: "aws_ec2_instance_types_from_instance_requirements",
+			Name:     "Instance Types From Instance Requirements",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
