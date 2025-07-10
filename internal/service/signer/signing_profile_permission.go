@@ -139,7 +139,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(fmt.Sprintf("%s/%s", profileName, statementID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, profileName, statementID)
 	})
 
