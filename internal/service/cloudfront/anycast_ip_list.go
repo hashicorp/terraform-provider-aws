@@ -211,6 +211,12 @@ func (r *anycastIPListResource) Delete(ctx context.Context, request resource.Del
 		return
 	}
 
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Anycast IP List (%s)", id), err.Error())
+
+		return
+	}
+
 	input := cloudfront.DeleteAnycastIpListInput{
 		Id:      aws.String(id),
 		IfMatch: aws.String(etag),
