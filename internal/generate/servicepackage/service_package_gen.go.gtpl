@@ -360,48 +360,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- if $.IsGlobal }}
 					{{- if $value.HasARNAttribute }}
 						Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
-							inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
-						),
 					{{- else }}
 						Identity: inttypes.GlobalARNIdentity(
-							inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
-						),
 					{{- end }}
 				{{- else }}
 					{{- if $value.HasARNAttribute }}
 						Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
-							inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
-						),
 					{{- else }}
 						Identity: inttypes.RegionalARNIdentity(
-							inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
-						),
 					{{- end }}
 				{{- end }}
+					inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+					{{- if $value.HasV6_0SDKv2Fix }}
+						inttypes.WithV6_0SDKv2Fix(),
+					{{ end -}}
+					{{- if .HasIdentityFix }}
+						inttypes.WithIdentityFix(),
+					{{- end }}
+				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
 					Identity: inttypes.GlobalSingletonIdentity(
