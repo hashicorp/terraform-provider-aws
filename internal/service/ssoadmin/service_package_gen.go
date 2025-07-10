@@ -61,8 +61,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Application",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalResourceWithGlobalARNFormat(inttypes.WithIdentityDuplicateAttrs(names.AttrID, "application_arn")),
-			Import: inttypes.Import{
+			Identity: inttypes.RegionalResourceWithGlobalARNFormat(inttypes.WithIdentityDuplicateAttrs(names.AttrID, "application_arn"),
+				inttypes.WithIdentityFix(),
+			),
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
@@ -84,7 +86,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Application Assignment Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalResourceWithGlobalARNFormatNamed("application_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
@@ -95,7 +97,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalResourceWithGlobalARNFormat(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},

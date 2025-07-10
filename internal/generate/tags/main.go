@@ -69,6 +69,7 @@ var (
 	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
+	listTagsOpPaginatorCustom  = flag.Bool("ListTagsOpPaginatorCustom", false, "whether ListTagsOp has a custom paginator")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
 
 	retryErrorCode        = flag.String("RetryErrorCode", "", "error code to retry, must be used with RetryTagOps")
@@ -161,6 +162,7 @@ type TemplateData struct {
 	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
+	ListTagsOpPaginatorCustom  bool
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
@@ -178,7 +180,6 @@ type TemplateData struct {
 	TagKeyType                 string
 	TagOp                      string
 	TagOpBatchSize             int
-	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
 	TagType                    string
@@ -242,7 +243,6 @@ func main() {
 	}
 
 	clientType := fmt.Sprintf("*%s.Client", awsPkg)
-	tagPackage := awsPkg
 	providerNameUpper := service.ProviderNameUpper()
 	templateData := TemplateData{
 		AWSService:        awsPkg,
@@ -261,6 +261,7 @@ func main() {
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,
+		ListTagsOpPaginatorCustom:  *listTagsOpPaginatorCustom,
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
@@ -278,7 +279,6 @@ func main() {
 		TagKeyType:                 *tagKeyType,
 		TagOp:                      *tagOp,
 		TagOpBatchSize:             *tagOpBatchSize,
-		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
 		TagResTypeElemType:         *tagResTypeElemType,
 		TagType:                    *tagType,
@@ -315,13 +315,6 @@ func main() {
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
-		// If you intend to only generate Tags and KeyValueTags helper methods,
-		// the corresponding aws-sdk-go	service package does not need to be imported
-		if !*getTag && !*listTags && !*serviceTagsSlice && !*updateTags {
-			templateData.AWSService = ""
-			templateData.TagPackage = ""
-		}
-
 		if err := d.BufferTemplate("header", templateBody.header, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}

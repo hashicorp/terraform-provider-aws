@@ -681,7 +681,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx, fwtypes.WithSemanticEqualityFunc(confirmationSettingsEqualityFunc)),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{

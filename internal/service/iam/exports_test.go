@@ -48,6 +48,7 @@ var (
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindOrganizationsFeatures           = findOrganizationsFeatures
 	FindPolicyByARN                     = findPolicyByARN
+	FindRolePolicyByTwoPartKey          = findRolePolicyByTwoPartKey
 	FindRolePoliciesByName              = findRolePoliciesByName
 	FindRolePolicyAttachmentsByName     = findRolePolicyAttachmentsByName
 	FindSAMLProviderByARN               = findSAMLProviderByARN
@@ -58,4 +59,6 @@ var (
 	FindUserPolicyAttachmentsByName     = findUserPolicyAttachmentsByName
 	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
 	SESSMTPPasswordFromSecretKeySigV4   = sesSMTPPasswordFromSecretKeySigV4
+
+	RolePolicyParseID = rolePolicyParseID
 )

@@ -70,7 +70,6 @@ func TestAccS3Object_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -123,7 +122,6 @@ func TestAccS3Object_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -170,7 +168,6 @@ func TestAccS3Object_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -205,7 +202,6 @@ func TestAccS3Object_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -261,7 +257,6 @@ func TestAccS3Object_tags_null(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -273,8 +268,14 @@ func TestAccS3Object_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -322,7 +323,6 @@ func TestAccS3Object_tags_EmptyMap(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -334,8 +334,14 @@ func TestAccS3Object_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -416,7 +422,6 @@ func TestAccS3Object_tags_AddOnUpdate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -478,7 +483,6 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -513,7 +517,6 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -611,7 +614,6 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -658,7 +660,6 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -751,7 +752,6 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -813,7 +813,6 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -864,7 +863,6 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -911,7 +909,6 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -948,7 +945,6 @@ func TestAccS3Object_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1020,7 +1016,6 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1083,7 +1078,6 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1120,7 +1114,6 @@ func TestAccS3Object_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1190,7 +1183,6 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1253,7 +1245,6 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1308,7 +1299,6 @@ func TestAccS3Object_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1402,7 +1392,6 @@ func TestAccS3Object_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1495,7 +1484,6 @@ func TestAccS3Object_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1564,7 +1552,6 @@ func TestAccS3Object_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1625,7 +1612,6 @@ func TestAccS3Object_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1691,7 +1677,6 @@ func TestAccS3Object_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1757,7 +1742,6 @@ func TestAccS3Object_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1816,7 +1800,6 @@ func TestAccS3Object_tags_ComputedTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -1917,7 +1900,6 @@ func TestAccS3Object_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,
@@ -2008,7 +1990,6 @@ func TestAccS3Object_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccObjectImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrForceDestroy,

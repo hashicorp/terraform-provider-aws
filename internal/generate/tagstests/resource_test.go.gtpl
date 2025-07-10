@@ -492,8 +492,14 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},
@@ -567,8 +573,14 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},

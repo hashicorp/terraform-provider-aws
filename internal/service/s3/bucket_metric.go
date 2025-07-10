@@ -218,7 +218,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]any) types.MetricsFil
 
 	var tags []types.Tag
 	if v, ok := m[names.AttrTags]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	var metricsFilter types.MetricsFilter

@@ -29,6 +29,7 @@ import (
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -560,9 +561,15 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			}
 
 			if res.Import.WrappedImport {
+				if res.Import.SetIDAttr {
+					if _, ok := res.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
+						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", typeName))
+						continue
+					}
+				}
 				switch v := inner.(type) {
 				case framework.ImportByIdentityer:
-					v.SetIdentitySpec(res.Identity)
+					v.SetIdentitySpec(res.Identity, res.Import)
 
 				default:
 					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer", typeName))

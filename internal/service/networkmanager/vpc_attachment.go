@@ -436,6 +436,8 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusVPCAttachment(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 

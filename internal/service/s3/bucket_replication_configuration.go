@@ -838,7 +838,7 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.
 	}
 
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
-		if tags := Tags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
+		if tags := svcTags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
 			apiObject.Tags = tags
 		}
 	}
