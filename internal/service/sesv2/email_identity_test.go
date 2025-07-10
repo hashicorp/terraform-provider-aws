@@ -233,6 +233,34 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	})
 }
 
+func TestAccSESV2EmailIdentity_domainSigningAttributesOrigin(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomDomainName()
+	resourceName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_domainSigningAttributesOrigin(rName, string(types.DkimSigningAttributesOriginAwsSesUsWest2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES_US_WEST_2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
@@ -331,4 +359,16 @@ resource "aws_sesv2_email_identity" "test" {
   }
 }
 `, rName, domainSigningPrivateKey, domainSigningSelector)
+}
+
+func testAccEmailIdentityConfig_domainSigningAttributesOrigin(rName, signingAttributesOrigin string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_email_identity" "test" {
+  email_identity = %[1]q
+
+  dkim_signing_attributes {
+    signing_attributes_origin  = %[2]q
+  }
+}
+`, rName, signingAttributesOrigin)
 }
