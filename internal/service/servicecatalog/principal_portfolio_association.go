@@ -104,7 +104,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutRead), func(ctx context.Context) (any, error) {
 		return findPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 	})
 
