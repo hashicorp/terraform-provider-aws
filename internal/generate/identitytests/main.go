@@ -1070,7 +1070,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, common commonConfig) {
+func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, config commonConfig) {
 	testName := test
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
@@ -1078,10 +1078,18 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	}
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
-	tf := g.NewUnformattedFileDestination(mainPath)
+	var tf common.Destination
+	if test == "basic_v5.100.0" {
+		tf = g.NewFileDestinationWithFormatter(mainPath, func(b []byte) ([]byte, error) {
+			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`)
+			return re.ReplaceAll(b, []byte("$1.name")), nil
+		})
+	} else {
+		tf = g.NewUnformattedFileDestination(mainPath)
+	}
 
 	configData := ConfigDatum{
-		commonConfig: common,
+		commonConfig: config,
 	}
 	if err := tf.BufferTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
