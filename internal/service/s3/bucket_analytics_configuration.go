@@ -173,7 +173,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findAnalyticsConfiguration(ctx, conn, bucket, name)
 		})
 

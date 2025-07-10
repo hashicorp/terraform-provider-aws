@@ -138,7 +138,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 	if d.IsNewResource() {
 		d.SetId(BucketIntelligentTieringConfigurationCreateResourceID(bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findIntelligentTieringConfiguration(ctx, conn, bucket, name)
 		})
 
