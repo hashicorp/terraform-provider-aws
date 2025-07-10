@@ -4334,7 +4334,7 @@ resource "aws_redshift_cluster" "test" {
   database_name             = "test"
   master_username           = "testuser"
   master_password           = "T3stPass"
-  node_type                 = "dc2.large"
+  node_type                 = "ra3.large"
   cluster_type              = "single-node"
   skip_final_snapshot       = true
   cluster_subnet_group_name = aws_redshift_subnet_group.test.id

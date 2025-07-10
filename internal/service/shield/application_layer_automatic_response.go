@@ -60,7 +60,7 @@ func newApplicationLayerAutomaticResponseResource(context.Context) (resource.Res
 type applicationLayerAutomaticResponseResource struct {
 	framework.ResourceWithModel[applicationLayerAutomaticResponseResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

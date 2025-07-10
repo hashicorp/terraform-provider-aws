@@ -34,7 +34,7 @@ func newVectorBucketPolicyResource(context.Context) (resource.ResourceWithConfig
 
 type vectorBucketPolicyResource struct {
 	framework.ResourceWithModel[vectorBucketPolicyResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *vectorBucketPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

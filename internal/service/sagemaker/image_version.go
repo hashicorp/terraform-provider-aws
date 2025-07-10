@@ -6,7 +6,6 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -173,7 +172,7 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) to be created: %s", d.Id(), err)
 	}
 
-	parts := []string{name, strconv.Itoa(int(aws.ToInt32(out.Version)))}
+	parts := []string{name, flex.Int32ToStringValue(out.Version)}
 	id, err := flex.FlattenResourceId(parts, imageVersionResourcePartCount, false)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Image Version %s: %s", name, err)
@@ -190,9 +189,8 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	name, version, err := expandImageVersionResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	d.Set("image_name", name) // to support import
 
 	image, err := findImageVersionByTwoPartKey(ctx, conn, name, version)
 
@@ -208,27 +206,27 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, image.ImageVersionArn)
 	d.Set("base_image", image.BaseImage)
-	d.Set("image_arn", image.ImageArn)
 	d.Set("container_image", image.ContainerImage)
-	d.Set(names.AttrVersion, image.Version)
 	d.Set("horovod", image.Horovod)
+	d.Set("image_arn", image.ImageArn)
+	d.Set("image_name", name)
 	d.Set("job_type", image.JobType)
+	d.Set("ml_framework", image.MLFramework)
 	d.Set("processor", image.Processor)
+	d.Set("programming_lang", image.ProgrammingLang)
 	d.Set("release_notes", image.ReleaseNotes)
 	d.Set("vendor_guidance", image.VendorGuidance)
-	d.Set("ml_framework", image.MLFramework)
-	d.Set("programming_lang", image.ProgrammingLang)
+	d.Set(names.AttrVersion, image.Version)
 
 	// The DescribeImageVersion API response does not include aliases, so these must
 	// be fetched separately using the ListAliases API
 	aliases, err := findImageVersionAliasesByTwoPartKey(ctx, conn, name, version)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading aliases for SageMaker AI Image Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Image Version (%s) aliases: %s", d.Id(), err)
 	}
 
-	if err := d.Set("aliases", aliases); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
-	}
+	d.Set("aliases", aliases)
 
 	return diags
 }
@@ -237,12 +235,14 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	name := d.Get("image_name").(string)
-	version := d.Get(names.AttrVersion).(int)
+	name, version, err := expandImageVersionResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	input := sagemaker.UpdateImageVersionInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	if d.HasChange("horovod") {
@@ -288,7 +288,9 @@ func resourceImageVersionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if _, err := conn.UpdateImageVersion(ctx, &input); err != nil {
+	_, err = conn.UpdateImageVersion(ctx, &input)
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
@@ -299,23 +301,28 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	name := d.Get("image_name").(string)
-	version := d.Get(names.AttrVersion).(int)
-
-	input := sagemaker.DeleteImageVersionInput{
-		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+	name, version, err := expandImageVersionResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if _, err := conn.DeleteImageVersion(ctx, &input); err != nil {
-		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
-			return diags
-		}
+	log.Printf("[DEBUG] Deleting SageMaker AI Image Version: %s", d.Id())
+	input := sagemaker.DeleteImageVersionInput{
+		ImageName: aws.String(name),
+		Version:   aws.Int32(version),
+	}
+	_, err = conn.DeleteImageVersion(ctx, &input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Image Version (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitImageVersionDeleted(ctx, conn, name, version); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Image Version (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -353,10 +360,10 @@ func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name st
 
 // findImageVersionByTwoPartKey is used to fetch a specific version once a version number
 // is assigned
-func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) (*sagemaker.DescribeImageVersionOutput, error) {
+func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
 	input := sagemaker.DescribeImageVersionInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	output, err := conn.DescribeImageVersion(ctx, &input)
@@ -379,10 +386,10 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	return output, nil
 }
 
-func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int) ([]string, error) {
+func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Client, name string, version int32) ([]string, error) {
 	input := sagemaker.ListAliasesInput{
 		ImageName: aws.String(name),
-		Version:   aws.Int32(int32(version)),
+		Version:   aws.Int32(version),
 	}
 
 	output, err := conn.ListAliases(ctx, &input)
@@ -407,17 +414,11 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 
 // expandImageVersionResourceID wraps flex.ExpandResourceId and handles conversion
 // of the version portion to an integer
-func expandImageVersionResourceID(id string) (string, int, error) {
+func expandImageVersionResourceID(id string) (string, int32, error) {
 	parts, err := flex.ExpandResourceId(id, imageVersionResourcePartCount, false)
 	if err != nil {
 		return "", 0, err
 	}
 
-	name := parts[0]
-	version, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return name, 0, err
-	}
-
-	return name, version, nil
+	return parts[0], flex.StringValueToInt32Value(parts[1]), nil
 }

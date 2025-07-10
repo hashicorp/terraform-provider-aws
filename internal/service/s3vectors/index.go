@@ -38,7 +38,7 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 type indexResource struct {
 	framework.ResourceWithModel[indexResourceModel]
 	framework.WithNoUpdate
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *indexResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

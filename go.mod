@@ -101,14 +101,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.230.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.231.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.46.3
-	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.6
@@ -148,8 +148,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.35.3
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.26.7
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.8
@@ -222,8 +222,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.0.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.9
+    github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.1
+    github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.10
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.58.0
@@ -304,7 +304,7 @@ require (
 	github.com/pquerna/otp v1.5.0
 	github.com/shopspring/decimal v1.4.0
 	golang.org/x/crypto v0.39.0
-	golang.org/x/text v0.26.0
+	golang.org/x/text v0.27.0
 	golang.org/x/tools v0.34.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.4
 	gopkg.in/yaml.v3 v3.0.1
@@ -371,7 +371,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/mod v0.25.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect

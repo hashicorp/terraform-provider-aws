@@ -39,7 +39,7 @@ func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, e
 type vectorBucketResource struct {
 	framework.ResourceWithModel[vectorBucketResourceModel]
 	framework.WithNoUpdate
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *vectorBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

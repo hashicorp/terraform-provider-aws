@@ -54,7 +54,7 @@ const (
 type exportResource struct {
 	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -296,7 +296,7 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionReading, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
