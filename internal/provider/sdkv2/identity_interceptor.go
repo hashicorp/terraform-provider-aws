@@ -18,7 +18,7 @@ import (
 var _ crudInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
-	attributes []inttypes.IdentityAttribute
+	identitySpec *inttypes.Identity
 }
 
 func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
@@ -28,7 +28,10 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 	switch d, when, why := opts.d, opts.when, opts.why; when {
 	case After:
 		switch why {
-		case Create, Read:
+		case Create, Read, Update:
+			if why == Update && !(r.identitySpec.IsMutable && r.identitySpec.IsSetOnUpdate) {
+				break
+			}
 			if d.Id() == "" {
 				break
 			}
@@ -37,7 +40,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			for _, attr := range r.attributes {
+			for _, attr := range r.identitySpec.Attributes {
 				switch attr.Name() {
 				case names.AttrAccountID:
 					if err := identity.Set(attr.Name(), awsClient.AccountID(ctx)); err != nil {
@@ -76,14 +79,20 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	}
 }
 
-func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptorInvocation {
-	return interceptorInvocation{
+func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocation {
+	interceptor := interceptorInvocation{
 		when: After,
 		why:  Create | Read,
 		interceptor: identityInterceptor{
-			attributes: attributes,
+			identitySpec: identitySpec,
 		},
 	}
+
+	if identitySpec.IsMutable && identitySpec.IsSetOnUpdate {
+		interceptor.why |= Update
+	}
+
+	return interceptor
 }
 
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {

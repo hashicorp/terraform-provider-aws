@@ -712,7 +712,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					r.ResourceBehavior.MutableIdentity = true
 				}
 
-				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
+				interceptors = append(interceptors, newIdentityInterceptor(&resource.Identity))
 			}
 
 			if resource.Import.CustomImport {
