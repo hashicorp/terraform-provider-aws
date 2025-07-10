@@ -22,8 +22,9 @@ func testAccAuditManagerAccountRegistration_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccAuditManagerAccountRegistration_Identity_Basic,
-		"RegionOverride": testAccAuditManagerAccountRegistration_Identity_RegionOverride,
+		acctest.CtBasic:    testAccAuditManagerAccountRegistration_Identity_Basic,
+		"ExistingResource": testAccAuditManagerAccountRegistration_Identity_ExistingResource,
+		"RegionOverride":   testAccAuditManagerAccountRegistration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

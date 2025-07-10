@@ -124,30 +124,44 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
+						Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
+						},
+						{{- if .HasIdentityFix }}
+							inttypes.WithIdentityFix(),
+						{{- end -}}
 						),
 					{{- else }}
-						Identity: inttypes.RegionalParameterizedIdentity(
+						Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
+						},
+						{{- if .HasIdentityFix }}
+							inttypes.WithIdentityFix(),
+						{{- end -}}
 						),
 					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }}
+								{{ .Name }},
 							{{- end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{- else }}
 						Identity: inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }}
+								{{ .Name }},
 							{{- end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{- end }}
 				{{- else if $value.ARNIdentity }}
@@ -173,21 +187,30 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- end }}
 					{{- end }}
 						{{- if .HasIdentityDuplicateAttrs -}}
-							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
+						{{- if .HasIdentityFix }}
+							inttypes.WithIdentityFix(),
+						{{- end }}
 						),
 				{{- else if $value.SingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 							{{- end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{ else }}
 						Identity: inttypes.RegionalSingletonIdentity(
 							{{- if .HasIdentityDuplicateAttrs -}}
-								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }})
+								inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 							{{- end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{- end }}
 				{{- end }}
@@ -272,51 +295,123 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			{{- if not $value.MutableIdentity }}
 				{{- if gt (len $value.IdentityAttributes) 1 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalParameterizedIdentity(
+						Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
+						},
+						{{- if $value.HasV6_0SDKv2Fix }}
+							inttypes.WithV6_0SDKv2Fix(),
+						{{ end -}}
+						{{- if .HasIdentityFix }}
+							inttypes.WithIdentityFix(),
+						{{- end -}}
 						),
 					{{- else }}
-						Identity: inttypes.RegionalParameterizedIdentity(
+						Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
 							{{- range $value.IdentityAttributes }}
 								{{ template "IdentifierAttribute" . }}
 							{{- end }}
+						},
+						{{- if $value.HasV6_0SDKv2Fix }}
+							inttypes.WithV6_0SDKv2Fix(),
+						{{ end -}}
+						{{- if .HasIdentityFix }}
+							inttypes.WithIdentityFix(),
+						{{- end -}}
 						),
 					{{- end }}
 				{{- else if gt (len $value.IdentityAttributes) 0 }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
 						Identity: inttypes.GlobalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }}
+								{{ .Name }},
 							{{- end -}}
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{- else }}
 						Identity: inttypes.RegionalSingleParameterIdentity(
 							{{- range $value.IdentityAttributes -}}
-								{{ .Name }}
-							{{- end -}}
+								{{ .Name }},
+							{{- end }}
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
 						),
 					{{- end }}
 				{{- else if $value.ARNIdentity }}
 					{{- if $.IsGlobal }}
 						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.GlobalARNIdentityNamed({{ $value.ARNAttribute }},
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+							),
 						{{- else }}
-							Identity: inttypes.GlobalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.GlobalARNIdentity(
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+							),
 						{{- end }}
 					{{- else }}
 						{{- if $value.HasARNAttribute }}
-							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }}, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.RegionalARNIdentityNamed({{ $value.ARNAttribute }},
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+							),
 						{{- else }}
-							Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+							Identity: inttypes.RegionalARNIdentity(
+								inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+							),
 						{{- end }}
 					{{- end }}
 				{{- else if $value.SingletonIdentity }}
 					{{- if or $.IsGlobal $value.IsGlobal }}
-						Identity: inttypes.GlobalSingletonIdentity(),
+						Identity: inttypes.GlobalSingletonIdentity(
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+						),
 					{{- else }}
-						Identity: inttypes.RegionalSingletonIdentity(),
+						Identity: inttypes.RegionalSingletonIdentity(
+							{{- if $value.HasV6_0SDKv2Fix }}
+								inttypes.WithV6_0SDKv2Fix(),
+							{{ end -}}
+							{{- if .HasIdentityFix }}
+								inttypes.WithIdentityFix(),
+							{{- end }}
+						),
 					{{- end }}
 				{{- end }}
 				{{- if $value.WrappedImport }}

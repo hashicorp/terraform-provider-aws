@@ -23,8 +23,9 @@ func testAccMacie2ClassificationExportConfiguration_IdentitySerial(t *testing.T)
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccMacie2ClassificationExportConfiguration_Identity_Basic,
-		"RegionOverride": testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:    testAccMacie2ClassificationExportConfiguration_Identity_Basic,
+		"ExistingResource": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource,
+		"RegionOverride":   testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

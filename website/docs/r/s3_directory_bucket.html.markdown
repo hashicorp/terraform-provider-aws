@@ -46,6 +46,7 @@ This resource supports the following arguments:
 * `data_redundancy` - (Optional) Data redundancy. Valid values: `SingleAvailabilityZone`, `SingleLocalZone`. The default value depends on the value of the `location.type` attribute.
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all objects should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `location` - (Required) Bucket location. See [Location](#location) below for more details.
+* `tags` - (Optional) Map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional, Default:`Directory`) Bucket type. Valid values: `Directory`.
 
 ### Location
@@ -61,6 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - (**Deprecated**, use `bucket` instead) Name of the bucket.
 * `arn` - ARN of the bucket.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

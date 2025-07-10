@@ -53,7 +53,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_certificate",
 			Name:     "Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceCertificateAuthority,
@@ -62,15 +65,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 		},
 		{
 			Factory:  resourceCertificateAuthorityCertificate,
 			TypeName: "aws_acmpca_certificate_authority_certificate",
 			Name:     "Certificate Authority Certificate",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed("certificate_authority_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentityNamed("certificate_authority_arn",
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -86,7 +95,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_acmpca_policy",
 			Name:     "Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},

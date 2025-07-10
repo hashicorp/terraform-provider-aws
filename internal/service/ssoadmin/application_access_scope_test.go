@@ -41,7 +41,7 @@ func TestAccSSOAdminApplicationAccessScope_basic(t *testing.T) {
 				Config: testAccApplicationAccessScopeConfig_basic(rName, "sso:account:access"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAccessScopeExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "sso:account:access"),
 				),
 			},
@@ -138,8 +138,8 @@ resource "aws_ssoadmin_application" "test" {
 }
 
 resource "aws_ssoadmin_application_access_scope" "test" {
-  application_arn    = aws_ssoadmin_application.test.application_arn
-  authorized_targets = [aws_ssoadmin_application.test.application_arn]
+  application_arn    = aws_ssoadmin_application.test.arn
+  authorized_targets = [aws_ssoadmin_application.test.arn]
   scope              = %[3]q
 }
 `, rName, testAccApplicationProviderARN, scope)

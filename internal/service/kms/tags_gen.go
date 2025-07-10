@@ -177,7 +177,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {
