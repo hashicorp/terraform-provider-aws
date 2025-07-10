@@ -16,6 +16,7 @@ const (
 type Volume struct {
 	*types.Volume
 
+	HasSource  bool
 	IsManaged  bool
 	IsDatafied bool
 	ReplacedBy string
@@ -25,6 +26,7 @@ func (v *Volume) UnmarshalJSON(data []byte) error {
 	iac := struct {
 		VolumeId string `json:"volumeId"`
 
+		HasSource  bool   `json:"hasSource"`
 		IsManaged  bool   `json:"isManaged"`
 		IsDatafied bool   `json:"isDatafied"`
 		ReplacedBy string `json:"replacedBy"`

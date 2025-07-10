@@ -363,7 +363,9 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 				return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s)", d.Id())
 			}
 
-			volumesIDs = make([]string, 0, len(dvo.Volumes))
+			if !datafyVolume.HasSource {
+				volumesIDs = make([]string, 0, len(dvo.Volumes))
+			}
 			for _, volume := range dvo.Volumes {
 				volumesIDs = append(volumesIDs, aws.ToString(volume.VolumeId))
 			}

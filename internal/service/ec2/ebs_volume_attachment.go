@@ -235,7 +235,9 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 				return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s) Attachement (%s)", volumeID, d.Id())
 			}
 
-			volumesToDelete = make(map[string]string, len(dvo.Volumes))
+			if !datafyVolume.HasSource {
+				volumesToDelete = make(map[string]string, len(dvo.Volumes))
+			}
 			for _, volume := range dvo.Volumes {
 				if len(volume.Attachments) == 0 {
 					return sdkdiag.AppendErrorf(diags, "can't find device name of EBS volume (%s) for EBS volume (%s) Attachement (%s)", aws.ToString(volume.VolumeId), volumeID, d.Id())
