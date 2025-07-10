@@ -101,14 +101,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.230.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.231.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.46.3
-	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.4
+	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.6
@@ -148,8 +148,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.35.3
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.26.6
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.26.7
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.8
@@ -221,8 +221,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.9
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.1
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.10
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.58.0
