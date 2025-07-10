@@ -2143,25 +2143,6 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	// if the instance has a datafied volume, it can't be deleted
-	if v, ok := d.GetOk("ebs_block_device"); ok {
-		dc := meta.(*conns.AWSClient).DatafyClient(ctx)
-		for _, v := range v.(*schema.Set).List() {
-			volumeId := v.(map[string]interface{})["volume_id"].(string)
-			if datafyVol, datafyErr := dc.GetVolume(volumeId); datafyErr == nil {
-				if datafyVol.IsManaged {
-					diags = sdkdiag.AppendErrorf(diags, "can't delete EC2 Instance (%s) with datafied EBS Volume (%s). Please undatafy the EBS Volume first", d.Id(), volumeId)
-				}
-			} else if !datafy.NotFound(datafyErr) {
-				return sdkdiag.AppendErrorf(diags, "deleting EC2 Instance (%s): %s", d.Id(), datafyErr)
-			}
-		}
-
-		if diags != nil && diags.HasError() {
-			return diags
-		}
-	}
-
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
