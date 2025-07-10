@@ -51,14 +51,18 @@ func resourceDistribution() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"aliases": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"anycast_ip_list_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"caller_reference": {
 				Type:     schema.TypeString,
@@ -889,10 +893,6 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"anycast_ip_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
 }
@@ -958,6 +958,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 		}
 	}
+	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
 	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
@@ -1024,9 +1025,6 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
 	}
 	d.Set("web_acl_id", distributionConfig.WebACLId)
-	if distributionConfig.AnycastIpListId != nil {
-		d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
-	}
 
 	return diags
 }
