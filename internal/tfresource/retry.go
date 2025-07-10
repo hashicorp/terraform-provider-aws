@@ -242,8 +242,8 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (any
 }
 
 // RetryGWhenNotFound retries the specified function when it returns a retry.NotFoundError.
-func RetryGWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryGWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return reetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
 			return true, err
 		}
@@ -389,4 +389,12 @@ func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, opt
 	// resultErr takes precedence over waitErr if both are set because it is
 	// more likely to be useful
 	return resultErr
+}
+
+type retryable func(error) (bool, error)
+
+func reetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
+	return retry.Op(f).If(func(_ T, err error) (bool, error) {
+		return retryable(err)
+	})(ctx, timeout, opts...)
 }
