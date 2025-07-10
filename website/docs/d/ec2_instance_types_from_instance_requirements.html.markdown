@@ -32,11 +32,12 @@ data "aws_ec2_instance_types_from_instance_requirements" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `architecture_types` - (Required) List of architecture types allowed. Possible values are `i386`, `x86_64`, `arm64`, `x86_64_mac` and `arm64_mac`
-* `instance_requirements` - (Required) The attribute requirements for the type of instance.
-* `virtualization_types` - (Required) List of virtualization types allowed. Possible values are `hvm` and `paravirtual`
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+- `architecture_types` - (Required) List of architecture types allowed. Possible values are `i386`, `x86_64`, `arm64`, `x86_64_mac` and `arm64_mac`
+- `instance_requirements` - (Required) The attribute requirements for the type of instance.
+- `virtualization_types` - (Required) List of virtualization types allowed. Possible values are `hvm` and `paravirtual`
 
 ### instance_requirements
 
@@ -45,8 +46,8 @@ This configuration block supports the following:
 ~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 - `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
-    - `min` - (Optional) Minimum.
-    - `max` - (Optional) Maximum. Set to `0` to exclude instance types with accelerators.
+  - `min` - (Optional) Minimum.
+  - `max` - (Optional) Maximum. Set to `0` to exclude instance types with accelerators.
 - `accelerator_manufacturers` - (Optional) List of accelerator manufacturer names. Default is any manufacturer.
 
   ```
@@ -72,8 +73,8 @@ This configuration block supports the following:
 
 - `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
 
-    - `min` - (Optional) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Optional) Minimum.
+  - `max` - (Optional) Maximum.
 
 - `accelerator_types` - (Optional) List of accelerator types. Default is any accelerator type.
 
@@ -90,8 +91,8 @@ This configuration block supports the following:
 
 - `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 - `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
-    - `min` - (Optional) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Optional) Minimum.
+  - `max` - (Optional) Maximum.
 - `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 - `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
@@ -126,17 +127,17 @@ This configuration block supports the following:
   ```
 
 - `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
-    - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
-    - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+  - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+  - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 - `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
-    - `min` - (Required) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Required) Minimum.
+  - `max` - (Optional) Maximum.
 - `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
-    - `min` - (Optional) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Optional) Minimum.
+  - `max` - (Optional) Maximum.
 - `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
-    - `min` - (Optional) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Optional) Minimum.
+  - `max` - (Optional) Maximum.
 - `on_demand_max_price_percentage_over_lowest_price` - (Optional) Price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
@@ -147,15 +148,15 @@ This configuration block supports the following:
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
 - `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
-    - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
-    - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+  - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+  - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 - `vcpu_count` - (Required) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
-    - `min` - (Required) Minimum.
-    - `max` - (Optional) Maximum.
+  - `min` - (Required) Minimum.
+  - `max` - (Optional) Maximum.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - AWS Region.
-* `instance_types` - List of EC2 Instance Types.
+- `id` - AWS Region.
+- `instance_types` - List of EC2 Instance Types.

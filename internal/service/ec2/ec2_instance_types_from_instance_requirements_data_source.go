@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -69,206 +70,121 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Schema(ctx context.Con
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"instance_requirements": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[instanceRequirementsData](ctx),
-				Attributes: map[string]schema.Attribute{
-					"accelerator_manufacturers": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.AcceleratorManufacturer](),
-							),
-						},
-					},
-					"accelerator_names": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.AcceleratorName](),
-							),
-						},
-					},
-					"accelerator_types": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.AcceleratorType](),
-							),
-						},
-					},
-					"allowed_instance_types": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-					},
-					"bare_metal": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							enum.FrameworkValidate[awstypes.BareMetal](),
-						},
-					},
-					"burstable_performance": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							enum.FrameworkValidate[awstypes.BurstablePerformance](),
-						},
-					},
-					"cpu_manufacturers": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.CpuManufacturer](),
-							),
-						},
-					},
-					"excluded_instance_types": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-					},
-					"instance_generations": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.InstanceGeneration](),
-							),
-						},
-					},
-					"local_storage": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							enum.FrameworkValidate[awstypes.LocalStorage](),
-						},
-					},
-					"local_storage_types": schema.ListAttribute{
-						CustomType:  fwtypes.ListOfStringType,
-						ElementType: types.StringType,
-						Optional:    true,
-						Validators: []validator.List{
-							listvalidator.ValueStringsAre(
-								enum.FrameworkValidate[awstypes.LocalStorageType](),
-							),
-						},
-					},
-					"on_demand_max_price_percentage_over_lowest_price": schema.Int64Attribute{
-						Optional: true,
-					},
-					"require_hibernate_support": schema.BoolAttribute{
-						Optional: true,
-					},
-					"spot_max_price_percentage_over_lowest_price": schema.Int64Attribute{
-						Optional: true,
-					},
+			"instance_requirements": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[instanceRequirementsData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				Blocks: map[string]schema.Block{
-					"memory_mib": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Required: true,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"accelerator_manufacturers": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.AcceleratorManufacturer](),
+								),
 							},
-							"max": schema.Int64Attribute{
-								Optional: true,
+						},
+						"accelerator_names": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.AcceleratorName](),
+								),
 							},
+						},
+						"accelerator_types": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.AcceleratorType](),
+								),
+							},
+						},
+						"allowed_instance_types": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+						"bare_metal": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.BareMetal](),
+							},
+						},
+						"burstable_performance": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.BurstablePerformance](),
+							},
+						},
+						"cpu_manufacturers": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.CpuManufacturer](),
+								),
+							},
+						},
+						"excluded_instance_types": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+						"instance_generations": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.InstanceGeneration](),
+								),
+							},
+						},
+						"local_storage": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.LocalStorage](),
+							},
+						},
+						"local_storage_types": schema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.List{
+								listvalidator.ValueStringsAre(
+									enum.FrameworkValidate[awstypes.LocalStorageType](),
+								),
+							},
+						},
+						"on_demand_max_price_percentage_over_lowest_price": schema.Int64Attribute{
+							Optional: true,
+						},
+						"require_hibernate_support": schema.BoolAttribute{
+							Optional: true,
+						},
+						"spot_max_price_percentage_over_lowest_price": schema.Int64Attribute{
+							Optional: true,
 						},
 					},
-					"vcpu_count": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Required: true,
-							},
-							"max": schema.Int64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"accelerator_count": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Optional: true,
-							},
-							"max": schema.Int64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"accelerator_total_memory_mib": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Optional: true,
-							},
-							"max": schema.Int64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"baseline_ebs_bandwidth_mbps": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Optional: true,
-							},
-							"max": schema.Int64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"memory_gib_per_vcpu": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Float64Attribute{
-								Optional: true,
-							},
-							"max": schema.Float64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"network_bandwidth_gbps": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Float64Attribute{
-								Optional: true,
-							},
-							"max": schema.Float64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"network_interface_count": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Int64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Int64Attribute{
-								Optional: true,
-							},
-							"max": schema.Int64Attribute{
-								Optional: true,
-							},
-						},
-					},
-					"total_local_storage_gb": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[minMax[types.Float64]](ctx),
-						Attributes: map[string]schema.Attribute{
-							"min": schema.Float64Attribute{
-								Optional: true,
-							},
-							"max": schema.Float64Attribute{
-								Optional: true,
-							},
-						},
+					Blocks: map[string]schema.Block{
+						"memory_mib":                   minMaxInt64(ctx, false),
+						"vcpu_count":                   minMaxInt64(ctx, false),
+						"accelerator_count":            minMaxInt64(ctx, true),
+						"accelerator_total_memory_mib": minMaxInt64(ctx, true),
+						"baseline_ebs_bandwidth_mbps":  minMaxInt64(ctx, true),
+						"memory_gib_per_vcpu":          minMaxFloat64(ctx),
+						"network_bandwidth_gbps":       minMaxFloat64(ctx),
+						"network_interface_count":      minMaxInt64(ctx, true),
+						"total_local_storage_gb":       minMaxFloat64(ctx),
 					},
 				},
 			},
@@ -280,18 +196,20 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Read(ctx context.Conte
 	var data instanceTypesFromInstanceRequirementsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		fmt.Println(resp.Diagnostics)
 		return
 	}
 
 	conn := d.Meta().EC2Client(ctx)
 
-	input := &ec2.GetInstanceTypesFromInstanceRequirementsInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input ec2.GetInstanceTypesFromInstanceRequirementsInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if resp.Diagnostics.HasError() {
+		fmt.Println(resp.Diagnostics)
 		return
 	}
 
-	output, err := findInstanceTypesFromInstanceRequirements(ctx, conn, input)
+	output, err := findInstanceTypesFromInstanceRequirements(ctx, conn, &input)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -311,40 +229,79 @@ func (d *instanceTypesFromInstanceRequirementsDataSource) Read(ctx context.Conte
 
 type instanceTypesFromInstanceRequirementsDataSourceModel struct {
 	framework.WithRegionModel
-	ArchitectureTypes    fwtypes.ListOfString                            `tfsdk:"architecture_types"`
-	InstanceRequirements fwtypes.ObjectValueOf[instanceRequirementsData] `tfsdk:"instance_requirements"`
-	InstanceTypes        fwtypes.ListOfString                            `tfsdk:"instance_types"`
-	ID                   types.String                                    `tfsdk:"id"`
-	VirtualizationTypes  fwtypes.ListOfString                            `tfsdk:"virtualization_types"`
+	ArchitectureTypes    fwtypes.ListOfString                                      `tfsdk:"architecture_types"`
+	InstanceRequirements fwtypes.ListNestedObjectValueOf[instanceRequirementsData] `tfsdk:"instance_requirements"`
+	InstanceTypes        fwtypes.ListOfString                                      `tfsdk:"instance_types"`
+	ID                   types.String                                              `tfsdk:"id"`
+	VirtualizationTypes  fwtypes.ListOfString                                      `tfsdk:"virtualization_types"`
 }
 
 type instanceRequirementsData struct {
-	MemoryMiB                                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"memory_mib"`
-	VCpuCount                                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"vcpu_count"`
-	AcceleratorCount                          fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_count"`
-	AcceleratorManufacturers                  fwtypes.ListOfString                         `tfsdk:"accelerator_manufacturers"`
-	AcceleratorNames                          fwtypes.ListOfString                         `tfsdk:"accelerator_names"`
-	AcceleratorTotalMemoryMiB                 fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_total_memory_mib"`
-	AcceleratorTypes                          fwtypes.ListOfString                         `tfsdk:"accelerator_types"`
-	AllowedInstanceTypes                      fwtypes.ListOfString                         `tfsdk:"allowed_instance_types"`
-	BareMetal                                 types.String                                 `tfsdk:"bare_metal"`
-	BaselineEbsBandwidthMbps                  fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"baseline_ebs_bandwidth_mbps"`
-	BurstablePerformance                      types.String                                 `tfsdk:"burstable_performance"`
-	CpuManufacturers                          fwtypes.ListOfString                         `tfsdk:"cpu_manufacturers"`
-	ExcludedInstanceTypes                     fwtypes.ListOfString                         `tfsdk:"excluded_instance_types"`
-	InstanceGenerations                       fwtypes.ListOfString                         `tfsdk:"instance_generations"`
-	LocalStorage                              types.String                                 `tfsdk:"local_storage"`
-	LocalStorageTypes                         fwtypes.ListOfString                         `tfsdk:"local_storage_types"`
-	MemoryGiBPerVCpu                          fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"memory_gib_per_vcpu"`
-	NetworkBandwidthGbps                      fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"network_bandwidth_gbps"`
-	NetworkInterfaceCount                     fwtypes.ObjectValueOf[minMax[types.Int64]]   `tfsdk:"network_interface_count"`
-	OnDemandMaxPricePercentageOverLowestPrice types.Int64                                  `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
-	RequireHibernateSupport                   types.Bool                                   `tfsdk:"require_hibernate_support"`
-	SpotMaxPricePercentageOverLowestPrice     types.Int64                                  `tfsdk:"spot_max_price_percentage_over_lowest_price"`
-	TotalLocalStorageGB                       fwtypes.ObjectValueOf[minMax[types.Float64]] `tfsdk:"total_local_storage_gb"`
+	MemoryMiB                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"memory_mib"`
+	VCpuCount                                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"vcpu_count"`
+	AcceleratorCount                          fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_count"`
+	AcceleratorManufacturers                  fwtypes.ListOfString                                   `tfsdk:"accelerator_manufacturers"`
+	AcceleratorNames                          fwtypes.ListOfString                                   `tfsdk:"accelerator_names"`
+	AcceleratorTotalMemoryMiB                 fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"accelerator_total_memory_mib"`
+	AcceleratorTypes                          fwtypes.ListOfString                                   `tfsdk:"accelerator_types"`
+	AllowedInstanceTypes                      fwtypes.ListOfString                                   `tfsdk:"allowed_instance_types"`
+	BareMetal                                 types.String                                           `tfsdk:"bare_metal"`
+	BaselineEbsBandwidthMbps                  fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"baseline_ebs_bandwidth_mbps"`
+	BurstablePerformance                      types.String                                           `tfsdk:"burstable_performance"`
+	CpuManufacturers                          fwtypes.ListOfString                                   `tfsdk:"cpu_manufacturers"`
+	ExcludedInstanceTypes                     fwtypes.ListOfString                                   `tfsdk:"excluded_instance_types"`
+	InstanceGenerations                       fwtypes.ListOfString                                   `tfsdk:"instance_generations"`
+	LocalStorage                              types.String                                           `tfsdk:"local_storage"`
+	LocalStorageTypes                         fwtypes.ListOfString                                   `tfsdk:"local_storage_types"`
+	MemoryGiBPerVCpu                          fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"memory_gib_per_vcpu"`
+	NetworkBandwidthGbps                      fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"network_bandwidth_gbps"`
+	NetworkInterfaceCount                     fwtypes.ListNestedObjectValueOf[minMax[types.Int64]]   `tfsdk:"network_interface_count"`
+	OnDemandMaxPricePercentageOverLowestPrice types.Int64                                            `tfsdk:"on_demand_max_price_percentage_over_lowest_price"`
+	RequireHibernateSupport                   types.Bool                                             `tfsdk:"require_hibernate_support"`
+	SpotMaxPricePercentageOverLowestPrice     types.Int64                                            `tfsdk:"spot_max_price_percentage_over_lowest_price"`
+	TotalLocalStorageGB                       fwtypes.ListNestedObjectValueOf[minMax[types.Float64]] `tfsdk:"total_local_storage_gb"`
 }
 
 type minMax[T comparable] struct {
 	Min T `tfsdk:"min"`
 	Max T `tfsdk:"max"`
+}
+
+func minMaxInt64(ctx context.Context, optional bool) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[minMax[types.Int64]](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrMin: schema.Int64Attribute{
+					Optional: optional,
+					Required: !optional,
+				},
+				names.AttrMax: schema.Int64Attribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func minMaxFloat64(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[minMax[types.Float64]](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrMin: schema.Float64Attribute{
+					Optional: true,
+				},
+				names.AttrMax: schema.Float64Attribute{
+					Optional: true,
+				},
+			},
+		},
+	}
 }
