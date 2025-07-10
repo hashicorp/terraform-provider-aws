@@ -665,6 +665,25 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							{{ .ARNAttribute }}: knownvalue.Null(),
 						}),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: knownvalue.Null(),
+							names.AttrRegion:    knownvalue.Null(),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: knownvalue.Null(),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: knownvalue.Null(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.Null(),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.Null(),
+							{{ end }}
+						}),
 					{{ end -}}
 				},
 			},
@@ -690,8 +709,30 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
 							{{ .ARNAttribute }}: knownvalue.NotNull(),
 						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{ end }}
 					{{ end -}}
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 				},
 			},
 		},
