@@ -182,32 +182,32 @@ func TestRetryWhenNotFound(t *testing.T) {
 	var retryCount int32
 	testCases := []struct {
 		Name        string
-		F           func() (any, error)
+		F           func(context.Context) (any, error)
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (any, error) {
+			F: func(ctx context.Context) (any, error) {
 				return nil, nil
 			},
 		},
 		{
 			Name: "non-retryable other error",
-			F: func() (any, error) {
+			F: func(ctx context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "retryable NotFoundError timeout",
-			F: func() (any, error) {
+			F: func(ctx context.Context) (any, error) {
 				return nil, &retry.NotFoundError{}
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "retryable NotFoundError success",
-			F: func() (any, error) {
+			F: func(ctx context.Context) (any, error) {
 				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
 					return nil, &retry.NotFoundError{}
 				}
