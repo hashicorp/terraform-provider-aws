@@ -16,7 +16,7 @@ terraform {
   required_providers {
     datafyaws = {
       source  = "datafy-io/datafyaws"
-      version = "~> 5.0"
+      version = "~> 1.0"
     }
   }
 }
@@ -40,7 +40,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "datafyaws" {
-  version = "~> 5.0"
+  version = "~> 1.0"
   region  = "us-east-1"
 }
 
