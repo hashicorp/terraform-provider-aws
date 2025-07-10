@@ -104,7 +104,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findApplicationByName(ctx, conn, d.Id())
 	})
 
