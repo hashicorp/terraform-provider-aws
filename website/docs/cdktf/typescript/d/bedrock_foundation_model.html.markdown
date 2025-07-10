@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_model"
 description: |-
@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
 * `modelId` – (Required) Model identifier.
 
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-6ca1c6ae02f6bf6eaa998eb031be9be04ad923c654a4f003585ee4d02856b78b -->
+<!-- cache-key: cdktf-0.20.8 input-c75c9c15d61ec94a1981795aaaa8623eed5814b08359d63d8dd10d45a2ef9523 -->

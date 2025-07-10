@@ -171,9 +171,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
-
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `gateway_name` - (Required) Name of the gateway.
 * `gateway_timezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `GMT-4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
@@ -192,6 +190,8 @@ This argument supports the following arguments:
 * `smb_file_share_visibility` - (Optional) Specifies whether the shares on this gateway appear when listing shares.
 * `tape_drive_type` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `IBM-ULT3580-TD5`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
 
 ### maintenance_start_time
 
@@ -290,4 +290,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-187ed7975b77b44dfe286243ecbc501bccd2e04c4172f96f87a4eb47a54fcf77 -->
+<!-- cache-key: cdktf-0.20.8 input-cb4c928c4fd1e30fad393d7f5e5b16672e561d0e4ad9c5fc7036fb9ac75b1c63 -->

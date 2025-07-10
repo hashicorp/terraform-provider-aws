@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS QuickSight Account Subscription.
 
+~> Due to the absence of the `adminGroup`, `authorGroup`, and `readerGroup` fields in the [`DescribeAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DescribeAccountSettings.html) API response, changes made to these groups post-subscription will not be detected by this resource.
+
 ## Example Usage
 
 ```typescript
@@ -49,15 +51,16 @@ The following arguments are required:
 The following arguments are optional:
 
 * `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
-* `adminGroup` - (Optional) Admin group associated with your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
-* `authorGroup` - (Optional) Author group associated with your Active Directory.
+* `adminGroup` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
+* `authorGroup` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
 * `awsAccountId` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
 * `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directoryId` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iamIdentityCenterInstanceArn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
-* `readerGroup` - (Optional) Reader group associated with your Active Direcrtory.
+* `readerGroup` - (Optional) Reader group associated with your Active Directory or IAM Identity Center account.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
 ## Attribute Reference
@@ -77,4 +80,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.1 input-263024d0a0cd87af2bb2dde605ea571666d2674cbefeccb3e8334a4f7c925686 -->
+<!-- cache-key: cdktf-0.20.8 input-99689028c9b906c6231226548c162e0e18f2aedaf2122f918bf3e09d8b560624 -->

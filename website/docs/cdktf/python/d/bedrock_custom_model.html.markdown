@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_model"
 description: |-
@@ -33,6 +33,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `model_id` – (Required) Name or ARN of the custom model.
 
 ## Attribute Reference
@@ -61,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `validation_metrics` - The loss metric for each validator that you provided.
     * `validation_loss` - The validation loss associated with the validator.
   
-<!-- cache-key: cdktf-0.20.1 input-9d7ebec3f75401eee70e98691f002ad65f0b09c6fcd48e93308bf9aa6010f5da -->
+<!-- cache-key: cdktf-0.20.8 input-84352a928e1fffb3197ae9bcd4e534307bff12270925c87131a9716427d13095 -->

@@ -59,13 +59,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** Please note that one of either `subnetId` or `gatewayId` is required.
-
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `subnetId` - (Optional) The subnet ID to create an association. Conflicts with `gatewayId`.
 * `gatewayId` - (Optional) The gateway ID to create an association. Conflicts with `subnetId`.
 * `routeTableId` - (Required) The ID of the routing table to associate with.
+
+~> **NOTE:** Please note that one of either `subnetId` or `gatewayId` is required.
 
 ## Attribute Reference
 
@@ -149,4 +149,4 @@ With EC2 Internet Gateways:
 % terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4552818b4878e80d058998466d30965c95d752e528e046f4f7a9999a8dfcb719 -->
+<!-- cache-key: cdktf-0.20.8 input-11c2d1f6ba42901dc102bb8ea0ea4775cedd6c54be32c05367deeccaef0a02ae -->

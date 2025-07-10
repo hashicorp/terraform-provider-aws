@@ -18,8 +18,14 @@ var (
 	ResourceUserPoolUICustomization = resourceUserPoolUICustomization
 
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
+	FindGroupUserByThreePartKey             = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
+	FindResourceServerByTwoPartKey          = findResourceServerByTwoPartKey
+	FindRiskConfigurationByTwoPartKey       = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
+	FindUserPoolClientByName                = findUserPoolClientByName
+	FindUserPoolClientByTwoPartKey          = findUserPoolClientByTwoPartKey
+	FindUserPoolDomain                      = findUserPoolDomain
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
 )

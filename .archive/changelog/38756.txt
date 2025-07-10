@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elbv2_trust_store_revocation: Fix to properly return errors during resource creation
+```

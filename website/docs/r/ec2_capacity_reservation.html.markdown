@@ -25,6 +25,7 @@ resource "aws_ec2_capacity_reservation" "default" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebs_optimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
 * `end_date` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
@@ -47,6 +48,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner_id` - The ID of the AWS account that owns the Capacity Reservation.
 * `arn` - The ARN of the Capacity Reservation.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

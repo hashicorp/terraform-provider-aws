@@ -88,7 +88,7 @@ locals {
 
   workspaces_az_id_strings = lookup(
     local.region_workspaces_az_id_strings,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     join(",", data.aws_availability_zones.available.zone_ids),
   )
   workspaces_az_ids = split(",", local.workspaces_az_id_strings)
@@ -121,5 +121,7 @@ resource "aws_directory_service_directory" "example" {
 }
 
 resource "aws_kms_key" "example" {
-  description = "WorkSpaces example key"
+  description             = "WorkSpaces example key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }

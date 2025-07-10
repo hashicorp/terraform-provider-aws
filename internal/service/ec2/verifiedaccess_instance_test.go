@@ -41,8 +41,8 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 				Config: testAccVerifiedAccessInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttr(resourceName, "verified_access_trust_providers.#", "0"),
 				),
 			},
@@ -77,7 +77,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 				Config: testAccVerifiedAccessInstanceConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -183,30 +183,63 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessInstanceConfig_tags1("key1", "value1"),
+				Config: testAccVerifiedAccessInstanceConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessInstanceConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccVerifiedAccessInstanceConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessInstanceConfig_tags1("key2", "value2"),
+				Config: testAccVerifiedAccessInstanceConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v3),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v1 types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+	subDomainName := "test.demo.com"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, subDomainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "cidr_endpoints_custom_subdomain", subDomainName),
 				),
 			},
 			{
@@ -341,4 +374,17 @@ resource "aws_verifiedaccess_instance" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVerifiedAccessInstanceConfig_cidrEndpointsCustomSubDomain(rName, cidrEndpointsCustomSubDomain string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_instance" "test" {
+
+  cidr_endpoints_custom_subdomain = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, cidrEndpointsCustomSubDomain)
 }

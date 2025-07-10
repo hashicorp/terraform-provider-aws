@@ -30,11 +30,14 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new LambdaCodeSigningConfig(this, "new_csc", {
       allowedPublishers: {
-        signingProfileVersionArns: [example1.arn, example2.arn],
+        signingProfileVersionArns: [example1.versionArn, example2.versionArn],
       },
       description: "My awesome code signing config.",
       policies: {
         untrustedArtifactOnDeployment: "Warn",
+      },
+      tags: {
+        Name: "dynamodb",
       },
     });
   }
@@ -44,9 +47,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `allowedPublishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
 * `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `allowedPublishers` block supports the following argument:
 
@@ -63,6 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the code signing configuration.
 * `configId` - Unique identifier for the code signing configuration.
 * `lastModified` - The date and time that the code signing configuration was last modified.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
 
@@ -98,4 +105,4 @@ Using `terraform import`, import Code Signing Configs using their ARN. For examp
 % terraform import aws_lambda_code_signing_config.imported_csc arn:aws:lambda:us-west-2:123456789012:code-signing-config:csc-0f6c334abcdea4d8b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b27a1e90446049f7c1773fd983c1f96949a20ac313e28f81bd237fd17f96c857 -->
+<!-- cache-key: cdktf-0.20.8 input-8277438b69c768d6fd9b1482f842bc5d5438d07f74a2ce6894246fda34455c7d -->

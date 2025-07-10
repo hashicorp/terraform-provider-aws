@@ -9,9 +9,21 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
+    "autoflex" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to AutoFlex."
+    },
+    "aws-compatible-service" = {
+      color       = "ff9900", # color:aws
+      description = "Issues related to compatibility with AWS-compatible services."
+    },
     "aws-sdk-go-migration" = {
       color       = "844fba", # color:terraform (main)
       description = "Issues that are related to the providers migration to AWS SDK for Go v2."
+    },
+    "beta-feedback" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues providing feedback on beta releases."
     },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
@@ -81,6 +93,10 @@ variable "workflow_labels" {
       color       = "63d0ff", # color:packer
       description = "Call to action for new contributors looking for a place to start. Smaller or straightforward issues."
     },
+    "resource-import" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to issues importing resources."
+    },
     "linter" = {
       color       = "f4ecff", # color:terraform secondary
       description = "Pertains to changes to or issues with the various linters."
@@ -97,6 +113,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
     },
+    "new-ephemeral-resource" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new ephemeral resource."
+    },
     "new-function" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new function."
@@ -108,6 +128,10 @@ variable "workflow_labels" {
     "new-service" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new service."
+    },
+    "no-changelog-needed" = {
+      color       = "828a90", # color:stale grey
+      description = "Indicates that a changelog entry is not necessary"
     },
     "partner" = {
       color       = "ff9900", # color:aws
@@ -189,6 +213,10 @@ variable "workflow_labels" {
       color       = "d1ebff", # color:terraform accent
       description = "Addresses areas of the codebase that need refactoring or redesign."
     },
+    "terraform-plugin-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to Terraform Plugin Framework."
+    },
     "tests" = {
       color       = "60dea9", # color:nomad
       description = "PRs: expanded test coverage. Issues: expanded coverage, enhancements to test infrastructure."
@@ -217,7 +245,6 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Issues and PRs that relate to using the provider on the Windows operating system."
     },
-
   }
   description = "Name-color-description mapping of workflow issues."
   type        = map(any)

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_origin_request_policy", name="Origin Request Policy")
@@ -33,7 +34,11 @@ func resourceOriginRequestPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -97,7 +102,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -133,29 +138,29 @@ func resourceOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.OriginRequestPolicyConfig{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cookies_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CookiesConfig = expandOriginRequestPolicyCookiesConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cookies_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CookiesConfig = expandOriginRequestPolicyCookiesConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.HeadersConfig = expandOriginRequestPolicyHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.HeadersConfig = expandOriginRequestPolicyHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("query_strings_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.QueryStringsConfig = expandOriginRequestPolicyQueryStringsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("query_strings_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.QueryStringsConfig = expandOriginRequestPolicyQueryStringsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.CreateOriginRequestPolicyInput{
@@ -173,7 +178,7 @@ func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginRequestPolicyRead(ctx, d, meta)...)
 }
 
-func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -189,10 +194,11 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, originRequestPolicyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
-		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
+		if err := d.Set("cookies_config", []any{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
 	} else {
@@ -200,15 +206,15 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("etag", output.ETag)
 	if apiObject.HeadersConfig != nil {
-		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
+		if err := d.Set("headers_config", []any{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
 		}
 	} else {
 		d.Set("headers_config", nil)
 	}
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
-		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
+		if err := d.Set("query_strings_config", []any{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
 		}
 	} else {
@@ -218,7 +224,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -227,23 +233,23 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	// "When you update an origin request policy configuration, all the fields are updated with the values provided in the request. You cannot update some fields independent of others."
 	//
 	apiObject := &awstypes.OriginRequestPolicyConfig{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("cookies_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.CookiesConfig = expandOriginRequestPolicyCookiesConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cookies_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.CookiesConfig = expandOriginRequestPolicyCookiesConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("headers_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.HeadersConfig = expandOriginRequestPolicyHeadersConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("headers_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.HeadersConfig = expandOriginRequestPolicyHeadersConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("query_strings_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.QueryStringsConfig = expandOriginRequestPolicyQueryStringsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("query_strings_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.QueryStringsConfig = expandOriginRequestPolicyQueryStringsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.UpdateOriginRequestPolicyInput{
@@ -261,15 +267,16 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceOriginRequestPolicyRead(ctx, d, meta)...)
 }
 
-func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: %s", d.Id())
-	_, err := conn.DeleteOriginRequestPolicy(ctx, &cloudfront.DeleteOriginRequestPolicyInput{
+	input := cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteOriginRequestPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchOriginRequestPolicy](err) {
 		return diags
@@ -307,7 +314,7 @@ func findOriginRequestPolicyByID(ctx context.Context, conn *cloudfront.Client, i
 	return output, nil
 }
 
-func expandOriginRequestPolicyCookiesConfig(tfMap map[string]interface{}) *awstypes.OriginRequestPolicyCookiesConfig {
+func expandOriginRequestPolicyCookiesConfig(tfMap map[string]any) *awstypes.OriginRequestPolicyCookiesConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -318,14 +325,14 @@ func expandOriginRequestPolicyCookiesConfig(tfMap map[string]interface{}) *awsty
 		apiObject.CookieBehavior = awstypes.OriginRequestPolicyCookieBehavior(v)
 	}
 
-	if v, ok := tfMap["cookies"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Cookies = expandCookieNames(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cookies"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Cookies = expandCookieNames(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandOriginRequestPolicyHeadersConfig(tfMap map[string]interface{}) *awstypes.OriginRequestPolicyHeadersConfig {
+func expandOriginRequestPolicyHeadersConfig(tfMap map[string]any) *awstypes.OriginRequestPolicyHeadersConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -336,14 +343,14 @@ func expandOriginRequestPolicyHeadersConfig(tfMap map[string]interface{}) *awsty
 		apiObject.HeaderBehavior = awstypes.OriginRequestPolicyHeaderBehavior(v)
 	}
 
-	if v, ok := tfMap["headers"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Headers = expandHeaders(v[0].(map[string]interface{}))
+	if v, ok := tfMap["headers"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Headers = expandHeaders(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandOriginRequestPolicyQueryStringsConfig(tfMap map[string]interface{}) *awstypes.OriginRequestPolicyQueryStringsConfig {
+func expandOriginRequestPolicyQueryStringsConfig(tfMap map[string]any) *awstypes.OriginRequestPolicyQueryStringsConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -354,57 +361,62 @@ func expandOriginRequestPolicyQueryStringsConfig(tfMap map[string]interface{}) *
 		apiObject.QueryStringBehavior = awstypes.OriginRequestPolicyQueryStringBehavior(v)
 	}
 
-	if v, ok := tfMap["query_strings"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.QueryStrings = expandQueryStringNames(v[0].(map[string]interface{}))
+	if v, ok := tfMap["query_strings"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.QueryStrings = expandQueryStringNames(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func flattenOriginRequestPolicyCookiesConfig(apiObject *awstypes.OriginRequestPolicyCookiesConfig) map[string]interface{} {
+func flattenOriginRequestPolicyCookiesConfig(apiObject *awstypes.OriginRequestPolicyCookiesConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cookie_behavior": apiObject.CookieBehavior,
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
-		tfMap["cookies"] = []interface{}{v}
+		tfMap["cookies"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenOriginRequestPolicyHeadersConfig(apiObject *awstypes.OriginRequestPolicyHeadersConfig) map[string]interface{} {
+func flattenOriginRequestPolicyHeadersConfig(apiObject *awstypes.OriginRequestPolicyHeadersConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"header_behavior": apiObject.HeaderBehavior,
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
-		tfMap["headers"] = []interface{}{v}
+		tfMap["headers"] = []any{v}
 	}
 
 	return tfMap
 }
 
-func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequestPolicyQueryStringsConfig) map[string]interface{} {
+func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequestPolicyQueryStringsConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"query_string_behavior": apiObject.QueryStringBehavior,
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {
-		tfMap["query_strings"] = []interface{}{v}
+		tfMap["query_strings"] = []any{v}
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func originRequestPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "origin-request-policy/"+id)
 }

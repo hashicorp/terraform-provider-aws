@@ -5,6 +5,7 @@ package iam_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -26,9 +27,9 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 				Config: testAccGroupDataSourceConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
+					acctest.CheckResourceAttrGlobalARN(ctx, "data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
 				),
 			},
 		},
@@ -51,10 +52,10 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 				Config: testAccGroupDataSourceConfig_user(groupName, userName, groupMemberShipName, userCount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", fmt.Sprint(userCount)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
+					acctest.CheckResourceAttrGlobalARN(ctx, "data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", strconv.Itoa(userCount)),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_id"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_name"),

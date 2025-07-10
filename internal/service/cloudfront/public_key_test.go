@@ -34,11 +34,11 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "caller_reference"),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "encoded_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -87,8 +87,8 @@ func TestAccCloudFrontPublicKey_nameGenerated(t *testing.T) {
 				Config: testAccPublicKeyConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-"),
 				),
 			},
 			{
@@ -114,8 +114,8 @@ func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 				Config: testAccPublicKeyConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -142,7 +142,7 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 				Config: testAccPublicKeyConfig_comment(rName, "comment 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment 1"),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 				Config: testAccPublicKeyConfig_comment(rName, "comment 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment 2"),
 				),
 			},
 		},

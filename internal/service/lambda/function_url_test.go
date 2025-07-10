@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,7 @@ import (
 )
 
 func testAccFunctionURLPreCheck(t *testing.T) {
-	acctest.PreCheckPartition(t, names.StandardPartitionID)
+	acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 }
 
 func TestAccLambdaFunctionURL_basic(t *testing.T) {
@@ -45,7 +46,7 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(resourceName, "function_url"),
 					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
@@ -84,7 +85,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "date"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "keep-alive"),
@@ -109,7 +110,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_headers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors.0.allow_headers.*", "x-custom-header"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_methods.#", "2"),
@@ -192,7 +193,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 					testAccCheckFunctionURLExists(ctx, latestResourceName, &conf),
 					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(latestResourceName, "cors.#", "0"),
-					resource.TestCheckResourceAttrSet(latestResourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(latestResourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(latestResourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(latestResourceName, "function_url"),
 					resource.TestCheckResourceAttr(latestResourceName, "qualifier", ""),
@@ -201,7 +202,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 					testAccCheckFunctionURLExists(ctx, liveResourceName, &conf),
 					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(liveResourceName, "cors.#", "0"),
-					resource.TestCheckResourceAttrSet(liveResourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(liveResourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttr(liveResourceName, "function_name", funcName),
 					resource.TestCheckResourceAttrSet(liveResourceName, "function_url"),
 					resource.TestCheckResourceAttr(liveResourceName, "qualifier", "live"),

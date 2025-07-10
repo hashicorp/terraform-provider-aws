@@ -9,3 +9,7 @@ const (
 	errCodeInvalidParameterValue       = "InvalidParameterValue"
 	errCodeValidationError             = "ValidationError"
 )
+
+const (
+	errIAMRolePropagationMessage = "IAM role ARN value is invalid or does not include the required permissions"
+)

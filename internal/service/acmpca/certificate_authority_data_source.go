@@ -10,31 +10,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_acmpca_certificate_authority", name="Certificate Authority")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func dataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +71,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -78,7 +79,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -95,7 +96,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -113,12 +114,12 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,23 +131,23 @@ func dataSourceCertificateAuthority() *schema.Resource {
 	}
 }
 
-func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	certificateAuthorityARN := d.Get("arn").(string)
-	input := &acmpca.DescribeCertificateAuthorityInput{
+	certificateAuthorityARN := d.Get(names.AttrARN).(string)
+	input := acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	certificateAuthority, err := findCertificateAuthority(ctx, conn, input)
+	certificateAuthority, err := findCertificateAuthority(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
 	d.SetId(certificateAuthorityARN)
-	d.Set("arn", certificateAuthority.Arn)
+	d.Set(names.AttrARN, certificateAuthority.Arn)
 	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.ToTime(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.ToTime(certificateAuthority.NotBefore).Format(time.RFC3339))
@@ -154,13 +155,14 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set("status", certificateAuthority.Status)
-	d.Set("type", certificateAuthority.Type)
+	d.Set(names.AttrStatus, certificateAuthority.Status)
+	d.Set(names.AttrType, certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
+	getCACertInput := acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &getCACertInput)
 
 	// Returned when in PENDING_CERTIFICATE status
 	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
@@ -168,20 +170,27 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
-	d.Set("certificate", "")
-	d.Set("certificate_chain", "")
+	d.Set(names.AttrCertificate, "")
+	d.Set(names.AttrCertificateChain, "")
 	if outputGCACert != nil {
-		d.Set("certificate", outputGCACert.Certificate)
-		d.Set("certificate_chain", outputGCACert.CertificateChain)
+		d.Set(names.AttrCertificate, outputGCACert.Certificate)
+		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
-	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+	// Attempt to get the CSR (if permitted).
+	getCACSRInput := acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	})
+	}
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &getCACSRInput)
 
-	// Returned when in PENDING_CERTIFICATE status
-	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+	switch {
+	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
+		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+		// arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority does not include acm-pca:GetCertificateAuthorityCsr.
+	case errs.IsA[*types.InvalidStateException](err):
+		// Returned when in PENDING_CERTIFICATE status
+		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 

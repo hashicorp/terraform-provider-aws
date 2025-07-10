@@ -112,7 +112,7 @@ The following arguments are required:
 * `name` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 
-The follow arguments are optional:
+The following arguments are optional:
 
 * `catalogId` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
@@ -160,6 +160,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### storage_descriptor
 
+* `additionalLocations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucketColumns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
@@ -256,4 +257,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-440086f7b6f42d14e88814e52247b9d2d35062cc39a397bacf9d9b2222191e88 -->
+<!-- cache-key: cdktf-0.20.8 input-3dca61f83e3b080e11e46459ca995d4e28ea9aa23f0cb390d25fabf872225bb6 -->

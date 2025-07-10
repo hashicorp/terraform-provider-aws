@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_listener", name="Custom Routing Listener")
@@ -46,6 +47,10 @@ func resourceCustomRoutingListener() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"port_range": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -70,7 +75,7 @@ func resourceCustomRoutingListener() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -97,7 +102,7 @@ func resourceCustomRoutingListenerCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -119,6 +124,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
@@ -126,7 +132,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -150,7 +156,7 @@ func resourceCustomRoutingListenerUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomRoutingListenerRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 

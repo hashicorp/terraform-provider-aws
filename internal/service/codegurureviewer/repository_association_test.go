@@ -13,8 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodegurureviewer "github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,8 +49,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -53,6 +59,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"repository"},
 			},
 		},
 	})
@@ -78,8 +90,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_kms_key(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -113,8 +125,8 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_s3_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
@@ -146,28 +158,28 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryAssociationConfig_tags_1(rName, "key1", "value1"),
+				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccRepositoryAssociationConfig_tags_2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRepositoryAssociationConfig_tags_2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRepositoryAssociationConfig_tags_1(rName, "key2", "value2"),
+				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -196,6 +208,88 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var repositoryassociation types.RepositoryAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codegurureviewer_repository_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
+		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccRepositoryAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccRepositoryAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRepositoryAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("codeguru-reviewer", regexache.MustCompile(`association:.+`)),
+					}),
+				},
 			},
 		},
 	})
@@ -358,6 +452,7 @@ func testAccRepositoryAssociation_kms_key() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }

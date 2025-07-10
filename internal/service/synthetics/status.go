@@ -12,7 +12,7 @@ import (
 )
 
 func statusCanaryState(ctx context.Context, conn *synthetics.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindCanaryByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

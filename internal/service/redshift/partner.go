@@ -9,15 +9,17 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshift_partner", name="Partner")
@@ -32,18 +34,18 @@ func resourcePartner() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,11 +55,11 @@ func resourcePartner() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,33 +67,33 @@ func resourcePartner() *schema.Resource {
 	}
 }
 
-func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	account := d.Get("account_id").(string)
-	clusterId := d.Get("cluster_identifier").(string)
+	account := d.Get(names.AttrAccountID).(string)
+	clusterId := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		DatabaseName:      aws.String(d.Get("database_name").(string)),
+		DatabaseName:      aws.String(d.Get(names.AttrDatabaseName).(string)),
 		PartnerName:       aws.String(d.Get("partner_name").(string)),
 	}
 
-	out, err := conn.AddPartnerWithContext(ctx, &input)
+	out, err := conn.AddPartner(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Partner: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s:%s", account, clusterId, aws.StringValue(out.DatabaseName), aws.StringValue(out.PartnerName)))
+	d.SetId(fmt.Sprintf("%s:%s:%s:%s", account, clusterId, aws.ToString(out.DatabaseName), aws.ToString(out.PartnerName)))
 
 	return append(diags, resourcePartnerRead(ctx, d, meta)...)
 }
 
-func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	out, err := findPartnerByID(ctx, conn, d.Id())
 
@@ -105,34 +107,34 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Partner (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", d.Get("account_id").(string))
-	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
+	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID).(string))
+	d.Set(names.AttrClusterIdentifier, d.Get(names.AttrClusterIdentifier).(string))
 	d.Set("partner_name", out.PartnerName)
-	d.Set("database_name", out.DatabaseName)
-	d.Set("status", out.Status)
-	d.Set("status_message", out.StatusMessage)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrStatusMessage, out.StatusMessage)
 
 	return diags
 }
 
-func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	account, clusterID, dbName, partnerName, err := DecodePartnerID(d.Id())
+	account, clusterID, dbName, partnerName, err := decodePartnerID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Partner: %s", d.Id())
-	_, err = conn.DeletePartnerWithContext(ctx, &redshift.DeletePartnerInput{
+	_, err = conn.DeletePartner(ctx, &redshift.DeletePartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterID),
 		DatabaseName:      aws.String(dbName),
 		PartnerName:       aws.String(partnerName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
+	if errs.IsA[*awstypes.PartnerNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
 	}
 
@@ -143,7 +145,7 @@ func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func DecodePartnerID(id string) (string, string, string, string, error) {
+func decodePartnerID(id string) (string, string, string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 		return "", "", "", "", fmt.Errorf("expected ID to be the form account:cluster_identifier:database_name:partner_name, given: %s", id)

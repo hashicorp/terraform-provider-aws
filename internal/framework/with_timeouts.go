@@ -42,7 +42,7 @@ func (w *WithTimeouts) CreateTimeout(ctx context.Context, timeouts timeouts.Valu
 	timeout, diags := timeouts.Create(ctx, w.defaultCreateTimeout)
 
 	if errors := diags.Errors(); len(errors) > 0 {
-		tflog.Warn(ctx, "reading configured Create timeout", map[string]interface{}{
+		tflog.Warn(ctx, "reading configured Create timeout", map[string]any{
 			"summary": errors[0].Summary(),
 			"detail":  errors[0].Detail(),
 		})
@@ -58,7 +58,7 @@ func (w *WithTimeouts) ReadTimeout(ctx context.Context, timeouts timeouts.Value)
 	timeout, diags := timeouts.Read(ctx, w.defaultReadTimeout)
 
 	if errors := diags.Errors(); len(errors) > 0 {
-		tflog.Warn(ctx, "reading configured Read timeout", map[string]interface{}{
+		tflog.Warn(ctx, "reading configured Read timeout", map[string]any{
 			"summary": errors[0].Summary(),
 			"detail":  errors[0].Detail(),
 		})
@@ -74,7 +74,7 @@ func (w *WithTimeouts) UpdateTimeout(ctx context.Context, timeouts timeouts.Valu
 	timeout, diags := timeouts.Update(ctx, w.defaultUpdateTimeout)
 
 	if errors := diags.Errors(); len(errors) > 0 {
-		tflog.Warn(ctx, "reading configured Update timeout", map[string]interface{}{
+		tflog.Warn(ctx, "reading configured Update timeout", map[string]any{
 			"summary": errors[0].Summary(),
 			"detail":  errors[0].Detail(),
 		})
@@ -90,7 +90,7 @@ func (w *WithTimeouts) DeleteTimeout(ctx context.Context, timeouts timeouts.Valu
 	timeout, diags := timeouts.Delete(ctx, w.defaultDeleteTimeout)
 
 	if errors := diags.Errors(); len(errors) > 0 {
-		tflog.Warn(ctx, "reading configured Delete timeout", map[string]interface{}{
+		tflog.Warn(ctx, "reading configured Delete timeout", map[string]any{
 			"summary": errors[0].Summary(),
 			"detail":  errors[0].Detail(),
 		})

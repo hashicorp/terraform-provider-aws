@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Friendly name of the topic to match.
 
 ## Attribute Reference
@@ -46,5 +48,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 * `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+* `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-a8e2c249a5626888f1285a9f19fb2d9d401d550cc75845a638d912a441614449 -->
+<!-- cache-key: cdktf-0.20.8 input-3bbfffdbf99a84bccbbeaed77ec04b029e35d143a8e4e2bb4cd0ddb84ce39e0c -->

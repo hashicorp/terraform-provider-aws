@@ -4,14 +4,21 @@
 package conns
 
 import (
-	"context"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+)
+
+var (
+	standardPartition, _ = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.UsEast1RegionID)
+	chinaPartition, _    = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.CnNorth1RegionID)
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -21,7 +28,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
+				partition: standardPartition,
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
@@ -29,7 +36,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
+				partition: chinaPartition,
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -37,7 +44,6 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -53,7 +59,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -63,8 +69,10 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			Prefix:   "test",
 			Expected: "test.us-west-2.amazonaws.com", //lintignore:AWSAT003
@@ -72,8 +80,10 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				Region:    "cn-northwest-1", //lintignore:AWSAT003
+				partition: chinaPartition,
+				awsConfig: &aws.Config{
+					Region: "cn-northwest-1", //lintignore:AWSAT003
+				},
 			},
 			Prefix:   "test",
 			Expected: "test.cn-northwest-1.amazonaws.com.cn", //lintignore:AWSAT003
@@ -81,7 +91,6 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -97,7 +106,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -107,8 +116,10 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 		{
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.us-west-2.compute.internal", //lintignore:AWSAT003
@@ -116,8 +127,10 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 		{
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-east-1", //lintignore:AWSAT003
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ip-10-20-30-40.ec2.internal",
@@ -125,7 +138,6 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -141,7 +153,7 @@ func TestAWSClientEC2PrivateDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-
 func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
-	ctx := context.TODO()
+	ctx := t.Context()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -151,8 +163,10 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 		{
 			Name: "us-west-2",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-west-2", //lintignore:AWSAT003
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.us-west-2.compute.amazonaws.com", //lintignore:AWSAT003
@@ -160,8 +174,10 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 		{
 			Name: "us-east-1",
 			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				Region:    "us-east-1", //lintignore:AWSAT003
+				partition: standardPartition,
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
 			},
 			IP:       "10.20.30.40",
 			Expected: "ec2-10-20-30-40.compute-1.amazonaws.com",
@@ -169,7 +185,6 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -177,6 +192,62 @@ func TestAWSClientEC2PublicDNSNameForIP(t *testing.T) { // nosemgrep:ci.aws-in-f
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientValidateInContextRegionInPartition(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Region    string
+		Expected  bool
+	}{
+		{
+			Name: "AWS Commercial, valid",
+			AWSClient: &AWSClient{
+				partition: standardPartition,
+			},
+			Region:   endpoints.ApNortheast1RegionID,
+			Expected: true,
+		},
+		{
+			Name: "AWS Commercial, invalid",
+			AWSClient: &AWSClient{
+				partition: standardPartition,
+			},
+			Region:   endpoints.UsGovWest1RegionID,
+			Expected: false,
+		},
+		{
+			Name: "AWS China, valid",
+			AWSClient: &AWSClient{
+				partition: chinaPartition,
+			},
+			Region:   endpoints.CnNorth1RegionID,
+			Expected: true,
+		},
+		{
+			Name:      "Empty partition, valid",
+			AWSClient: &AWSClient{},
+			Region:    "ash",
+			Expected:  true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx = NewResourceContext(ctx, "test", "Test", testCase.Region)
+			err := testCase.AWSClient.ValidateInContextRegionInPartition(ctx)
+
+			if got := err == nil; got != testCase.Expected {
+				t.Errorf("got %t, expected %t", got, testCase.Expected)
 			}
 		})
 	}

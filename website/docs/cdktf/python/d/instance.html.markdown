@@ -41,17 +41,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
-
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
 * `get_user_data` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instance_tags`, or `instance_id` must be specified.
@@ -99,6 +97,7 @@ interpolation.
 * `instance_type` - Type of the Instance.
 * `ipv6_addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `key_name` - Key name of the Instance.
+* `launch_time` - Time the instance was launched.
 * `maintenance_options` - Maintenance and recovery options for the instance.
     * `auto_recovery` - Automatic recovery behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.
@@ -148,4 +147,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.1 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
+<!-- cache-key: cdktf-0.20.8 input-6be3248cfb27358ddb2d28d43a1f606e00e8edf34845e58f6efbfb9ec9bd828f -->

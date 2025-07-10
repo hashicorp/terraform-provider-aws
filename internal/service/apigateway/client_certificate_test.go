@@ -34,8 +34,8 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/clientcertificates/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Hello from TF acceptance test"),
 				),
 			},
 			{
@@ -47,53 +47,8 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				Config: testAccClientCertificateConfig_basicUpdated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/clientcertificates/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf apigateway.GetClientCertificateOutput
-	resourceName := "aws_api_gateway_client_certificate.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClientCertificateConfig_tags1("key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClientCertificateConfig_tags2("key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccClientCertificateConfig_tags1("key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/clientcertificates/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Hello from TF acceptance test - updated"),
 				),
 			},
 		},
@@ -181,28 +136,3 @@ resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
-
-func testAccClientCertificateConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
-  description = "Hello from TF acceptance test"
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccClientCertificateConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "test" {
-  description = "Hello from TF acceptance test"
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
-}

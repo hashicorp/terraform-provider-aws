@@ -26,6 +26,7 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bot_name` - (Required) The name of the bot.
 * `bot_version` - (Required) The version of the bot.
 * `conversation_logs` - (Optional) The settings that determine how Amazon Lex uses conversation logs for the alias. Attributes are documented under [conversation_logs](#conversation_logs).

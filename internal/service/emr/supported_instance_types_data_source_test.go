@@ -25,7 +25,6 @@ func TestAccEMRSupportedInstanceTypesDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSupportedInstanceTypesDataSourceConfig_basic(releaseLabel),
@@ -33,7 +32,7 @@ func TestAccEMRSupportedInstanceTypesDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "release_label", releaseLabel),
 					// Verify a known supported type is included in the output
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "supported_instance_types.*", map[string]string{
-						"type": "m5.xlarge",
+						names.AttrType: "m5.xlarge",
 					}),
 				),
 			},

@@ -68,6 +68,7 @@ This resource supports the following arguments:
 * `kmsKeyId` - (Optional) KMS key ID.
 * `optionGroupName`- (Optional) The name of an option group to associate with the copy of the snapshot.
 * `presignedUrl` - (Optional) he URL that contains a Signature Version 4 signed request.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `sourceDbSnapshotIdentifier` - (Required) Snapshot identifier of the source snapshot.
 * `targetCustomAvailabilityZone` - (Optional) The external custom Availability Zone.
 * `targetDbSnapshotIdentifier` - (Required) The Identifier for the snapshot.
@@ -88,6 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kmsKeyId` - The ARN for the KMS encryption key.
 * `licenseModel` - License model information for the restored DB instance.
 * `optionGroupName` - Provides the option group name for the DB snapshot.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `sourceDbSnapshotIdentifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `sourceRegion` - The region that the DB snapshot was created in or copied from.
 * `storageType` - Specifies the storage type associated with DB snapshot.
@@ -128,4 +130,4 @@ Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot ident
 % terraform import aws_db_snapshot_copy.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-082f155090a12691f858aa1fdb27e4c7fb93bb3dd71c2796c7c873690f9af714 -->
+<!-- cache-key: cdktf-0.20.8 input-6f6547e303737706fa49af0edbb754214d4784da5b3aa4cd7c55df0c0282d271 -->

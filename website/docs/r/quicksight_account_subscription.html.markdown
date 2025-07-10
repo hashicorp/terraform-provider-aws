@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS QuickSight Account Subscription.
 
+~> Due to the absence of the `admin_group`, `author_group`, and `reader_group` fields in the [`DescribeAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DescribeAccountSettings.html) API response, changes made to these groups post-subscription will not be detected by this resource.
+
 ## Example Usage
 
 ```terraform
@@ -32,16 +34,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active_directory_name` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
-* `admin_group` - (Optional) Admin group associated with your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
-* `author_group` - (Optional) Author group associated with your Active Directory.
+* `admin_group` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
+* `author_group` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
 * `aws_account_id` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
 * `contact_number` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directory_id` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `email_address` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `first_name` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iam_identity_center_instance_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `last_name` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
-* `reader_group` - (Optional) Reader group associated with your Active Direcrtory.
+* `reader_group` - (Optional) Reader group associated with your Active Directory or IAM Identity Center account.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
 ## Attribute Reference

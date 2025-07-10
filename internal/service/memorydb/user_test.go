@@ -34,14 +34,14 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "user/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
@@ -71,11 +71,11 @@ func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_string", "on ~* &* +@all"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "user/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "user/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 				),
 			},
 			{
@@ -214,11 +214,11 @@ func TestAccMemoryDBUser_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_tags1(rName, "key1", "value1"),
+				Config: testAccUserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -228,20 +228,20 @@ func TestAccMemoryDBUser_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"authentication_mode.0.passwords"},
 			},
 			{
-				Config: testAccUserConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccUserConfig_tags1(rName, "key2", "value2"),
+				Config: testAccUserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -250,14 +250,14 @@ func TestAccMemoryDBUser_tags(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_user" {
 				continue
 			}
 
-			_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes["user_name"])
+			_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -285,9 +285,9 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No MemoryDB User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
-		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes["user_name"])
+		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
 
 		return err
 	}

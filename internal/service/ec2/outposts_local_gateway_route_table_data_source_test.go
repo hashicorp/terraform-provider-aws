@@ -26,8 +26,8 @@ func TestAccEC2OutpostsLocalGatewayRouteTableDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},
 		},
@@ -48,8 +48,8 @@ func TestAccEC2OutpostsLocalGatewayRouteTableDataSource_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},
 		},
@@ -70,8 +70,8 @@ func TestAccEC2OutpostsLocalGatewayRouteTableDataSource_localGatewayID(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},
 		},
@@ -92,8 +92,8 @@ func TestAccEC2OutpostsLocalGatewayRouteTableDataSource_outpostARN(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_id", regexache.MustCompile(`^lgw-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "state", "available"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},
 		},

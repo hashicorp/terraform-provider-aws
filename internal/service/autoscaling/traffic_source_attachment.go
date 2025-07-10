@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_traffic_source_attachment", name="Traffic Source Attachment")
@@ -49,13 +50,13 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -68,12 +69,12 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 	}
 }
 
-func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	asgName := d.Get("autoscaling_group_name").(string)
-	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
+	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]any)[0].(map[string]any))
 	trafficSourceID := aws.ToString(trafficSource.Identifier)
 	trafficSourceType := aws.ToString(trafficSource.Type)
 	id := trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, trafficSourceID)
@@ -97,7 +98,7 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceTrafficSourceAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -121,7 +122,7 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -130,13 +131,14 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
+	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]any)[0].(map[string]any))
 
 	log.Printf("[INFO] Deleting Auto Scaling Traffic Source Attachment: %s", d.Id())
-	_, err = conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
+	input := autoscaling.DetachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
-	})
+	}
+	_, err = conn.DetachTrafficSources(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
@@ -192,7 +194,7 @@ func findTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autosc
 }
 
 func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 		if tfresource.NotFound(err) {

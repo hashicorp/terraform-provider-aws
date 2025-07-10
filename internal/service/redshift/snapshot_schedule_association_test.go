@@ -35,8 +35,8 @@ func TestAccRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "schedule_identifier", snapshotScheduleResourceName, names.AttrID),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 			_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 
@@ -142,7 +142,7 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err = tfredshift.FindSnapshotScheduleAssociationByTwoPartKey(ctx, conn, clusterIdentifier, scheduleIdentifier)
 

@@ -10,7 +10,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
+~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -135,7 +135,7 @@ resource "aws_lambda_function" "func" {
   function_name = "example_lambda_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -190,7 +190,7 @@ resource "aws_lambda_function" "func1" {
   function_name = "example_lambda_name1"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_permission" "allow_bucket2" {
@@ -330,6 +330,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.

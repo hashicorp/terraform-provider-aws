@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_addon_version")
+// @SDKDataSource("aws_eks_addon_version", name="Add-On Version")
 func dataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,
@@ -34,11 +35,11 @@ func dataSourceAddonVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,14 +47,14 @@ func dataSourceAddonVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
-	mostRecent := d.Get("most_recent").(bool)
+	mostRecent := d.Get(names.AttrMostRecent).(bool)
 	versionInfo, err := findAddonVersionByTwoPartKey(ctx, conn, addonName, kubernetesVersion, mostRecent)
 
 	if err != nil {
@@ -63,8 +64,8 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(addonName)
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
-	d.Set("most_recent", mostRecent)
-	d.Set("version", versionInfo.AddonVersion)
+	d.Set(names.AttrMostRecent, mostRecent)
+	d.Set(names.AttrVersion, versionInfo.AddonVersion)
 
 	return diags
 }

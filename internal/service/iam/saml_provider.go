@@ -23,12 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
-// @Tags(identifierAttribute="id", resourceType="SAMLProvider")
+// @Tags(identifierAttribute="arn", resourceType="SAMLProvider")
 // @Testing(tagsTest=false)
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
@@ -42,11 +41,11 @@ func resourceSAMLProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,17 +63,15 @@ func resourceSAMLProvider() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(name),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
@@ -84,7 +81,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateSAMLProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -102,7 +99,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 		err := samlProviderCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 		}
 
@@ -114,7 +111,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -137,8 +134,8 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", name)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
@@ -151,12 +148,12 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iam.UpdateSAMLProviderInput{
 			SAMLProviderArn:      aws.String(d.Id()),
 			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
@@ -172,7 +169,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
-func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
@@ -213,6 +210,26 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func samlProviderTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListSAMLProviderTagsInput{
+		SAMLProviderArn: aws.String(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListSAMLProviderTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
 	return output, nil

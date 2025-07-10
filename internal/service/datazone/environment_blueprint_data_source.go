@@ -19,47 +19,43 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Environment Blueprint")
-func newDataSourceEnvironmentBlueprint(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceEnvironmentBlueprint{}, nil
+// @FrameworkDataSource("aws_datazone_environment_blueprint", name="Environment Blueprint")
+func newEnvironmentBlueprintDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &environmentBlueprintDataSource{}, nil
 }
 
 const (
 	DSNameEnvironmentBlueprint = "Environment Blueprint Data Source"
 )
 
-type dataSourceEnvironmentBlueprint struct {
-	framework.DataSourceWithConfigure
+type environmentBlueprintDataSource struct {
+	framework.DataSourceWithModel[environmentBlueprintDataSourceModel]
 }
 
-func (d *dataSourceEnvironmentBlueprint) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_datazone_environment_blueprint"
-}
-
-func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *environmentBlueprintDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"blueprint_provider": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"domain_id": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"managed": schema.BoolAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 		},
 	}
 }
 
-func (d *dataSourceEnvironmentBlueprint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data environmentBlueprintDataSourceModel
@@ -123,6 +119,7 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 }
 
 type environmentBlueprintDataSourceModel struct {
+	framework.WithRegionModel
 	BlueprintProvider types.String `tfsdk:"blueprint_provider"`
 	Description       types.String `tfsdk:"description"`
 	DomainId          types.String `tfsdk:"domain_id"`

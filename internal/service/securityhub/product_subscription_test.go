@@ -48,7 +48,7 @@ func testAccProductSubscription_basic(t *testing.T) {
 						Partition: acctest.Partition(),
 						Service:   "securityhub",
 						Region:    acctest.Region(),
-						AccountID: acctest.AccountID(),
+						AccountID: acctest.AccountID(ctx),
 						Resource:  "product-subscription/aws/guardduty",
 					}.String()
 					input := &securityhub.DisableImportFindingsForProductInput{
@@ -90,7 +90,7 @@ func testAccCheckProductSubscriptionExists(ctx context.Context, n string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
+		_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		return err
 	}
@@ -105,7 +105,7 @@ func testAccCheckProductSubscriptionDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes["arn"])
+			_, err := tfsecurityhub.FindProductSubscriptionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -132,6 +132,6 @@ data "aws_partition" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = [aws_securityhub_account.example]
-  product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
+  product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}::product/aws/guardduty"
 }
 `)

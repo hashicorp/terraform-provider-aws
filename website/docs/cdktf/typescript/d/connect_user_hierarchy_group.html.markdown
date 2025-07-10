@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `hierarchyGroupId` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific hierarchy group by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
 
 ## Attribute Reference
 
@@ -94,4 +94,4 @@ A level block supports the following attributes:
 * `id` -  The identifier of the hierarchy group.
 * `name` - Name of the hierarchy group.
 
-<!-- cache-key: cdktf-0.20.1 input-4a65e86f5180790b93c832a3ed14333f7e6e9c245f4c8eef60843f34eedef36c -->
+<!-- cache-key: cdktf-0.20.8 input-efe2745b1ed137c4f94adac89130ddc4cd26c4ec8d71ea42fc41800493a830bf -->

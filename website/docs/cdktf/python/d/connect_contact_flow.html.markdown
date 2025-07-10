@@ -56,13 +56,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `contact_flow_id` - (Optional) Returns information on a specific Contact Flow by contact flow id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
 
 ## Attribute Reference
 
@@ -74,4 +74,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Tags to assign to the Contact Flow.
 * `type` - Type of Contact Flow.
 
-<!-- cache-key: cdktf-0.20.1 input-4e365316c40b7e767d366a9457c4aad07059bd09524a478619ae11bc584d56dc -->
+<!-- cache-key: cdktf-0.20.8 input-4704b62808f87c9ff83ebffa212a8fd91a6d335e99a45cf8358d205ea13cab4a -->

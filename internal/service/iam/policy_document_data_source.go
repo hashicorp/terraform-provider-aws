@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
@@ -40,7 +41,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 									Type: schema.TypeString,
 								},
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -59,7 +60,11 @@ func dataSourcePolicyDocument() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"json": {
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"minified_json": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -68,7 +73,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
@@ -87,7 +93,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringIsEmpty,
-					Deprecated:   "Not used",
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,
@@ -102,8 +109,8 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": setOfStringSchema(),
-							"condition": {
+							names.AttrActions: setOfStringSchema(),
+							names.AttrCondition: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
@@ -112,7 +119,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Required: true,
 											Elem: &schema.Schema{
@@ -132,19 +139,21 @@ func dataSourcePolicyDocument() *schema.Resource {
 								Default:      "Allow",
 								ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
 							},
-							"not_actions":    setOfStringSchema(),
-							"not_principals": principalsSchema(),
-							"not_resources":  setOfStringSchema(),
-							"principals":     principalsSchema(),
-							"resources":      setOfStringSchema(),
+							"not_actions":       setOfStringSchema(),
+							"not_principals":    principalsSchema(),
+							"not_resources":     setOfStringSchema(),
+							"principals":        principalsSchema(),
+							names.AttrResources: setOfStringSchema(),
 							"sid": {
+								// Because policy documents are widely used outside IAM, we don't enforce
+								// IAM validation rules requiring alphanumeric and no spaces.
 								Type:     schema.TypeString,
 								Optional: true,
 							},
 						},
 					},
 				},
-				"version": {
+				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  "2012-10-17",
@@ -158,11 +167,11 @@ func dataSourcePolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	mergedDoc := &IAMPolicyDoc{}
 
-	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]any)) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
 		sidMap := make(map[string]struct{})
 		for _, stmt := range mergedDoc.Statements {
@@ -172,7 +181,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// merge sourceDocs in order specified
-		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
+		for sourceJSONIndex, sourceJSON := range v.([]any) {
 			if sourceJSON == nil {
 				continue
 			}
@@ -198,7 +207,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 	// process the current document
 	doc := &IAMPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
@@ -206,12 +215,12 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
-		var cfgStmtIntf = cfgStmts.([]interface{})
+		var cfgStmtIntf = cfgStmts.([]any)
 		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
 		sidMap := make(map[string]struct{})
 
 		for i, stmtI := range cfgStmtIntf {
-			cfgStmt := stmtI.(map[string]interface{})
+			cfgStmt := stmtI.(map[string]any)
 			stmt := &IAMPolicyStatement{
 				Effect: cfgStmt["effect"].(string),
 			}
@@ -226,14 +235,14 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
+			if actions := cfgStmt[names.AttrActions].(*schema.Set).List(); len(actions) > 0 {
 				stmt.Actions = policyDecodeConfigStringList(actions)
 			}
 			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
 				stmt.NotActions = policyDecodeConfigStringList(actions)
 			}
 
-			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
+			if resources := cfgStmt[names.AttrResources].(*schema.Set).List(); len(resources) > 0 {
 				var err error
 				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					policyDecodeConfigStringList(resources), doc.Version,
@@ -268,7 +277,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
+			if conditions := cfgStmt[names.AttrCondition].(*schema.Set).List(); len(conditions) > 0 {
 				var err error
 				stmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {
@@ -286,8 +295,8 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	mergedDoc.Merge(doc)
 
 	// merge override_policy_documents policies into mergedDoc in order specified
-	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]interface{})) > 0 {
-		for overrideJSONIndex, overrideJSON := range v.([]interface{}) {
+	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]any)) > 0 {
+		for overrideJSONIndex, overrideJSON := range v.([]any) {
 			if overrideJSON == nil {
 				continue
 			}
@@ -307,13 +316,23 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
+
+	jsonMinDoc, err := json.Marshal(mergedDoc)
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
+	}
+	jsonMinString := string(jsonMinDoc)
+
+	d.Set("minified_json", jsonMinString)
+
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags
 }
 
-func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (interface{}, error) {
+func dataSourcePolicyDocumentReplaceVarsInList(in any, version string) (any, error) {
 	switch v := in.(type) {
 	case string:
 		if version == "2008-10-17" && strings.Contains(v, "&{") {
@@ -334,17 +353,17 @@ func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (
 	}
 }
 
-func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (IAMPolicyStatementConditionSet, error) {
+func dataSourcePolicyDocumentMakeConditions(in []any, version string) (IAMPolicyStatementConditionSet, error) {
 	out := make([]IAMPolicyStatementCondition, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
+		item := itemI.(map[string]any)
 		out[i] = IAMPolicyStatementCondition{
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.ToStringSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]any))),
 			version,
 		)
 		if err != nil {
@@ -358,13 +377,13 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 	return IAMPolicyStatementConditionSet(out), nil
 }
 
-func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (IAMPolicyStatementPrincipalSet, error) {
+func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (IAMPolicyStatementPrincipalSet, error) {
 	out := make([]IAMPolicyStatementPrincipal, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
+		item := itemI.(map[string]any)
 		out[i] = IAMPolicyStatementPrincipal{
-			Type: item["type"].(string),
+			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			policyDecodeConfigStringList(

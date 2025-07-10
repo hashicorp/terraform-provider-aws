@@ -9,6 +9,8 @@ description: |-
 
 Terraform resource for managing an AWS EC2 Image Builder Workflow.
 
+-> Image Builder manages the workflows for the distribution stage. Therefore, using the DISTRIBUTION workflow type results in an error.
+
 ## Example Usage
 
 ### Basic Usage
@@ -55,11 +57,12 @@ resource "aws_imagebuilder_workflow" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the workflow.
-* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`, `DISTRIBUTION`.
+* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`.
 * `version` - (Required) Version of the workflow.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `change_description` - (Optional) Change description of the workflow.
 * `data` - (Optional) Inline YAML string with data of the workflow. Exactly one of `data` and `uri` can be specified.
 * `description` - (Optional) Description of the workflow.

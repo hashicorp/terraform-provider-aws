@@ -33,6 +33,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,18 +44,18 @@ func testAccCustomLogSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.crawler_arn", "glue", fmt.Sprintf("crawler/%s", rName)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.crawler_arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", fmt.Sprintf("%s-test", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_classes"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "provider_details.0.location", regexache.MustCompile(fmt.Sprintf(`^s3://aws-security-data-lake-%s-[a-z0-9]{30}/ext/%s/$`, acctest.Region(), rName))),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-%s-%s", rName, acctest.Region())),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-%s-%s", rName, acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "source_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "source_version"),
 				),
@@ -63,7 +64,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -80,6 +81,7 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,7 +98,7 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "2.5"),
@@ -109,7 +111,7 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -128,6 +130,7 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -148,7 +151,7 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -165,6 +168,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -182,7 +186,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY", "FILE_ACTIVITY"),
@@ -197,7 +201,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY"),
@@ -211,7 +215,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 		},
 	})
@@ -228,6 +232,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

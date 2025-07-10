@@ -15,8 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,12 +46,12 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`task/task-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`task/task-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCloudWatchLogGroupARN, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "includes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", "-1"),
@@ -64,8 +69,9 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "INT_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
 				),
 			},
 			{
@@ -161,7 +167,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskConfig_cloudWatchLogGroupARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test1", names.AttrARN),
 				),
 			},
 			{
@@ -173,7 +179,7 @@ func TestAccDataSyncTask_cloudWatchLogGroupARN(t *testing.T) {
 				Config: testAccTaskConfig_cloudWatchLogGroupARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", "aws_cloudwatch_log_group.test2", "arn")),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCloudWatchLogGroupARN, "aws_cloudwatch_log_group.test2", names.AttrARN)),
 			},
 		},
 	})
@@ -807,6 +813,56 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_taskMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1, task2 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_taskMode_enhanced(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "ENHANCED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskConfig_taskMode_basic(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task2),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceName, "task_mode", "BASIC"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var task1 datasync.DescribeTaskOutput
@@ -834,8 +890,8 @@ func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.skipped_override", "ERRORS_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.transferred_override", "ERRORS_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.verified_override", "ERRORS_ONLY"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.bucket_access_role_arn", "aws_iam_role.report_test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.s3_bucket_arn", "aws_s3_bucket.report_test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.bucket_access_role_arn", "aws_iam_role.report_test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "task_report_config.0.s3_destination.0.s3_bucket_arn", "aws_s3_bucket.report_test", names.AttrARN),
 				),
 			},
 			{
@@ -860,11 +916,11 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -873,23 +929,98 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTaskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDataSyncTask_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccTaskConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccTaskConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTaskConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`task/task-.+`)),
+					}),
+				},
 			},
 		},
 	})
@@ -986,6 +1117,21 @@ resource "aws_datasync_location_s3" "test" {
   }
 
   depends_on = [aws_iam_role_policy.test]
+}
+`)
+}
+
+func testAccTaskConfig_baseLocationS3_2(rName string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base2(rName), `
+resource "aws_datasync_location_s3" "test2" {
+  s3_bucket_arn = aws_s3_bucket.test2.arn
+  subdirectory  = "/test2"
+
+  s3_config {
+    bucket_access_role_arn = aws_iam_role.test2.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test2]
 }
 `)
 }
@@ -1583,4 +1729,45 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTaskConfig_taskMode_basic(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationS3_2(rName2),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test2.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_s3.test.arn
+  task_mode                = "BASIC"
+
+  options {
+    gid               = "NONE"
+    posix_permissions = "NONE"
+    uid               = "NONE"
+  }
+}
+`, rName, rName2))
+}
+
+func testAccTaskConfig_taskMode_enhanced(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationS3_2(rName2),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test2.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_s3.test.arn
+  task_mode                = "ENHANCED"
+
+  options {
+    gid               = "NONE"
+    posix_permissions = "NONE"
+    uid               = "NONE"
+    verify_mode       = "ONLY_FILES_TRANSFERRED"
+  }
+}
+`, rName, rName2))
 }

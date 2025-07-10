@@ -6,11 +6,12 @@ package kms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kms_alias", name="Alias")
@@ -19,11 +20,11 @@ func dataSourceAlias() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validNameForDataSource,
@@ -40,19 +41,19 @@ func dataSourceAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	target := d.Get("name").(string)
+	target := d.Get(names.AttrName).(string)
 	alias, err := findAliasByName(ctx, conn, target)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", target, err)
 	}
 
-	d.SetId(aws.StringValue(alias.AliasArn))
-	d.Set("arn", alias.AliasArn)
+	d.SetId(aws.ToString(alias.AliasArn))
+	d.Set(names.AttrARN, alias.AliasArn)
 
 	// ListAliases can return an alias for an AWS service key (e.g.
 	// alias/aws/rds) without a TargetKeyId if the alias has not yet been

@@ -757,7 +757,7 @@ The launch specification for Spot instances in the fleet, which determines the d
 
 * `iops` - (Optional) Number of I/O operations per second (IOPS) that the volume supports.
 * `size` - (Required) Volume size, in gibibytes (GiB).
-* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `io2`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `throughput` - (Optional) The throughput, in mebibyte per second (MiB/s).
 * `volumesPerInstance` - (Optional) Number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1).
 
@@ -917,4 +917,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c921965b6e59ca4fc2d1ad8eaeeec6e7c7afc0ff2e4415087fe68f92fd8a4344 -->
+<!-- cache-key: cdktf-0.20.8 input-ec7619312ade932d91657636d6ffdcecad348a6adb2eb6bbfed46294dd2f51dc -->

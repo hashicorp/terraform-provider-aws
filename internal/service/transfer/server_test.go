@@ -11,8 +11,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +36,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func testAccServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,12 +51,12 @@ func testAccServer_basic(t *testing.T) {
 				Config: testAccServerConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "endpoint", "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "host_key_fingerprint"),
@@ -76,8 +76,8 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_options.0.directory_listing_optimization", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
 					resource.TestCheckResourceAttr(resourceName, "structured_log_destinations.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "0"),
 				),
 			},
@@ -85,30 +85,30 @@ func testAccServer_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
-					resource.TestCheckResourceAttr(resourceName, "domain", "S3"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "endpoint", "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "S3"),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "host_key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "invocation_role", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_role", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "SFTP"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
 			},
 		},
@@ -117,7 +117,7 @@ func testAccServer_basic(t *testing.T) {
 
 func testAccServer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -140,7 +140,7 @@ func testAccServer_disappears(t *testing.T) {
 
 func testAccServer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -150,34 +150,34 @@ func testAccServer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerConfig_tags1("key1", "value1"),
+				Config: testAccServerConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccServerConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccServerConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccServerConfig_tags1("key2", "value2"),
+				Config: testAccServerConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -186,7 +186,7 @@ func testAccServer_tags(t *testing.T) {
 
 func testAccServer_domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -200,14 +200,14 @@ func testAccServer_domain(t *testing.T) {
 				Config: testAccServerConfig_domain(rName, "EFS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "EFS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "EFS"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -215,7 +215,7 @@ func testAccServer_domain(t *testing.T) {
 
 func testAccServer_securityPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -236,7 +236,7 @@ func testAccServer_securityPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2018-11"),
@@ -260,6 +260,20 @@ func testAccServer_securityPolicy(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2024-01"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2024-01"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2025-03"),
+				),
+			},
+			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
@@ -267,19 +281,42 @@ func testAccServer_securityPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2024-01"),
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2018-11"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2024-01"),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2018-11"),
 				),
 			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2020-06"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2020-06"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				),
+			},
+			/*
+				{
+					Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2024-06"),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckServerExists(ctx, resourceName, &conf),
+						resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2024-06"),
+					),
+				},
+			*/
 		},
 	})
 }
 
 func testAccServer_securityPolicyFIPS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -290,17 +327,24 @@ func testAccServer_securityPolicyFIPS(t *testing.T) {
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2023-05"),
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2020-06"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2023-05"),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2020-06"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2023-05"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2023-05"),
+				),
 			},
 			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2024-01"),
@@ -309,13 +353,34 @@ func testAccServer_securityPolicyFIPS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2024-01"),
 				),
 			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2024-05"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2024-05"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2025-03"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"),
+				),
+			},
 		},
 	})
 }
 
 func testAccServer_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 	subnetResourceName := "aws_subnet.test"
@@ -335,18 +400,18 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_vpcUpdate(rName),
@@ -355,12 +420,12 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -370,11 +435,11 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -383,7 +448,7 @@ func testAccServer_vpc(t *testing.T) {
 
 func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	eip1ResourceName := "aws_eip.test.0"
 	eip2ResourceName := "aws_eip.test.1"
@@ -404,21 +469,21 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_vpcAddressAllocationIdsUpdate(rName),
@@ -426,14 +491,14 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -443,11 +508,11 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -456,7 +521,7 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 
 func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	securityGroup1ResourceName := "aws_security_group.test"
 	securityGroup2ResourceName := "aws_security_group.test2"
@@ -476,18 +541,18 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup1ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_vpcSecurityGroupIdsUpdate(rName),
@@ -496,11 +561,11 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -509,7 +574,7 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 
 func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	eip1ResourceName := "aws_eip.test.0"
 	eip2ResourceName := "aws_eip.test.1"
@@ -531,21 +596,21 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup1ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_vpcAddressAllocationIdsSecurityGroupIdsUpdate(rName),
@@ -553,14 +618,14 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.address_allocation_ids.*", eip2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.security_group_ids.*", securityGroup2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -569,7 +634,7 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 
 func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -584,7 +649,7 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
@@ -592,14 +657,14 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -607,7 +672,7 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 
 func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -622,7 +687,7 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
@@ -630,14 +695,14 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -645,7 +710,7 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -660,7 +725,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
@@ -668,14 +733,14 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})
@@ -683,7 +748,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -697,7 +762,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				Config: testAccServerConfig_vpcEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 				),
 			},
@@ -705,7 +770,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				Config: testAccServerConfig_vpcAddressAllocationIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 				),
 			},
@@ -713,7 +778,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})
@@ -721,7 +786,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 
 func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -736,7 +801,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
@@ -744,14 +809,14 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -759,7 +824,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 
 func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -774,7 +839,7 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -782,14 +847,14 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -797,7 +862,7 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 
 func testAccServer_structuredLogDestinations(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	cloudwatchLogGroupName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -820,7 +885,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_structuredLogDestinationsUpdate(rName),
@@ -837,7 +902,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 
 func testAccServer_protocols(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	var ca acmpca_types.CertificateAuthority
 	resourceName := "aws_transfer_server.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -856,8 +921,8 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_protocols(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
@@ -867,7 +932,7 @@ func testAccServer_protocols(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			// We need to create and activate the CA before issuing a certificate.
 			{
@@ -881,8 +946,8 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_protocolsUpdate(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate", acmCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
@@ -903,7 +968,7 @@ func testAccServer_protocols(t *testing.T) {
 
 func testAccServer_protocolDetails(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -927,7 +992,7 @@ func testAccServer_protocolDetails(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_protocolDetails("8.8.8.8", "ENABLE_NO_OP", "DISABLED"),
@@ -946,7 +1011,7 @@ func testAccServer_protocolDetails(t *testing.T) {
 
 func testAccServer_s3StorageOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
+	var s awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -967,7 +1032,7 @@ func testAccServer_s3StorageOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_s3StorageOptions("DISABLED"),
@@ -981,7 +1046,7 @@ func testAccServer_s3StorageOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -989,7 +1054,7 @@ func testAccServer_s3StorageOptions(t *testing.T) {
 
 func testAccServer_apiGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1004,7 +1069,7 @@ func testAccServer_apiGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
 				),
 			},
@@ -1012,7 +1077,7 @@ func testAccServer_apiGateway(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1020,7 +1085,7 @@ func testAccServer_apiGateway(t *testing.T) {
 
 func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1035,14 +1100,14 @@ func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1050,7 +1115,7 @@ func testAccServer_apiGateway_forceDestroy(t *testing.T) {
 
 func testAccServer_directoryService(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -1077,7 +1142,7 @@ func testAccServer_directoryService(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1085,9 +1150,9 @@ func testAccServer_directoryService(t *testing.T) {
 
 func testAccServer_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s transfer.DescribedServer
-	var u transfer.DescribedUser
-	var k transfer.SshPublicKey
+	var s awstypes.DescribedServer
+	var u awstypes.DescribedUser
+	var k awstypes.SshPublicKey
 	resourceName := "aws_transfer_server.test"
 	userResourceName := "aws_transfer_user.test"
 	sshKeyResourceName := "aws_transfer_ssh_key.test"
@@ -1110,14 +1175,14 @@ func testAccServer_forceDestroy(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &s),
 					testAccCheckUserExists(ctx, userResourceName, &u),
 					testAccCheckSSHKeyExists(ctx, sshKeyResourceName, &k),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "host_key"},
 			},
 		},
 	})
@@ -1125,7 +1190,7 @@ func testAccServer_forceDestroy(t *testing.T) {
 
 func testAccServer_hostKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	hostKey := "test-fixtures/transfer-ssh-rsa-key"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1147,7 +1212,7 @@ func testAccServer_hostKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "host_key"},
 			},
 		},
 	})
@@ -1155,7 +1220,7 @@ func testAccServer_hostKey(t *testing.T) {
 
 func testAccServer_vpcEndpointID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1178,16 +1243,16 @@ func testAccServer_vpcEndpointID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "host_key"},
 			},
 		},
 	})
@@ -1195,7 +1260,7 @@ func testAccServer_vpcEndpointID(t *testing.T) {
 
 func testAccServer_lambdaFunction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1209,7 +1274,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 				Config: testAccServerConfig_lambdaFunctionIdentityProviderType(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
 				),
@@ -1218,7 +1283,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1226,7 +1291,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 
 func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1241,7 +1306,7 @@ func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
 				),
 			},
@@ -1249,7 +1314,7 @@ func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1257,7 +1322,7 @@ func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) 
 
 func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1272,7 +1337,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
 				),
 			},
@@ -1281,7 +1346,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_AND_PASSWORD"),
 				),
 			},
@@ -1289,7 +1354,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1297,7 +1362,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 
 func testAccServer_authenticationLoginBanners(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
@@ -1318,7 +1383,7 @@ func testAccServer_authenticationLoginBanners(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1326,7 +1391,7 @@ func testAccServer_authenticationLoginBanners(t *testing.T) {
 
 func testAccServer_workflowDetails(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedServer
+	var conf awstypes.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1342,18 +1407,18 @@ func testAccServer_workflowDetails(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_partial_upload.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test", names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServerConfig_workflowUpdated(rName),
@@ -1361,11 +1426,11 @@ func testAccServer_workflowDetails(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_partial_upload.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_partial_upload.0.workflow_id", "aws_transfer_workflow.test2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.0.on_upload.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test2", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "workflow_details.0.on_upload.0.workflow_id", "aws_transfer_workflow.test2", names.AttrID),
 				),
 			},
 			{
@@ -1379,7 +1444,7 @@ func testAccServer_workflowDetails(t *testing.T) {
 	})
 }
 
-func testAccCheckServerExists(ctx context.Context, n string, v *transfer.DescribedServer) resource.TestCheckFunc {
+func testAccCheckServerExists(ctx context.Context, n string, v *awstypes.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1390,7 +1455,7 @@ func testAccCheckServerExists(ctx context.Context, n string, v *transfer.Describ
 			return fmt.Errorf("No Transfer Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindServerByID(ctx, conn, rs.Primary.ID)
 
@@ -1406,7 +1471,7 @@ func testAccCheckServerExists(ctx context.Context, n string, v *transfer.Describ
 
 func testAccCheckServerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_server" {
@@ -1436,7 +1501,7 @@ func testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGro
 		if !ok {
 			return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
 		}
-		cwARN, ok := cwResource.Primary.Attributes["arn"]
+		cwARN, ok := cwResource.Primary.Attributes[names.AttrARN]
 		if !ok {
 			return errors.New("cloudwatch group arn missing")
 		}

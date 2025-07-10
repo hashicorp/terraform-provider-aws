@@ -36,13 +36,13 @@ func testAccInsight_basic(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": string(types.StringFilterComparisonEquals),
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
 				),
@@ -181,7 +181,7 @@ func testAccInsight_KeywordFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.keyword.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.keyword.*", map[string]string{
-						"value": rName,
+						names.AttrValue: rName,
 					}),
 				),
 			},
@@ -212,9 +212,9 @@ func testAccInsight_MapFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": string(types.MapFilterComparisonEquals),
-						"key":        "key1",
-						"value":      "value1",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 				),
 			},
@@ -245,23 +245,23 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": string(types.StringFilterComparisonEquals),
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": string(types.StringFilterComparisonEquals),
-						"value":      "09876543210",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "09876543210",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": string(types.MapFilterComparisonEquals),
-						"key":        "key1",
-						"value":      "value1",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
-						"comparison": string(types.MapFilterComparisonEquals),
-						"key":        "key2",
-						"value":      "value2",
+						"comparison":    string(types.MapFilterComparisonEquals),
+						names.AttrKey:   acctest.CtKey2,
+						names.AttrValue: acctest.CtValue2,
 					}),
 				),
 			},
@@ -277,8 +277,8 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
-						"comparison": string(types.StringFilterComparisonEquals),
-						"value":      "1234567890",
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: "1234567890",
 					}),
 				),
 			},
@@ -303,16 +303,16 @@ func testAccInsight_Name(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccInsightConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					testAccCheckInsightARN(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					testAccCheckInsightARN(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{
@@ -436,8 +436,8 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.workflow_status.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.workflow_status.*", map[string]string{
-						"comparison": string(types.StringFilterComparisonEquals),
-						"value":      string(types.WorkflowStatusNew),
+						"comparison":    string(types.StringFilterComparisonEquals),
+						names.AttrValue: string(types.WorkflowStatusNew),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "WorkflowStatus"),
 				),
@@ -495,11 +495,11 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 // testAccCheckInsightARN checks the computed ARN value
 // and accounts for differences in SecurityHub on GovCloud where the partition portion
 // of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
-func testAccCheckInsightARN(resourceName string) resource.TestCheckFunc {
+func testAccCheckInsightARN(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(), acctest.AccountID())
+		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(ctx), acctest.AccountID(ctx))
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, "arn", regexache.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s)
 	}
 }
 

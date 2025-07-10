@@ -50,10 +50,10 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, schema),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema),
 				),
 			},
 			{
@@ -149,30 +149,30 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Config: testAccModelConfig_allAttributes(rName, schema1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{
 				Config: testAccModelConfig_basic(rName, schema2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema2),
 				),
 			},
 			{
 				Config: testAccModelConfig_allAttributes(rName, schema1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{
@@ -255,18 +255,18 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccModelConfig_basic(rName, schema string) string {
-	return testAccModelConfig_api(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_api(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
   api_id       = aws_apigatewayv2_api.test.id
   content_type = "application/json"
   name         = %[1]q
   schema       = %[2]q
 }
-`, rName, schema)
+`, rName, schema))
 }
 
 func testAccModelConfig_allAttributes(rName, schema string) string {
-	return testAccModelConfig_api(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccModelConfig_api(rName), fmt.Sprintf(`
 resource "aws_apigatewayv2_model" "test" {
   api_id       = aws_apigatewayv2_api.test.id
   content_type = "text/x-json"
@@ -274,5 +274,5 @@ resource "aws_apigatewayv2_model" "test" {
   description  = "test"
   schema       = %[2]q
 }
-`, rName, schema)
+`, rName, schema))
 }

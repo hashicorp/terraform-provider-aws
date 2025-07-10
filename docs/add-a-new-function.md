@@ -35,7 +35,7 @@ cd internal/function
 
 Next, run the `skaff function` subcommand.
 The name and description flags are required.
-The name argument should be camel cased (ie. `FooBar`), and the generator will handle converting the name to snake case where appropriate.
+The name argument should be [mixed caps](naming.md#mixed-caps) (ie. `FooBar`), and the generator will handle converting the name to snake case where appropriate.
 
 ```console
 skaff function -n Example -d "Makes some output from an input."

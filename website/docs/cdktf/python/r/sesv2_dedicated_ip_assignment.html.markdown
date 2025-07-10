@@ -49,13 +49,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Dedicated IP Assignment using the `id`, which is a comma-separated string made up of `ip` and `destination_pool_name`. For example:
@@ -81,4 +74,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Assignment
 % terraform import aws_sesv2_dedicated_ip_assignment.example "0.0.0.0,my-pool"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->
+<!-- cache-key: cdktf-0.20.8 input-3bade86996d3acf65855f6a6231ce2ef82aa6ec1d5d1f14f8816370a5fbe92d7 -->

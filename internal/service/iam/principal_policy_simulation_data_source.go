@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_principal_policy_simulation", name="Principal Policy Simulation")
@@ -44,17 +45,17 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The key name of the context entry, such as "aws:CurrentTime".`,
 						},
-						"type": {
+						names.AttrType: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The type that the simulator should use to interpret the strings given in argument "values".`,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -151,7 +152,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 							},
 							Description: `A mapping of various additional details that are relevant to the decision, exactly as returned by the policy simulator.`,
 						},
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: `ARN of the resource that the action was tested against.`,
@@ -199,7 +200,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 					},
 				},
 			},
-			"id": {
+			names.AttrID: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: `Do not use`,
@@ -208,11 +209,11 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 	}
 }
 
-func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	setAsAWSStringSlice := func(raw interface{}) []string {
+	setAsAWSStringSlice := func(raw any) []string {
 		if raw.(*schema.Set).Len() == 0 {
 			return nil
 		}
@@ -228,11 +229,11 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	}
 
 	for _, entryRaw := range d.Get("context").(*schema.Set).List() {
-		entryRaw := entryRaw.(map[string]interface{})
+		entryRaw := entryRaw.(map[string]any)
 		entry := awstypes.ContextEntry{
-			ContextKeyName:   aws.String(entryRaw["key"].(string)),
-			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw["type"].(string)),
-			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
+			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
+			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
+			ContextKeyValues: setAsAWSStringSlice(entryRaw[names.AttrValues]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
 	}
@@ -281,9 +282,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	allowedCount := 0
 	deniedCount := 0
 
-	rawResults := make([]interface{}, len(results))
+	rawResults := make([]any, len(results))
 	for i, result := range results {
-		rawResult := map[string]interface{}{}
+		rawResult := map[string]any{}
 		rawResult["action_name"] = aws.ToString(result.EvalActionName)
 		rawResult["decision"] = string(result.EvalDecision)
 		allowed := string(result.EvalDecision) == "allowed"
@@ -294,7 +295,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 			deniedCount++
 		}
 		if result.EvalResourceName != nil {
-			rawResult["resource_arn"] = aws.ToString(result.EvalResourceName)
+			rawResult[names.AttrResourceARN] = aws.ToString(result.EvalResourceName)
 		}
 
 		var missingContextKeys []string
@@ -313,9 +314,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 		}
 		rawResult["decision_details"] = decisionDetails
 
-		rawMatchedStmts := make([]interface{}, len(result.MatchedStatements))
+		rawMatchedStmts := make([]any, len(result.MatchedStatements))
 		for i, stmt := range result.MatchedStatements {
-			rawStmt := map[string]interface{}{
+			rawStmt := map[string]any{
 				"source_policy_id":   stmt.SourcePolicyId,
 				"source_policy_type": stmt.SourcePolicyType,
 			}

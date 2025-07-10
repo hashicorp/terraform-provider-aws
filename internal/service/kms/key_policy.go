@@ -9,12 +9,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_key_policy", name="Key Policy")
@@ -35,33 +36,23 @@ func resourceKeyPolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
-			"policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 
-	if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", keyID, d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+	if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", keyID, d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -70,7 +61,7 @@ func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -86,24 +77,22 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	d.Set("key_id", key.metadata.KeyId)
-
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }
 
-func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	if d.HasChange("policy") {
-		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+	if d.HasChange(names.AttrPolicy) {
+		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Id(), d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -111,12 +100,12 @@ func resourceKeyPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceKeyPolicyRead(ctx, d, meta)...)
 }
 
-func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
-		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Get("key_id").(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(ctx), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Get(names.AttrKeyID).(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(ctx), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		} else {
 			log.Printf("[WARN] KMS Key Policy for Key (%s) does not allow PutKeyPolicy. Default Policy cannot be restored. Removing from state", d.Id())

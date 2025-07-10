@@ -242,6 +242,7 @@ class MyConvertedCode extends TerraformStack {
               subnetIds,
               id,
               dnsSupport,
+              securityGroupReferencingSupport,
               ipv6Support,
               transitGatewayId,
               vpcId,
@@ -354,7 +355,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `filter` - (Required) Custom filter block as described below.
 * `transitGatewayRouteTableId` - (Required) Identifier of EC2 Transit Gateway Route Table.
@@ -366,9 +367,9 @@ which take the following arguments:
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html).
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The transit gateway route table id suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.
@@ -381,4 +382,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
 
-<!-- cache-key: cdktf-0.20.1 input-5fba265cc145ada0235efec26c10c79f01ec5384ee918cc84a3f6d087ffa07e0 -->
+<!-- cache-key: cdktf-0.20.8 input-0127f2b0c710e7371ba682f52e5c0ee782913b4b112f80a448777e02c054b4b0 -->

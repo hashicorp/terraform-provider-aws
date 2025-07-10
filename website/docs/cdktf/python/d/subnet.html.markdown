@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
         selected = DataAwsSubnet(self, "selected",
             id=subnet_id.string_value
         )
-        SecurityGroup(self, "subnet",
+        SecurityGroup(self, "subnet_security_group",
             ingress=[SecurityGroupIngress(
                 cidr_blocks=[Token.as_string(selected.cidr_block)],
                 from_port=80,
@@ -76,9 +76,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available subnets in the current region. The given filters must match exactly one subnet whose data will be exported as attributes.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
@@ -126,4 +124,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-4038416b655586cab52609dedf5c41d129209560a5619712772e26a29f2bcdfb -->
+<!-- cache-key: cdktf-0.20.8 input-7911f323f953d2280f57448efee3d93a31dd46970f59fdbb47ff6eea88361d35 -->

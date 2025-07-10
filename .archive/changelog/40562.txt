@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_iam_policy_document: Add plan-time validation that the `statement` `sid` is valid, including on alphanumeric characters
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sqs_queue_redrive_allow_policy: Fix perpetual `redrive_allow_policy` diffs
+```

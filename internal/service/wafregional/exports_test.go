@@ -19,5 +19,19 @@ var (
 	ResourceWebACLAssociation    = resourceWebACLAssociation
 	ResourceXSSMatchSet          = resourceXSSMatchSet
 
-	FindWebACLByResourceARN = findWebACLByResourceARN
+	FindByteMatchSetByID         = findByteMatchSetByID
+	FindGeoMatchSetByID          = findGeoMatchSetByID
+	FindIPSetByID                = findIPSetByID
+	FindRateBasedRuleByID        = findRateBasedRuleByID
+	FindRegexMatchSetByID        = findRegexMatchSetByID
+	FindRegexPatternSetByID      = findRegexPatternSetByID
+	FindRuleByID                 = findRuleByID
+	FindRuleGroupByID            = findRuleGroupByID
+	FindSizeConstraintSetByID    = findSizeConstraintSetByID
+	FindSQLInjectionMatchSetByID = findSQLInjectionMatchSetByID
+	FindWebACLByID               = findWebACLByID
+	FindWebACLByResourceARN      = findWebACLByResourceARN
+	FindXSSMatchSetByID          = findXSSMatchSetByID
+	FlattenFieldToMatch          = flattenFieldToMatch
+	RegexMatchSetTupleHash       = regexMatchSetTupleHash
 )

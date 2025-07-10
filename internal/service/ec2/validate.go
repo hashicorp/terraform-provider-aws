@@ -10,7 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
+func validSecurityGroupRuleDescription(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
@@ -30,7 +30,7 @@ func validSecurityGroupRuleDescription(v interface{}, k string) (ws []string, er
 
 // validNestedExactlyOneOf is called on the map representing a nested schema element
 // Once ExactlyOneOf is supported for nested elements, this should be deprecated.
-func validNestedExactlyOneOf(m map[string]interface{}, valid []string) error {
+func validNestedExactlyOneOf(m map[string]any, valid []string) error {
 	specified := make([]string, 0)
 	for _, k := range valid {
 		if v, ok := m[k].(string); ok && v != "" {

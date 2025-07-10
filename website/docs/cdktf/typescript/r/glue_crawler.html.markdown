@@ -213,9 +213,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodbTarget`, `jdbcTarget`, `s3Target`, `mongodbTarget` or `catalogTarget`.
-
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `databaseName` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
@@ -239,6 +237,8 @@ This argument supports the following arguments:
 * `securityConfiguration` (Optional) The name of Security Configuration to be used by the crawler
 * `tablePrefix` (Optional) The table prefix used for catalog tables that are created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Must specify at least one of `dynamodbTarget`, `jdbcTarget`, `s3Target`, `mongodbTarget` or `catalogTarget`.
 
 ### Dynamodb Target
 
@@ -355,4 +355,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0df369bee2ab9f48ca2abe5fa0e864a1921bff66fc146728b45e061f21763933 -->
+<!-- cache-key: cdktf-0.20.8 input-79105020f369af2ee4b1acbb9e4d0c032d5fbaef52eb433968bf5f947b5f84d0 -->

@@ -14,6 +14,8 @@ Use this data source to get the ARN and URL of queue in AWS Simple Queue Service
 By using this data source, you can reference SQS queues without having to hardcode
 the ARNs as input.
 
+~> **NOTE:** To use this data source, you must have the `sqs:GetQueueAttributes` and `sqs:GetQueueURL` permissions.
+
 ## Example Usage
 
 ```python
@@ -35,6 +37,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the queue to match.
 
 ## Attribute Reference
@@ -45,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `url` - URL of the queue.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-bc2387998bbb916bdcaa1a3f2f812935f5cc67ab5bb81f0bdfe43f5e898107d4 -->
+<!-- cache-key: cdktf-0.20.8 input-24d5a97ed7fbead815006896ee90ce8d0a4e26e3a321d0c96d945d459d82dbe3 -->

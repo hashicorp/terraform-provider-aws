@@ -98,6 +98,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) The name of the rule.
 * `description` - (Optional) The description of the rule.
 * `enabled` - (Required) Specifies whether the rule is enabled.
@@ -115,6 +117,7 @@ The `cloudwatchAlarm` object takes the following arguments:
 
 The `cloudwatchLogs` object takes the following arguments:
 
+* `batchMode` - (Optional) The payload that contains a JSON array of records will be sent to CloudWatch via a batch call.
 * `logGroupName` - (Required) The CloudWatch log group name.
 * `roleArn` - (Required) The IAM role ARN that allows access to the CloudWatch alarm.
 
@@ -285,4 +288,4 @@ Using `terraform import`, import IoT Topic Rules using the `name`. For example:
 % terraform import aws_iot_topic_rule.rule <name>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b205624c029d2d94d7075b9c9db60430a43913be043604027026ace9f2ae039e -->
+<!-- cache-key: cdktf-0.20.8 input-890085d11823831d294f49f441689f282a28b5ca6c8cd2abd41bb6fe9b7f9acd -->

@@ -33,11 +33,11 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_username", "admin"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "accounts_with_restore_access.#", "0"),
 				),
@@ -51,10 +51,10 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "10"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "10"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "owner_account"),
 				),
 			},
 		},
@@ -86,7 +86,7 @@ func TestAccRedshiftServerlessSnapshot_disappears(t *testing.T) {
 
 func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_snapshot" {
@@ -120,7 +120,7 @@ func testAccCheckSnapshotExists(ctx context.Context, name string) resource.TestC
 			return fmt.Errorf("Redshift Serverless Snapshot is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 		_, err := tfredshiftserverless.FindSnapshotByName(ctx, conn, rs.Primary.ID)
 

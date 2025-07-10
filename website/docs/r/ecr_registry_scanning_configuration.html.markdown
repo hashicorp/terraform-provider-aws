@@ -56,6 +56,7 @@ resource "aws_ecr_registry_scanning_configuration" "test" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `scan_type` - (Required) the scanning type to set for the registry. Can be either `ENHANCED` or `BASIC`.
 - `rule` - (Optional) One or multiple blocks specifying scanning rules to determine which repository filters are used and at what frequency scanning will occur. See [below for schema](#rule).
 
@@ -77,12 +78,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ecr_registry_scanning_configuration.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import ECR Scanning Configurations using the `registry_id`. For example:
 
 ```console
-% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+% terraform import aws_ecr_registry_scanning_configuration.example 123456789012
 ```

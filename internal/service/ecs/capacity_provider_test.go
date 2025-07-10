@@ -8,11 +8,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,7 +28,7 @@ import (
 
 func TestAccECSCapacityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
@@ -36,7 +43,7 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_draining", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "300"),
@@ -45,15 +52,14 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -63,7 +69,7 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 
 func TestAccECSCapacityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
@@ -87,7 +93,7 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 
 func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
@@ -98,10 +104,10 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(awstypes.ManagedScalingStatusEnabled), 300, 10, 1, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_draining", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "300"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "1"),
@@ -113,15 +119,14 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(awstypes.ManagedScalingStatusDisabled), 400, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_draining", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "400"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "10"),
@@ -132,10 +137,10 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_managedScaling(rName, ecs.ManagedScalingStatusEnabled, 0, 100, 10, 100),
+				Config: testAccCapacityProviderConfig_managedScaling(rName, string(awstypes.ManagedScalingStatusEnabled), 0, 100, 10, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_draining", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "10"),
@@ -151,7 +156,7 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 
 func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
@@ -165,8 +170,8 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 				Config: testAccCapacityProviderConfig_managedScalingPartial(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_draining", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "0"),
@@ -178,7 +183,6 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -188,7 +192,7 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 
 func TestAccECSCapacityProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var provider ecs.CapacityProvider
+	var provider awstypes.CapacityProvider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_capacity_provider.test"
 
@@ -199,35 +203,112 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityProviderConfig_tags1(rName, "key1", "value1"),
+				Config: testAccCapacityProviderConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityProviderConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCapacityProviderConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCapacityProviderConfig_tags1(rName, "key2", "value2"),
+				Config: testAccCapacityProviderConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccCapacityProviderConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccCapacityProviderConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccCapacityProviderConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("ecs", regexache.MustCompile(`capacity-provider/.+`)),
+					}),
+				},
 			},
 		},
 	})
@@ -235,7 +316,7 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_capacity_provider" {
@@ -247,7 +328,6 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 			if tfresource.NotFound(err) {
 				continue
 			}
-
 			if err != nil {
 				return err
 			}
@@ -259,18 +339,14 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string, provider *ecs.CapacityProvider) resource.TestCheckFunc {
+func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string, provider *awstypes.CapacityProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECS Capacity Provider ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		output, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
 

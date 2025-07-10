@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `vocabularyId` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Vocabulary by name
 * `vocabularyId` - (Optional) Returns information on a specific Vocabulary by Vocabulary id
+
+~> **NOTE:** `instanceId` and one of either `name` or `vocabularyId` is required.
 
 ## Attribute Reference
 
@@ -85,4 +85,4 @@ separated by a colon (`:`).
 * `tags` - A map of tags to assign to the Vocabulary.
 * `vocabularyId` - The identifier of the custom vocabulary.
 
-<!-- cache-key: cdktf-0.20.1 input-28dff9533e7ed6f8274af7c06c44ac3737d4ee8b41560fc884b0ffe019a6221f -->
+<!-- cache-key: cdktf-0.20.8 input-1b8a11fb2c6b6577ca64d6bb98267121c60f81ac0e58db11ee29213bce8f4084 -->

@@ -6,6 +6,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
@@ -120,6 +121,10 @@ func StringEnumUnknown[T enum.Valueser[T]]() StringEnum[T] {
 
 func StringEnumValue[T enum.Valueser[T]](value T) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(string(value))}
+}
+
+func StringEnumValueToUpper[T enum.Valueser[T]](value T) StringEnum[T] {
+	return StringEnumValue(T(strings.ToUpper(string(value))))
 }
 
 func (v StringEnum[T]) Equal(o attr.Value) bool {

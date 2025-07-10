@@ -42,3 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 * `additional_artifacts` - A list of additional artifacts.
 * `refresh_closed_reports` - If true reports are updated after they have been finalized.
 * `report_versioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.
+* `tags` - Map of key-value pairs assigned to the resource.

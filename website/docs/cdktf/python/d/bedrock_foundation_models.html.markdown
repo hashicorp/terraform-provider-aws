@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_models"
 description: |-
@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
 * `by_inference_type` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_name` - Model provider name.
 * `response_streaming_supported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.1 input-6460f3b0b18394205440301a3c70d60b4b02252dc7a9f84d403f0e812f7a5da5 -->
+<!-- cache-key: cdktf-0.20.8 input-227a0115e2e4bd66dcfd4db719eba9ea0fe83af6d032b25579fd0d750d3c565a -->

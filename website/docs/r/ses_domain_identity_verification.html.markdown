@@ -25,14 +25,14 @@ resource "aws_ses_domain_identity" "example" {
 
 resource "aws_route53_record" "example_amazonses_verification_record" {
   zone_id = aws_route53_zone.example.zone_id
-  name    = "_amazonses.${aws_ses_domain_identity.example.id}"
+  name    = "_amazonses.${aws_ses_domain_identity.example.domain}"
   type    = "TXT"
   ttl     = "600"
   records = [aws_ses_domain_identity.example.verification_token]
 }
 
 resource "aws_ses_domain_identity_verification" "example_verification" {
-  domain = aws_ses_domain_identity.example.id
+  domain = aws_ses_domain_identity.example.domain
 
   depends_on = [aws_route53_record.example_amazonses_verification_record]
 }
@@ -42,6 +42,7 @@ resource "aws_ses_domain_identity_verification" "example_verification" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
 ## Attribute Reference

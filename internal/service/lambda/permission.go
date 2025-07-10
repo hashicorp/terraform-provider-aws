@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
@@ -40,7 +41,7 @@ func resourcePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +65,7 @@ func resourcePermission() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -112,7 +113,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -126,9 +127,9 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	defer conns.GlobalMutexKV.Unlock(functionName)
 
 	input := &lambda.AddPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		FunctionName: aws.String(functionName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -158,7 +159,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Retry for IAM and Lambda eventual consistency.
 	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.ResourceConflictException, *awstypes.ResourceNotFoundException](ctx, lambdaPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.AddPermission(ctx, input)
 		})
 
@@ -171,12 +172,12 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	}, d.IsNewResource())
 
@@ -196,7 +197,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition+":lambda:") {
+	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition(ctx)+":lambda:") {
 		// Strip qualifier off
 		trimmed := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmed)
@@ -209,16 +210,16 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("function_name", functionName)
 	}
 
-	d.Set("action", statement.Action)
+	d.Set(names.AttrAction, statement.Action)
 	// Check if the principal is a cross-account IAM role
-	if v, ok := statement.Principal.(map[string]interface{}); ok {
+	if v, ok := statement.Principal.(map[string]any); ok {
 		if _, ok := v["AWS"]; ok {
-			d.Set("principal", v["AWS"])
+			d.Set(names.AttrPrincipal, v["AWS"])
 		} else {
-			d.Set("principal", v["Service"])
+			d.Set(names.AttrPrincipal, v["Service"])
 		}
 	} else if v, ok := statement.Principal.(string); ok {
-		d.Set("principal", v)
+		d.Set(names.AttrPrincipal, v)
 	}
 
 	if v, ok := statement.Condition["StringEquals"]; ok {
@@ -238,7 +239,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -270,7 +271,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "removing Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 
@@ -281,7 +282,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", d.Id())
@@ -308,7 +309,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(statementID)
-	d.Set("function_name", output.Configuration.FunctionArn)
+	d.Set("function_name", output.Configuration.FunctionName)
 	if qualifier != "" {
 		d.Set("qualifier", qualifier)
 	}
@@ -400,6 +401,6 @@ type PolicyStatement struct {
 	Action    string
 	Resource  string
 	Effect    string
-	Principal interface{}
+	Principal any
 	Sid       string
 }

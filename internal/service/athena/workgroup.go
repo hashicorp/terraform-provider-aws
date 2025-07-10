@@ -41,11 +41,11 @@ func resourceWorkGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -65,7 +65,7 @@ func resourceWorkGroup() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -113,7 +113,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -124,7 +124,7 @@ func resourceWorkGroup() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 												},
-												"kms_key_arn": {
+												names.AttrKMSKeyARN: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -132,7 +132,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"expected_bucket_owner": {
+									names.AttrExpectedBucketOwner: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -151,17 +151,17 @@ func resourceWorkGroup() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -170,7 +170,7 @@ func resourceWorkGroup() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
 				),
 			},
-			"state": {
+			names.AttrState: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.WorkGroupStateEnabled,
@@ -179,23 +179,21 @@ func resourceWorkGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateWorkGroupInput{
-		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
+		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]any)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -207,7 +205,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(name)
 
-	if v := types.WorkGroupState(d.Get("state").(string)); v == types.WorkGroupStateDisabled {
+	if v := types.WorkGroupState(d.Get(names.AttrState).(string)); v == types.WorkGroupStateDisabled {
 		input := &athena.UpdateWorkGroupInput{
 			State:     v,
 			WorkGroup: aws.String(d.Id()),
@@ -223,7 +221,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -240,43 +238,43 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
-	if err := d.Set("configuration", flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
+	d.Set(names.AttrARN, arn.String())
+	if err := d.Set(names.AttrConfiguration, flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
-	d.Set("description", wg.Description)
-	d.Set("force_destroy", d.Get("force_destroy"))
-	d.Set("name", wg.Name)
-	d.Set("state", wg.State)
+	d.Set(names.AttrDescription, wg.Description)
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy))
+	d.Set(names.AttrName, wg.Name)
+	d.Set(names.AttrState, wg.State)
 
 	return diags
 }
 
-func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &athena.UpdateWorkGroupInput{
-			WorkGroup: aws.String(d.Get("name").(string)),
+			WorkGroup: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if d.HasChange("configuration") {
-			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]any))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("state") {
-			input.State = types.WorkGroupState(d.Get("state").(string))
+		if d.HasChange(names.AttrState) {
+			input.State = types.WorkGroupState(d.Get(names.AttrState).(string))
 		}
 
 		_, err := conn.UpdateWorkGroup(ctx, input)
@@ -289,7 +287,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -297,10 +295,11 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 
+	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
 	_, err := conn.DeleteWorkGroup(ctx, input)
 
 	if err != nil {
@@ -335,12 +334,12 @@ func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) 
 	return output.WorkGroup, nil
 }
 
-func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration {
+func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configuration := &types.WorkGroupConfiguration{}
 
@@ -352,7 +351,7 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]any); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -365,7 +364,7 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]interface{}))
+		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]any))
 	}
 
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
@@ -375,12 +374,12 @@ func expandWorkGroupConfiguration(l []interface{}) *types.WorkGroupConfiguration
 	return configuration
 }
 
-func expandWorkGroupEngineVersion(l []interface{}) *types.EngineVersion {
+func expandWorkGroupEngineVersion(l []any) *types.EngineVersion {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	engineVersion := &types.EngineVersion{}
 
@@ -391,12 +390,12 @@ func expandWorkGroupEngineVersion(l []interface{}) *types.EngineVersion {
 	return engineVersion
 }
 
-func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfigurationUpdates {
+func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	configurationUpdates := &types.WorkGroupConfigurationUpdates{}
 
@@ -410,7 +409,7 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
-	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := m[names.AttrEngineVersion].([]any); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
@@ -423,7 +422,7 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 	}
 
 	if v, ok := m["result_configuration"]; ok {
-		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]interface{}))
+		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]any))
 	}
 
 	if v, ok := m["requester_pays_enabled"].(bool); ok {
@@ -433,45 +432,45 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *types.WorkGroupConfig
 	return configurationUpdates
 }
 
-func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfiguration {
+func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	resultConfiguration := &types.ResultConfiguration{}
 
-	if v, ok := m["encryption_configuration"]; ok {
-		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := m["output_location"].(string); ok && v != "" {
 		resultConfiguration.OutputLocation = aws.String(v)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfiguration.ExpectedBucketOwner = aws.String(v)
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfiguration.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+		resultConfiguration.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	}
 
 	return resultConfiguration
 }
 
-func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultConfigurationUpdates {
+func expandWorkGroupResultConfigurationUpdates(l []any) *types.ResultConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
-	if v, ok := m["encryption_configuration"]; ok {
-		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
+		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]any))
 	} else {
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 	}
@@ -482,14 +481,14 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
 	} else {
 		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
+		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]any))
 	} else {
 		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
 	}
@@ -497,12 +496,12 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 	return resultConfigurationUpdates
 }
 
-func expandWorkGroupEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
+func expandWorkGroupEncryptionConfiguration(l []any) *types.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	encryptionConfiguration := &types.EncryptionConfiguration{}
 
@@ -510,86 +509,86 @@ func expandWorkGroupEncryptionConfiguration(l []interface{}) *types.EncryptionCo
 		encryptionConfiguration.EncryptionOption = types.EncryptionOption(v.(string))
 	}
 
-	if v, ok := m["kms_key_arn"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrKMSKeyARN]; ok && v.(string) != "" {
 		encryptionConfiguration.KmsKey = aws.String(v.(string))
 	}
 
 	return encryptionConfiguration
 }
 
-func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []interface{} {
+func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) []any {
 	if configuration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"bytes_scanned_cutoff_per_query":     aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		names.AttrEngineVersion:              flattenWorkGroupEngineVersion(configuration.EngineVersion),
 		"execution_role":                     aws.ToString(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.ToBool(configuration.RequesterPaysEnabled),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []interface{} {
+func flattenWorkGroupEngineVersion(engineVersion *types.EngineVersion) []any {
 	if engineVersion == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"effective_engine_version": aws.ToString(engineVersion.EffectiveEngineVersion),
 		"selected_engine_version":  aws.ToString(engineVersion.SelectedEngineVersion),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfiguration) []interface{} {
+func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfiguration) []any {
 	if resultConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"encryption_configuration": flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
-		"output_location":          aws.ToString(resultConfiguration.OutputLocation),
+	m := map[string]any{
+		names.AttrEncryptionConfiguration: flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
+		"output_location":                 aws.ToString(resultConfiguration.OutputLocation),
 	}
 
 	if resultConfiguration.ExpectedBucketOwner != nil {
-		m["expected_bucket_owner"] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
+		m[names.AttrExpectedBucketOwner] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
 	}
 
 	if resultConfiguration.AclConfiguration != nil {
 		m["acl_configuration"] = flattenWorkGroupACLConfiguration(resultConfiguration.AclConfiguration)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *types.EncryptionConfiguration) []interface{} {
+func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *types.EncryptionConfiguration) []any {
 	if encryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"encryption_option": encryptionConfiguration.EncryptionOption,
-		"kms_key_arn":       aws.ToString(encryptionConfiguration.KmsKey),
+		names.AttrKMSKeyARN: aws.ToString(encryptionConfiguration.KmsKey),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []interface{} {
+func flattenWorkGroupACLConfiguration(aclConfig *types.AclConfiguration) []any {
 	if aclConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_acl_option": aclConfig.S3AclOption,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

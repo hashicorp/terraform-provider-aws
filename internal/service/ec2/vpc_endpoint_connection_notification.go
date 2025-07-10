@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
-func ResourceVPCEndpointConnectionNotification() *schema.Resource {
+func resourceVPCEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionNotificationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionNotificationRead,
@@ -48,33 +49,33 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"vpc_endpoint_id", "vpc_endpoint_service_id"},
+				ExactlyOneOf: []string{names.AttrVPCEndpointID, "vpc_endpoint_service_id"},
 			},
 			"vpc_endpoint_service_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"vpc_endpoint_id", "vpc_endpoint_service_id"},
+				ExactlyOneOf: []string{names.AttrVPCEndpointID, "vpc_endpoint_service_id"},
 			},
 		},
 	}
 }
 
-func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ClientToken:               aws.String(id.UniqueId()),
-		ConnectionEvents:          flex.ExpandStringSet(d.Get("connection_events").(*schema.Set)),
+		ConnectionEvents:          flex.ExpandStringValueSet(d.Get("connection_events").(*schema.Set)),
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
 	}
 
@@ -82,26 +83,26 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 		input.ServiceId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCEndpointID); ok {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpcEndpointConnectionNotificationWithContext(ctx, input)
+	output, err := conn.CreateVpcEndpointConnectionNotification(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint Connection Notification: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectionNotification.ConnectionNotificationId))
+	d.SetId(aws.ToString(output.ConnectionNotification.ConnectionNotificationId))
 
 	return append(diags, resourceVPCEndpointConnectionNotificationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	cn, err := FindVPCConnectionNotificationByID(ctx, conn, d.Id())
+	cn, err := findVPCEndpointConnectionNotificationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Connection Notification %s not found, removing from state", d.Id())
@@ -113,33 +114,33 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Connection Notification (%s): %s", d.Id(), err)
 	}
 
-	d.Set("connection_events", aws.StringValueSlice(cn.ConnectionEvents))
+	d.Set("connection_events", cn.ConnectionEvents)
 	d.Set("connection_notification_arn", cn.ConnectionNotificationArn)
 	d.Set("notification_type", cn.ConnectionNotificationType)
-	d.Set("state", cn.ConnectionNotificationState)
-	d.Set("vpc_endpoint_id", cn.VpcEndpointId)
+	d.Set(names.AttrState, cn.ConnectionNotificationState)
+	d.Set(names.AttrVPCEndpointID, cn.VpcEndpointId)
 	d.Set("vpc_endpoint_service_id", cn.ServiceId)
 
 	return diags
 }
 
-func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.ModifyVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationId: aws.String(d.Id()),
 	}
 
 	if d.HasChange("connection_events") {
-		input.ConnectionEvents = flex.ExpandStringSet(d.Get("connection_events").(*schema.Set))
+		input.ConnectionEvents = flex.ExpandStringValueSet(d.Get("connection_events").(*schema.Set))
 	}
 
 	if d.HasChange("connection_notification_arn") {
 		input.ConnectionNotificationArn = aws.String(d.Get("connection_notification_arn").(string))
 	}
 
-	_, err := conn.ModifyVpcEndpointConnectionNotificationWithContext(ctx, input)
+	_, err := conn.ModifyVpcEndpointConnectionNotification(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint Connection Notification (%s): %s", d.Id(), err)
@@ -148,14 +149,15 @@ func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *sch
 	return append(diags, resourceVPCEndpointConnectionNotificationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint Connection Notification: %s", d.Id())
-	_, err := conn.DeleteVpcEndpointConnectionNotificationsWithContext(ctx, &ec2.DeleteVpcEndpointConnectionNotificationsInput{
-		ConnectionNotificationIds: aws.StringSlice([]string{d.Id()}),
-	})
+	input := ec2.DeleteVpcEndpointConnectionNotificationsInput{
+		ConnectionNotificationIds: []string{d.Id()},
+	}
+	_, err := conn.DeleteVpcEndpointConnectionNotifications(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
 		return diags

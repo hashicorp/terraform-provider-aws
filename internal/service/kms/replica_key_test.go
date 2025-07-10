@@ -4,6 +4,7 @@
 package kms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,6 +12,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,24 +33,27 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
-					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, names.AttrARN),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -70,7 +77,7 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -100,15 +107,15 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "description", rName2),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -121,16 +128,16 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName3, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "description", rName3),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccReplicaKeyConfig_descriptionAndEnabled(rName1, rName4, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "description", rName4),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -151,14 +158,14 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicaKeyConfig_policy(rName, policy1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 					testAccCheckKeyHasPolicy(ctx, resourceName, policy1),
 				),
 			},
@@ -172,78 +179,9 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 				Config: testAccReplicaKeyConfig_policy(rName, policy2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 					testAccCheckExternalKeyHasPolicy(ctx, resourceName, policy2),
 				),
-			},
-		},
-	})
-}
-
-func TestAccKMSReplicaKey_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var key awstypes.KeyMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_kms_replica_key.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicaKeyConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deletion_window_in_days",
-					"bypass_policy_lockout_safety_check",
-				},
-			},
-			{
-				Config: testAccReplicaKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccReplicaKeyConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccReplicaKeyConfig_tags0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deletion_window_in_days",
-					"bypass_policy_lockout_safety_check",
-				},
 			},
 		},
 	})
@@ -261,7 +199,7 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -274,30 +212,86 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 	})
 }
 
-func testAccReplicaKeyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  provider = awsalternate
+func TestAccKMSReplicaKey_multipleProviders(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_kms_replica_key.test"
 
-  description  = %[1]q
-  multi_region = true
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicaKeyConfig_multipleProviders(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, names.AttrARN),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+		},
+	})
+}
+
+func testAccCheckReplicaKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return testAccCheckKeyDestroy(ctx)
+}
+
+func testAccCheckReplicaKeyExists(ctx context.Context, name string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
+	return testAccCheckKeyExists(ctx, name, key)
+}
+
+func testAccReplicaKeyConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  region = %[2]q
+
+  description             = %[1]q
+  multi_region            = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
   primary_key_arn = aws_kms_key.test.arn
 }
-`, rName))
+`, rName, acctest.AlternateRegion())
 }
 
 func testAccReplicaKeyConfig_descriptionAndEnabled(rName, description string, enabled bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = %[4]q
 
   description  = %[1]q
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
@@ -307,18 +301,19 @@ resource "aws_kms_replica_key" "test" {
 
   deletion_window_in_days = 7
 }
-`, rName, description, enabled))
+`, rName, description, enabled, acctest.AlternateRegion())
 }
 
 func testAccReplicaKeyConfig_policy(rName, policy string, bypassLockoutCheck bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = %[4]q
 
   description  = %[1]q
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test" {
@@ -331,95 +326,19 @@ resource "aws_kms_replica_key" "test" {
 
   policy = %[2]q
 }
-`, rName, policy, bypassLockoutCheck))
-}
-
-func testAccReplicaKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  provider = awsalternate
-
-  description  = %[1]q
-  multi_region = true
-
-  tags = {
-    Name = %[1]q
-  }
-
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_replica_key" "test" {
-  description     = %[1]q
-  primary_key_arn = aws_kms_key.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  deletion_window_in_days = 7
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccReplicaKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  provider = awsalternate
-
-  description  = %[1]q
-  multi_region = true
-
-  tags = {
-    Name = %[1]q
-  }
-
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_replica_key" "test" {
-  description     = %[1]q
-  primary_key_arn = aws_kms_key.test.arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  deletion_window_in_days = 7
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccReplicaKeyConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  provider = awsalternate
-
-  description  = %[1]q
-  multi_region = true
-
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_replica_key" "test" {
-  description     = %[1]q
-  primary_key_arn = aws_kms_key.test.arn
-
-  deletion_window_in_days = 7
-}
-`, rName))
+`, rName, policy, bypassLockoutCheck, acctest.AlternateRegion())
 }
 
 func testAccReplicaKeyConfig_two(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(3), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider = awsalternate
+  region = %[2]q
 
   description  = %[1]q
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_replica_key" "test1" {
@@ -430,12 +349,27 @@ resource "aws_kms_replica_key" "test1" {
 }
 
 resource "aws_kms_replica_key" "test2" {
-  provider = awsthird
+  region = %[3]q
 
   description     = %[1]q
   primary_key_arn = aws_kms_key.test.arn
 
   deletion_window_in_days = 7
+}
+`, rName, acctest.AlternateRegion(), acctest.ThirdRegion())
+}
+
+func testAccReplicaKeyConfig_multipleProviders(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  provider = awsalternate
+
+  description  = %[1]q
+  multi_region = true
+}
+
+resource "aws_kms_replica_key" "test" {
+  primary_key_arn = aws_kms_key.test.arn
 }
 `, rName))
 }

@@ -11,8 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,14 +32,15 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
-			"basic":                 testAccAccountPublicAccessBlock_basic,
-			"disappears":            testAccAccountPublicAccessBlock_disappears,
+			acctest.CtBasic:         testAccAccountPublicAccessBlock_basic,
+			acctest.CtDisappears:    testAccAccountPublicAccessBlock_disappears,
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
 			"BlockPublicPolicy":     testAccAccountPublicAccessBlock_BlockPublicPolicy,
 			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
 			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
 			"DataSourceBasic":       testAccAccountPublicAccessBlockDataSource_basic,
+			"Identity":              testAccS3ControlAccountPublicAccessBlock_IdentitySerial,
 		},
 	}
 
@@ -53,19 +60,97 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.PublicAccessBlockConfiguration
+	resourceName := "aws_s3_account_public_access_block.test"
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ServiceID),
+		CheckDestroy: testAccCheckAccountPublicAccessBlockDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccAccountPublicAccessBlockConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccAccountPublicAccessBlockConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountPublicAccessBlockConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+					}),
+				},
 			},
 		},
 	})
@@ -84,7 +169,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccountPublicAccessBlock(), resourceName),
 				),
@@ -107,9 +192,10 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_id(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrAccountID),
 				),
 			},
 			{
@@ -134,9 +220,9 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_acls(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -146,16 +232,16 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_acls(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_acls(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -175,9 +261,9 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_policy(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 			{
@@ -187,16 +273,16 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_policy(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_policy(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 		},
@@ -216,9 +302,9 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -228,16 +314,16 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -257,9 +343,9 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 			{
@@ -269,16 +355,16 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 		},

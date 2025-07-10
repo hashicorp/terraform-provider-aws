@@ -59,6 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `appliance_mode_support` - Whether Appliance Mode support is enabled. Valid values: `disable`, `enable`.
 * `dns_support` - Whether DNS support is enabled. Valid values: `disable`, `enable`.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`.
 * `ipv6_support` - Whether IPv6 support is enabled. Valid values: `disable`, `enable`.
 * `subnet_ids` - Identifiers of EC2 Subnets.
 * `transit_gateway_id` - Identifier of EC2 Transit Gateway.
@@ -90,4 +91,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment_accepte
 % terraform import aws_ec2_transit_gateway_vpc_attachment_accepter.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ecbf6dbf5eb02fc6c50aa5f135ccaddf1f97a389191703614a66b382e746bf66 -->
+<!-- cache-key: cdktf-0.20.8 input-8a93a9534222a0411ee2c7dd323d9ec89074c9d2d0ddbd86e7e945f34fd825af -->

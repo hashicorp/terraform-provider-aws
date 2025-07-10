@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_eks_cluster: Set `access_config.bootstrap_cluster_creator_admin_permissions` to `true` on Read for clusters with no `access_config` configured. This allows in-place updates of existing clusters when `access_config` is configured
+```
+
+```release-note:bug
+data-source/aws_eks_cluster: Add `access_config.bootstrap_cluster_creator_admin_permissions` attribute
+```

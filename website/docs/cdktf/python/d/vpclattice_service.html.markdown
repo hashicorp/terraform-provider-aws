@@ -35,8 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC lattice services.
-The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `name` - (Optional) Service name.
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
@@ -49,9 +48,11 @@ This data source exports the following attributes in addition to the arguments a
 * `auth_type` - Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - Custom domain name of the service.
-* `dns_entry` - DNS name of the service.
+* `dns_entry` - List of objects with DNS names.
+    * `domain_name` - DNS name for the service.
+    * `hosted_zone_id` - Hosted zone ID where the DNS name is registered.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.20.1 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->
+<!-- cache-key: cdktf-0.20.8 input-f6eb2edf5afca72fd15cc9f050a43fc65c468170db53f21a34cb79340e78b9d1 -->

@@ -56,13 +56,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
 ## Attribute Reference
 
@@ -93,4 +93,4 @@ A `start_time` block supports the following arguments:
 * `hours` - Hour of opening.
 * `minutes` - Minute of opening.
 
-<!-- cache-key: cdktf-0.20.1 input-69f2eddaf1ae71ae8b2382f108eed67e1baf19a25a016f4a6cd6db210fa55e83 -->
+<!-- cache-key: cdktf-0.20.8 input-b3031b7a2c9849fe7881cd92166bfd6c65e9e28158e52c5b80fe35997480d3d0 -->

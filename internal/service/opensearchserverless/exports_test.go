@@ -5,12 +5,12 @@ package opensearchserverless
 
 // Exports for use in tests only.
 var (
-	ResourceAccessPolicy    = newResourceAccessPolicy
-	ResourceCollection      = newResourceCollection
-	ResourceLifecyclePolicy = newResourceLifecyclePolicy
-	ResourceSecurityConfig  = newResourceSecurityConfig
-	ResourceSecurityPolicy  = newResourceSecurityPolicy
-	ResourceVPCEndpoint     = newResourceVPCEndpoint
+	ResourceAccessPolicy    = newAccessPolicyResource
+	ResourceCollection      = newCollectionResource
+	ResourceLifecyclePolicy = newLifecyclePolicyResource
+	ResourceSecurityConfig  = newSecurityConfigResource
+	ResourceSecurityPolicy  = newSecurityPolicyResource
+	ResourceVPCEndpoint     = newVPCEndpointResource
 
 	FindAccessPolicyByNameAndType    = findAccessPolicyByNameAndType
 	FindCollectionByID               = findCollectionByID

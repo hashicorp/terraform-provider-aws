@@ -14,9 +14,16 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
@@ -24,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testRotation_basic(t *testing.T) {
+func testAccRotation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -49,7 +56,7 @@ func testRotation_basic(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_zone_id", timeZoneId),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.number_of_on_calls", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.recurrence_multiplier", "1"),
@@ -57,7 +64,7 @@ func testRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`rotation/.+$`)),
 				),
 			},
 			{
@@ -76,7 +83,101 @@ func testRotation_basic(t *testing.T) {
 	})
 }
 
-func testRotation_disappears(t *testing.T) {
+// testAccSSMContactsRotation_Identity_RegionOverride cannot be generated, because the test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+func testAccSSMContactsRotation_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssmcontacts_rotation.test"
+
+	timeZoneId := "Australia/Sydney"
+	recurrenceMultiplier := 1
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRotationConfig_regionOverride(rName, recurrenceMultiplier, timeZoneId),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+
+			// Import command with appended "@<region>"
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+
+			// Import command without appended "@<region>"
+			{
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Import block with Import ID and appended "@<region>"
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Import block with Import ID and no appended "@<region>"
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+
+			// Import block with Resource Identity
+			{
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccRotation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,7 +209,7 @@ func testRotation_disappears(t *testing.T) {
 	})
 }
 
-func testRotation_updateRequiredFields(t *testing.T) {
+func testAccRotation_updateRequiredFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -156,7 +257,7 @@ func testRotation_updateRequiredFields(t *testing.T) {
 	})
 }
 
-func testRotation_startTime(t *testing.T) {
+func testAccRotation_startTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -181,7 +282,7 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, iniStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", iniStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, iniStartTime),
 				),
 			},
 			{
@@ -193,14 +294,14 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, updStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", updStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, updStartTime),
 				),
 			},
 		},
 	})
 }
 
-func testRotation_contactIds(t *testing.T) {
+func testAccRotation_contactIds(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -241,7 +342,7 @@ func testRotation_contactIds(t *testing.T) {
 	})
 }
 
-func testRotation_recurrence(t *testing.T) {
+func testAccRotation_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -352,54 +453,70 @@ func testRotation_recurrence(t *testing.T) {
 	})
 }
 
-func testRotation_tags(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_rotation.test"
-
-	tagKey1 := sdkacctest.RandString(26)
-	tagVal1 := sdkacctest.RandString(26)
-	tagVal1Updated := sdkacctest.RandString(26)
-	tagKey2 := sdkacctest.RandString(26)
-	tagVal2 := sdkacctest.RandString(26)
+	timeZoneId := "Australia/Sydney"
+	recurrenceMultiplier := 1
 
 	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
+		CheckDestroy: testAccCheckRotationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRotationConfig_oneTag(rName, tagKey1, tagVal1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1),
-				),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
 			},
 			{
-				Config: testAccRotationConfig_multipleTags(rName, tagKey1, tagVal1, tagKey2, tagVal2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey2, tagVal2),
-				),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
 			},
 			{
-				Config: testAccRotationConfig_oneTag(rName, tagKey1, tagVal1Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1Updated),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
 			},
 		},
 	})
@@ -487,6 +604,18 @@ resource "aws_ssmincidents_replication_set" "test" {
 `, acctest.Region())
 }
 
+func testAccRotationConfig_replicationSetBase_regionOverride() string {
+	return fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  provider = awsalternate
+
+  region {
+    name = %[1]q
+  }
+}
+`, acctest.AlternateRegion())
+}
+
 func testAccRotationConfig_base(alias string, contactCount int) string {
 	return acctest.ConfigCompose(
 		testAccRotationConfig_replicationSetBase(),
@@ -499,6 +628,22 @@ resource "aws_ssmcontacts_contact" "test" {
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 `, alias, contactCount))
+}
+
+func testAccRotationConfig_base_regionOverride(alias string, contactCount int) string {
+	return acctest.ConfigCompose(
+		testAccRotationConfig_replicationSetBase_regionOverride(),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_contact" "test" {
+  region = %[3]q
+
+  count = %[2]d
+  alias = "%[1]s-${count.index}"
+  type  = "PERSONAL"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}
+`, alias, contactCount, acctest.AlternateRegion()))
 }
 
 func testAccRotationConfig_basic(rName string, recurrenceMultiplier int, timeZoneId string) string {
@@ -523,6 +668,33 @@ resource "aws_ssmcontacts_rotation" "test" {
 
   depends_on = [aws_ssmincidents_replication_set.test]
 }`, rName, recurrenceMultiplier, timeZoneId))
+}
+
+func testAccRotationConfig_regionOverride(rName string, recurrenceMultiplier int, timeZoneId string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccRotationConfig_base_regionOverride(rName, 1),
+		fmt.Sprintf(`
+resource "aws_ssmcontacts_rotation" "test" {
+  region = %[4]q
+
+  contact_ids = aws_ssmcontacts_contact.test[*].arn
+
+  name = %[1]q
+
+  recurrence {
+    number_of_on_calls    = 1
+    recurrence_multiplier = %[2]d
+    daily_settings {
+      hour_of_day    = 1
+      minute_of_hour = 00
+    }
+  }
+
+  time_zone_id = %[3]q
+
+  depends_on = [aws_ssmincidents_replication_set.test]
+}`, rName, recurrenceMultiplier, timeZoneId, acctest.AlternateRegion()))
 }
 
 func testAccRotationConfig_startTime(rName, startTime string) string {
@@ -844,61 +1016,4 @@ resource "aws_ssmcontacts_rotation" "test" {
 
   depends_on = [aws_ssmincidents_replication_set.test]
 }`, rName))
-}
-
-func testAccRotationConfig_oneTag(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(
-		testAccRotationConfig_base(rName, 1),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_rotation" "test" {
-  contact_ids = aws_ssmcontacts_contact.test[*].arn
-
-  name = %[1]q
-
-  recurrence {
-    number_of_on_calls    = 1
-    recurrence_multiplier = 1
-    daily_settings {
-      hour_of_day    = 18
-      minute_of_hour = 00
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  time_zone_id = "Australia/Sydney"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}`, rName, tagKey, tagValue))
-}
-
-func testAccRotationConfig_multipleTags(rName, tagKey1, tagVal1, tagKey2, tagVal2 string) string {
-	return acctest.ConfigCompose(
-		testAccRotationConfig_base(rName, 1),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_rotation" "test" {
-  contact_ids = aws_ssmcontacts_contact.test[*].arn
-
-  name = %[1]q
-
-  recurrence {
-    number_of_on_calls    = 1
-    recurrence_multiplier = 1
-    daily_settings {
-      hour_of_day    = 18
-      minute_of_hour = 00
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  time_zone_id = "Australia/Sydney"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}`, rName, tagKey1, tagVal1, tagKey2, tagVal2))
 }

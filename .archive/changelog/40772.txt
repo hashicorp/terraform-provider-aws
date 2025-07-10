@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecr_account_setting: Add valid values for registry policy scope to `name` and `value` arguments
+```

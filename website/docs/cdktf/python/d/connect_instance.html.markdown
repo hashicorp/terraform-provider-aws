@@ -54,13 +54,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
-
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
 ## Attribute Reference
 
@@ -79,5 +78,6 @@ This data source exports the following attributes in addition to the arguments a
 * `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `service_role` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.
 
-<!-- cache-key: cdktf-0.20.1 input-f348847518408d57a1b3c05acaebc2f7c353201d2c00301debc08e5c4c84bccc -->
+<!-- cache-key: cdktf-0.20.8 input-8810f745a5a2d6ae1485a4660b98c529dbdc0d3e4285a67d3f3f061f152139ad -->

@@ -1,0 +1,16 @@
+```release-note:bug
+resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors
+```
+
+```release-note:bug
+resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:enhancement
+resource/aws_vpc_ipam: Add `enable_private_gua` argument
+```
+
+
+```release-note:enhancement
+resource/aws_vpc_ipv6_cidr_block_association: Add `ip_source` and `ipv6_address_attribute` attributes
+```

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix bug updating `warm_pool.max_group_prepared_capacity` to `0`
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Add plan-time validation of `warm_pool.max_group_prepared_capacity` and `warm_pool.min_size`
+```

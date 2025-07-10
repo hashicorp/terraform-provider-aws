@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,11 +41,11 @@ func resourceTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +78,7 @@ func resourceTable() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -86,7 +87,7 @@ func resourceTable() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.S3EncryptionOption](),
 												},
-												"kms_key_id": {
+												names.AttrKMSKeyID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -124,7 +125,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -145,12 +146,12 @@ func resourceTable() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PartitionKeyEnforcementLevel](),
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ForceNew:         true,
@@ -162,7 +163,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -174,16 +175,15 @@ func resourceTable() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	databaseName := d.Get("database_name").(string)
-	tableName := d.Get("table_name").(string)
+	databaseName := d.Get(names.AttrDatabaseName).(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(databaseName),
@@ -191,35 +191,36 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("magnetic_store_write_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]interface{}))
+	if v, ok := d.GetOk("magnetic_store_write_properties"); ok && len(v.([]any)) > 0 && v.([]any) != nil {
+		input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(v.([]any))
 	}
 
-	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		input.RetentionProperties = expandRetentionProperties(v.([]interface{}))
+	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]any)) > 0 && v.([]any) != nil {
+		input.RetentionProperties = expandRetentionProperties(v.([]any))
 	}
 
-	if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Schema = expandSchema(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateTable(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Timestream Table (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Timestream Table (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
-func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	table, err := findTableByTwoPartKey(ctx, conn, databaseName, tableName)
@@ -227,36 +228,41 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Timestream Table %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	d.Set("arn", table.Arn)
-	d.Set("database_name", table.DatabaseName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Timestream Table (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrARN, table.Arn)
+	d.Set(names.AttrDatabaseName, table.DatabaseName)
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
-		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting magnetic_store_write_properties: %s", err)
 	}
 	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
-		return diag.Errorf("setting retention_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting retention_properties: %s", err)
 	}
 	if table.Schema != nil {
-		if err := d.Set("schema", []interface{}{flattenSchema(table.Schema)}); err != nil {
-			return diag.Errorf("setting schema: %s", err)
+		if err := d.Set(names.AttrSchema, []any{flattenSchema(table.Schema)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 		}
 	} else {
-		d.Set("schema", nil)
+		d.Set(names.AttrSchema, nil)
 	}
-	d.Set("table_name", table.TableName)
+	d.Set(names.AttrTableName, table.TableName)
 
-	return nil
+	return diags
 }
 
-func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		tableName, databaseName, err := tableParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &timestreamwrite.UpdateTableInput{
@@ -265,52 +271,54 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("magnetic_store_write_properties") {
-			input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]interface{}))
+			input.MagneticStoreWriteProperties = expandMagneticStoreWriteProperties(d.Get("magnetic_store_write_properties").([]any))
 		}
 
 		if d.HasChange("retention_properties") {
-			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]interface{}))
+			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]any))
 		}
 
-		if d.HasChange("schema") {
-			if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange(names.AttrSchema) {
+			if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.Schema = expandSchema(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		_, err = conn.UpdateTable(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Timestream Table (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Timestream Table (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
-func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	tableName, databaseName, err := tableParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
-	_, err = conn.DeleteTable(ctx, &timestreamwrite.DeleteTableInput{
+	input := timestreamwrite.DeleteTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
-	})
+	}
+	_, err = conn.DeleteTable(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Timestream Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Timestream Table (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findTableByTwoPartKey(ctx context.Context, conn *timestreamwrite.Client, databaseName, tableName string) (*types.Table, error) {
@@ -339,12 +347,12 @@ func findTableByTwoPartKey(ctx context.Context, conn *timestreamwrite.Client, da
 	return output.Table, nil
 }
 
-func expandRetentionProperties(tfList []interface{}) *types.RetentionProperties {
+func expandRetentionProperties(tfList []any) *types.RetentionProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -363,25 +371,25 @@ func expandRetentionProperties(tfList []interface{}) *types.RetentionProperties 
 	return apiObject
 }
 
-func flattenRetentionProperties(apiObject *types.RetentionProperties) []interface{} {
+func flattenRetentionProperties(apiObject *types.RetentionProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"magnetic_store_retention_period_in_days": aws.ToInt64(apiObject.MagneticStoreRetentionPeriodInDays),
 		"memory_store_retention_period_in_hours":  aws.ToInt64(apiObject.MemoryStoreRetentionPeriodInHours),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandMagneticStoreWriteProperties(tfList []interface{}) *types.MagneticStoreWriteProperties {
+func expandMagneticStoreWriteProperties(tfList []any) *types.MagneticStoreWriteProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -391,32 +399,32 @@ func expandMagneticStoreWriteProperties(tfList []interface{}) *types.MagneticSto
 		EnableMagneticStoreWrites: aws.Bool(tfMap["enable_magnetic_store_writes"].(bool)),
 	}
 
-	if v, ok := tfMap["magnetic_store_rejected_data_location"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["magnetic_store_rejected_data_location"].([]any); ok && len(v) > 0 {
 		apiObject.MagneticStoreRejectedDataLocation = expandMagneticStoreRejectedDataLocation(v)
 	}
 
 	return apiObject
 }
 
-func flattenMagneticStoreWriteProperties(apiObject *types.MagneticStoreWriteProperties) []interface{} {
+func flattenMagneticStoreWriteProperties(apiObject *types.MagneticStoreWriteProperties) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enable_magnetic_store_writes":          aws.ToBool(apiObject.EnableMagneticStoreWrites),
 		"magnetic_store_rejected_data_location": flattenMagneticStoreRejectedDataLocation(apiObject.MagneticStoreRejectedDataLocation),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandMagneticStoreRejectedDataLocation(tfList []interface{}) *types.MagneticStoreRejectedDataLocation {
+func expandMagneticStoreRejectedDataLocation(tfList []any) *types.MagneticStoreRejectedDataLocation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -424,31 +432,31 @@ func expandMagneticStoreRejectedDataLocation(tfList []interface{}) *types.Magnet
 
 	apiObject := &types.MagneticStoreRejectedDataLocation{}
 
-	if v, ok := tfMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.S3Configuration = expandS3Configuration(v)
 	}
 
 	return apiObject
 }
 
-func flattenMagneticStoreRejectedDataLocation(apiObject *types.MagneticStoreRejectedDataLocation) []interface{} {
+func flattenMagneticStoreRejectedDataLocation(apiObject *types.MagneticStoreRejectedDataLocation) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"s3_configuration": flattenS3Configuration(apiObject.S3Configuration),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
+func expandS3Configuration(tfList []any) *types.S3Configuration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 
 	if !ok {
 		return nil
@@ -456,7 +464,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 
 	apiObject := &types.S3Configuration{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -464,7 +472,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 		apiObject.EncryptionOption = types.S3EncryptionOption(v)
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -475,36 +483,36 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 	return apiObject
 }
 
-func flattenS3Configuration(apiObject *types.S3Configuration) []interface{} {
+func flattenS3Configuration(apiObject *types.S3Configuration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
-		"bucket_name":       aws.ToString(apiObject.BucketName),
-		"encryption_option": string(apiObject.EncryptionOption),
-		"kms_key_id":        aws.ToString(apiObject.KmsKeyId),
-		"object_key_prefix": aws.ToString(apiObject.ObjectKeyPrefix),
+	tfMap := map[string]any{
+		names.AttrBucketName: aws.ToString(apiObject.BucketName),
+		"encryption_option":  string(apiObject.EncryptionOption),
+		names.AttrKMSKeyID:   aws.ToString(apiObject.KmsKeyId),
+		"object_key_prefix":  aws.ToString(apiObject.ObjectKeyPrefix),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandSchema(tfMap map[string]interface{}) *types.Schema {
+func expandSchema(tfMap map[string]any) *types.Schema {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.Schema{}
 
-	if v, ok := tfMap["composite_partition_key"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["composite_partition_key"].([]any); ok && len(v) > 0 {
 		apiObject.CompositePartitionKey = expandPartitionKeys(v)
 	}
 
 	return apiObject
 }
 
-func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
+func expandPartitionKey(tfMap map[string]any) *types.PartitionKey {
 	if tfMap == nil {
 		return nil
 	}
@@ -515,18 +523,18 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 		apiObject.EnforcementInRecord = types.PartitionKeyEnforcementLevel(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.PartitionKeyType(v)
 	}
 
 	return apiObject
 }
 
-func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
+func expandPartitionKeys(tfList []any) []types.PartitionKey {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -534,7 +542,7 @@ func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
 	var apiObjects []types.PartitionKey
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -552,12 +560,12 @@ func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
 	return apiObjects
 }
 
-func flattenSchema(apiObject *types.Schema) map[string]interface{} {
+func flattenSchema(apiObject *types.Schema) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CompositePartitionKey; v != nil {
 		tfMap["composite_partition_key"] = flattenPartitionKeys(v)
@@ -566,29 +574,29 @@ func flattenSchema(apiObject *types.Schema) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
+func flattenPartitionKey(apiObject *types.PartitionKey) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"enforcement_in_record": apiObject.EnforcementInRecord,
-		"type":                  apiObject.Type,
+		names.AttrType:          apiObject.Type,
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenPartitionKeys(apiObjects []types.PartitionKey) []interface{} {
+func flattenPartitionKeys(apiObjects []types.PartitionKey) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPartitionKey(&apiObject))

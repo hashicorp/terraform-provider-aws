@@ -354,7 +354,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 * `customEndpointEnabled` - (Optional) Whether to enable custom endpoint for the Elasticsearch domain.
 * `customEndpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforceHttps` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07`, `Policy-Min-TLS-1-2-2019-07`, and `Policy-Min-TLS-1-2-PFS-2023-10`. Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
@@ -447,4 +447,4 @@ Using `terraform import`, import Elasticsearch domains using the `domainName`. F
 % terraform import aws_elasticsearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2ba3b0b9b5de9cf5e4bfb0c3d93db7aa5852b5b15d23694c08cdf16cdf8481e6 -->
+<!-- cache-key: cdktf-0.20.8 input-60dfcf11c5c8eac949444d5d799ae6ac9b5ba88c6982adad1d54ec9eee35c2b4 -->

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker_engine_types", name="Broker Engine Types")
@@ -37,7 +38,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -56,7 +57,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).MQClient(ctx)
 
@@ -92,9 +93,9 @@ func dataSourceBrokerEngineTypesRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]interface{}) {
+func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]any) {
 	for _, broker := range types {
-		brokers = append(brokers, map[string]interface{}{
+		brokers = append(brokers, map[string]any{
 			"engine_type":     broker.EngineType,
 			"engine_versions": flattenEngineVersions(broker.EngineVersions),
 		})
@@ -105,7 +106,7 @@ func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]int
 func flattenEngineVersions(engines []types.EngineVersion) (versions []map[string]string) {
 	for _, engine := range engines {
 		versions = append(versions, map[string]string{
-			"name": aws.ToString(engine.Name),
+			names.AttrName: aws.ToString(engine.Name),
 		})
 	}
 	return

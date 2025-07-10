@@ -5,21 +5,18 @@ package quicksight
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_user", name="User")
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -29,16 +26,16 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
 				},
-				"email": {
+				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -46,10 +43,10 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  DefaultUserNamespace,
+					Default:  defaultUserNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
@@ -59,7 +56,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"user_name": {
+				names.AttrUserName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -72,38 +69,33 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
-	namespace := d.Get("namespace").(string)
-	in := &quicksight.DescribeUserInput{
-		UserName:     aws.String(d.Get("user_name").(string)),
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-	}
+	namespace := d.Get(names.AttrNamespace).(string)
+	userName := d.Get(names.AttrUserName).(string)
+	id := userCreateResourceID(awsAccountID, namespace, userName)
 
-	out, err := conn.DescribeUserWithContext(ctx, in)
+	user, err := findUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), err)
-	}
-	if out == nil || out.User == nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), tfresource.NewEmptyResultError(in))
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
-	d.Set("active", out.User.Active)
-	d.Set("arn", out.User.Arn)
-	d.Set("aws_account_id", awsAccountID)
-	d.Set("email", out.User.Email)
-	d.Set("identity_type", out.User.IdentityType)
-	d.Set("principal_id", out.User.PrincipalId)
-	d.Set("user_name", out.User.UserName)
-	d.Set("user_role", out.User.Role)
+	d.SetId(id)
+	d.Set("active", user.Active)
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set(names.AttrEmail, user.Email)
+	d.Set("identity_type", user.IdentityType)
+	d.Set("principal_id", user.PrincipalId)
+	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_role", user.Role)
 
 	return diags
 }

@@ -1,0 +1,16 @@
+rules:
+  - id: attr-names-as-test-names
+    languages: [go]
+    message: Do not use attribute name constants as test names
+    patterns:
+      - pattern-regex: 'names\.Attr\w+:\s+test\w+,'
+    severity: ERROR
+
+  - id: attr-names-in-config-variables
+    languages: [go]
+    message: Do not use attribute name constants as Terraform config variable names
+    patterns:
+      - pattern-regex: 'names\.Attr\w+'
+      - pattern-inside: |
+          config.Variables{ ... }
+    severity: ERROR

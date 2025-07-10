@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Fix `InvalidParameterCombination: A parameter group can't be specified during Read Replica creation for the following DB engine: postgres` errors
+```

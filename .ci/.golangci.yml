@@ -1,11 +1,11 @@
-issues:
-  max-per-linter: 0
-  max-same-issues: 0
-
+version: "2"
 linters:
-  disable-all: true
+  default: none
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
   enable:
     - gofmt
-
 run:
   timeout: 30m

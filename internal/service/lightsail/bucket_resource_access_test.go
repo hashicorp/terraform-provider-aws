@@ -42,7 +42,7 @@ func TestAccLightsailBucketResourceAccess_basic(t *testing.T) {
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketResourceAccessExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", bucketName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "resource_name", rName),
 				),
 			},

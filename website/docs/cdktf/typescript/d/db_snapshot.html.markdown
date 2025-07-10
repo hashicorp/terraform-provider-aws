@@ -64,9 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `dbInstanceIdentifier` or `dbSnapshotIdentifier` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
@@ -82,6 +80,8 @@ The default is `false`.
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired DB snapshot.
+
+~> **NOTE:** One of either `dbInstanceIdentifier` or `dbSnapshotIdentifier` is required.
 
 ## Attribute Reference
 
@@ -106,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
 * `originalSnapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.20.1 input-c839ad8d58fed1752eb8fb0ecf7cb491e814d59ae1af484cefe56dffea031a1c -->
+<!-- cache-key: cdktf-0.20.8 input-ad94ffd13e4fb8aeb714df247a1165a99db7e06b216bb424a87d108519cb28c3 -->

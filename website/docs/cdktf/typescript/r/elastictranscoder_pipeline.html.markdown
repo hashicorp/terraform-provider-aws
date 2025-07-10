@@ -46,9 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
-
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `awsKmsKeyArn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `contentConfig` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
@@ -60,6 +58,8 @@ This argument supports the following arguments:
 * `role` - (Required) The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to use to transcode jobs for this pipeline.
 * `thumbnailConfig` - (Optional) The ThumbnailConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save thumbnail files. (documented below)
 * `thumbnailConfigPermissions` - (Optional) The permissions for the `thumbnailConfig` object. (documented below)
+
+See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
 The `contentConfig` object specifies information about the Amazon S3 bucket in
 which you want Elastic Transcoder to save transcoded files and playlists: which
@@ -146,4 +146,4 @@ Using `terraform import`, import Elastic Transcoder pipelines using the `id`. Fo
 % terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6b409c28f1ed17363c636a956212b4fffbbcf9da888917717aff32273f1430a2 -->
+<!-- cache-key: cdktf-0.20.8 input-d8b9ec69cbe365283513cdf6c361c18be89b13dde215b0a2bc7a1caa68d80f7e -->

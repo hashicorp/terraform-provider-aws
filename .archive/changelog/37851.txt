@@ -1,0 +1,27 @@
+```release-note:bug
+service/chatbot: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/costoptimizationhub: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/cur: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/globalaccelerator: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/route53: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/route53domains: Correctly overrides region when using custom endpoint.
+```
+
+```release-note:bug
+service/shield: Correctly overrides region when using custom endpoint.
+```

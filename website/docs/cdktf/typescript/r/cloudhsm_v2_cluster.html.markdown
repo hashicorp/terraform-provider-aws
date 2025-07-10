@@ -90,8 +90,9 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `sourceBackupIdentifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
-* `hsmType` - (Required) The type of HSM module in the cluster. Currently, only `hsm1.medium` is supported.
+* `hsmType` - (Required) The type of HSM module in the cluster. Currently, `hsm1.medium` and `hsm2m.medium` are supported.
 * `subnetIds` - (Required) The IDs of subnets in which cluster will operate.
+* `mode` - (Optional) The mode to use in the cluster. The allowed values are `FIPS` and `NON_FIPS`. This field is required if `hsmType` is `hsm2m.medium`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -145,4 +146,4 @@ Using `terraform import`, import CloudHSM v2 Clusters using the cluster `id`. Fo
 % terraform import aws_cloudhsm_v2_cluster.test_cluster cluster-aeb282a201
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-60608d99ff28e60f3d4ab022d7e83a5948556613036f369878a80719c7316ce2 -->
+<!-- cache-key: cdktf-0.20.8 input-3208e14c04cfc617e88b434c8f4bbb8bbc097b0e47df7d25a430d89aae3136b1 -->

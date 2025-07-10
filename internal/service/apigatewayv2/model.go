@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_model", name="Model")
@@ -43,17 +44,17 @@ func resourceModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -61,7 +62,7 @@ func resourceModel() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must be alphanumeric"),
 				),
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -70,7 +71,7 @@ func resourceModel() *schema.Resource {
 				),
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -79,19 +80,19 @@ func resourceModel() *schema.Resource {
 	}
 }
 
-func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Name:        aws.String(name),
-		Schema:      aws.String(d.Get("schema").(string)),
+		Schema:      aws.String(d.Get(names.AttrSchema).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -106,7 +107,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -122,15 +123,15 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Model (%s): %s", d.Id(), err)
 	}
 
-	d.Set("content_type", output.ContentType)
-	d.Set("description", output.Description)
-	d.Set("name", output.Name)
-	d.Set("schema", output.Schema)
+	d.Set(names.AttrContentType, output.ContentType)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrSchema, output.Schema)
 
 	return diags
 }
 
-func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -139,20 +140,20 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ModelId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("content_type") {
-		input.ContentType = aws.String(d.Get("content_type").(string))
+	if d.HasChange(names.AttrContentType) {
+		input.ContentType = aws.String(d.Get(names.AttrContentType).(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("schema") {
-		input.Schema = aws.String(d.Get("schema").(string))
+	if d.HasChange(names.AttrSchema) {
+		input.Schema = aws.String(d.Get(names.AttrSchema).(string))
 	}
 
 	_, err := conn.UpdateModel(ctx, input)
@@ -164,15 +165,16 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Model: %s", d.Id())
-	_, err := conn.DeleteModel(ctx, &apigatewayv2.DeleteModelInput{
+	input := apigatewayv2.DeleteModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteModel(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -185,7 +187,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceModelImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceModelImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/model-id'", d.Id())

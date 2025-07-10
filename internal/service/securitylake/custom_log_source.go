@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Log Source")
+// @FrameworkResource("aws_securitylake_custom_log_source", name="Custom Log Source")
 func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customLogSourceResource{}
 
@@ -39,19 +39,15 @@ func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type customLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (r *customLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_custom_log_source"
 }
 
 func (r *customLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"attributes": schema.ListAttribute{
+			names.AttrAttributes: schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceAttributesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
@@ -79,8 +75,8 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"location": types.StringType,
-						"role_arn": types.StringType,
+						names.AttrLocation: types.StringType,
+						names.AttrRoleARN:  types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.List{
@@ -105,7 +101,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceConfigurationModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -129,7 +125,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"role_arn": schema.StringAttribute{
+									names.AttrRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -151,13 +147,13 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"external_id": schema.StringAttribute{
+									names.AttrExternalID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"principal": schema.StringAttribute{
+									names.AttrPrincipal: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -320,6 +316,7 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 }
 
 type customLogSourceResourceModel struct {
+	framework.WithRegionModel
 	Attributes      fwtypes.ListNestedObjectValueOf[customLogSourceAttributesModel]    `tfsdk:"attributes"`
 	Configuration   fwtypes.ListNestedObjectValueOf[customLogSourceConfigurationModel] `tfsdk:"configuration"`
 	EventClasses    fwtypes.SetValueOf[types.String]                                   `tfsdk:"event_classes"`

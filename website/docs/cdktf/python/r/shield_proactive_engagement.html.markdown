@@ -47,7 +47,7 @@ class MyConvertedCode(TerraformStack):
                     ],
                     "Version": "2012-10-17"
                 })),
-            name=aws_shield_drt_access_role_arn.string_value
+            name="example-role"
         )
         aws_iam_role_policy_attachment_example = IamRolePolicyAttachment(self, "example_1",
             policy_arn="arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy",
@@ -61,27 +61,29 @@ class MyConvertedCode(TerraformStack):
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_shield_drt_access_role_arn_association_example.override_logical_id("example")
-        ShieldProactiveEngagement(self, "test",
-            depends_on=[aws_shield_drt_access_role_arn_association_test],
+        aws_shield_proactive_engagement_example = ShieldProactiveEngagement(self, "example_3",
+            depends_on=[aws_shield_drt_access_role_arn_association_example],
             emergency_contact=[ShieldProactiveEngagementEmergencyContact(
                 contact_notes="Notes",
-                email_address="test@company.com",
+                email_address="contact1@example.com",
                 phone_number="+12358132134"
             ), ShieldProactiveEngagementEmergencyContact(
                 contact_notes="Notes 2",
-                email_address="test2@company.com",
+                email_address="contact2@example.com",
                 phone_number="+12358132134"
             )
             ],
             enabled=True
         )
-        aws_shield_protection_group_test = ShieldProtectionGroup(self, "test_4",
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_shield_proactive_engagement_example.override_logical_id("example")
+        aws_shield_protection_group_example = ShieldProtectionGroup(self, "example_4",
             aggregation="MAX",
             pattern="ALL",
             protection_group_id="example"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        aws_shield_protection_group_test.override_logical_id("test")
+        aws_shield_protection_group_example.override_logical_id("example")
 ```
 
 ## Argument Reference
@@ -92,6 +94,8 @@ The following arguments are required:
 * `emergency_contact` - (Required) One or more emergency contacts. You must provide at least one phone number in the emergency contact list. See [`emergency_contacts`](#emergency_contacts).
 
 ### emergency_contacts
+
+~> **Note:** The contacts that you provide here replace any contacts that were already configured within AWS. While `phone_number` is marked as optional, to enable proactive engagement, the contact list must include at least one phone number. If a phone number is not already configured within AWS, one must be provided in order to prevent errors.
 
 * `contact_notes` - (Optional) Additional notes regarding the contact.
 * `email_address` - (Required) A valid email address that will be used for this contact.
@@ -126,4 +130,4 @@ Using `terraform import`, import Shield proactive engagement using the AWS accou
 % terraform import aws_shield_proactive_engagement.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-18d32750dfd31cffba57af41ba91e22ba3765e56d4195e29721822c73685fa6d -->
+<!-- cache-key: cdktf-0.20.8 input-3518084d9f1c458dd6d4b119233d0d69663d04dd0d614b197213886387e520a4 -->

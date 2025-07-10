@@ -23,12 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user", name="User")
-// @Tags(identifierAttribute="id", resourceType="User")
+// @Tags(identifierAttribute="name", resourceType="User")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
@@ -42,17 +41,17 @@ func resourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
@@ -60,7 +59,7 @@ func resourceUser() *schema.Resource {
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -85,17 +84,15 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
-	path := d.Get("path").(string)
+	name := d.Get(names.AttrName).(string)
+	path := d.Get(names.AttrPath).(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
 		Tags:     getTagsIn(ctx),
@@ -106,14 +103,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateUser(ctx, input)
+	output, err := retryCreateUser(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateUser(ctx, input)
+		output, err = retryCreateUser(ctx, conn, input)
 	}
 
 	if err != nil {
@@ -127,7 +124,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := userCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceUserRead(ctx, d, meta)...)
 		}
 
@@ -139,11 +136,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findUserByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -159,9 +156,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user := outputRaw.(*awstypes.User)
 
-	d.Set("arn", user.Arn)
-	d.Set("name", user.UserName)
-	d.Set("path", user.Path)
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrName, user.UserName)
+	d.Set(names.AttrPath, user.Path)
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
@@ -174,16 +171,16 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChanges("name", "path") {
-		o, n := d.GetChange("name")
+	if d.HasChanges(names.AttrName, names.AttrPath) {
+		o, n := d.GetChange(names.AttrName)
 		input := &iam.UpdateUserInput{
 			UserName:    aws.String(o.(string)),
 			NewUserName: aws.String(n.(string)),
-			NewPath:     aws.String(d.Get("path").(string)),
+			NewPath:     aws.String(d.Get(names.AttrPath).(string)),
 		}
 
 		_, err := conn.UpdateUser(ctx, input)
@@ -222,7 +219,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -234,7 +231,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// All access keys, MFA devices and login profile for the user must be removed.
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string
@@ -600,13 +597,48 @@ func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) 
 	return nil
 }
 
-func userTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListUserTags(ctx, &iam.ListUserTagsInput{
+func userTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListUserTagsInput{
 		UserName: aws.String(identifier),
-	})
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListUserTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
+	}
+
+	return output, nil
+}
+
+func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (any, error) {
+			return conn.CreateUser(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return output.Tags, nil
+	output, ok := outputRaw.(*iam.CreateUserOutput)
+	if !ok || output == nil || aws.ToString(output.User.UserName) == "" {
+		return nil, fmt.Errorf("create IAM user (%s) returned an empty result", aws.ToString(input.UserName))
+	}
+
+	return output, err
 }

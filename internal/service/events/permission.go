@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_permission", name="Permission")
@@ -38,29 +39,29 @@ func resourcePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "events:PutEvents",
 				ValidateFunc: validatePermissionAction,
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"aws:PrincipalOrgID"}, false),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"StringEquals"}, false),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -75,7 +76,7 @@ func resourcePermission() *schema.Resource {
 				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validatePermissionPrincipal,
@@ -90,7 +91,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -98,10 +99,10 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	statementID := d.Get("statement_id").(string)
 	id := permissionCreateResourceID(eventBusName, statementID)
 	input := &eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCondition(d.Get("condition").([]interface{})),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -117,7 +118,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -126,7 +127,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findPermissionByTwoPartKey(ctx, conn, eventBusName, statementID)
 	})
 
@@ -142,15 +143,15 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	policyStatement := outputRaw.(*permissionPolicyStatement)
 
-	d.Set("action", policyStatement.Action)
-	if err := d.Set("condition", flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
+	d.Set(names.AttrAction, policyStatement.Action)
+	if err := d.Set(names.AttrCondition, flattenPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 	d.Set("event_bus_name", eventBusName)
 	switch principal := policyStatement.Principal.(type) {
 	case string:
-		d.Set("principal", principal)
-	case map[string]interface{}:
+		d.Set(names.AttrPrincipal, principal)
+	case map[string]any:
 		if v, ok := principal["AWS"].(string); ok {
 			if arn.IsARN(v) {
 				principalARN, err := arn.Parse(v)
@@ -158,9 +159,9 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				d.Set("principal", principalARN.AccountID)
+				d.Set(names.AttrPrincipal, principalARN.AccountID)
 			} else {
-				d.Set("principal", v)
+				d.Set(names.AttrPrincipal, v)
 			}
 		}
 	}
@@ -169,7 +170,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -179,10 +180,10 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	input := &eventbridge.PutPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
-		Condition:    expandCondition(d.Get("condition").([]interface{})),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
+		Condition:    expandCondition(d.Get(names.AttrCondition).([]any)),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -195,7 +196,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -282,7 +283,7 @@ type permissionPolicyStatement struct {
 	Effect    string
 	Action    string
 	Condition *permissionPolicyStatementCondition `json:"Condition,omitempty"`
-	Principal interface{}                         // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
+	Principal any                                 // "*" or {"AWS": "arn:aws:iam::111111111111:root"}
 	Resource  string
 }
 
@@ -317,38 +318,38 @@ func (c *permissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func expandCondition(l []interface{}) *types.Condition {
+func expandCondition(l []any) *types.Condition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	condition := &types.Condition{
-		Key:   aws.String(m["key"].(string)),
-		Type:  aws.String(m["type"].(string)),
-		Value: aws.String(m["value"].(string)),
+		Key:   aws.String(m[names.AttrKey].(string)),
+		Type:  aws.String(m[names.AttrType].(string)),
+		Value: aws.String(m[names.AttrValue].(string)),
 	}
 
 	return condition
 }
 
-func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondition) []interface{} {
+func flattenPermissionPolicyStatementCondition(c *permissionPolicyStatementCondition) []any {
 	if c == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"key":   c.Key,
-		"type":  c.Type,
-		"value": c.Value,
+	m := map[string]any{
+		names.AttrKey:   c.Key,
+		names.AttrType:  c.Type,
+		names.AttrValue: c.Value,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionAction(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionAction(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
@@ -361,7 +362,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionPrincipal(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^(\d{12}|\*)$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be * or a 12 digit AWS account ID", k))
@@ -370,7 +371,7 @@ func validatePermissionPrincipal(v interface{}, k string) (ws []string, es []err
 }
 
 // https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutPermission.html#API_PutPermission_RequestParameters
-func validatePermissionStatementID(v interface{}, k string) (ws []string, es []error) {
+func validatePermissionStatementID(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if (len(value) < 1) || (len(value) > 64) {
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))

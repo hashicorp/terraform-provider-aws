@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_ciphertext", name="Ciphertext")
@@ -35,7 +36,7 @@ func resourceCiphertext() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,18 +51,18 @@ func resourceCiphertext() *schema.Resource {
 	}
 }
 
-func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.EncryptInput{
-		KeyId:     aws.String(d.Get("key_id").(string)),
+		KeyId:     aws.String(d.Get(names.AttrKeyID).(string)),
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
-	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk("context"); ok && len(v.(map[string]any)) > 0 {
+		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.Encrypt(ctx, input)

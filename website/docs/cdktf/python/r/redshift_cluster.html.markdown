@@ -17,6 +17,8 @@ Provides a Redshift Cluster Resource.
 
 ~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `default_iam_role_arn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `default_iam_role_arn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
+-> **Note:** Write-Only argument `master_password_wo` is available to use in place of `master_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic Usage
@@ -69,9 +71,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
-
 This resource supports the following arguments:
 
 * `cluster_identifier` - (Required) The Cluster Identifier. Must be a lower case string.
@@ -81,13 +80,19 @@ This resource supports the following arguments:
 * `node_type` - (Required) The node type to be provisioned for the cluster.
 * `cluster_type` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `manage_master_password` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
-  Conflicts with `master_password`.
+  Conflicts with `master_password` and `master_password_wo`.
   One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
 * `master_password` - (Optional) Password for the master DB user.
-  Conflicts with `manage_master_password`.
-  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+  Conflicts with `manage_master_password` and `master_password_wo`.
+  One of `master_password`, `master_password_wo` or `manage_master_password` is required unless `snapshot_identifier` is provided.
   Note that this may show up in logs, and it will be stored in the state file.
   Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `master_password_wo` - (Optional, Write-Only) Password for the master DB user.
+  Conflicts with `manage_master_password` and `master_password`.
+  One of `master_password_wo`, `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+  Note that this may show up in logs.
+  Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+* `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
 * `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `multi_az` - (Optional) Specifies if the Redshift cluster is multi-AZ.
@@ -128,6 +133,9 @@ This resource supports the following arguments:
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
 * `snapshot_copy` - (Optional, **Deprecated**) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
 ### Nested Blocks
 
@@ -217,4 +225,4 @@ Using `terraform import`, import Redshift Clusters using the `cluster_identifier
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-256317dde5b7df14e079cdaf9e10b363bf1abfa16c1fe6bf54c640647f4810cf -->
+<!-- cache-key: cdktf-0.20.8 input-2f7865a81437f8b2f6238e8b5b463f5b3c0daba8936a724e1a1a2332f8ed7ee4 -->

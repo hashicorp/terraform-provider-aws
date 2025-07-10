@@ -8,16 +8,17 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenLayers(apiObjects []awstypes.Layer) []interface{} {
+func flattenLayers(apiObjects []awstypes.Layer) []any {
 	return flex.FlattenStringValueList(tfslices.ApplyToAll(apiObjects, func(v awstypes.Layer) string {
 		return aws.ToString(v.Arn)
 	}))
 }
 
-func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface{} {
-	tfMap := make(map[string]interface{})
+func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []any {
+	tfMap := make(map[string]any)
 
 	if apiObject == nil {
 		return nil
@@ -28,11 +29,11 @@ func flattenVPCConfigResponse(apiObject *awstypes.VpcConfigResponse) []interface
 	}
 
 	tfMap["ipv6_allowed_for_dual_stack"] = aws.ToBool(apiObject.Ipv6AllowedForDualStack)
-	tfMap["subnet_ids"] = apiObject.SubnetIds
-	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
+	tfMap[names.AttrSubnetIDs] = apiObject.SubnetIds
+	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	if apiObject.VpcId != nil {
-		tfMap["vpc_id"] = aws.ToString(apiObject.VpcId)
+		tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

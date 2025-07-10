@@ -15,17 +15,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kinesis_stream_consumer", name="Stream Consumer)
+// @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
 func dataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamConsumerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -35,39 +38,40 @@ func dataSourceStreamConsumer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	streamARN := d.Get("stream_arn").(string)
-	input := &kinesis.ListStreamConsumersInput{
+	streamARN := d.Get(names.AttrStreamARN).(string)
+	input := kinesis.ListStreamConsumersInput{
 		StreamARN: aws.String(streamARN),
 	}
 
-	consumer, err := findStreamConsumer(ctx, conn, input, func(c *types.Consumer) bool {
-		if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(c.ConsumerName) {
+	consumer, err := findStreamConsumer(ctx, conn, &input, func(c *types.Consumer) bool {
+		if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(c.ConsumerName) {
 			return false
 		}
 
-		if v, ok := d.GetOk("arn"); ok && v.(string) != aws.ToString(c.ConsumerARN) {
+		if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != aws.ToString(c.ConsumerARN) {
 			return false
 		}
 
@@ -79,11 +83,11 @@ func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(consumer.ConsumerARN))
-	d.Set("arn", consumer.ConsumerARN)
+	d.Set(names.AttrARN, consumer.ConsumerARN)
 	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
-	d.Set("name", consumer.ConsumerName)
-	d.Set("status", consumer.ConsumerStatus)
-	d.Set("stream_arn", streamARN)
+	d.Set(names.AttrName, consumer.ConsumerName)
+	d.Set(names.AttrStatus, consumer.ConsumerStatus)
+	d.Set(names.AttrStreamARN, streamARN)
 
 	return diags
 }

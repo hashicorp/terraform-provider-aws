@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_network_performance_metric_subscription")
-func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
+// @SDKResource("aws_vpc_network_performance_metric_subscription", name="VPC Network Performance Metric Subscription")
+func resourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionCreate,
 		ReadWithoutTimeout:   resourceNetworkPerformanceMetricSubscriptionRead,
 		DeleteWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -44,7 +45,7 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,16 +61,15 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	}
 }
 
-func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source := d.Get("source").(string)
-	destination := d.Get("destination").(string)
+	source := d.Get(names.AttrSource).(string)
+	destination := d.Get(names.AttrDestination).(string)
 	metric := d.Get("metric").(string)
 	statistic := d.Get("statistic").(string)
-	id := NetworkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
+	id := networkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
 	input := &ec2.EnableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
 		Metric:      types.MetricType(metric),
@@ -88,18 +88,16 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	return append(diags, resourceNetworkPerformanceMetricSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
-
+	source, destination, metric, statistic, err := networkPerformanceMetricSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	subscription, err := FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
+	subscription, err := findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx, conn, source, destination, metric, statistic)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 AWS Network Performance Metric Subscription (%s) not found, removing from state", d.Id())
@@ -111,33 +109,32 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination", subscription.Destination)
+	d.Set(names.AttrDestination, subscription.Destination)
 	d.Set("metric", subscription.Metric)
 	d.Set("period", subscription.Period)
-	d.Set("source", subscription.Source)
+	d.Set(names.AttrSource, subscription.Source)
 	d.Set("statistic", subscription.Statistic)
 
 	return diags
 }
 
-func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
-
+	source, destination, metric, statistic, err := networkPerformanceMetricSubscriptionParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 AWS Network Performance Metric Subscriptione: %s", d.Id())
-	_, err = conn.DisableAwsNetworkPerformanceMetricSubscription(ctx, &ec2.DisableAwsNetworkPerformanceMetricSubscriptionInput{
+	input := ec2.DisableAwsNetworkPerformanceMetricSubscriptionInput{
 		Destination: aws.String(destination),
 		Metric:      types.MetricType(metric),
 		Source:      aws.String(source),
 		Statistic:   types.StatisticType(statistic),
-	})
+	}
+	_, err = conn.DisableAwsNetworkPerformanceMetricSubscription(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
@@ -148,14 +145,14 @@ func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *
 
 const networkPerformanceMetricSubscriptionRuleIDSeparator = "/"
 
-func NetworkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic string) string {
+func networkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic string) string {
 	parts := []string{source, destination, metric, statistic}
 	id := strings.Join(parts, networkPerformanceMetricSubscriptionRuleIDSeparator)
 
 	return id
 }
 
-func NetworkPerformanceMetricSubscriptionResourceID(id string) (string, string, string, string, error) {
+func networkPerformanceMetricSubscriptionParseResourceID(id string) (string, string, string, string, error) {
 	parts := strings.Split(id, networkPerformanceMetricSubscriptionRuleIDSeparator)
 
 	if len(parts) == 4 && parts[0] != "" && parts[1] != "" && parts[2] != "" && parts[3] != "" {

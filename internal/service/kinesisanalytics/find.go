@@ -6,28 +6,26 @@ package kinesisanalytics
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindApplicationDetailByName returns the application corresponding to the specified name.
-// Returns NotFoundError if no application is found.
-func FindApplicationDetailByName(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+func findApplicationDetailByName(ctx context.Context, conn *kinesisanalytics.Client, name string) (*awstypes.ApplicationDetail, error) {
 	input := &kinesisanalytics.DescribeApplicationInput{
 		ApplicationName: aws.String(name),
 	}
 
-	return FindApplicationDetail(ctx, conn, input)
+	return findApplicationDetail(ctx, conn, input)
 }
 
-// FindApplicationDetail returns the application details corresponding to the specified name.
-// Returns NotFoundError if no application is found.
-func FindApplicationDetail(ctx context.Context, conn *kinesisanalytics.KinesisAnalytics, input *kinesisanalytics.DescribeApplicationInput) (*kinesisanalytics.ApplicationDetail, error) {
-	output, err := conn.DescribeApplicationWithContext(ctx, input)
+func findApplicationDetail(ctx context.Context, conn *kinesisanalytics.Client, input *kinesisanalytics.DescribeApplicationInput) (*awstypes.ApplicationDetail, error) {
+	output, err := conn.DescribeApplication(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, kinesisanalytics.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -39,10 +37,7 @@ func FindApplicationDetail(ctx context.Context, conn *kinesisanalytics.KinesisAn
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.ApplicationDetail, nil

@@ -6,7 +6,7 @@ description: |-
   Get information on a AWS Key Management Service (KMS) Key
 ---
 
-# aws_kms_key
+# Data Source: aws_kms_key
 
 Use this data source to get detailed information about
 the specified KMS Key with flexible key id input.
@@ -35,6 +35,9 @@ data "aws_kms_key" "by_key_arn" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`
     * Key ARN. E.g.: `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
@@ -52,7 +55,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloud_hsm_cluster_id`: The cluster ID of the AWS CloudHSM cluster that contains the key material for the KMS key.
 * `creation_date`: The date and time when the key was created
 * `custom_key_store_id`: A unique identifier for the custom key store that contains the KMS key.
-* `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
+* `customer_master_key_spec`: See `key_spec`.
 * `deletion_date`: The date and time after which AWS KMS deletes the key. This value is present only when `key_state` is `PendingDeletion`, otherwise this value is 0
 * `description`: The description of the key.
 * `enabled`: Specifies whether the key is enabled. When `key_state` is `Enabled` this value is true, otherwise it is false

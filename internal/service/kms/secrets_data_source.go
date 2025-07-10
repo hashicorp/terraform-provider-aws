@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kms_secrets", name="Secrets)
@@ -44,11 +45,11 @@ func dataSourceSecrets() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"key_id": {
+						names.AttrKeyID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -69,7 +70,7 @@ func dataSourceSecrets() *schema.Resource {
 	}
 }
 
-func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -77,8 +78,8 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	plaintext := make(map[string]string, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		name := tfMap["name"].(string)
+		tfMap := tfMapRaw.(map[string]any)
+		name := tfMap[names.AttrName].(string)
 
 		// base64 decode the payload
 		payload, err := itypes.Base64Decode(tfMap["payload"].(string))
@@ -90,7 +91,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 			CiphertextBlob: payload,
 		}
 
-		if v, ok := tfMap["context"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["context"].(map[string]any); ok && len(v) > 0 {
 			input.EncryptionContext = flex.ExpandStringValueMap(v)
 		}
 
@@ -98,11 +99,11 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 			input.EncryptionAlgorithm = awstypes.EncryptionAlgorithmSpec(v)
 		}
 
-		if v, ok := tfMap["grant_tokens"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["grant_tokens"].([]any); ok && len(v) > 0 {
 			input.GrantTokens = flex.ExpandStringValueList(v)
 		}
 
-		if v, ok := tfMap["key_id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrKeyID].(string); ok && v != "" {
 			input.KeyId = aws.String(v)
 		}
 
@@ -116,7 +117,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		plaintext[name] = string(output.Plaintext)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("plaintext", plaintext)
 
 	return diags

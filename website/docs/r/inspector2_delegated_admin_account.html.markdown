@@ -24,8 +24,9 @@ resource "aws_inspector2_delegated_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) Account to enable as delegated admin account.
 
 ## Attribute Reference
@@ -48,12 +49,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_inspector2_delegated_admin_account.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import Inspector Delegated Admin Account using the `account_id`. For example:
 
 ```console
-% terraform import aws_inspector2_delegated_admin_account.example 012345678901
+% terraform import aws_inspector2_delegated_admin_account.example 123456789012
 ```

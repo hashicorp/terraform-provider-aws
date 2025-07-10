@@ -26,10 +26,11 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "s3_canonical_user_id", resourceName, "s3_canonical_user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cloudfront_access_identity_path", resourceName, "cloudfront_access_identity_path"),

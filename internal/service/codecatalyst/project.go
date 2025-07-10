@@ -47,15 +47,15 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,31 +67,31 @@ const (
 	ResNameProject = "Project"
 )
 
-func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateProjectInput{
-		DisplayName: aws.String(d.Get("display_name").(string)),
+		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
 	out, err := conn.CreateProject(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), err)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
 	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -110,14 +110,14 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameProject, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("space_name", out.SpaceName)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 
 	return diags
 }
 
-func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -125,13 +125,13 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	update := false
 
 	in := &codecatalyst.UpdateProjectInput{
-		Name:        aws.String(d.Get("display_name").(string)),
+		Name:        aws.String(d.Get(names.AttrDisplayName).(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 
@@ -149,17 +149,18 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCatalyst Project %s", d.Id())
 
-	_, err := conn.DeleteProject(ctx, &codecatalyst.DeleteProjectInput{
+	input := codecatalyst.DeleteProjectInput{
 		Name:      aws.String(d.Id()),
 		SpaceName: aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteProject(ctx, &input)
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {

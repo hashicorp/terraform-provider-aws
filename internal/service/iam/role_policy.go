@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -31,6 +32,11 @@ const (
 )
 
 // @SDKResource("aws_iam_role_policy", name="Role Policy")
+// @IdentityAttribute("role")
+// @IdentityAttribute("name")
+// @IdAttrFormat("{role}:{name}")
+// @ImportIDHandler("rolePolicyImportID")
+// @Testing(existsType="string")
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
@@ -38,39 +44,35 @@ func resourceRolePolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceRolePolicyPut,
 		DeleteWithoutTimeout: resourceRolePolicyDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validRolePolicyName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := verify.LegacyPolicyNormalize(v)
 					return json
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -80,17 +82,17 @@ func resourceRolePolicy() *schema.Resource {
 	}
 }
 
-func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	policy, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	roleName := d.Get("role").(string)
+	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	roleName := d.Get(names.AttrRole).(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(policyName),
@@ -104,10 +106,10 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:%s", roleName, policyName))
+		d.SetId(createRolePolicyImportID(roleName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-			return FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 
 		if err != nil {
@@ -118,16 +120,16 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceRolePolicyRead(ctx, d, meta)...)
 }
 
-func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyDocument, err := FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
+	policyDocument, err := findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy %s not found, removing from state", d.Id())
@@ -144,24 +146,24 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("name", policyName)
-	d.Set("name_prefix", create.NamePrefixFromName(policyName))
-	d.Set("policy", policyToSet)
-	d.Set("role", roleName)
+	d.Set(names.AttrName, policyName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
+	d.Set(names.AttrPolicy, policyToSet)
+	d.Set(names.AttrRole, roleName)
 
 	return diags
 }
 
-func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	roleName, policyName, err := RolePolicyParseID(d.Id())
+	roleName, policyName, err := rolePolicyParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -183,7 +185,7 @@ func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
+func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName, policyName string) (string, error) {
 	input := &iam.GetRolePolicyInput{
 		PolicyName: aws.String(policyName),
 		RoleName:   aws.String(roleName),
@@ -209,7 +211,11 @@ func FindRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	return aws.ToString(output.PolicyDocument), nil
 }
 
-func RolePolicyParseID(id string) (roleName, policyName string, err error) {
+func createRolePolicyImportID(roleName, policyName string) string {
+	return fmt.Sprintf("%s:%s", roleName, policyName)
+}
+
+func rolePolicyParseID(id string) (roleName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
 		err = fmt.Errorf("role_policy id must be of the form <role name>:<policy name>")
@@ -219,4 +225,23 @@ func RolePolicyParseID(id string) (roleName, policyName string, err error) {
 	roleName = parts[0]
 	policyName = parts[1]
 	return
+}
+
+type rolePolicyImportID struct{}
+
+func (rolePolicyImportID) Create(d *schema.ResourceData) string {
+	return createRolePolicyImportID(d.Get(names.AttrRole).(string), d.Get(names.AttrName).(string))
+}
+
+func (rolePolicyImportID) Parse(id string) (string, map[string]string, error) {
+	roleName, policyName, err := rolePolicyParseID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]string{
+		names.AttrRole: roleName,
+		names.AttrName: policyName,
+	}
+	return id, result, nil
 }

@@ -12,8 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,14 +45,14 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_class"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -76,13 +82,13 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 				Config: testAccLocationS3Config_storageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_class", "STANDARD_IA"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -131,11 +137,11 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -144,21 +150,99 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationS3Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationS3Config_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationS3Output
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_location_s3.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckLocationS3Destroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccLocationS3Config_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccLocationS3Config_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLocationS3Config_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`location/loc-.+`)),
+					}),
+				},
 			},
 		},
 	})
@@ -209,6 +293,53 @@ func testAccCheckLocationS3Exists(ctx context.Context, n string, v *datasync.Des
 
 		return nil
 	}
+}
+
+func testAccLocationS3Config_base2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "datasync.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test2" {
+  role   = aws_iam_role.test2.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": [
+      "s3:*"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_s3_bucket.test2.arn}",
+      "${aws_s3_bucket.test2.arn}/*"
+    ]
+  }]
+}
+POLICY
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName)
 }
 
 func testAccLocationS3Config_base(rName string) string {

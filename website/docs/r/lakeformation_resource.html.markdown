@@ -31,13 +31,15 @@ resource "aws_lakeformation_resource" "example" {
 
 The following arguments are required:
 
-* `arn` – (Required) Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) Amazon Resource Name (ARN) of the resource.
 
 The following arguments are optional:
 
-* `role_arn` – (Optional) Role that has read/write access to the resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Optional) Role that has read/write access to the resource.
 * `use_service_linked_role` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
 * `hybrid_access_enabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.
+* `with_federation`- (Optional) Whether or not the resource is a federated resource. Set to true when registering AWS Glue connections for federated catalog functionality.
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 

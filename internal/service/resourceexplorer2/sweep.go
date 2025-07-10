@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -46,8 +47,8 @@ func sweepIndexes(region string) error {
 		}
 
 		for _, v := range page.Indexes {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIndex, client,
-				framework.NewAttribute("arn", aws.ToString(v.Arn)),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIndexResource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn)),
 			))
 		}
 	}

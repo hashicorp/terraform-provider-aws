@@ -36,11 +36,12 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexache.MustCompile(`queues/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "concurrent_jobs"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -89,11 +90,11 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
+				Config: testAccQueueConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +103,20 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccQueueConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
+				Config: testAccQueueConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -183,14 +184,14 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusPaused)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusPaused)),
 				),
 			},
 			{
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -220,14 +221,44 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 				Config: testAccQueueConfig_description(rName, description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccQueueConfig_description(rName, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMediaConvertQueue_withConcurrentJobs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queue types.Queue
+	resourceName := "aws_media_convert_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueueConfig_concurrentJobs(rName, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queue),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_jobs", "100"),
+				),
+			},
+			{
+				Config: testAccQueueConfig_concurrentJobs(rName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueueExists(ctx, resourceName, &queue),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_jobs", "5"),
 				),
 			},
 		},
@@ -305,6 +336,15 @@ resource "aws_media_convert_queue" "test" {
   description = %[2]q
 }
 `, rName, description)
+}
+
+func testAccQueueConfig_concurrentJobs(rName string, concurrentJobs int) string {
+	return fmt.Sprintf(`
+resource "aws_media_convert_queue" "test" {
+  name            = %[1]q
+  concurrent_jobs = %[2]d
+}
+`, rName, concurrentJobs)
 }
 
 func testAccQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {

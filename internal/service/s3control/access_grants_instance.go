@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Access Grants Instance")
+// @FrameworkResource("aws_s3control_access_grants_instance", name="Access Grants Instance")
 // @Tags
 func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accessGrantsInstanceResource{}
@@ -37,12 +37,8 @@ func newAccessGrantsInstanceResource(context.Context) (resource.ResourceWithConf
 }
 
 type accessGrantsInstanceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantsInstanceResourceModel]
 	framework.WithImportByID
-}
-
-func (r *accessGrantsInstanceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grants_instance"
 }
 
 func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -60,7 +56,7 @@ func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -99,7 +95,7 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
 		AccountId:         flex.StringFromFramework(ctx, data.AccountID),
@@ -169,7 +165,7 @@ func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resourc
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -254,10 +250,6 @@ func (r *accessGrantsInstanceResource) Delete(ctx context.Context, request resou
 	}
 }
 
-func (r *accessGrantsInstanceResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func associateAccessGrantsInstanceIdentityCenterInstance(ctx context.Context, conn *s3control.Client, accountID, identityCenterARN string) error {
 	input := &s3control.AssociateAccessGrantsIdentityCenterInput{
 		AccountId:         aws.String(accountID),
@@ -305,14 +297,15 @@ func findAccessGrantsInstance(ctx context.Context, conn *s3control.Client, accou
 }
 
 type accessGrantsInstanceResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantsInstanceARN      types.String `tfsdk:"access_grants_instance_arn"`
 	AccessGrantsInstanceID       types.String `tfsdk:"access_grants_instance_id"`
 	AccountID                    types.String `tfsdk:"account_id"`
 	ID                           types.String `tfsdk:"id"`
 	IdentityCenterApplicationARN types.String `tfsdk:"identity_center_application_arn"`
 	IdentityCenterARN            fwtypes.ARN  `tfsdk:"identity_center_arn"`
-	Tags                         types.Map    `tfsdk:"tags"`
-	TagsAll                      types.Map    `tfsdk:"tags_all"`
+	Tags                         tftags.Map   `tfsdk:"tags"`
+	TagsAll                      tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (data *accessGrantsInstanceResourceModel) InitFromID() error {

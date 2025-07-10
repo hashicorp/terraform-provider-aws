@@ -15,12 +15,20 @@ var (
 	ResourceReplicaExternalKey = resourceReplicaExternalKey
 	ResourceReplicaKey         = resourceReplicaKey
 
+	AliasARNToKeyARN          = aliasARNToKeyARN
 	AliasNamePrefix           = aliasNamePrefix
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
+	FindKeyByID               = findKeyByID
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
-	KMSPropagationTimeout     = kmsPropagationTimeout // nosemgrep:ci.kms-in-var-name
+	KeyARNOrIDEqual           = keyARNOrIDEqual
+	PropagationTimeout        = propagationTimeout
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
+
+	ValidNameForResource   = validNameForResource
+	ValidateKeyARN         = validateKeyARN
+	ValidGrantName         = validGrantName
+	ValidNameForDataSource = validNameForDataSource
 )

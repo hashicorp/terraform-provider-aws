@@ -22,12 +22,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_certificate", name="Certificate")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -40,15 +39,15 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 				// trailing period, no longer requiring a custom StateFunc
 				// to prevent ACM API error
@@ -63,7 +62,7 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -83,7 +82,7 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: domainValidationOptionsHash,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -112,11 +111,11 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
-				if diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names") {
-					domain_name := diff.Get("domain_name").(string)
+				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
+					domain_name := diff.Get(names.AttrDomainName).(string)
 
 					if sanSet, ok := diff.Get("subject_alternative_names").(*schema.Set); ok {
 						sanSet.Add(domain_name)
@@ -128,19 +127,18 @@ func ResourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	req := lightsail.CreateCertificateInput{
-		CertificateName: aws.String(d.Get("name").(string)),
-		DomainName:      aws.String(d.Get("domain_name").(string)),
+		CertificateName: aws.String(d.Get(names.AttrName).(string)),
+		DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -151,10 +149,10 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateCertificate(ctx, &req)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get(names.AttrName).(string), err)
 	}
 
-	id := d.Get("name").(string)
+	id := d.Get(names.AttrName).(string)
 	diag := expandOperations(ctx, conn, resp.Operations, types.OperationTypeCreateCertificate, ResCertificate, id)
 
 	if diag != nil {
@@ -166,7 +164,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -183,11 +181,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
-	d.Set("arn", certificate.Arn)
-	d.Set("created_at", certificate.CreatedAt.Format(time.RFC3339))
-	d.Set("domain_name", certificate.DomainName)
+	d.Set(names.AttrARN, certificate.Arn)
+	d.Set(names.AttrCreatedAt, certificate.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrDomainName, certificate.DomainName)
 	d.Set("domain_validation_options", flattenDomainValidationRecords(certificate.DomainValidationRecords))
-	d.Set("name", certificate.Name)
+	d.Set(names.AttrName, certificate.Name)
 	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
 
 	setTagsOut(ctx, certificate.Tags)
@@ -195,12 +193,12 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceCertificateRead(ctx, d, meta)
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -226,27 +224,27 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func domainValidationOptionsHash(v interface{}) int {
-	m, ok := v.(map[string]interface{})
+func domainValidationOptionsHash(v any) int {
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0
 	}
 
-	if v, ok := m["domain_name"].(string); ok {
+	if v, ok := m[names.AttrDomainName].(string); ok {
 		return create.StringHashcode(v)
 	}
 
 	return 0
 }
 
-func flattenDomainValidationRecords(domainValidationRecords []types.DomainValidationRecord) []map[string]interface{} {
-	var domainValidationResult []map[string]interface{}
+func flattenDomainValidationRecords(domainValidationRecords []types.DomainValidationRecord) []map[string]any {
+	var domainValidationResult []map[string]any
 
 	for _, o := range domainValidationRecords {
 		if o.ResourceRecord != nil {
-			validationOption := map[string]interface{}{
-				"domain_name":           aws.ToString(o.DomainName),
+			validationOption := map[string]any{
+				names.AttrDomainName:    aws.ToString(o.DomainName),
 				"resource_record_name":  aws.ToString(o.ResourceRecord.Name),
 				"resource_record_type":  aws.ToString(o.ResourceRecord.Type),
 				"resource_record_value": aws.ToString(o.ResourceRecord.Value),
@@ -258,7 +256,7 @@ func flattenDomainValidationRecords(domainValidationRecords []types.DomainValida
 	return domainValidationResult
 }
 
-func expandSubjectAlternativeNames(sans interface{}) []string {
+func expandSubjectAlternativeNames(sans any) []string {
 	subjectAlternativeNames := make([]string, len(sans.(*schema.Set).List()))
 	for i, sanRaw := range sans.(*schema.Set).List() {
 		subjectAlternativeNames[i] = sanRaw.(string)

@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `contactFlowModuleId` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `contactFlowModuleId` - (Optional) Returns information on a specific Contact Flow Module by contact flow module id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow Module by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `contactFlowModuleId` is required.
 
 ## Attribute Reference
 
@@ -81,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
 * `status` - Status of the Contact Flow Module Module. Values are either `PUBLISHED` or `SAVED`.
 
-<!-- cache-key: cdktf-0.20.1 input-42ad4b40afc50837380755e739270bff09e741210205ca792850ed7cbdd2d210 -->
+<!-- cache-key: cdktf-0.20.8 input-52cdffa5c1084b9718b894778e048543a4c5d79a35de546106f5cb7c6574163c -->

@@ -104,13 +104,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `autoStartConfiguration` – (Optional) The configuration for an application to automatically start on job submission.
 * `autoStopConfiguration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
 * `imageConfiguration` – (Optional) The image configuration applied to all worker types.
 * `initialCapacity` – (Optional) The capacity to initialize when the application is created.
+* `interactiveConfiguration` – (Optional) Enables the interactive use cases to use when running an application.
 * `maximumCapacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
 * `name` – (Required) The name of the application.
 * `networkConfiguration` – (Optional) The network configuration for customer VPC connectivity.
@@ -151,6 +152,11 @@ The following arguments are required:
 
 * `workerConfiguration` - (Optional) The resource configuration of the initial capacity configuration.
 * `workerCount` - (Required) The number of workers in the initial capacity configuration.
+
+### interactive_configuration Arguments
+
+* `livyEndpointEnabled` - (Optional) Enables an Apache Livy endpoint that you can connect to and run interactive jobs.
+* `studioEnabled` - (Optional) Enables you to connect an application to Amazon EMR Studio to run interactive workloads in a notebook.
 
 ##### worker_configuration Arguments
 
@@ -194,4 +200,4 @@ Using `terraform import`, import EMR Severless applications using the `id`. For 
 % terraform import aws_emrserverless_application.example id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e44c01cb3d0245a04c0ae76333390d6e8ad9c201d82a7409ec4c28eab63c55d0 -->
+<!-- cache-key: cdktf-0.20.8 input-52c96edac1b89b33d215325b591c7b64e16067b0104f8fc01d3227e392d24876 -->

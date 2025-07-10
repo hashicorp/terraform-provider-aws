@@ -1,5 +1,5 @@
 ---
-subcategory: "Amazon Bedrock"
+subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_models"
 description: |-
@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-None.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
     * `modelArn` - The ARN of the custom model.
     * `modelName` - The name of the custom model.
 
-<!-- cache-key: cdktf-0.20.1 input-5c8a3f3692382ecd35babad90f7ea55ce880124425b33d50e7c1631f449d3166 -->
+<!-- cache-key: cdktf-0.20.8 input-5a092b76015697e2ea6a65880a8c04a9699ca462fc5ea1d0e41140b038f713d5 -->

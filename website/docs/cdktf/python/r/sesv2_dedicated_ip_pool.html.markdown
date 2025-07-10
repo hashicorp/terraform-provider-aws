@@ -70,14 +70,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Dedicated IP Pool.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
-
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Dedicated IP Pool using the `pool_name`. For example:
@@ -103,4 +95,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Pool using
 % terraform import aws_sesv2_dedicated_ip_pool.example my-pool
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0803493a6210a46636d12167a1f3177b733cfc4fbdc40d4043f26a173d0508db -->
+<!-- cache-key: cdktf-0.20.8 input-6412cfede9409ff4616137941920d2ba9f22cbdf7b5dfdf5784353be6f60b3e5 -->

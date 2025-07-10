@@ -1,0 +1,31 @@
+```release-note:enhancement
+resource/aws_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4
+```
+
+```release-note:enhancement
+resource/aws_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4
+```
+
+```release-note:enhancement
+resource/aws_default_vpc: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4
+```
+
+```release-note:enhancement
+resource/aws_default_vpc: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4
+```
+
+```release-note:enhancement
+resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_cidr_block` sizes between `/44` and `/60` in increments of /4
+```
+
+```release-note:enhancement
+resource/aws_vpc_ipv6_cidr_block_association: Support `ipv6_netmask_length` values between `44` and `60` in increments of 4
+```
+
+```release-note:enhancement
+resource/aws_vpc_security_group_ingress_rule: Add `tags` to the `AuthorizeSecurityGroupIngress` EC2 API call instead of making a separate `CreateTags` call
+```
+
+```release-note:enhancement
+resource/aws_vpc_security_group_egress_rule: Add `tags` to the `AuthorizeSecurityGroupEgress` EC2 API call instead of making a separate `CreateTags` call
+```

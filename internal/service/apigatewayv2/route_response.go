@@ -62,7 +62,7 @@ func resourceRouteResponse() *schema.Resource {
 	}
 }
 
-func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -77,7 +77,7 @@ func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("response_models"); ok {
-		input.ResponseModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.ResponseModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.CreateRouteResponse(ctx, input)
@@ -91,7 +91,7 @@ func resourceRouteResponseCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRouteResponseRead(ctx, d, meta)...)
 }
 
-func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -114,7 +114,7 @@ func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -129,7 +129,7 @@ func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange("response_models") {
-		input.ResponseModels = flex.ExpandStringValueMap(d.Get("response_models").(map[string]interface{}))
+		input.ResponseModels = flex.ExpandStringValueMap(d.Get("response_models").(map[string]any))
 	}
 
 	if d.HasChange("route_response_key") {
@@ -145,16 +145,17 @@ func resourceRouteResponseUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRouteResponseRead(ctx, d, meta)...)
 }
 
-func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route Response: %s", d.Id())
-	_, err := conn.DeleteRouteResponse(ctx, &apigatewayv2.DeleteRouteResponseInput{
+	input := apigatewayv2.DeleteRouteResponseInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
 		RouteId:         aws.String(d.Get("route_id").(string)),
 		RouteResponseId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRouteResponse(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -167,7 +168,7 @@ func resourceRouteResponseDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRouteResponseImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteResponseImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id/route-response-id'", d.Id())

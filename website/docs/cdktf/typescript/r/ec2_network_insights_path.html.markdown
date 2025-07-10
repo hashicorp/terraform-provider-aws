@@ -41,15 +41,29 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `source` - (Required) ID or ARN of the resource which is the source of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
-* `destination` - (Required) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
 * `protocol` - (Required) Protocol to use for analysis. Valid options are `tcp` or `udp`.
 
 The following arguments are optional:
 
 * `sourceIp` - (Optional) IP address of the source resource.
+* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN. Either the `destination` argument or the `destinationAddress` argument in the `filterAtSource` block must be specified.
 * `destinationIp` - (Optional) IP address of the destination resource.
 * `destinationPort` - (Optional) Destination port to analyze access to.
+* `filterAtDestination` - (Optional) Scopes the analysis to network paths that match specific filters at the destination. If you specify this parameter, you can't specify `destinationIp`. See below for details. Note that Terraform performs drift detection on this argument only when the value is provided.
+* `filterAtSource` - (Optional) Scopes the analysis to network paths that match specific filters at the source. If you specify this parameter, you can't specify `sourceIp` or `destinationPort`. See below for details. Note that Terraform performs drift detection on this argument only when the value is provided.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+The `filterAtDestination` and `filterAtSource` configuration blocks support the following arguments:
+
+* `destinationAddress` - (Optional) The destination IPv4 address.
+* `destinationPortRange` - (Optional) The destination port range. See below for details.
+* `sourceAddress` - (Optional) IP address of the source resource.
+* `sourcePortRange` - (Optional) The source port range. See below for details.
+
+The `destinationPortRange` and `sourcePortRange` configuration blocks support the following arguments:
+
+* `fromPort` - (Optional) The first port in the range.
+* `toPort` - (Optional) The last port in the range.
 
 ## Attribute Reference
 
@@ -93,4 +107,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2d954457dd6558b313317ea2a62a029bb4f6b0f9fb109a2eff89ecd56e960d31 -->
+<!-- cache-key: cdktf-0.20.8 input-c7ec5b4a6e1040e38b2f1d4a36adc77bf92adc66d1599c8b5e2ff7ad0d2feede -->

@@ -35,8 +35,8 @@ func TestAccServiceCatalogTagOptionResourceAssociation_basic(t *testing.T) {
 				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagOptionResourceAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "tag_option_id", "aws_servicecatalog_tag_option.test", names.AttrID),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) 
 
 func testAccCheckTagOptionResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_tag_option_resource_association" {
@@ -115,7 +115,7 @@ func testAccCheckTagOptionResourceAssociationExists(ctx context.Context, resourc
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		_, err = tfservicecatalog.WaitTagOptionResourceAssociationReady(ctx, conn, tagOptionID, resourceID, tfservicecatalog.TagOptionResourceAssociationReadyTimeout)
 

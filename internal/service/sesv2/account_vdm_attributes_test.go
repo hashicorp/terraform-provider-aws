@@ -5,7 +5,6 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,8 +22,8 @@ func TestAccSESV2AccountVDMAttributes_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                   testAccAccountVDMAttributes_basic,
-		"disappears":              testAccAccountVDMAttributes_disappears,
+		acctest.CtBasic:           testAccAccountVDMAttributes_basic,
+		acctest.CtDisappears:      testAccAccountVDMAttributes_disappears,
 		"engagementMetrics":       testAccAccountVDMAttributes_engagementMetrics,
 		"optimizedSharedDelivery": testAccAccountVDMAttributes_optimizedSharedDelivery,
 	}
@@ -153,16 +152,21 @@ func testAccCheckAccountVDMAttributesDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			out, err := tfsesv2.FindAccountVDMAttributes(ctx, conn)
+			output, err := tfsesv2.FindAccountVDMAttributes(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			if out.VdmEnabled == types.FeatureStatusDisabled {
-				return nil
+			if output.VdmEnabled == types.FeatureStatusDisabled {
+				continue
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameAccountVDMAttributes, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Account VDM Attributes %s still exists", rs.Primary.ID)
 		}
 
 		return nil

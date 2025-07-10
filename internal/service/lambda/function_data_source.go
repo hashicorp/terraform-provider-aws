@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_lambda_function", name="Function")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,
@@ -31,7 +33,11 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,18 +50,18 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -73,7 +79,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -85,7 +91,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -112,7 +118,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,7 +175,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,15 +192,16 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -203,18 +210,18 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -223,17 +230,17 @@ func dataSourceFunction() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -244,7 +251,7 @@ func dataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -287,20 +294,21 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
-	d.Set("arn", unqualifiedARN)
+	d.Set(names.AttrARN, unqualifiedARN)
+	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		if err := d.Set("dead_letter_config", []interface{}{
-			map[string]interface{}{
-				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
+		if err := d.Set("dead_letter_config", []any{
+			map[string]any{
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
 	} else {
-		d.Set("dead_letter_config", []interface{}{})
+		d.Set("dead_letter_config", []any{})
 	}
-	d.Set("description", function.Description)
-	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+	d.Set(names.AttrDescription, function.Description)
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
@@ -313,8 +321,8 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), unqualifiedARN))
-	d.Set("kms_key_arn", function.KMSKeyArn)
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), unqualifiedARN))
+	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
@@ -324,39 +332,39 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
-	d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
+	d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
 	if output.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("role", function.Role)
+	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
-	d.Set("timeout", function.Timeout)
+	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
 	}
-	if err := d.Set("tracing_config", []interface{}{
-		map[string]interface{}{
-			"mode": string(tracingConfigMode),
+	if err := d.Set("tracing_config", []any{
+		map[string]any{
+			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
 	}
-	d.Set("version", function.Version)
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+	d.Set(names.AttrVersion, function.Version)
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	setTagsOut(ctx, output.Tags)
 
 	// See r/aws_lambda_function.
-	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		if function.PackageType == awstypes.PackageTypeZip {

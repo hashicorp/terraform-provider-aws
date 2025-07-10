@@ -28,7 +28,7 @@ func testAccBotAssociationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "lex_bot", resourceName, "lex_bot"),
 				),
 			},
@@ -84,7 +84,7 @@ resource "aws_connect_instance" "test" {
 resource "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {
-    lex_region = data.aws_region.current.name
+    lex_region = data.aws_region.current.region
     name       = aws_lex_bot.test.name
   }
 }
@@ -92,7 +92,7 @@ resource "aws_connect_bot_association" "test" {
 }
 
 func testAccBotAssociationDataSourceConfig_basic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccBotAssociationDataSourceConfig_base(rName, rName2) + `
+	return acctest.ConfigCompose(testAccBotAssociationDataSourceConfig_base(rName, rName2), `
 data "aws_connect_bot_association" "test" {
   instance_id = aws_connect_instance.test.id
   lex_bot {

@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_codepipeline: Removal of `trigger` argument now properly removes custom trigger definitions
+```
+```release-note:enhancement
+resource/aws_codepipeline:  Adds `trigger_all` attribute
+```

@@ -14,23 +14,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*apigateway.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*apigateway.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return apigateway.NewFromConfig(cfg, func(o *apigateway.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			// Many operations can return an error such as:
-			//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
-			// Handle them all globally for the service client.
-			if errs.IsAErrorMessageContains[*types.ConflictException](err, "try again later") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return []func(*apigateway.Options){
+		func(o *apigateway.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				// Many operations can return an error such as:
+				//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+				// Handle them all globally for the service client.
+				if errs.IsAErrorMessageContains[*types.ConflictException](err, "try again later") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	}
 }

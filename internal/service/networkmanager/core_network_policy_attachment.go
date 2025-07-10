@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_core_network_policy_attachment")
-func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_networkmanager_core_network_policy_attachment", name="Core Network Policy Attachment")
+func resourceCoreNetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceCoreNetworkPolicyAttachmentRead,
@@ -54,12 +55,12 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 					validation.StringIsJSON,
 				),
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,18 +68,18 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceCoreNetworkPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCoreNetworkPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	d.SetId(d.Get("core_network_id").(string))
 
 	return resourceCoreNetworkPolicyAttachmentUpdate(ctx, d, meta)
 }
 
-func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
+	coreNetwork, err := findCoreNetworkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
@@ -91,18 +92,18 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("core_network_id", coreNetwork.CoreNetworkId)
-	d.Set("state", coreNetwork.State)
+	d.Set(names.AttrState, coreNetwork.State)
 
 	// getting the policy document uses a different API call
 	// pass in latestPolicyVersionId to get the latest version id by default
-	coreNetworkPolicy, err := FindCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), latestPolicyVersionID)
+	coreNetworkPolicy, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, d.Id(), aws.Int32(latestPolicyVersionID))
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s) policy: %s", d.Id(), err)
 	} else {
-		encodedPolicyDocument, err := protocol.EncodeJSONValue(coreNetworkPolicy.PolicyDocument, protocol.NoEscape)
+		encodedPolicyDocument, err := structure.NormalizeJsonString(aws.ToString(coreNetworkPolicy.PolicyDocument))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "encoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
@@ -113,13 +114,13 @@ func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChange("policy_document") {
-		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
+		err := putAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

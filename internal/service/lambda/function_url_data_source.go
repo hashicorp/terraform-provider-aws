@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lambda_function_url", name="Function URL")
@@ -61,11 +62,11 @@ func dataSourceFunctionURL() *schema.Resource {
 					},
 				},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +98,7 @@ func dataSourceFunctionURL() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -114,14 +115,14 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
-		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
+		if err := d.Set("cors", []any{flattenCors(output.Cors)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
 	}
-	d.Set("creation_time", output.CreationTime)
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrCreationTime, output.CreationTime)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)

@@ -44,7 +44,7 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "query_string", expectedQueryString),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "query_definition_id", regexache.MustCompile(verify.UUIDRegexPattern)),
@@ -54,24 +54,10 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v),
 			},
 		},
 	})
-}
-
-func testAccQueryDefinitionImportStateID(v *types.QueryDefinition) resource.ImportStateIdFunc {
-	return func(*terraform.State) (string, error) {
-		id := arn.ARN{
-			AccountID: acctest.AccountID(),
-			Partition: acctest.Partition(),
-			Region:    acctest.Region(),
-			Service:   "logs",
-			Resource:  fmt.Sprintf("query-definition:%s", aws.ToString(v.QueryDefinitionId)),
-		}
-
-		return id.String(), nil
-	}
 }
 
 func TestAccLogsQueryDefinition_disappears(t *testing.T) {
@@ -115,21 +101,21 @@ func TestAccLogsQueryDefinition_rename(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 				),
 			},
 			{
 				Config: testAccQueryDefinitionConfig_basic(updatedQueryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedQueryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedQueryName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v2),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v2),
 			},
 		},
 	})
@@ -151,29 +137,75 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_logGroups(queryName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
 				),
 			},
 			{
 				Config: testAccQueryDefinitionConfig_logGroups(queryName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "5"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", names.AttrName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v2),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v2),
 			},
 		},
 	})
+}
+
+func TestAccLogsQueryDefinition_logGroupARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	queryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueryDefinitionConfig_logGroupARNs(queryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v),
+			},
+		},
+	})
+}
+
+func testAccQueryDefinitionImportStateID(ctx context.Context, v *types.QueryDefinition) resource.ImportStateIdFunc {
+	return func(*terraform.State) (string, error) {
+		id := arn.ARN{
+			AccountID: acctest.AccountID(ctx),
+			Partition: acctest.Partition(),
+			Region:    acctest.Region(),
+			Service:   "logs",
+			Resource:  fmt.Sprintf("query-definition:%s", aws.ToString(v.QueryDefinitionId)),
+		}
+
+		return id.String(), nil
+	}
 }
 
 func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *types.QueryDefinition) resource.TestCheckFunc {
@@ -185,7 +217,7 @@ func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *types.Q
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.ID)
+		output, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -206,7 +238,7 @@ func testAccCheckQueryDefinitionDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.ID)
+			_, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -257,4 +289,29 @@ resource "aws_cloudwatch_log_group" "test" {
   name = "%[1]s-${count.index}"
 }
 `, rName, count)
+}
+
+func testAccQueryDefinitionConfig_logGroupARNs(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  log_group_names = [
+    aws_cloudwatch_log_group.test[0].arn,
+    aws_cloudwatch_log_group.test[1].arn,
+  ]
+
+  query_string = <<EOF
+fields @timestamp, @message
+| sort @timestamp desc
+| limit 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+`, rName)
 }

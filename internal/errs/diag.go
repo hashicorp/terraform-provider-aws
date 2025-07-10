@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -74,19 +75,6 @@ func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {
 	return d
 }
 
-// newAttributeConflictsError is included for use with NewAttributeConflictsWillBeError.
-// The typical behavior is covered using the schema ConflictsWith parameter.
-func newAttributeConflictsError(path, otherPath cty.Path) diag.Diagnostic {
-	return NewAttributeErrorDiagnostic(
-		path,
-		"Invalid Attribute Combination",
-		fmt.Sprintf("Attribute %q cannot be specified when %q is specified.",
-			PathString(path),
-			PathString(otherPath),
-		),
-	)
-}
-
 // NewAttributeConflictsWhenError returns an error diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath has the given value.
 func NewAttributeConflictsWhenError(path, otherPath cty.Path, otherValue string) diag.Diagnostic {
@@ -115,12 +103,31 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 	)
 }
 
-// NewAttributeConflictsWillBeError returns a warning diagnostic indicating that the attribute at the given path cannot be
-// specified when the attribute at otherPath is set.
-// This is intended to be used for situations where the conflict will become an error in a future release.
-func NewAttributeConflictsWillBeError(path, otherPath cty.Path) diag.Diagnostic {
+// NewAtLeastOneOfChildrenError returns an error diagnostic indicating that at least on of the named children of
+// parentPath is required.
+func NewAtLeastOneOfChildrenError(parentPath cty.Path, paths ...cty.Path) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("At least one attribute out of [%s] must be specified", strings.Join(tfslices.ApplyToAll(paths, PathString), ", ")),
+	)
+}
+
+// NewAttributeRequiredWhenError should only be used for apply-time validation, as it replicates
+// the functionality of a `Required` attribute
+func NewAttributeRequiredError(parentPath cty.Path, attrname string) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Missing required argument",
+		fmt.Sprintf("The argument %q is required, but no definition was found.", attrname),
+	)
+}
+
+// NewAttributeRequiredWillBeError returns a warning diagnostic indicating that the attribute at the given path is required.
+// This is intended to be used for situations where the missing attribute will be an error in a future release.
+func NewAttributeRequiredWillBeError(parentPath cty.Path, attrname string) diag.Diagnostic {
 	return willBeError(
-		newAttributeConflictsError(path, otherPath),
+		NewAttributeRequiredError(parentPath, attrname),
 	)
 }
 
@@ -143,24 +150,22 @@ func PathString(path cty.Path) string {
 			}
 			buf.WriteString(x.Name)
 		case cty.IndexStep:
-			val := x.Key
-			typ := val.Type()
 			var s string
-			switch {
-			case typ == cty.String:
+			switch val := x.Key; val.Type() {
+			case cty.String:
 				s = val.AsString()
-			case typ == cty.Number:
+			case cty.Number:
 				num := val.AsBigFloat()
 				s = num.String()
 			default:
-				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+				s = fmt.Sprintf("<unexpected index: %s>", val.Type().FriendlyName())
 			}
-			buf.WriteString(fmt.Sprintf("[%s]", s))
+			fmt.Fprintf(&buf, "[%s]", s)
 		default:
 			if i != 0 {
 				buf.WriteString(".")
 			}
-			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+			fmt.Fprintf(&buf, "<unexpected step: %[1]T %[1]v>", x)
 		}
 	}
 	return buf.String()

@@ -22,13 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/crypto/ssh"
 )
 
 // @SDKResource("aws_key_pair", name="Key Pair")
 // @Tags(identifierAttribute="key_pair_id")
+// @Testing(tagsTest=false)
 func resourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -41,13 +41,11 @@ func resourceKeyPair() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaVersion: 1,
-		MigrateState:  KeyPairMigrateState,
+		MigrateState:  keyPairMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,11 +77,11 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
 						return strings.TrimSpace(v)
@@ -98,18 +96,18 @@ func resourceKeyPair() *schema.Resource {
 	}
 }
 
-func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
-	input := &ec2.ImportKeyPairInput{
+	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
-		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeKeyPair),
+		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeKeyPair),
 	}
 
-	output, err := conn.ImportKeyPair(ctx, input)
+	output, err := conn.ImportKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
@@ -120,7 +118,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -137,25 +135,25 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
 
-	setTagsOutV2(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }
 
-func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -163,14 +161,15 @@ func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
-	_, err := conn.DeleteKeyPair(ctx, &ec2.DeleteKeyPairInput{
+	input := ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteKeyPair(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)
@@ -181,7 +180,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 // OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
 // Any key comment is ignored when comparing values.
-func OpenSSHPublicKeysEqual(v1, v2 string) bool {
+func openSSHPublicKeysEqual(v1, v2 string) bool {
 	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
 
 	if err != nil {

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
@@ -46,6 +47,10 @@ func resourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"client_affinity": {
 				Type:             schema.TypeString,
@@ -73,7 +78,7 @@ func resourceListener() *schema.Resource {
 					},
 				},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
@@ -82,7 +87,7 @@ func resourceListener() *schema.Resource {
 	}
 }
 
-func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -92,7 +97,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientAffinity:   awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:         awstypes.Protocol(d.Get("protocol").(string)),
+		Protocol:         awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
 	output, err := conn.CreateListener(ctx, input)
@@ -111,7 +116,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -133,16 +138,17 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
+	d.Set(names.AttrARN, listener.ListenerArn)
 	d.Set("client_affinity", listener.ClientAffinity)
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
-	d.Set("protocol", listener.Protocol)
+	d.Set(names.AttrProtocol, listener.Protocol)
 
 	return diags
 }
 
-func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -151,7 +157,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientAffinity: awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		ListenerArn:    aws.String(d.Id()),
 		PortRanges:     expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:       awstypes.Protocol(d.Get("protocol").(string)),
+		Protocol:       awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
 	_, err := conn.UpdateListener(ctx, input)
@@ -168,7 +174,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceListenerRead(ctx, d, meta)...)
 }
 
-func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -219,7 +225,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	return output.Listener, nil
 }
 
-func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
+func expandPortRange(tfMap map[string]any) *awstypes.PortRange {
 	if tfMap == nil {
 		return nil
 	}
@@ -237,7 +243,7 @@ func expandPortRange(tfMap map[string]interface{}) *awstypes.PortRange {
 	return apiObject
 }
 
-func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
+func expandPortRanges(tfList []any) []awstypes.PortRange {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -245,7 +251,7 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	var apiObjects []awstypes.PortRange
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -263,12 +269,12 @@ func expandPortRanges(tfList []interface{}) []awstypes.PortRange {
 	return apiObjects
 }
 
-func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
+func flattenPortRange(apiObject *awstypes.PortRange) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FromPort; v != nil {
 		tfMap["from_port"] = aws.ToInt32(v)
@@ -281,12 +287,12 @@ func flattenPortRange(apiObject *awstypes.PortRange) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPortRanges(apiObjects []awstypes.PortRange) []interface{} {
+func flattenPortRanges(apiObjects []awstypes.PortRange) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPortRange(&apiObject))

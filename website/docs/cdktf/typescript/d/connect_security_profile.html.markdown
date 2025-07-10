@@ -62,13 +62,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `securityProfileId` is required.
-
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `securityProfileId` - (Optional) Returns information on a specific Security Profile by Security Profile id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Security Profile by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `securityProfileId` is required.
 
 ## Attribute Reference
 
@@ -81,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `permissions` - List of permissions assigned to the security profile.
 * `tags` - Map of tags to assign to the Security Profile.
 
-<!-- cache-key: cdktf-0.20.1 input-ca6061431d187a32ef698b08c7464880ab9e5cbcb8ba86414cce0d19a1515ff1 -->
+<!-- cache-key: cdktf-0.20.8 input-3fcab7514da2cb12be43f655d7e95864400a12e00ccef4afff32f6893c854c49 -->

@@ -121,3 +121,7 @@ func (lifecycleHookLifecycleTransition) Values() []lifecycleHookLifecycleTransit
 		lifecycleHookLifecycleTransitionInstanceTerminating,
 	}
 }
+
+const (
+	elbInstanceStateInService = "InService"
+)

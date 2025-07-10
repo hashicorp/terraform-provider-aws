@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_service_specific_credential", name="Service Specific Credential")
@@ -34,18 +35,18 @@ func resourceServiceSpecificCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.StatusTypeActive,
@@ -68,13 +69,13 @@ func resourceServiceSpecificCredential() *schema.Resource {
 	}
 }
 
-func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateServiceSpecificCredentialInput{
-		ServiceName: aws.String(d.Get("service_name").(string)),
-		UserName:    aws.String(d.Get("user_name").(string)),
+		ServiceName: aws.String(d.Get(names.AttrServiceName).(string)),
+		UserName:    aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	out, err := conn.CreateServiceSpecificCredential(ctx, input)
@@ -87,7 +88,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	d.SetId(fmt.Sprintf("%s:%s:%s", aws.ToString(cred.ServiceName), aws.ToString(cred.UserName), aws.ToString(cred.ServiceSpecificCredentialId)))
 	d.Set("service_password", cred.ServicePassword)
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != string(awstypes.StatusTypeActive) {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateServiceSpecificCredentialInput{
 			ServiceSpecificCredentialId: cred.ServiceSpecificCredentialId,
 			UserName:                    cred.UserName,
@@ -103,7 +104,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -112,7 +113,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return FindServiceSpecificCredential(ctx, conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 
@@ -130,21 +131,21 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 
 	d.Set("service_specific_credential_id", cred.ServiceSpecificCredentialId)
 	d.Set("service_user_name", cred.ServiceUserName)
-	d.Set("service_name", cred.ServiceName)
-	d.Set("user_name", cred.UserName)
-	d.Set("status", cred.Status)
+	d.Set(names.AttrServiceName, cred.ServiceName)
+	d.Set(names.AttrUserName, cred.UserName)
+	d.Set(names.AttrStatus, cred.Status)
 
 	return diags
 }
 
-func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	request := &iam.UpdateServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
-		UserName:                    aws.String(d.Get("user_name").(string)),
-		Status:                      awstypes.StatusType(d.Get("status").(string)),
+		UserName:                    aws.String(d.Get(names.AttrUserName).(string)),
+		Status:                      awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 	}
 	_, err := conn.UpdateServiceSpecificCredential(ctx, request)
 	if err != nil {
@@ -154,13 +155,13 @@ func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	request := &iam.DeleteServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
-		UserName:                    aws.String(d.Get("user_name").(string)),
+		UserName:                    aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if _, err := conn.DeleteServiceSpecificCredential(ctx, request); err != nil {

@@ -1,4 +1,5 @@
 name: Post Publish
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,10 +7,12 @@ on:
         type: string
         description: 'Semver release tag e.g. v1.1.0'
         required: true
+
   workflow_run:
     workflows: [Release]
     types:
       - completed
+
 jobs:
   on-success-or-workflow-dispatch:
     runs-on: ubuntu-latest
@@ -19,7 +22,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
+        uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
         with:
           workflow: release.yml
           name: release-tag
@@ -32,23 +35,43 @@ jobs:
             value=`cat release-tag.data`
             echo "tag=$value" >> "$GITHUB_OUTPUT"
           fi
+
   tidy-jira:
     needs: [on-success-or-workflow-dispatch]
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@77daa2cf0f0574bb7be001eb6380939c1af31672 # v0.9.0
+        uses: breathingdust/github-jira-tidy@a64b76479e0021bf2ea7b2066b7496e0d365f929 # v0.11.0
         with:
           jira_host: 'hashicorp.atlassian.net'
           jira_username: 'sdavis@hashicorp.com'
           jira_password: ${{ secrets.jira_password }}
           jira_jql_filter: ${{ secrets.jira_jql_filter }}
-          jira_closed_id: '371'
           jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
       - run: echo 'The triggering workflow failed'
+
+  start-registry-check:
+    name: Start Registry Check
+    runs-on: ubuntu-latest
+    needs: [on-success-or-workflow-dispatch]
+    permissions:
+      actions: write
+    steps:
+      - name: Initiate Workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
+        run: |
+          gh workflow run \
+            --repo ${{ github.repository }} \
+            --ref main \
+            --field version=${VERSION:1} \
+            registry-check.yml

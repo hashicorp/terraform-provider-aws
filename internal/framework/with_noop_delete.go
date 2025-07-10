@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-// WithNoOpUpdate is intended to be embedded in resources which have no need of a custom Delete method.
+// WithNoOpDelete is intended to be embedded in resources which have no need of a custom Delete method.
 type WithNoOpDelete struct{}
 
 func (w *WithNoOpDelete) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

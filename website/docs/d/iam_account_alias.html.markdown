@@ -17,14 +17,14 @@ for the effective account in which Terraform is working.
 ```terraform
 data "aws_iam_account_alias" "current" {}
 
-output "account_id" {
+output "account_alias" {
   value = data.aws_iam_account_alias.current.account_alias
 }
 ```
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 

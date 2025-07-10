@@ -24,6 +24,7 @@ resource "aws_redshift_endpoint_access" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to access.
 * `endpoint_name` - (Required) The Redshift-managed VPC endpoint name.
 * `resource_owner` - (Optional) The Amazon Web Services account ID of the owner of the cluster. This is only required if the cluster is in another Amazon Web Services account.

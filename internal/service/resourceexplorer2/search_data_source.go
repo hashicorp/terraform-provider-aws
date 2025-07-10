@@ -5,9 +5,11 @@ package resourceexplorer2
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -20,116 +22,66 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Search")
-func newDataSourceSearch(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSearch{}, nil
+// @FrameworkDataSource("aws_resourceexplorer2_search", name="Search")
+func newSearchDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &searchDataSource{}, nil
 }
 
 const (
 	DSNameSearch = "Search Data Source"
 )
 
-type dataSourceSearch struct {
-	framework.DataSourceWithConfigure
+type searchDataSource struct {
+	framework.DataSourceWithModel[searchDataSourceModel]
 }
 
-func (d *dataSourceSearch) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_resourceexplorer2_search"
-}
-
-func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *searchDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			"resource_count":    framework.DataSourceComputedListOfObjectAttribute[countData](ctx),
+			names.AttrResources: framework.DataSourceComputedListOfObjectAttribute[resourcesData](ctx),
 			"view_arn": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1011),
 				},
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"resource_count": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"complete": schema.BoolAttribute{
-							Computed: true,
-						},
-						"total_resources": schema.Int64Attribute{
-							Computed: true,
-						},
-					},
-				},
-			},
-			"resources": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"last_reported_at": schema.StringAttribute{
-							Computed: true,
-						},
-						"owning_account_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"region": schema.StringAttribute{
-							Computed: true,
-						},
-						"resource_type": schema.StringAttribute{
-							Computed: true,
-						},
-						"service": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"resource_property": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[resourcePropertyData](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"data": schema.StringAttribute{
-										Computed: true,
-									},
-									"last_reported_at": schema.StringAttribute{
-										Computed: true,
-									},
-									"name": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
-func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *searchDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ResourceExplorer2Client(ctx)
 
-	var data dataSourceSearchData
+	var data searchDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.ID = types.StringValue(data.QueryString.ValueString())
+	if data.ViewArn.IsNull() {
+		data.ID = types.StringValue(fmt.Sprintf(",%s", data.QueryString.ValueString()))
+	} else {
+		data.ID = types.StringValue(fmt.Sprintf("%s,%s", data.ViewArn.ValueString(), data.QueryString.ValueString()))
+	}
 
 	input := &resourceexplorer2.SearchInput{
-		QueryString: aws.String(data.QueryString.ValueString()),
+		QueryString: data.QueryString.ValueStringPointer(),
+	}
+	if !data.ViewArn.IsNull() {
+		input.ViewArn = data.ViewArn.ValueStringPointer()
 	}
 
 	paginator := resourceexplorer2.NewSearchPaginator(conn, input)
 
 	var out resourceexplorer2.SearchOutput
+	commonFieldsSet := false
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -141,6 +93,11 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 		}
 
 		if page != nil && len(page.Resources) > 0 {
+			if !commonFieldsSet {
+				out.Count = page.Count
+				out.ViewArn = page.ViewArn
+				commonFieldsSet = true
+			}
 			out.Resources = append(out.Resources, page.Resources...)
 		}
 	}
@@ -149,33 +106,36 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSearchData struct {
-	ResourceCount fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
-	Resources     fwtypes.ListNestedObjectValueOf[resourcesData] `tfsdk:"resources"`
-	ID            types.String                                   `tfsdk:"id"`
-	ViewArn       types.String                                   `tfsdk:"view_arn"`
-	QueryString   types.String                                   `tfsdk:"query_string"`
+type searchDataSourceModel struct {
+	framework.WithRegionModel
+	Count       fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
+	ID          types.String                                   `tfsdk:"id"`
+	QueryString types.String                                   `tfsdk:"query_string"`
+	Resources   fwtypes.ListNestedObjectValueOf[resourcesData] `tfsdk:"resources"`
+	ViewArn     fwtypes.ARN                                    `tfsdk:"view_arn"`
 }
 
 type countData struct {
-	Completed      types.Bool  `tfsdk:"completed"`
+	Complete       types.Bool  `tfsdk:"complete"`
 	TotalResources types.Int64 `tfsdk:"total_resources"`
 }
 
 type resourcesData struct {
-	ARN              types.String                                          `tfsdk:"arn"`
-	LastReportedAt   types.String                                          `tfsdk:"last_reported_at"`
-	OwningAccountID  types.String                                          `tfsdk:"owning_account_id"`
-	Region           types.String                                          `tfsdk:"region"`
-	ResourceProperty fwtypes.ListNestedObjectValueOf[resourcePropertyData] `tfsdk:"resource_property"`
-	ResourceType     types.String                                          `tfsdk:"resource_type"`
-	Service          types.String                                          `tfsdk:"service"`
+	ARN             fwtypes.ARN                                     `tfsdk:"arn"`
+	LastReportedAt  timetypes.RFC3339                               `tfsdk:"last_reported_at"`
+	OwningAccountID types.String                                    `tfsdk:"owning_account_id"`
+	Properties      fwtypes.ListNestedObjectValueOf[propertiesData] `tfsdk:"properties"`
+	Region          types.String                                    `tfsdk:"region"`
+	ResourceType    types.String                                    `tfsdk:"resource_type"`
+	Service         types.String                                    `tfsdk:"service"`
 }
 
-type resourcePropertyData struct {
-	Data           types.String `tfsdk:"data"`
-	LastReportedAt types.String `tfsdk:"last_reported_at"`
-	Name           types.String `tfsdk:"name"`
+type propertiesData struct {
+	Data           jsontypes.Normalized `tfsdk:"data"`
+	LastReportedAt timetypes.RFC3339    `tfsdk:"last_reported_at"`
+	Name           types.String         `tfsdk:"name"`
 }

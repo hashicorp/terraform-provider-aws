@@ -48,7 +48,7 @@ func resourceDashboard() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -63,7 +63,7 @@ func resourceDashboard() *schema.Resource {
 	}
 }
 
-func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -86,7 +86,7 @@ func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDashboardRead(ctx, d, meta)...)
 }
 
-func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
@@ -109,14 +109,15 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Dashboard: %s", d.Id())
-	_, err := conn.DeleteDashboards(ctx, &cloudwatch.DeleteDashboardsInput{
+	input := cloudwatch.DeleteDashboardsInput{
 		DashboardNames: []string{d.Id()},
-	})
+	}
+	_, err := conn.DeleteDashboards(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Dashboard (%s): %s", d.Id(), err)

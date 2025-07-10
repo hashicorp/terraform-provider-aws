@@ -62,7 +62,7 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_redshift_cluster_example.override_logical_id("example")
         aws_s3_bucket_example = S3Bucket(self, "example_2",
-            bucket="example_bucket"
+            bucket="example-bucket"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_s3_bucket_example.override_logical_id("example")
@@ -97,7 +97,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
+This resource supports the following arguments:
 
 * `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
@@ -305,6 +305,7 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
+* `use_privatelink_for_metadata_and_authorization` (Optional) - Indicates whether Amazon AppFlow uses the private network to send metadata and authorization calls to Salesforce. Amazon AppFlow sends private calls through AWS PrivateLink. These calls travel through AWS infrastructure without being exposed to the public internet.
 
 #### SAPOData Connector Profile Properties
 
@@ -364,4 +365,4 @@ Using `terraform import`, import AppFlow Connector Profile using the connector p
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
 
-<!-- cache-key: cdktf-0.20.1 input-175320c144cddd55dbd02b452b869ed210cf85367e05941516384dd0ea24a19d -->
+<!-- cache-key: cdktf-0.20.8 input-69ad196c10636b85f48457cfc68bade8df355a60bc971a50103f349a66affc67 -->

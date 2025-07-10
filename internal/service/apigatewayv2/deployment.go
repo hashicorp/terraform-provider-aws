@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_deployment", name="Deployment")
@@ -47,12 +48,12 @@ func resourceDeployment() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -62,7 +63,7 @@ func resourceDeployment() *schema.Resource {
 	}
 }
 
-func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -71,7 +72,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ApiId: aws.String(apiID),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -90,7 +91,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -107,12 +108,12 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("auto_deployed", output.AutoDeployed)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 
 	return diags
 }
 
-func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -122,8 +123,8 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		DeploymentId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	_, err := conn.UpdateDeployment(ctx, input)
@@ -139,15 +140,16 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Deployment (%s)", d.Id())
-	_, err := conn.DeleteDeployment(ctx, &apigatewayv2.DeleteDeploymentInput{
+	input := apigatewayv2.DeleteDeploymentInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		DeploymentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDeployment(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -160,7 +162,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/deployment-id'", d.Id())
@@ -203,7 +205,7 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 }
 
 func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
 		if tfresource.NotFound(err) {

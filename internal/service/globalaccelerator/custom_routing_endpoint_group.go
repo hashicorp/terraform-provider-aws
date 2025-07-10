@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_endpoint_group", name="Custom Routing Endpoint Group")
@@ -42,7 +43,7 @@ func resourceCustomRoutingEndpointGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,13 +105,13 @@ func resourceCustomRoutingEndpointGroup() *schema.Resource {
 	}
 }
 
-func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
 		DestinationConfigurations: expandCustomRoutingDestinationConfigurations(d.Get("destination_configuration").(*schema.Set).List()),
-		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region),
+		EndpointGroupRegion:       aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		IdempotencyToken:          aws.String(id.UniqueId()),
 		ListenerArn:               aws.String(d.Get("listener_arn").(string)),
 	}
@@ -156,7 +157,7 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceCustomRoutingEndpointGroupRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -177,7 +178,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", endpointGroup.EndpointGroupArn)
+	d.Set(names.AttrARN, endpointGroup.EndpointGroupArn)
 	if err := d.Set("destination_configuration", flattenCustomRoutingDestinationDescriptions(endpointGroup.DestinationDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination_configuration: %s", err)
 	}
@@ -190,7 +191,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -244,7 +245,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	return output.EndpointGroup, nil
 }
 
-func expandCustomRoutingEndpointDestinationConfiguration(tfMap map[string]interface{}) *awstypes.CustomRoutingDestinationConfiguration {
+func expandCustomRoutingEndpointDestinationConfiguration(tfMap map[string]any) *awstypes.CustomRoutingDestinationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -266,7 +267,7 @@ func expandCustomRoutingEndpointDestinationConfiguration(tfMap map[string]interf
 	return apiObject
 }
 
-func expandCustomRoutingDestinationConfigurations(tfList []interface{}) []awstypes.CustomRoutingDestinationConfiguration {
+func expandCustomRoutingDestinationConfigurations(tfList []any) []awstypes.CustomRoutingDestinationConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -274,7 +275,7 @@ func expandCustomRoutingDestinationConfigurations(tfList []interface{}) []awstyp
 	var apiObjects []awstypes.CustomRoutingDestinationConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -292,7 +293,7 @@ func expandCustomRoutingDestinationConfigurations(tfList []interface{}) []awstyp
 	return apiObjects
 }
 
-func expandCustomRoutingEndpointConfiguration(tfMap map[string]interface{}) *awstypes.CustomRoutingEndpointConfiguration {
+func expandCustomRoutingEndpointConfiguration(tfMap map[string]any) *awstypes.CustomRoutingEndpointConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -306,7 +307,7 @@ func expandCustomRoutingEndpointConfiguration(tfMap map[string]interface{}) *aws
 	return apiObject
 }
 
-func expandCustomRoutingEndpointConfigurations(tfList []interface{}) []awstypes.CustomRoutingEndpointConfiguration {
+func expandCustomRoutingEndpointConfigurations(tfList []any) []awstypes.CustomRoutingEndpointConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -314,7 +315,7 @@ func expandCustomRoutingEndpointConfigurations(tfList []interface{}) []awstypes.
 	var apiObjects []awstypes.CustomRoutingEndpointConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -332,12 +333,12 @@ func expandCustomRoutingEndpointConfigurations(tfList []interface{}) []awstypes.
 	return apiObjects
 }
 
-func flattenCustomRoutingDestinationDescription(apiObject *awstypes.CustomRoutingDestinationDescription) map[string]interface{} {
+func flattenCustomRoutingDestinationDescription(apiObject *awstypes.CustomRoutingDestinationDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FromPort; v != nil {
 		tfMap["from_port"] = aws.ToInt32(v)
@@ -354,12 +355,12 @@ func flattenCustomRoutingDestinationDescription(apiObject *awstypes.CustomRoutin
 	return tfMap
 }
 
-func flattenCustomRoutingDestinationDescriptions(apiObjects []awstypes.CustomRoutingDestinationDescription) []interface{} {
+func flattenCustomRoutingDestinationDescriptions(apiObjects []awstypes.CustomRoutingDestinationDescription) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenCustomRoutingDestinationDescription(&apiObject))
@@ -368,12 +369,12 @@ func flattenCustomRoutingDestinationDescriptions(apiObjects []awstypes.CustomRou
 	return tfList
 }
 
-func flattenCustomRoutingEndpointDescription(apiObject *awstypes.CustomRoutingEndpointDescription) map[string]interface{} {
+func flattenCustomRoutingEndpointDescription(apiObject *awstypes.CustomRoutingEndpointDescription) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EndpointId; v != nil {
 		tfMap["endpoint_id"] = aws.ToString(v)
@@ -382,12 +383,12 @@ func flattenCustomRoutingEndpointDescription(apiObject *awstypes.CustomRoutingEn
 	return tfMap
 }
 
-func flattenCustomRoutingEndpointDescriptions(apiObjects []awstypes.CustomRoutingEndpointDescription) []interface{} {
+func flattenCustomRoutingEndpointDescriptions(apiObjects []awstypes.CustomRoutingEndpointDescription) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenCustomRoutingEndpointDescription(&apiObject))

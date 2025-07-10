@@ -25,7 +25,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 			{
 				Config: testAccOutpostInstanceTypeDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrInstanceType, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *test
 			{
 				Config: testAccOutpostInstanceTypeDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexache.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrInstanceType, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},

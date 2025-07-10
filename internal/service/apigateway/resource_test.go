@@ -36,7 +36,7 @@ func TestAccAPIGatewayResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test"),
 					resource.TestCheckResourceAttr(resourceName, "path_part", "test"),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test"),
 					resource.TestCheckResourceAttr(resourceName, "path_part", "test"),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 				Config: testAccResourceConfig_updatePathPart(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test_changed"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test_changed"),
 					resource.TestCheckResourceAttr(resourceName, "path_part", "test_changed"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccAPIGatewayResource_withSleep(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test"),
 					resource.TestCheckResourceAttr(resourceName, "path_part", "test"),
 				),
 			},

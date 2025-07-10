@@ -12,8 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,18 +43,18 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
@@ -77,54 +83,54 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
 				Config: testAccLocationObjectStorageConfig_updateAddAgent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "2"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
 				Config: testAccLocationObjectStorageConfig_updateRemoveAgent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 		},
@@ -170,11 +176,11 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -183,20 +189,20 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationObjectStorageConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationObjectStorageConfig_tags2(rName, domain, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -222,19 +228,98 @@ func TestAccDataSyncLocationObjectStorage_serverCertificate(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_serverCertificate(rName, domain, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
 					resource.TestCheckResourceAttr(resourceName, "server_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/test/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/test/", domain, rName)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`location/loc-.+`)),
+					}),
+				},
 			},
 		},
 	})

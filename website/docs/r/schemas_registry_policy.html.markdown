@@ -27,8 +27,8 @@ data "aws_iam_policy_document" "example" {
     }
     actions = ["schemas:*"]
     resources = [
-      "arn:aws:schemas:us-east-1:012345678901:registry/example",
-      "arn:aws:schemas:us-east-1:012345678901:schema/example*"
+      "arn:aws:schemas:us-east-1:123456789012:registry/example",
+      "arn:aws:schemas:us-east-1:123456789012:schema/example*"
     ]
   }
 }
@@ -41,8 +41,9 @@ resource "aws_schemas_registry_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_name` - (Required) Name of EventBridge Schema Registry
 * `policy` - (Required) Resource Policy for EventBridge Schema Registry
 

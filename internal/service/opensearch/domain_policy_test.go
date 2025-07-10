@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +19,7 @@ import (
 
 func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
     "Version": "2012-10-17",
@@ -63,7 +63,7 @@ func TestAccOpenSearchDomainPolicy_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition(ctx), awsClient.AccountID(ctx), awsClient.Region(ctx))
 						if err != nil {
 							return err
 						}

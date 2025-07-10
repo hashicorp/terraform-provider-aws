@@ -39,6 +39,7 @@ resource "aws_backup_plan" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The display name of a backup plan.
 * `rule` - (Required) A rule object that specifies a scheduled task that is used to back up a selection of resources.
 * `advanced_backup_setting` - (Optional) An object that specifies backup options for each resource type.
@@ -51,6 +52,7 @@ This resource supports the following arguments:
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `start_window` - (Optional) The amount of time in minutes before beginning a backup.
 * `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Prevents overly-long creation times and possible `OperationInProgress` errors
+```

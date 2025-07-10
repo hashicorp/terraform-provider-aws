@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `role_name` - (Required) IAM role name.
 
 ## Attribute Reference
@@ -45,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `names` - Set of IAM instance profile names.
 * `paths` - Set of IAM instance profile paths.
 
-<!-- cache-key: cdktf-0.20.1 input-fdf4537f5bc24d70dba8df68e238853fd99393192e43f6e525a475fe964ee287 -->
+<!-- cache-key: cdktf-0.20.8 input-c4cea6bb99277f4f271304a6b417b57faa37dd8cc91f1c759660f2e3bb84dca2 -->

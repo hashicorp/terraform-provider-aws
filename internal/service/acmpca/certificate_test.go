@@ -15,8 +15,14 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -40,10 +46,10 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_root(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateChain, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -85,10 +91,10 @@ func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					testAccCheckCertificateExtension(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateChain, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -129,10 +135,10 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_subordinate(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", rootCertificateAuthorityResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", rootCertificateAuthorityResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_signing_request", subordinateCertificateAuthorityResourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "YEARS"),
@@ -173,9 +179,9 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_endEntity(domain, acctest.TLSPEMEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "DAYS"),
@@ -217,9 +223,9 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 				Config: testAccCertificateConfig_validityEndDate(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", later),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "END_DATE"),
@@ -261,9 +267,9 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 				Config: testAccCertificateConfig_validityAbsolute(domain, acctest.TLSPEMEscapeNewlines(csr), later),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.value", strconv.FormatInt(later, 10)),
 					resource.TestCheckResourceAttr(resourceName, "validity.0.type", "ABSOLUTE"),
@@ -281,6 +287,83 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 					"signing_algorithm",
 					"template_arn",
 					"validity",
+				},
+			},
+		},
+	})
+}
+
+func TestAccACMPCACertificate_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_acmpca_certificate.test"
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
+		CheckDestroy: testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccCertificateConfig_root(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccCertificateConfig_root(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccCertificateConfig_root(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("acm-pca", regexache.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					}),
 				},
 			},
 		},
@@ -340,7 +423,7 @@ func testAccCheckCertificateExtension(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		block, _ := pem.Decode([]byte(rs.Primary.Attributes["certificate"]))
+		block, _ := pem.Decode([]byte(rs.Primary.Attributes[names.AttrCertificate]))
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
 			return fmt.Errorf("Failed to parse certificate: %w", err)
@@ -584,7 +667,7 @@ func TestValidateTemplateARN(t *testing.T) {
 	}
 
 	invalidNames := []string{
-		"arn",
+		names.AttrARN,
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                       // lintignore:AWSAT005
 		"arn:aws:acm-pca:us-west-2::template/SubordinateCACertificate_PathLen0/V1", // lintignore:AWSAT003,AWSAT005
 		"arn:aws:acm-pca::123456789012:template/EndEntityCertificate/V1",           // lintignore:AWSAT005

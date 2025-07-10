@@ -7,15 +7,22 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type TemplateData struct {
-	Services []names.ServiceNameUpper
+	Services []serviceDatum
+}
+
+type serviceDatum struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+	SDKID             string
 }
 
 func main() {
@@ -26,17 +33,39 @@ func main() {
 
 	g.Infof("Generating names/%s", filename)
 
-	td := TemplateData{
-		Services: names.ServiceNamesUpper(),
+	data, err := data.ReadAllServiceData()
+
+	if err != nil {
+		g.Fatalf("error reading service data: %s", err)
 	}
 
-	sort.Slice(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	td := TemplateData{}
+
+	for _, l := range data {
+		if l.Exclude() {
+			continue
+		}
+
+		if l.NotImplemented() && !l.EndpointOnly() {
+			continue
+		}
+
+		sd := serviceDatum{
+			ProviderPackage:   l.ProviderPackage(),
+			ProviderNameUpper: l.ProviderNameUpper(),
+			SDKID:             l.SDKID(),
+		}
+
+		td.Services = append(td.Services, sd)
+	}
+
+	slices.SortFunc(td.Services, func(a, b serviceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("consts", tmpl, td); err != nil {
+	if err := d.BufferTemplate("consts", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

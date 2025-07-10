@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -29,9 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Environment Blueprint Configuration")
-func newResourceEnvironmentBlueprintConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironmentBlueprintConfiguration{}
+// @FrameworkResource("aws_datazone_environment_blueprint_configuration", name="Environment Blueprint Configuration")
+func newEnvironmentBlueprintConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentBlueprintConfigurationResource{}
 	return r, nil
 }
 
@@ -39,15 +37,11 @@ const (
 	ResNameEnvironmentBlueprintConfiguration = "Environment Blueprint Configuration"
 )
 
-type resourceEnvironmentBlueprintConfiguration struct {
-	framework.ResourceWithConfigure
+type environmentBlueprintConfigurationResource struct {
+	framework.ResourceWithModel[environmentBlueprintConfigurationResourceModel]
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_environment_blueprint_configuration"
-}
-
-func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"domain_id": schema.StringAttribute{
@@ -57,6 +51,7 @@ func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, 
 				},
 			},
 			"enabled_regions": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
@@ -75,7 +70,8 @@ func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, 
 				Optional:   true,
 			},
 			"regional_parameters": schema.MapAttribute{
-				Optional: true,
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
 				ElementType: types.MapType{
 					ElemType: types.StringType,
 				},
@@ -84,7 +80,7 @@ func (r *resourceEnvironmentBlueprintConfiguration) Schema(ctx context.Context, 
 	}
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentBlueprintConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan environmentBlueprintConfigurationResourceModel
@@ -94,17 +90,17 @@ func (r *resourceEnvironmentBlueprintConfiguration) Create(ctx context.Context, 
 	}
 
 	in := &datazone.PutEnvironmentBlueprintConfigurationInput{
-		DomainIdentifier:               aws.String(plan.DomainId.ValueString()),
+		DomainIdentifier:               plan.DomainId.ValueStringPointer(),
 		EnabledRegions:                 flex.ExpandFrameworkStringValueList(ctx, plan.EnabledRegions),
-		EnvironmentBlueprintIdentifier: aws.String(plan.EnvironmentBlueprintId.ValueString()),
+		EnvironmentBlueprintIdentifier: plan.EnvironmentBlueprintId.ValueStringPointer(),
 	}
 
 	if !plan.ManageAccessRoleArn.IsNull() {
-		in.ManageAccessRoleArn = aws.String(plan.ManageAccessRoleArn.ValueString())
+		in.ManageAccessRoleArn = plan.ManageAccessRoleArn.ValueStringPointer()
 	}
 
 	if !plan.ProvisioningRoleArn.IsNull() {
-		in.ProvisioningRoleArn = aws.String(plan.ProvisioningRoleArn.ValueString())
+		in.ProvisioningRoleArn = plan.ProvisioningRoleArn.ValueStringPointer()
 	}
 
 	if !plan.RegionalParameters.IsNull() {
@@ -137,7 +133,7 @@ func (r *resourceEnvironmentBlueprintConfiguration) Create(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *environmentBlueprintConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state environmentBlueprintConfigurationResourceModel
@@ -160,19 +156,19 @@ func (r *resourceEnvironmentBlueprintConfiguration) Read(ctx context.Context, re
 	}
 
 	state.DomainId = flex.StringToFramework(ctx, out.DomainId)
-	state.EnabledRegions = flattenEnabledRegions(ctx, out.EnabledRegions)
+	state.EnabledRegions = flex.FlattenFrameworkStringValueListOfStringLegacy(ctx, out.EnabledRegions)
 	state.EnvironmentBlueprintId = flex.StringToFramework(ctx, out.EnvironmentBlueprintId)
 	state.ManageAccessRoleArn = flex.StringToFrameworkARN(ctx, out.ManageAccessRoleArn)
 	state.ProvisioningRoleArn = flex.StringToFrameworkARN(ctx, out.ProvisioningRoleArn)
 
 	regionalParameters, d := flattenRegionalParameters(ctx, &out.RegionalParameters)
 	resp.Diagnostics.Append(d...)
-	state.RegionalParameters = regionalParameters
+	state.RegionalParameters = fwtypes.MapValueOf[types.String]{MapValue: regionalParameters}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *environmentBlueprintConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan, state environmentBlueprintConfigurationResourceModel
@@ -187,17 +183,17 @@ func (r *resourceEnvironmentBlueprintConfiguration) Update(ctx context.Context, 
 		!plan.ProvisioningRoleArn.Equal(state.ProvisioningRoleArn) ||
 		!plan.RegionalParameters.Equal(state.RegionalParameters) {
 		in := &datazone.PutEnvironmentBlueprintConfigurationInput{
-			DomainIdentifier:               aws.String(plan.DomainId.ValueString()),
+			DomainIdentifier:               plan.DomainId.ValueStringPointer(),
 			EnabledRegions:                 flex.ExpandFrameworkStringValueList(ctx, plan.EnabledRegions),
-			EnvironmentBlueprintIdentifier: aws.String(plan.EnvironmentBlueprintId.ValueString()),
+			EnvironmentBlueprintIdentifier: plan.EnvironmentBlueprintId.ValueStringPointer(),
 		}
 
 		if !plan.ManageAccessRoleArn.IsNull() {
-			in.ManageAccessRoleArn = aws.String(plan.ManageAccessRoleArn.ValueString())
+			in.ManageAccessRoleArn = plan.ManageAccessRoleArn.ValueStringPointer()
 		}
 
 		if !plan.ProvisioningRoleArn.IsNull() {
-			in.ProvisioningRoleArn = aws.String(plan.ProvisioningRoleArn.ValueString())
+			in.ProvisioningRoleArn = plan.ProvisioningRoleArn.ValueStringPointer()
 		}
 
 		if !plan.RegionalParameters.IsNull() {
@@ -230,7 +226,7 @@ func (r *resourceEnvironmentBlueprintConfiguration) Update(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *environmentBlueprintConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var state environmentBlueprintConfigurationResourceModel
@@ -240,8 +236,8 @@ func (r *resourceEnvironmentBlueprintConfiguration) Delete(ctx context.Context, 
 	}
 
 	in := &datazone.DeleteEnvironmentBlueprintConfigurationInput{
-		DomainIdentifier:               aws.String(state.DomainId.ValueString()),
-		EnvironmentBlueprintIdentifier: aws.String(state.EnvironmentBlueprintId.ValueString()),
+		DomainIdentifier:               state.DomainId.ValueStringPointer(),
+		EnvironmentBlueprintIdentifier: state.EnvironmentBlueprintId.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteEnvironmentBlueprintConfiguration(ctx, in)
@@ -257,7 +253,7 @@ func (r *resourceEnvironmentBlueprintConfiguration) Delete(ctx context.Context, 
 	}
 }
 
-func (r *resourceEnvironmentBlueprintConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *environmentBlueprintConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, "/")
 	if len(parts) != 2 {
 		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("Wrong format for import ID (%s), use: 'domain-id/environment-blueprint-id'", req.ID))
@@ -323,20 +319,12 @@ func flattenRegionalParameters(ctx context.Context, apiObject *map[string]map[st
 	return mapVal, diags
 }
 
-func flattenEnabledRegions(ctx context.Context, apiList []string) basetypes.ListValue {
-	// When the list returned from the api is empty, return empty list rather than the
-	// default flatten result of null for empty lists.
-	if len(apiList) == 0 {
-		return types.ListValueMust(types.StringType, []attr.Value{})
-	}
-	return flex.FlattenFrameworkStringValueList(ctx, apiList)
-}
-
 type environmentBlueprintConfigurationResourceModel struct {
-	DomainId               types.String `tfsdk:"domain_id"`
-	EnabledRegions         types.List   `tfsdk:"enabled_regions"`
-	EnvironmentBlueprintId types.String `tfsdk:"environment_blueprint_id"`
-	ManageAccessRoleArn    fwtypes.ARN  `tfsdk:"manage_access_role_arn"`
-	ProvisioningRoleArn    fwtypes.ARN  `tfsdk:"provisioning_role_arn"`
-	RegionalParameters     types.Map    `tfsdk:"regional_parameters"`
+	framework.WithRegionModel
+	DomainId               types.String         `tfsdk:"domain_id"`
+	EnabledRegions         fwtypes.ListOfString `tfsdk:"enabled_regions"`
+	EnvironmentBlueprintId types.String         `tfsdk:"environment_blueprint_id"`
+	ManageAccessRoleArn    fwtypes.ARN          `tfsdk:"manage_access_role_arn"`
+	ProvisioningRoleArn    fwtypes.ARN          `tfsdk:"provisioning_role_arn"`
+	RegionalParameters     fwtypes.MapOfString  `tfsdk:"regional_parameters"`
 }

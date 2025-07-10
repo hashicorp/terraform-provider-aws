@@ -12,8 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,8 +42,8 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
 				),
@@ -51,8 +57,8 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 				),
@@ -79,8 +85,8 @@ func TestAccXRayGroup_insights(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
-						"insights_enabled":      "true",
-						"notifications_enabled": "true",
+						"insights_enabled":      acctest.CtTrue,
+						"notifications_enabled": acctest.CtTrue,
 					}),
 				),
 			},
@@ -95,8 +101,8 @@ func TestAccXRayGroup_insights(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
-						"insights_enabled":      "false",
-						"notifications_enabled": "false",
+						"insights_enabled":      acctest.CtFalse,
+						"notifications_enabled": acctest.CtFalse,
 					}),
 				),
 			},
@@ -128,15 +134,89 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccXRayGroup_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Group
+	resourceName := "aws_xray_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.XRayServiceID),
+		CheckDestroy: testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccGroupConfig_basic(rName, "responsetime > 5"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("xray", regexache.MustCompile(`group/.+`)),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)

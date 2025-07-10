@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_alias", name="Alias")
@@ -33,24 +34,24 @@ func resourceAlias() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validNameForResource,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validNameForResource,
 			},
 			"target_key_arn": {
@@ -66,21 +67,21 @@ func resourceAlias() *schema.Resource {
 	}
 }
 
-func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	namePrefix := d.Get("name_prefix").(string)
+	namePrefix := d.Get(names.AttrNamePrefix).(string)
 	if namePrefix == "" {
 		namePrefix = aliasNamePrefix
 	}
-	name := create.Name(d.Get("name").(string), namePrefix)
+	name := create.Name(d.Get(names.AttrName).(string), namePrefix)
 	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, keyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, keyRotationUpdatedTimeout, func() (any, error) {
 		return conn.CreateAlias(ctx, input)
 	})
 
@@ -93,11 +94,11 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findAliasByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -119,16 +120,16 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", aliasARN)
-	d.Set("name", alias.AliasName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(alias.AliasName)))
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrName, alias.AliasName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(alias.AliasName)))
 	d.Set("target_key_arn", targetKeyARN)
 	d.Set("target_key_id", targetKeyID)
 
 	return diags
 }
 
-func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -148,7 +149,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
