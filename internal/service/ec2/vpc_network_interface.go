@@ -69,6 +69,11 @@ func resourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
 					},
 				},
 			},
@@ -490,8 +495,14 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]any)
+		var networkCardIndex int
+		if attachment["network_card_index"] != nil {
+			networkCardIndex = attachment["network_card_index"].(int)
+		} else {
+			networkCardIndex = 0
+		}
 
-		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
+		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkCardIndex, networkInterfaceAttachedTimeout)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -600,8 +611,14 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]any)
+			var networkCardIndex int
+			if attachment["network_card_index"] != nil {
+				networkCardIndex = attachment["network_card_index"].(int)
+			} else {
+				networkCardIndex = 0
+			}
 
-			if _, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout); err != nil {
+			if _, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkCardIndex, networkInterfaceAttachedTimeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -1083,10 +1100,11 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
+func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, instanceID string, deviceIndex int, networkCardIndex int, timeout time.Duration) (string, error) {
 	input := &ec2.AttachNetworkInterfaceInput{
 		DeviceIndex:        aws.Int32(int32(deviceIndex)),
 		InstanceId:         aws.String(instanceID),
+		NetworkCardIndex:   aws.Int32(int32(networkCardIndex)),
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	}
 
@@ -1211,6 +1229,10 @@ func flattenNetworkInterfaceAttachment(apiObject *types.NetworkInterfaceAttachme
 
 	if v := apiObject.InstanceId; v != nil {
 		tfMap["instance"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
 	}
 
 	return tfMap
