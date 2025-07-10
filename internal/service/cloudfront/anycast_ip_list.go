@@ -6,13 +6,16 @@ package cloudfront
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
@@ -21,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,12 +40,15 @@ import (
 func newAnycastIPListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anycastIPListResource{}
 
+	r.SetDefaultCreateTimeout(15 * time.Minute)
+
 	return r, nil
 }
 
 type anycastIPListResource struct {
 	framework.ResourceWithModel[anycastIPListResourceModel]
 	framework.WithImportByID
+	framework.WithTimeouts
 }
 
 func (r *anycastIPListResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -95,6 +101,11 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+			}),
+		},
 	}
 }
 
@@ -135,6 +146,13 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	data.ID = fwflex.StringToFramework(ctx, anycastIPList.Id)
 
+	if _, err := waitAnycastIPListDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Anycast IP List (%s) create", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -164,10 +182,12 @@ func (r *anycastIPListResource) Read(ctx context.Context, request resource.ReadR
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AnycastIpList, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -199,7 +219,7 @@ func (r *anycastIPListResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func findAnycastIPListByID(ctx context.Context, conn *cloudfront.Client, id string) (*awstypes.AnycastIpList, error) {
+func findAnycastIPListByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetAnycastIpListOutput, error) {
 	input := cloudfront.GetAnycastIpListInput{
 		Id: aws.String(id),
 	}
@@ -207,13 +227,12 @@ func findAnycastIPListByID(ctx context.Context, conn *cloudfront.Client, id stri
 	return findAnycastIPList(ctx, conn, &input)
 }
 
-func findAnycastIPList(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetAnycastIpListInput) (*awstypes.AnycastIpList, error) {
+func findAnycastIPList(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetAnycastIpListInput) (*cloudfront.GetAnycastIpListOutput, error) {
 	output, err := conn.GetAnycastIpList(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -225,7 +244,34 @@ func findAnycastIPList(ctx context.Context, conn *cloudfront.Client, input *clou
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output.AnycastIpList, nil
+	return output, nil
+}
+
+func statusAnycastIPList(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[*cloudfront.GetAnycastIpListOutput, string] {
+	return func(ctx context.Context) (*cloudfront.GetAnycastIpListOutput, string, error) {
+		output, err := findAnycastIPListByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.AnycastIpList.Status), nil
+	}
+}
+
+func waitAnycastIPListDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetAnycastIpListOutput, error) {
+	stateConf := &retry.StateChangeConfOf[*cloudfront.GetAnycastIpListOutput, string]{
+		Pending: []string{anycastIPListDeploying},
+		Target:  []string{anycastIPListDeployed},
+		Refresh: statusAnycastIPList(conn, id),
+		Timeout: timeout,
+	}
+
+	return stateConf.WaitForStateContext(ctx)
 }
 
 type anycastIPListResourceModel struct {
@@ -237,4 +283,5 @@ type anycastIPListResourceModel struct {
 	Name       types.String         `tfsdk:"name"`
 	Tags       tftags.Map           `tfsdk:"tags"`
 	TagsAll    tftags.Map           `tfsdk:"tags_all"`
+	Timeouts   timeouts.Value       `tfsdk:"timeouts"`
 }
