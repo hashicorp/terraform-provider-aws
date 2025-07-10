@@ -20,19 +20,3 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 		"InvalidParameterValueException: Unsupported source arn",
 	)
 }
-
-func TestAccCloudFront_serial(t *testing.T) {
-	t.Parallel()
-
-	acctest.Skip(t, "Amazon CloudFront Anycast static IP lists cost $3000 per list per month")
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"AnycastIPList": {
-			acctest.CtBasic:      testAccAnycastIPList_basic,
-			acctest.CtDisappears: testAccAnycastIPList_disappears,
-			"tags":               testAccAnycastIPList_tags,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}

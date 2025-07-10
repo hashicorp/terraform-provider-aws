@@ -24,6 +24,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccCloudFrontAnycastIPList_serial(t *testing.T) {
+	t.Parallel()
+
+	acctest.Skip(t, "Amazon CloudFront Anycast static IP lists cost $3000 per list per month")
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccAnycastIPList_basic,
+		acctest.CtDisappears: testAccAnycastIPList_disappears,
+		"tags":               testAccAnycastIPList_tags,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 func testAccAnycastIPList_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
