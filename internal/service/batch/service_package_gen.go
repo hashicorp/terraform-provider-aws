@@ -95,6 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(
 				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				inttypes.WithMutableIdentity(),
 			),
 			Import: inttypes.SDKv2Import{
 				CustomImport: true,
