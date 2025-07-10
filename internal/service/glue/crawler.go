@@ -612,6 +612,11 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 					return retry.RetryableError(err)
 				}
 
+				// Glue will allow updating crawlers when a crawler is running. Retry occassionally to persist the updates once a crawler has finished the run.
+				if errs.IsAErrorMessageContains[*awstypes.CrawlerRunningException](err, "Cannot update Crawler while running") {
+					return retry.RetryableError(err)
+				}
+
 				return retry.NonRetryableError(err)
 			}
 			return nil
