@@ -616,6 +616,194 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 {{ end }}
 
 {{ if .HasV6_0SDKv2Fix }}
+{{ if .HasV6_0RefreshError }}
+func {{ template "testname" . }}_Identity_ExistingResource_fromV5(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
+
+func {{ template "testname" . }}_Identity_ExistingResource_fromV6(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{{ $step := 1 -}}
+			// Step {{ $step }}: Create in v6.0
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v6.0.0/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{ end }}
+					{{ end -}}
+				},
+			},
+
+			// Step {{ ($step = inc $step) | print }}: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{ if .HasExistsFunc -}}
+				Check:  resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				{{ end -}}
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else if .IsGlobalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ range .IdentityAttributes -}}
+								{{ . }}: knownvalue.NotNull(),
+							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+						{{ end }}
+					{{ end -}}
+				},
+			},
+		},
+	})
+}
+{{ else }}
 func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 	{{- template "Init" . }}
 
@@ -738,4 +926,5 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 		},
 	})
 }
+{{ end }}
 {{ end }}

@@ -400,6 +400,7 @@ type ResourceDatum struct {
 	IdentityDuplicateAttrs      []string
 	IDAttrFormat                string
 	HasV6_0SDKv2Fix             bool
+	HasV6_0RefreshError         bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -716,6 +717,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
 				d.HasV6_0SDKv2Fix = true
+
+				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0RefreshError = b
+					}
+				}
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
