@@ -171,7 +171,7 @@ func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetGlossaryTermOutput, error) {
 		return findGlossaryTermByID(ctx, conn, *out.Id, *out.DomainId)
 	})
 
@@ -183,7 +183,6 @@ func (r *glossaryTermResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	output := outputRaws.(*datazone.GetGlossaryTermOutput)
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 
 	if resp.Diagnostics.HasError() {
