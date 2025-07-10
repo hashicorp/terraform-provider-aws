@@ -196,10 +196,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- if .HasIdentityDuplicateAttrs -}}
 						inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 					{{- end -}}
+					{{- if .MutableIdentity }}
+						inttypes.WithMutableIdentity(),
+					{{- end }}
 					{{- if .HasIdentityFix }}
 						inttypes.WithIdentityFix(),
 					{{- end }}
-					),
+				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
 					Identity: inttypes.GlobalSingletonIdentity(
@@ -374,6 +377,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- if $value.HasV6_0SDKv2Fix }}
 						inttypes.WithV6_0SDKv2Fix(),
 					{{ end -}}
+					{{- if .MutableIdentity }}
+						inttypes.WithMutableIdentity(),
+					{{- end }}
 					{{- if .HasIdentityFix }}
 						inttypes.WithIdentityFix(),
 					{{- end }}
