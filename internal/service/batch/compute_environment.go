@@ -661,7 +661,7 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 			if v := diff.GetRawPlan().GetAttr("compute_resources"); v.IsKnown() && v.LengthInt() == 1 {
 				if v := v.AsValueSlice()[0].GetAttr(names.AttrLaunchTemplate); v.IsKnown() && v.LengthInt() == 1 {
 					if v := v.AsValueSlice()[0].GetAttr(names.AttrVersion); !v.IsKnown() {
-						if err := diff.ForceNew("compute_resources.0.launch_template"); err != nil {
+						if err := diff.ForceNew("compute_resources.0.launch_template.0.launch_template_id"); err != nil {
 							return err
 						}
 					}
