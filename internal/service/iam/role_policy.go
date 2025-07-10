@@ -108,7 +108,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	if d.IsNewResource() {
 		d.SetId(createRolePolicyImportID(roleName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 
