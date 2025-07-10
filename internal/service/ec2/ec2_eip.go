@@ -182,7 +182,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(aws.ToString(output.AllocationId))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	})
 
