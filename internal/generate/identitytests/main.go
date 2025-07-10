@@ -209,6 +209,26 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
 
+			if resource.HasV6_0SDKv2Fix {
+				commonV5 := common
+				commonV5.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "5.100.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplates, commonV5)
+
+				commonV6 := common
+				commonV6.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "6.0.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+			}
+
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
 			if err != nil {
 				g.Fatalf("parsing config template: %s", err)
@@ -379,6 +399,7 @@ type ResourceDatum struct {
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
 	IDAttrFormat                string
+	HasV6_0SDKv2Fix             bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -475,9 +496,15 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
-	WithRegion       bool
+	AdditionalTfVars  []string
+	WithRName         bool
+	WithRegion        bool
+	ExternalProviders map[string]requiredProvider
+}
+
+type requiredProvider struct {
+	Source  string
+	Version string
 }
 
 type ConfigDatum struct {
@@ -685,6 +712,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "NoImport":
 				d.NoImport = true
+
+			// TODO: allow underscore?
+			case "V60SDKv2Fix":
+				d.HasV6_0SDKv2Fix = true
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
