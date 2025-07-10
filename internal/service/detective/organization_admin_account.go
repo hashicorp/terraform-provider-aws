@@ -63,7 +63,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
