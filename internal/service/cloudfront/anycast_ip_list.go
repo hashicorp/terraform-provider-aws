@@ -131,7 +131,7 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 		}
 	}
 
-	output, err := conn.CreateAnycastIpList(ctx, &input)
+	outputCAIL, err := conn.CreateAnycastIpList(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront Anycast IP List (%s)", name), err.Error())
@@ -140,18 +140,21 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Set values for unknowns.
-	anycastIPList := output.AnycastIpList
+	anycastIPList := outputCAIL.AnycastIpList
 	data.AnycastIPs = fwflex.FlattenFrameworkStringValueListOfString(ctx, anycastIPList.AnycastIps)
 	data.ARN = fwflex.StringToFramework(ctx, anycastIPList.Arn)
-	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 	data.ID = fwflex.StringToFramework(ctx, anycastIPList.Id)
 
-	if _, err := waitAnycastIPListDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	outputGAIL, err := waitAnycastIPListDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront Anycast IP List (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
+
+	data.ETag = fwflex.StringToFramework(ctx, outputGAIL.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -202,11 +205,17 @@ func (r *anycastIPListResource) Delete(ctx context.Context, request resource.Del
 	conn := r.Meta().CloudFrontClient(ctx)
 
 	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	etag, err := anycastIPListETag(ctx, conn, id)
+
+	if tfresource.NotFound(err) {
+		return
+	}
+
 	input := cloudfront.DeleteAnycastIpListInput{
 		Id:      aws.String(id),
-		IfMatch: fwflex.StringFromFramework(ctx, data.ETag),
+		IfMatch: aws.String(etag),
 	}
-	_, err := conn.DeleteAnycastIpList(ctx, &input)
+	_, err = conn.DeleteAnycastIpList(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return
@@ -217,6 +226,16 @@ func (r *anycastIPListResource) Delete(ctx context.Context, request resource.Del
 
 		return
 	}
+}
+
+func anycastIPListETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
+	output, err := findAnycastIPListByID(ctx, conn, id)
+
+	if err != nil {
+		return "", err
+	}
+
+	return aws.ToString(output.ETag), nil
 }
 
 func findAnycastIPListByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetAnycastIpListOutput, error) {
@@ -247,8 +266,8 @@ func findAnycastIPList(ctx context.Context, conn *cloudfront.Client, input *clou
 	return output, nil
 }
 
-func statusAnycastIPList(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[*cloudfront.GetAnycastIpListOutput, string] {
-	return func(ctx context.Context) (*cloudfront.GetAnycastIpListOutput, string, error) {
+func anycastIPListStatus(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAnycastIPListByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -264,14 +283,20 @@ func statusAnycastIPList(conn *cloudfront.Client, id string) retry.StateRefreshF
 }
 
 func waitAnycastIPListDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetAnycastIpListOutput, error) {
-	stateConf := &retry.StateChangeConfOf[*cloudfront.GetAnycastIpListOutput, string]{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{anycastIPListDeploying},
 		Target:  []string{anycastIPListDeployed},
-		Refresh: statusAnycastIPList(conn, id),
+		Refresh: anycastIPListStatus(conn, id),
 		Timeout: timeout,
 	}
 
-	return stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetAnycastIpListOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type anycastIPListResourceModel struct {
