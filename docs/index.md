@@ -56,10 +56,13 @@ resource "aws_ebs_volume" "example" {
 ## Configuration
 
 All configuration of DATAFYAWS provider are the same as [AWS provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication-and-configuration)  
-The only mandatory addition is _datafy_token_ (that can also be set via environment variables)
+The only mandatory addition is _datafy_token_ (that can also be set via environment variables: `DATAFY_TOKEN`)
 
-## Supported Resources by Datafy
-* `aws_ebs_volume`
-* `aws_volume_attachment`
-* `aws_instance`
+## Resources Supported by Datafy
+The Datafy provider should be added to every resource of the following types to enable Datafy support:
 
+* [aws_ebs_volume](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ebs_volume)
+* [aws_volume_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/volume_attachment)
+* [aws_instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)
+
+Other resource types are not supported by Datafy, and the Datafy provider cannot be used to reconcile Datafy-managed volumes associated with them.
