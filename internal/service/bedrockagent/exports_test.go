@@ -10,6 +10,7 @@ var (
 	ResourceAgentAlias                    = newAgentAliasResource
 	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
+	ResourceAgentPrepare                  = newResourceAgentPrepare
 	ResourceDataSource                    = newDataSourceResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 	ResourcePrompt                        = newPromptResource
