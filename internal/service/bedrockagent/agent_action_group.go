@@ -283,7 +283,9 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		}
 	}
 
-	data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.AgentActionGroup.ParentActionSignature)
+	if output.AgentActionGroup.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.AgentActionGroup.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -322,7 +324,9 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
+	if output.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -379,8 +383,9 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	}
 
 	new.ActionGroupState = fwtypes.StringEnumValue(output.ActionGroupState)
-	new.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
-
+	if output.ParentActionSignature != "" {
+		new.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
