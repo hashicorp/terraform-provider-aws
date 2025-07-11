@@ -27,7 +27,7 @@ variable "region" {
   type        = string
   nullable    = false
 }
-{{ end -}}
+{{ end }}
 {{- if ne (len .ExternalProviders) 0 -}}
 terraform {
   required_providers {
