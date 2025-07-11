@@ -753,7 +753,7 @@ resource "aws_lexv2models_slot" "test" {
   locale_id   = aws_lexv2models_bot_locale.test.locale_id
 
   value_elicitation_setting {
-	slot_constraint = "Optional"
+    slot_constraint = "Optional"
     prompt_specification {
       allow_interrupt            = true
       max_retries                = 1
