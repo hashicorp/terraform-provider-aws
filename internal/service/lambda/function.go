@@ -591,7 +591,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findFunctionByName(ctx, conn, d.Id())
 	})
 
@@ -1634,7 +1634,7 @@ func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.Res
 	return suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new, d.HasChanges("logging_config.0.log_format"))
 }
 
-func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
+func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(_, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
 	if logFormatHasChanges {
 		return false
 	}

@@ -350,11 +350,9 @@ func (r *resourceLFTagResource) Create(ctx context.Context, req resource.CreateR
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*lakeformation.GetResourceLFTagsOutput, error) {
 		return findResourceLFTagByID(ctx, conn, state.CatalogID.ValueString(), res)
 	})
-
-	out := outputRaw.(*lakeformation.GetResourceLFTagsOutput)
 
 	if err != nil {
 		resp.Diagnostics.AddError(

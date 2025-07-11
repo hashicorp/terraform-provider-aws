@@ -96,7 +96,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 	})
 

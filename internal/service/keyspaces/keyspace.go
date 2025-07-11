@@ -122,7 +122,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findKeyspaceByName(ctx, conn, d.Id())
 	})
 

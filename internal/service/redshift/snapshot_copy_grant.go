@@ -81,7 +81,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func(ctx context.Context) (any, error) {
 		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 

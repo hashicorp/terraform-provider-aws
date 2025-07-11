@@ -196,7 +196,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(aws.ToString(outputRaw.(*secretsmanager.CreateSecretOutput).ARN))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretByID(ctx, conn, d.Id())
 	})
 

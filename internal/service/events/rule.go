@@ -172,7 +172,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 	})
 
