@@ -5,7 +5,9 @@ package s3vectors
 
 // Exports for use in tests only.
 var (
+	ResourceIndex        = newIndexResource
 	ResourceVectorBucket = newVectorBucketResource
 
+	FindIndexByARN        = findIndexByARN
 	FindVectorBucketByARN = findVectorBucketByARN
 )
