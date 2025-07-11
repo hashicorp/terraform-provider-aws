@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1719,6 +1720,55 @@ func TestAccGlueCrawler_reCrawlPolicy(t *testing.T) {
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVERYTHING"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
+	ctx := acctest.Context(t)
+	var crawler awstypes.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Before updating the crawler, start the crawler so it's in a "running" state
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+					// run the crawler
+					_, err := conn.StartCrawler(ctx, &glue.StartCrawlerInput{
+						Name: crawler.Name,
+					})
+					if err != nil {
+						t.Fatalf("Failed to start crawler, which is required to test run detection in the next step; err: %v", err)
+					}
+				},
+				// Change the name so the crawler gets updated. If no error was encountered, that means
+				// that the test passed, because it properly handled the fact that the crawler was running
+				// when the update happehed.
+				Config: testAccCrawlerConfig_s3Target(fmt.Sprintf("%s-change", rName), "bucket1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
 				),
 			},
 		},
