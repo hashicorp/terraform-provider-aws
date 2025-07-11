@@ -164,7 +164,7 @@ func resourceCertificate() *schema.Resource {
 						"export": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          types.CertificateExportDisabled,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.CertificateExport](),
 						},
 					},
