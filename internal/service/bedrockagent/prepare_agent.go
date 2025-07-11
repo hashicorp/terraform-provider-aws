@@ -43,7 +43,7 @@ const (
 )
 
 type resourceAgentPrepare struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceAgentPrepareModel]
 	framework.WithTimeouts
 }
 
@@ -164,6 +164,7 @@ func (r *resourceAgentPrepare) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 type resourceAgentPrepareModel struct {
+	framework.WithRegionModel
 	ID         types.String      `tfsdk:"id"`
 	PreparedAt timetypes.RFC3339 `tfsdk:"prepared_at"`
 	Timeouts   timeouts.Value    `tfsdk:"timeouts"`
