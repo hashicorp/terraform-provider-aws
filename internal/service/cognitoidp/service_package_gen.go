@@ -55,6 +55,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "User Pool Client",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newLogDeliveryConfigurationResource,
+			TypeName: "aws_cognitoidp_log_delivery_configuration",
+			Name:     "Log Delivery Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

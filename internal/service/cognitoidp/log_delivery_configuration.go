@@ -30,9 +30,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
 // @FrameworkResource("aws_cognitoidp_log_delivery_configuration", name="Log Delivery Configuration")
-func newResourceLogDeliveryConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceLogDeliveryConfiguration{}
+func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &LogDeliveryConfigurationResource{}
 	return r, nil
 }
 
@@ -40,12 +41,21 @@ const (
 	ResNameLogDeliveryConfiguration = "Log Delivery Configuration"
 )
 
-type resourceLogDeliveryConfiguration struct {
+/*
+	func newManagedUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+		return &managedUserPoolClientResource{}, nil
+	}
+
+	type managedUserPoolClientResource struct {
+		framework.ResourceWithModel[managedUserPoolClientResourceModel]
+		framework.WithNoOpDelete
+	}
+*/
+type LogDeliveryConfigurationResource struct {
 	framework.ResourceWithModel[resourceLogDeliveryConfigurationModel]
 }
 
-
-func (r *resourceLogDeliveryConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrUserPoolID: schema.StringAttribute{
@@ -122,9 +132,9 @@ func (r *resourceLogDeliveryConfiguration) Schema(ctx context.Context, req resou
 	}
 }
 
-func (r *resourceLogDeliveryConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *LogDeliveryConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
-	
+
 	var plan resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -157,19 +167,19 @@ func (r *resourceLogDeliveryConfiguration) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceLogDeliveryConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *LogDeliveryConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
-	
+
 	var state resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	out, err := findLogDeliveryConfigurationByUserPoolID(ctx, conn, state.UserPoolID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -183,25 +193,25 @@ func (r *resourceLogDeliveryConfiguration) Read(ctx context.Context, req resourc
 		)
 		return
 	}
-	
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceLogDeliveryConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *LogDeliveryConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
-	
+
 	var plan, state resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
@@ -214,7 +224,7 @@ func (r *resourceLogDeliveryConfiguration) Update(ctx context.Context, req resou
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		
+
 		out, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -230,7 +240,7 @@ func (r *resourceLogDeliveryConfiguration) Update(ctx context.Context, req resou
 			)
 			return
 		}
-		
+
 		resp.Diagnostics.Append(flex.Flatten(ctx, out.LogDeliveryConfiguration, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -240,21 +250,21 @@ func (r *resourceLogDeliveryConfiguration) Update(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceLogDeliveryConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
-	
+
 	var state resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// To "delete" a log delivery configuration, we set an empty configuration
 	input := cognitoidentityprovider.SetLogDeliveryConfigurationInput{
 		UserPoolId:        state.UserPoolID.ValueStringPointer(),
 		LogConfigurations: []awstypes.LogConfigurationType{},
 	}
-	
+
 	_, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -269,7 +279,7 @@ func (r *resourceLogDeliveryConfiguration) Delete(ctx context.Context, req resou
 	}
 }
 
-func (r *resourceLogDeliveryConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *LogDeliveryConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrUserPoolID), req, resp)
 }
 
@@ -299,16 +309,16 @@ func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognito
 
 type resourceLogDeliveryConfigurationModel struct {
 	framework.WithRegionModel
-	UserPoolID        types.String                                          `tfsdk:"user_pool_id"`
+	UserPoolID        types.String                                           `tfsdk:"user_pool_id"`
 	LogConfigurations fwtypes.ListNestedObjectValueOf[logConfigurationModel] `tfsdk:"log_configurations"`
 }
 
 type logConfigurationModel struct {
-	EventSource                     fwtypes.StringEnum[awstypes.EventSourceName]                                  `tfsdk:"event_source"`
-	LogLevel                        fwtypes.StringEnum[awstypes.LogLevel]                                         `tfsdk:"log_level"`
-	CloudWatchLogsConfiguration     fwtypes.ListNestedObjectValueOf[cloudWatchLogsConfigurationModel]             `tfsdk:"cloud_watch_logs_configuration"`
-	FirehoseConfiguration           fwtypes.ListNestedObjectValueOf[firehoseConfigurationModel]                   `tfsdk:"firehose_configuration"`
-	S3Configuration                 fwtypes.ListNestedObjectValueOf[s3ConfigurationModel]                         `tfsdk:"s3_configuration"`
+	EventSource                 fwtypes.StringEnum[awstypes.EventSourceName]                      `tfsdk:"event_source"`
+	LogLevel                    fwtypes.StringEnum[awstypes.LogLevel]                             `tfsdk:"log_level"`
+	CloudWatchLogsConfiguration fwtypes.ListNestedObjectValueOf[cloudWatchLogsConfigurationModel] `tfsdk:"cloud_watch_logs_configuration"`
+	FirehoseConfiguration       fwtypes.ListNestedObjectValueOf[firehoseConfigurationModel]       `tfsdk:"firehose_configuration"`
+	S3Configuration             fwtypes.ListNestedObjectValueOf[s3ConfigurationModel]             `tfsdk:"s3_configuration"`
 }
 
 type cloudWatchLogsConfigurationModel struct {
