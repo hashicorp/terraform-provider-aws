@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+func replicationGroupStateUpgradeFromV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		rawState = map[string]any{}
 	}
@@ -282,4 +282,39 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 			},
 		},
 	}
+}
+
+func replicationGroupStateUpgradeFromV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if rawState == nil {
+		rawState = map[string]any{}
+	}
+
+	// Remove auth_token_update_strategy default value if auth_token is not set
+	if v, ok := rawState["auth_token"].(string); !ok || v == "" {
+		delete(rawState, "auth_token_update_strategy")
+	}
+
+	return rawState, nil
+}
+
+func resourceReplicationGroupConfigV2() *schema.Resource {
+	s := resourceReplicationGroupConfigV1()
+
+	// Attributes added in V2 of the schema
+	s.Schema["auth_token_update_strategy"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+	}
+	s.Schema["cluster_mode"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	}
+	s.Schema["transit_encryption_mode"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	}
+
+	return s
 }

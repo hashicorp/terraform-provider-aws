@@ -25,7 +25,7 @@ func newCallerIdentityDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type callerIdentityDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[callerIdentityDataSourceModel]
 }
 
 func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -49,7 +49,7 @@ func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasourc
 }
 
 func (d *callerIdentityDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data CallerIdentityDataSourceModel
+	var data callerIdentityDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -90,7 +90,7 @@ func findCallerIdentity(ctx context.Context, conn *sts.Client) (*sts.GetCallerId
 	return output, nil
 }
 
-type CallerIdentityDataSourceModel struct {
+type callerIdentityDataSourceModel struct {
 	AccountID types.String `tfsdk:"account_id"`
 	ARN       types.String `tfsdk:"arn"`
 	ID        types.String `tfsdk:"id"`

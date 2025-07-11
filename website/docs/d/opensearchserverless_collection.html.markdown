@@ -24,10 +24,11 @@ data "aws_opensearchserverless_collection" "example" {
 
 The following arguments are optional:
 
-~> Exactly one of `id` or `name` is required.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the collection.
 * `name` - (Optional) Name of the collection.
+
+~> Exactly one of `id` or `name` is required.
 
 ## Attribute Reference
 

@@ -231,7 +231,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.secretsmanager"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.secretsmanager"
   vpc_endpoint_type = "Interface"
 
   security_group_ids = [

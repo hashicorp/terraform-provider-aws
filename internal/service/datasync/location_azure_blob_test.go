@@ -12,8 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,12 +36,12 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationAzureBlobConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
@@ -69,12 +75,12 @@ func TestAccDataSyncLocationAzureBlob_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationAzureBlobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationAzureBlob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,12 +99,12 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationAzureBlobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -112,7 +118,7 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 			{
 				Config: testAccLocationAzureBlobConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -121,7 +127,7 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 			{
 				Config: testAccLocationAzureBlobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -140,12 +146,12 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationAzureBlobDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationAzureBlobConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
@@ -162,7 +168,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 			{
 				Config: testAccLocationAzureBlobConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "COOL"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
@@ -180,7 +186,85 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationAzureBlobDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccDataSyncLocationAzureBlob_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationAzureBlobOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_location_azure_blob.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
+		CheckDestroy: testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccLocationAzureBlobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccLocationAzureBlobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLocationAzureBlobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("datasync", regexache.MustCompile(`location/loc-.+`)),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckLocationMicrosoftAzureBlobStorageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -206,7 +290,7 @@ func testAccCheckLocationAzureBlobDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckLocationAzureBlobExists(ctx context.Context, n string, v *datasync.DescribeLocationAzureBlobOutput) resource.TestCheckFunc {
+func testAccCheckLocationMicrosoftAzureBlobStorageExists(ctx context.Context, n string, v *datasync.DescribeLocationAzureBlobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

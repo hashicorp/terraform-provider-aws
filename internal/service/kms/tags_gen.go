@@ -27,6 +27,7 @@ func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns .
 	input := kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := kms.NewListResourceTagsPaginator(conn, &input)
@@ -44,9 +45,7 @@ func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns .
 			return tftags.New(ctx, nil), err
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil
@@ -178,7 +177,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 		names.AttrTags: tags,
 	})
 
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := listTags(ctx, conn, id, optFns...)
 
 		if tfresource.NotFound(err) {

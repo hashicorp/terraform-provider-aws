@@ -24,13 +24,20 @@ func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optF
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	var output []awstypes.TagRef
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := appmesh.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return keyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists appmesh service tags and set them in Context.

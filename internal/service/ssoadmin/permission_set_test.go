@@ -291,7 +291,7 @@ func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -322,7 +322,7 @@ func testAccCheckSOAdminPermissionSetExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindPermissionSetByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}

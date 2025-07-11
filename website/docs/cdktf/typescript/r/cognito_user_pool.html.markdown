@@ -107,12 +107,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the user pool.
-
-The following arguments are optional:
-
 * `accountRecoverySetting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `adminCreateUserConfig` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `aliasAttributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phoneNumber`, `email`, or `preferred_username`. Conflicts with `usernameAttributes`.
@@ -309,12 +306,12 @@ The following arguments are required in the `softwareTokenMfaConfiguration` conf
 
 ### user_pool_add_ons
 
-* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
+* `advancedSecurityAdditionalFlows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advancedSecurityMode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
 
 ### advanced_security_additional_flows
 
-* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
+* `customAuthMode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 
@@ -371,4 +368,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-65516b082518b79af3f585f164931e6ed17b5b5d4f086966c6f5daef6291ea82 -->
+<!-- cache-key: cdktf-0.20.8 input-bf613de4b3913f417616b1617d2c7cc8079f2f7426813c90fec07e3b902ae516 -->

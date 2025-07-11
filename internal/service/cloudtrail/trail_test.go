@@ -16,8 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -848,6 +854,84 @@ func testAccTrail_migrateV0(t *testing.T) {
 	})
 }
 
+func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var trail types.Trail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail.test"
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CloudTrailServiceID),
+		CheckDestroy: testAccCheckTrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccCloudTrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccCloudTrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccCloudTrailConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrailExists(ctx, resourceName, &trail),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: tfknownvalue.RegionalARNRegexp("cloudtrail", regexache.MustCompile(`trail/.+`)),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTrailExists(ctx context.Context, n string, v *types.Trail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -955,9 +1039,7 @@ func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccCloudTrailConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
 data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -966,7 +1048,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -977,7 +1059,7 @@ resource "aws_s3_bucket_policy" "test" {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
-        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
+        Resource = aws_s3_bucket.test.arn
         Condition = {
           StringEquals = {
             "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
@@ -991,7 +1073,7 @@ resource "aws_s3_bucket_policy" "test" {
           Service = "cloudtrail.amazonaws.com"
         }
         Action   = "s3:PutObject"
-        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Resource = "${aws_s3_bucket.test.arn}/*"
         Condition = {
           StringEquals = {
             "s3:x-amz-acl"  = "bucket-owner-full-control"
@@ -1012,7 +1094,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1024,7 +1106,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
@@ -1038,7 +1120,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
   enable_logging                = %[2]t
@@ -1053,7 +1135,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1110,7 +1192,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test2.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
@@ -1171,7 +1253,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
   is_multi_region_trail = true
 }
 `, rName))
@@ -1185,7 +1267,7 @@ resource "aws_cloudtrail" "test" {
 
   is_organization_trail = true
   name                  = %[1]q
-  s3_bucket_name        = aws_s3_bucket.test.id
+  s3_bucket_name        = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1197,7 +1279,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   is_multi_region_trail         = true
   include_global_service_events = true
   enable_log_file_validation    = true
@@ -1212,7 +1294,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
 }
 `, rName))
@@ -1221,7 +1303,8 @@ resource "aws_cloudtrail" "test" {
 func testAccCloudTrailConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(testAccCloudTrailConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -1245,7 +1328,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = true
   kms_key_id                    = aws_kms_key.test.arn
 }
@@ -1295,7 +1378,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
   sns_topic_name = %[2]q
 }
 
@@ -1330,7 +1413,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
   sns_topic_name = aws_sns_topic.test.arn
 }
 
@@ -1344,7 +1427,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name                          = %[1]q
-  s3_bucket_name                = aws_s3_bucket.test.id
+  s3_bucket_name                = aws_s3_bucket.test.bucket
   include_global_service_events = false
 }
 `, rName))
@@ -1357,7 +1440,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1373,7 +1456,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   tags = {
     %[2]q = %[3]q
@@ -1390,7 +1473,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1421,7 +1504,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "WriteOnly"
@@ -1438,7 +1521,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "ReadOnly"
@@ -1517,7 +1600,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 }
 `, rName))
 }
@@ -1529,7 +1612,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     read_write_type           = "All"
@@ -1568,7 +1651,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = ["kms.${data.aws_partition.current.dns_suffix}"]
@@ -1586,7 +1669,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   event_selector {
     exclude_management_event_sources = [
@@ -1605,7 +1688,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1622,7 +1705,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
 
   insight_selector {
@@ -1643,7 +1726,7 @@ resource "aws_cloudtrail" "test" {
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.id
+  s3_bucket_name = aws_s3_bucket.test.bucket
 
   advanced_event_selector {
     name = "s3Custom"

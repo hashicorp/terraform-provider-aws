@@ -20,15 +20,16 @@ This resource can be used to adjust this default behavior if necessary.
 
 ```terraform
 resource "aws_ssoadmin_application_assignment_configuration" "example" {
-  application_arn     = aws_ssoadmin_application.example.application_arn
+  application_arn     = aws_ssoadmin_application.example.arn
   assignment_required = true
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_arn` - (Required) ARN of the application.
 * `assignment_required` - (Required) Indicates whether users must have an explicit assignment to access the application. If `false`, all users have access to the application.
 

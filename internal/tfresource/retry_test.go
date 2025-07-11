@@ -4,6 +4,7 @@
 package tfresource_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -11,15 +12,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 //nolint:tparallel
 func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
-	ctx := acctest.Context(t)
 	t.Parallel()
 
+	ctx := t.Context()
 	testCases := []struct {
 		Name        string
 		F           func() (any, error)
@@ -55,9 +55,9 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 
 //nolint:tparallel
 func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-func-name
-	ctx := acctest.Context(t)
 	t.Parallel()
 
+	ctx := t.Context()
 	testCases := []struct {
 		Name        string
 		F           func() (any, error)
@@ -91,12 +91,12 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
-	ctx := acctest.Context(t)
+//nolint:tparallel
+func TestRetryWhenNewResourceNotFound(t *testing.T) {
 	t.Parallel()
 
+	ctx := t.Context()
 	var retryCount int32
-
 	testCases := []struct {
 		Name        string
 		F           func() (any, error)
@@ -174,12 +174,12 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 	}
 }
 
-func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
-	ctx := acctest.Context(t)
+//nolint:tparallel
+func TestRetryWhenNotFound(t *testing.T) {
 	t.Parallel()
 
+	ctx := t.Context()
 	var retryCount int32
-
 	testCases := []struct {
 		Name        string
 		F           func() (any, error)
@@ -232,12 +232,71 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 	}
 }
 
-func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
-	ctx := acctest.Context(t)
+//nolint:tparallel
+func TestRetryUntilEqual(t *testing.T) {
 	t.Parallel()
 
+	ctx := t.Context()
 	var retryCount int32
+	target := 42
+	testCases := []struct {
+		Name        string
+		F           func(context.Context) (int, error)
+		ExpectError bool
+	}{
+		{
+			Name: "return error",
+			F: func(context.Context) (int, error) {
+				return 0, errors.New("TestCode")
+			},
+			ExpectError: true,
+		},
+		{
+			Name: "equal immediately",
+			F: func(context.Context) (int, error) {
+				return target, nil
+			},
+		},
+		{
+			Name: "equal eventually",
+			F: func(context.Context) (int, error) {
+				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
+					return target, nil
+				}
 
+				return 0, nil
+			},
+		},
+		{
+			Name: "equal never",
+			F: func(context.Context) (int, error) {
+				return 0, nil
+			},
+			ExpectError: true,
+		},
+	}
+
+	for _, testCase := range testCases { //nolint:paralleltest
+		t.Run(testCase.Name, func(t *testing.T) {
+			retryCount = 0
+
+			_, err := tfresource.RetryUntilEqual(ctx, 5*time.Second, target, testCase.F)
+
+			if testCase.ExpectError && err == nil {
+				t.Fatal("expected error")
+			} else if !testCase.ExpectError && err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+		})
+	}
+}
+
+//nolint:tparallel
+func TestRetryUntilNotFound(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	var retryCount int32
 	testCases := []struct {
 		Name        string
 		F           func() (any, error)
@@ -291,9 +350,9 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 }
 
 func TestRetryContext_error(t *testing.T) {
-	ctx := acctest.Context(t)
 	t.Parallel()
 
+	ctx := t.Context()
 	expected := fmt.Errorf("nope")
 	f := func() *retry.RetryError {
 		return retry.NonRetryableError(expected)

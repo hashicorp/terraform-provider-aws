@@ -75,6 +75,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
+									"volume_initialization_rate": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
 									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
@@ -176,32 +180,6 @@ func dataSourceLaunchTemplate() *schema.Resource {
 			"ebs_optimized": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"elastic_gpu_specifications": {
-				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"elastic_inference_accelerator": {
-				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"enclave_options": {
 				Type:     schema.TypeList,
@@ -838,7 +816,6 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	lt, err := findLaunchTemplate(ctx, conn, &input)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
 	}
@@ -847,7 +824,6 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 
 	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}

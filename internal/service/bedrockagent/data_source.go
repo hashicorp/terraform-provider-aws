@@ -61,7 +61,7 @@ func newDataSourceResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type dataSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[dataSourceResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -1024,6 +1024,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 type dataSourceResourceModel struct {
+	framework.WithRegionModel
 	DataDeletionPolicy                fwtypes.StringEnum[awstypes.DataDeletionPolicy]                         `tfsdk:"data_deletion_policy"`
 	DataSourceConfiguration           fwtypes.ListNestedObjectValueOf[dataSourceConfigurationModel]           `tfsdk:"data_source_configuration"`
 	DataSourceID                      types.String                                                            `tfsdk:"data_source_id"`

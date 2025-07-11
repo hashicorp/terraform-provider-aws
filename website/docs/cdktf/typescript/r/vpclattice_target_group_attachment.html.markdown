@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 - `targetGroupIdentifier` - (Required) The ID or Amazon Resource Name (ARN) of the target group.
 - `target` - (Required) The target.
@@ -56,4 +56,4 @@ The following arguments are required:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-07d016dd19914a4941aa50badc7be37f87be2205c9b19ece183e96d29c4e875b -->
+<!-- cache-key: cdktf-0.20.8 input-76bb32523fd1b009dd3acd5c4e346952c40db6a6b4d8dbf3c0993de29a708fa5 -->

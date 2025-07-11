@@ -7,6 +7,7 @@ package cloudformation
 var (
 	FindStackByName      = findStackByName
 	FindTypeByName       = findTypeByName
+	KeyValueTags         = keyValueTags
 	WaitChangeSetCreated = waitChangeSetCreated
 	WaitStackCreated     = waitStackCreated
 	WaitStackDeleted     = waitStackDeleted

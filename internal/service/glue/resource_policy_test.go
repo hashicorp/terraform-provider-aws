@@ -9,15 +9,19 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/glue"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -149,10 +153,22 @@ func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(ctx, resourceName, "glue:CreateTable"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccResourcePolicyConfig_equivalent2(),
-				PlanOnly: true,
+				Config: testAccResourcePolicyConfig_equivalent2(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -160,25 +176,20 @@ func testAccResourcePolicy_ignoreEquivalent(t *testing.T) {
 
 func testAccResourcePolicy(ctx context.Context, n string, action string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No policy id set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		policy, err := conn.GetResourcePolicy(ctx, &glue.GetResourcePolicyInput{})
+		output, err := tfglue.FindResourcePolicy(ctx, conn)
+
 		if err != nil {
-			return fmt.Errorf("Get resource policy error: %v", err)
+			return err
 		}
 
-		actualPolicyText := aws.ToString(policy.PolicyInJson)
-
-		expectedPolicy := CreateTablePolicy(ctx, action)
+		actualPolicyText, expectedPolicy := aws.ToString(output.PolicyInJson), testAccNewResourcePolicy(ctx, action)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicy)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
@@ -192,45 +203,145 @@ func testAccResourcePolicy(ctx context.Context, n string, action string) resourc
 	}
 }
 
+func testAccGlueResourcePolicy_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_glue_resource_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.GlueServiceID),
+		CheckDestroy: testAccCheckResourcePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccResourcePolicyConfig_required_v5("glue:CreateTable"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: knownvalue.Null(),
+						names.AttrRegion:    knownvalue.Null(),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccResourcePolicyConfig_required("glue:CreateTable"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+					}),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		policy, err := conn.GetResourcePolicy(ctx, &glue.GetResourcePolicyInput{})
-
-		if err != nil {
-			if errs.IsAErrorMessageContains[*awstypes.EntityNotFoundException](err, "Policy not found") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_resource_policy" {
+				continue
 			}
-			return err
+
+			_, err := tfglue.FindResourcePolicy(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Glue Resource Policy %s still exists", rs.Primary.ID)
 		}
 
-		if *policy.PolicyInJson != "" {
-			return fmt.Errorf("Aws glue resource policy still exists: %s", *policy.PolicyInJson)
-		}
 		return nil
 	}
 }
 
-func CreateTablePolicy(ctx context.Context, action string) string {
+func testAccNewResourcePolicy(ctx context.Context, action string) string {
 	return fmt.Sprintf(`{
   "Version" : "2012-10-17",
   "Statement" : [
     {
       "Effect" : "Allow",
       "Action" : [
-        "%s"
+        %[1]q
       ],
       "Principal" : {
          "AWS": "*"
        },
-      "Resource" : "arn:%s:glue:%s:%s:*"
+      "Resource" : "arn:%[2]s:glue:%[3]s:%[4]s:*"
     }
   ]
 }`, action, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx))
 }
 
 func testAccResourcePolicyConfig_required(action string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "glue-example-policy" {
+  statement {
+    actions   = [%[1]q]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    principals {
+      identifiers = ["*"]
+      type        = "AWS"
+    }
+  }
+}
+
+resource "aws_glue_resource_policy" "test" {
+  policy = data.aws_iam_policy_document.glue-example-policy.json
+}
+`, action)
+}
+
+func testAccResourcePolicyConfig_required_v5(action string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -266,7 +377,7 @@ data "aws_region" "current" {}
 data "aws_iam_policy_document" "glue-example-policy" {
   statement {
     actions   = [%[1]q]
-    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
     principals {
       identifiers = ["*"]
       type        = "AWS"
@@ -296,7 +407,7 @@ resource "aws_glue_resource_policy" "test" {
       Action = "glue:CreateTable"
       Effect = "Allow"
       Resource = [
-        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
       ]
       Principal = {
         AWS = "*"
@@ -323,7 +434,7 @@ resource "aws_glue_resource_policy" "test" {
       Action = [
         "glue:CreateTable",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      Resource = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
       Principal = {
         AWS = ["*"]
       }

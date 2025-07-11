@@ -194,6 +194,7 @@ This resource supports the following arguments:
 * `vpnGatewayId` - (Optional) The ID of the Virtual Private Gateway.
 * `staticRoutesOnly` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enableAcceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
+* `preshared_key_storage` - (Optional) Storage mode for the pre-shared key (PSK). Valid values are `Standard` (stored in the Site-to-Site VPN service) or `SecretsManager` (stored in AWS Secrets Manager).
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `localIpv4NetworkCidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `localIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
@@ -268,19 +269,20 @@ This resource exports the following attributes in addition to the arguments abov
 * `customerGatewayConfiguration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customerGatewayId` - The ID of the customer gateway to which the connection is attached.
 * `routes` - The static routes associated with the VPN connection. Detailed below.
+* `preshared_key_arn` - ARN of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection. Note that even if it returns a valid Secrets Manager ARN, the pre-shared key(s) will not be stored in Secrets Manager unless the `preshared_key_storage` argument is set to `SecretsManager`.
 * `staticRoutesOnly` - Whether the VPN connection uses static routes exclusively.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transitGatewayAttachmentId` - When associated with an EC2 Transit Gateway (`transitGatewayId` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1Address` - The public IP address of the first VPN tunnel.
 * `tunnel1CgwInsideAddress` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1VgwInsideAddress` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
-* `tunnel1PresharedKey` - The preshared key of the first VPN tunnel.
+* `tunnel1PresharedKey` - The preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1BgpAsn` - The bgp asn number of the first VPN tunnel.
 * `tunnel1BgpHoldtime` - The bgp holdtime of the first VPN tunnel.
 * `tunnel2Address` - The public IP address of the second VPN tunnel.
 * `tunnel2CgwInsideAddress` - The RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
 * `tunnel2VgwInsideAddress` - The RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
-* `tunnel2PresharedKey` - The preshared key of the second VPN tunnel.
+* `tunnel2PresharedKey` - The preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2BgpAsn` - The bgp asn number of the second VPN tunnel.
 * `tunnel2BgpHoldtime` - The bgp holdtime of the second VPN tunnel.
 * `vgwTelemetry` - Telemetry for the VPN tunnels. Detailed below.
@@ -333,4 +335,4 @@ Using `terraform import`, import VPN Connections using the VPN connection `id`. 
 % terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d4c651206d8de0b5ebbb8296bd6fe1204e1e62a8b678542649a4c1ea7d11c9f -->
+<!-- cache-key: cdktf-0.20.8 input-120eb1944a70edf22f3416af4f79d1e6cb52774049e1c224e9e052a133b9e2eb -->

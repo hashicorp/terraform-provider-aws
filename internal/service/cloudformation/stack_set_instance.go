@@ -39,6 +39,7 @@ const (
 )
 
 // @SDKResource("aws_cloudformation_stack_set_instance", name="Stack Set Instance")
+// @Region(overrideEnabled=false)
 func resourceStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetInstanceCreate,
@@ -180,10 +181,12 @@ func resourceStackSetInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"stack_set_instance_region"},
+				Deprecated:    "region is deprecated. Use stack_set_instance_region instead.",
 			},
 			"retain_stack": {
 				Type:     schema.TypeBool,
@@ -216,6 +219,13 @@ func resourceStackSetInstance() *schema.Resource {
 					},
 				},
 			},
+			"stack_set_instance_region": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrRegion},
+			},
 			"stack_set_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -231,7 +241,9 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region(ctx)
-	if v, ok := d.GetOk(names.AttrRegion); ok {
+	if v, ok := d.GetOk("stack_set_instance_region"); ok {
+		region = v.(string)
+	} else if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -312,6 +324,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	d.Set(names.AttrRegion, region)
+	d.Set("stack_set_instance_region", region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)

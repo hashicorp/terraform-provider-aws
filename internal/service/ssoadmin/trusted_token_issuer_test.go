@@ -5,30 +5,49 @@ package ssoadmin_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
+func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccSSOAdminTrustedTokenIssuer_basic,
+		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
+		"update":             testAccSSOAdminTrustedTokenIssuer_update,
+		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,14 +74,14 @@ func TestAccSSOAdminTrustedTokenIssuer_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,13 +114,13 @@ func TestAccSSOAdminTrustedTokenIssuer_update(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -119,13 +138,13 @@ func TestAccSSOAdminTrustedTokenIssuer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application ssoadmin.DescribeTrustedTokenIssuerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -165,27 +184,84 @@ func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustedTokenIssuerExists(ctx context.Context, name string, trustedTokenIssuer *ssoadmin.DescribeTrustedTokenIssuerOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameTrustedTokenIssuer, name, errors.New("not found"))
-		}
+func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application ssoadmin.DescribeTrustedTokenIssuerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameTrustedTokenIssuer, name, errors.New("not set"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
-		resp, err := tfssoadmin.FindTrustedTokenIssuerByARN(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameTrustedTokenIssuer, rs.Primary.ID, err)
-		}
-
-		*trustedTokenIssuer = *resp
-
-		return nil
-	}
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccTrustedTokenIssuerConfigBase_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config: testAccTrustedTokenIssuerConfigBase_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN:    tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/.+`)),
+						names.AttrRegion: knownvalue.StringExact(acctest.Region()),
+					}),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccTrustedTokenIssuerConfigBase_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN:    tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/.+`)),
+						names.AttrRegion: knownvalue.StringExact(acctest.Region()),
+					}),
+				},
+			},
+		},
+	})
 }
 
 func testAccCheckTrustedTokenIssuerDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -198,15 +274,37 @@ func testAccCheckTrustedTokenIssuerDestroy(ctx context.Context) resource.TestChe
 			}
 
 			_, err := tfssoadmin.FindTrustedTokenIssuerByARN(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.SSOAdmin, create.ErrActionCheckingDestroyed, tfssoadmin.ResNameTrustedTokenIssuer, rs.Primary.ID, err)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.SSOAdmin, create.ErrActionCheckingDestroyed, tfssoadmin.ResNameTrustedTokenIssuer, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SSO Trusted Token Issuer %s still exists", rs.Primary.ID)
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckTrustedTokenIssuerExists(ctx context.Context, n string, v *ssoadmin.DescribeTrustedTokenIssuerOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+
+		output, err := tfssoadmin.FindTrustedTokenIssuerByARN(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}

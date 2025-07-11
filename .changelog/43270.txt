@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshift_cluster: Correctly set `availability_zone_relocation_enabled`
+```
