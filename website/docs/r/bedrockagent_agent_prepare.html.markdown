@@ -81,6 +81,10 @@ The following arguments are required:
 
 * `id` - (Required) The unique identifier of the agent to prepare. Must be a 10-character alphanumeric string. Changing this value will trigger a replacement of the resource.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
