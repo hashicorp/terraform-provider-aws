@@ -1818,7 +1818,7 @@ func TestAccACMCertificate_Identity_ExistingResource(t *testing.T) {
 func TestAccACMCertificate_optionExport(t *testing.T) {
 	// Issuing an exportable ACM Certificate is expensive.
 	// Skip the test by default and only run if the environment variable is set.
-	acctest.SkipIfEnvVarNotSet(t, "TESTACC_ACM_CERTIFICATE_EXPORT")
+	acctest.SkipIfEnvVarNotSet(t, "ACM_TEST_CERTIFICATE_EXPORT")
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
