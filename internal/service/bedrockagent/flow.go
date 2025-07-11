@@ -27,8 +27,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,8 +39,8 @@ import (
 
 // @FrameworkResource("aws_bedrockagent_flow", name="Flow")
 // @Tags(identifierAttribute="arn")
-func newResourceFlow(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceFlow{}
+func newFlowResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &flowResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -52,13 +53,13 @@ const (
 	ResNameFlow = "Flow"
 )
 
-type resourceFlow struct {
-	framework.ResourceWithConfigure
+type flowResource struct {
+	framework.ResourceWithModel[flowResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *flowResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
@@ -829,17 +830,17 @@ func (r *resourceFlow) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-func (r *resourceFlow) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	var data resourceFlowModel
+func (r *flowResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data flowResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentClient(ctx)
+
 	var input bedrockagent.CreateFlowInput
-	response.Diagnostics.Append(flex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -856,7 +857,7 @@ func (r *resourceFlow) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -864,56 +865,63 @@ func (r *resourceFlow) Create(ctx context.Context, request resource.CreateReques
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceFlow) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data flowResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	var data resourceFlowModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	output, err := findFlowByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := findFlowByID(ctx, conn, data.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNameFlow, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	var new, old resourceFlowModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
+func (r *flowResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old flowResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, new, old)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input bedrockagent.UpdateFlowInput
-		resp.Diagnostics.Append(flex.Expand(ctx, new, &input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -921,22 +929,22 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		output, err := conn.UpdateFlow(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameFlow, new.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, output, &new)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Set values for unknowns.
 		new.CreatedAt = timetypes.NewRFC3339TimePointerValue(output.CreatedAt)
 		new.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
-		new.Version = flex.StringToFramework(ctx, output.Version)
+		new.Version = fwflex.StringToFramework(ctx, output.Version)
 		new.Status = fwtypes.StringEnumValue(output.Status)
 	} else {
 		new.CreatedAt = old.CreatedAt
@@ -945,65 +953,66 @@ func (r *resourceFlow) Update(ctx context.Context, req resource.UpdateRequest, r
 		new.Status = old.Status
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceFlow) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
-	var state resourceFlowModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *flowResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data flowResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().BedrockAgentClient(ctx)
+
 	input := bedrockagent.DeleteFlowInput{
-		FlowIdentifier: state.ID.ValueStringPointer(),
+		FlowIdentifier: data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteFlow(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteFlow(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameFlow, state.ID.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameFlow, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceFlow) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *flowResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetFlowOutput, error) {
-	in := &bedrockagent.GetFlowInput{
+	input := bedrockagent.GetFlowInput{
 		FlowIdentifier: aws.String(id),
 	}
+	output, err := conn.GetFlow(ctx, &input)
 
-	out, err := conn.GetFlow(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourceFlowModel struct {
+type flowResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                         `tfsdk:"arn"`
 	ID                       types.String                                         `tfsdk:"id"`
 	Name                     types.String                                         `tfsdk:"name"`
@@ -1052,7 +1061,7 @@ func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (
 	switch t := v.(type) {
 	case awstypes.FlowConnectionConfigurationMemberData:
 		var model flowConnectionConfigurationMemberDataModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1063,7 +1072,7 @@ func (m *flowConnectionConfigurationModel) Flatten(ctx context.Context, v any) (
 		return diags
 	case awstypes.FlowConnectionConfigurationMemberConditional:
 		var model flowConnectionConfigurationMemberConditionalModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1087,7 +1096,7 @@ func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result an
 		}
 
 		var r awstypes.FlowConnectionConfigurationMemberData
-		diags.Append(flex.Expand(ctx, flowConnectionConfigurationData, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowConnectionConfigurationData, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1101,7 +1110,7 @@ func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result an
 		}
 
 		var r awstypes.FlowConnectionConfigurationMemberConditional
-		diags.Append(flex.Expand(ctx, flowConnectionConfigurationConditional, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowConnectionConfigurationConditional, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1140,7 +1149,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 	switch t := v.(type) {
 	case awstypes.FlowNodeConfigurationMemberAgent:
 		var model flowNodeConfigurationMemberAgentModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1151,7 +1160,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberCollector:
 		var model flowNodeConfigurationMemberCollectorModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1162,7 +1171,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberCondition:
 		var model flowNodeConfigurationMemberConditionModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1173,7 +1182,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberInput:
 		var model flowNodeConfigurationMemberInputModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1184,7 +1193,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberIterator:
 		var model flowNodeConfigurationMemberIteratorModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1195,7 +1204,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberKnowledgeBase:
 		var model flowNodeConfigurationMemberKnowledgeBaseModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1206,7 +1215,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberLambdaFunction:
 		var model flowNodeConfigurationMemberLambdaFunctionModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1217,7 +1226,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberLex:
 		var model flowNodeConfigurationMemberLexModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1228,7 +1237,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberOutput:
 		var model flowNodeConfigurationMemberOutputModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1239,7 +1248,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberPrompt:
 		var model flowNodeConfigurationMemberPromptModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1250,7 +1259,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberRetrieval:
 		var model flowNodeConfigurationMemberRetrievalModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1261,7 +1270,7 @@ func (m *flowNodeConfigurationModel) Flatten(ctx context.Context, v any) (diags 
 		return diags
 	case awstypes.FlowNodeConfigurationMemberStorage:
 		var model flowNodeConfigurationMemberStorageModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1285,7 +1294,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberAgent
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationAgent, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationAgent, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1299,7 +1308,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberCollector
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationCollector, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationCollector, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1313,7 +1322,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberCondition
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationCondition, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationCondition, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1327,7 +1336,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberInput
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationInput, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationInput, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1341,7 +1350,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberIterator
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationIterator, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationIterator, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1355,7 +1364,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberKnowledgeBase
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationKnowledgeBase, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationKnowledgeBase, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1369,7 +1378,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberLambdaFunction
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationLambdaFunction, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationLambdaFunction, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1383,7 +1392,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberLex
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationLex, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationLex, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1397,7 +1406,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberOutput
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationOutput, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationOutput, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1411,7 +1420,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberPrompt
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationPrompt, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationPrompt, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1425,7 +1434,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberRetrieval
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationRetrieval, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationRetrieval, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1439,7 +1448,7 @@ func (m flowNodeConfigurationModel) Expand(ctx context.Context) (result any, dia
 		}
 
 		var r awstypes.FlowNodeConfigurationMemberStorage
-		diags.Append(flex.Expand(ctx, flowNodeConfigurationStorage, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, flowNodeConfigurationStorage, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1509,7 +1518,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 	switch t := v.(type) {
 	case awstypes.PromptFlowNodeSourceConfigurationMemberInline:
 		var model promptFlowNodeSourceConfigurationMemberInlineModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1534,7 +1543,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		return diags
 	case awstypes.PromptFlowNodeSourceConfigurationMemberResource:
 		var model promptFlowNodeSourceConfigurationMemberResourceModel
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1558,14 +1567,14 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 		}
 
 		var r awstypes.PromptFlowNodeSourceConfigurationMemberInline
-		diags.Append(flex.Expand(ctx, promptFlowNodeSourceConfigurationInline, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptFlowNodeSourceConfigurationInline, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
 		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
 		if !additionalFields.IsNull() {
-			json, err := smithyjson.SmithyDocumentFromString(flex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
+			json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Decoding JSON",
@@ -1587,7 +1596,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 		}
 
 		var r awstypes.PromptFlowNodeSourceConfigurationMemberResource
-		diags.Append(flex.Expand(ctx, promptFlowNodeSourceConfigurationResource, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, promptFlowNodeSourceConfigurationResource, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1623,7 +1632,7 @@ func (m *retrievalFlowNodeServiceConfigurationModel) Flatten(ctx context.Context
 	switch t := v.(type) {
 	case awstypes.RetrievalFlowNodeServiceConfigurationMemberS3:
 		var model retrievalFlowNodeServiceConfigurationMemberS3Model
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1647,7 +1656,7 @@ func (m retrievalFlowNodeServiceConfigurationModel) Expand(ctx context.Context) 
 		}
 
 		var r awstypes.RetrievalFlowNodeServiceConfigurationMemberS3
-		diags.Append(flex.Expand(ctx, retrievalFlowNodeServiceConfigurationS3, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, retrievalFlowNodeServiceConfigurationS3, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1675,7 +1684,7 @@ func (m *storageFlowNodeServiceConfigurationModel) Flatten(ctx context.Context, 
 	switch t := v.(type) {
 	case awstypes.StorageFlowNodeServiceConfigurationMemberS3:
 		var model storageFlowNodeServiceConfigurationMemberS3Model
-		d := flex.Flatten(ctx, t.Value, &model)
+		d := fwflex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
 			return diags
@@ -1699,7 +1708,7 @@ func (m storageFlowNodeServiceConfigurationModel) Expand(ctx context.Context) (r
 		}
 
 		var r awstypes.StorageFlowNodeServiceConfigurationMemberS3
-		diags.Append(flex.Expand(ctx, storageFlowNodeServiceConfigurationS3, &r.Value)...)
+		diags.Append(fwflex.Expand(ctx, storageFlowNodeServiceConfigurationS3, &r.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}

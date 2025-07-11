@@ -11,7 +11,7 @@ var (
 	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
-	ResourceFlow                          = newResourceFlow
+	ResourceFlow                          = newFlowResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
 	ResourcePrompt                        = newPromptResource
 

@@ -74,7 +74,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceFlow,
+			Factory:  newFlowResource,
 			TypeName: "aws_bedrockagent_flow",
 			Name:     "Flow",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
