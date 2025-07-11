@@ -16,6 +16,9 @@
 {{ end }}
 
 {{ define "commonInit" -}}
+{{ range .RequiredEnvVars -}}
+	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
+{{ end -}}
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
