@@ -89,6 +89,9 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 			"parent_action_group_signature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ActionGroupSignature](),
 				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrDescription)),
+				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -280,6 +283,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		}
 	}
 
+	data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.AgentActionGroup.ParentActionSignature)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -318,6 +322,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	data.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -374,6 +379,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	}
 
 	new.ActionGroupState = fwtypes.StringEnumValue(output.ActionGroupState)
+	new.ParentActionGroupSignature = fwtypes.StringEnumValue[awstypes.ActionGroupSignature](output.ParentActionSignature)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
