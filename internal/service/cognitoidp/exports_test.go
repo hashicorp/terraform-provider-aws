@@ -6,6 +6,7 @@ package cognitoidp
 // Exports for use in tests only.
 var (
 	ResourceIdentityProvider        = resourceIdentityProvider
+	ResourceLogDeliveryConfiguration = newResourceLogDeliveryConfiguration
 	ResourceManagedUserPoolClient   = newManagedUserPoolClientResource
 	ResourceResourceServer          = resourceResourceServer
 	ResourceRiskConfiguration       = resourceRiskConfiguration
@@ -20,6 +21,7 @@ var (
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
 	FindGroupUserByThreePartKey             = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
+	FindLogDeliveryConfigurationByUserPoolID = findLogDeliveryConfigurationByUserPoolID
 	FindResourceServerByTwoPartKey          = findResourceServerByTwoPartKey
 	FindRiskConfigurationByTwoPartKey       = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
