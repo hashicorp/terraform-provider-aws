@@ -967,7 +967,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			// SQS seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func() (any, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func(ctx context.Context) (any, error) {
 				return tfsqs.FindQueueAttributesByURL(ctx, conn, rs.Primary.ID)
 			})
 			if errors.Is(err, tfresource.ErrFoundResource) {
