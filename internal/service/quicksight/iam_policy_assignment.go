@@ -289,7 +289,7 @@ func (r *iamPolicyAssignmentResource) Delete(ctx context.Context, request resour
 	}
 
 	// wait for IAM to propagate before returning
-	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findIAMPolicyAssignmentByThreePartKey(ctx, conn, awsAccountID, namespace, assignmentName)
 	})
 

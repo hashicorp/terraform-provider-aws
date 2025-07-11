@@ -219,7 +219,7 @@ func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d 
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findIntelligentTieringConfiguration(ctx, conn, bucket, name)
 	})
 

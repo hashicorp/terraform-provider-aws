@@ -339,7 +339,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		const (
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 

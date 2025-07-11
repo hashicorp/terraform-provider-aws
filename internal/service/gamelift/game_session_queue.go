@@ -207,7 +207,7 @@ func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData,
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGameSessionQueueByName(ctx, conn, d.Id())
 	})
 

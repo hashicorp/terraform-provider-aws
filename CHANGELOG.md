@@ -1,4 +1,10 @@
-## 6.3.0 (Unreleased)
+## 6.4.0 (Unreleased)
+
+BUG FIXES:
+
+* aws_bedrockagent_agent_action_group: Fix issue reading back value of `parent_action_group_signature` ([#43355](https://github.com/hashicorp/terraform-provider-aws/issues/43355))
+
+## 6.3.0 (July 10, 2025)
 
 FEATURES:
 
@@ -6,7 +12,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_distribution: Add `anycast_ip_list_id` attribute ([#43196](https://github.com/hashicorp/terraform-provider-aws/issues/43196))
 * data-source/aws_networkmanager_core_network_policy_document: Add `core_network_configuration.dns_support` and `core_network_configuration.security_group_referencing_support` arguments ([#43277](https://github.com/hashicorp/terraform-provider-aws/issues/43277))
+* resource/aws_cloudfront_distribution: Add `anycast_ip_list_id` argument ([#43196](https://github.com/hashicorp/terraform-provider-aws/issues/43196))
 * resource/aws_dynamodb_table: Add `replica.consistency_mode` argument in support of [multi-Region strong consistency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/V2globaltables_HowItWorks.html#V2globaltables_HowItWorks.choosing-consistency-mode) for Amazon DynamoDB global tables ([#43236](https://github.com/hashicorp/terraform-provider-aws/issues/43236))
 
 BUG FIXES:
