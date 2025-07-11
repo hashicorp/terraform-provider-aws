@@ -88,6 +88,7 @@ func subSlotSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.
 				return true, diags
 			}
 
+			var promptsAreEquals bool
 			for _, oldSlotSpec := range oldSlotSpecification {
 				index := slices.IndexFunc(newSlotSpecification, func(item *SlotSpecificationsData) bool {
 					return item.MapBlockKey.ValueString() == oldSlotSpec.MapBlockKey.ValueString()
@@ -115,9 +116,17 @@ func subSlotSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.
 				}
 
 				if oldValueElicitationSetting != nil && newValueElicitationSetting != nil {
-					return evalValueElicitationSetting(ctx, oldValueElicitationSetting, newValueElicitationSetting)
+					out, di := evalValueElicitationSetting(ctx, oldValueElicitationSetting, newValueElicitationSetting)
+					diags = append(diags, di...)
+					if diags.HasError() {
+						return false, diags
+					}
+
+					promptsAreEquals = out
 				}
 			}
+
+			return promptsAreEquals, diags
 		}
 	}
 
@@ -146,11 +155,11 @@ func valueElicitationSettingEqualityFunc(ctx context.Context, oldValue, newValue
 	return false, diags
 }
 
-type ValueElicitationSettinger interface {
+type valueElicitationSettinger interface {
 	*ValueElicitationSettingData | *SubSlotValueElicitationSettingData
 }
 
-func evalValueElicitationSetting[T ValueElicitationSettinger](ctx context.Context, oldValueElicitationSetting, newValueElicitationSetting T) (bool, diag.Diagnostics) {
+func evalValueElicitationSetting[T valueElicitationSettinger](ctx context.Context, oldValueElicitationSetting, newValueElicitationSetting T) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	switch oldSetting := any(oldValueElicitationSetting).(type) {

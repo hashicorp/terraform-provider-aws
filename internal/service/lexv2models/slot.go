@@ -495,7 +495,7 @@ func (r *slotResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 
 	valueElicitationSettingLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx, fwtypes.WithSemanticEqualityFunc(valueElicitationSettingEqualityFunc)),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtMost(1),
