@@ -197,7 +197,20 @@ func TestAccLexV2ModelsSlot_subSlotSetting_promptAttemptsSpecification_defaults(
 		CheckDestroy:             testAccCheckSlotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_defaults(rName, true),
+				Config: testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_noDefaults(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlotExists(ctx, resourceName, &slot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.expression", "string"),
+					resource.TestCheckResourceAttr(resourceName, "sub_slot_setting.0.slot_specification.#", "1"),
+				),
+			},
+			{
+				Config: testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_withDefaults(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -547,7 +560,66 @@ resource "aws_lexv2models_slot" "test" {
 `, rName, allow))
 }
 
-func testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_defaults(rName string, allow bool) string {
+func testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_noDefaults(rName string, allow bool) string {
+	return acctest.ConfigCompose(
+		testAccSlotConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot_type" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_selection_setting {
+    resolution_strategy = "OriginalValue"
+  }
+}
+resource "aws_lexv2models_slot" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  intent_id   = aws_lexv2models_intent.test.intent_id
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_elicitation_setting {
+    slot_constraint = "Optional"
+    default_value_specification {
+      default_value_list {
+        default_value = "default"
+      }
+    }
+  }
+
+  multiple_values_setting {
+    allow_multiple_values = %[2]t
+  }
+
+  sub_slot_setting {
+    expression = "string"
+    slot_specification {
+      map_block_key = "Initial"
+      slot_type_id  = aws_lexv2models_slot_type.test.slot_type_id
+      value_elicitation_setting {
+        prompt_specification {
+          allow_interrupt            = true
+          max_retries                = 1
+          message_selection_strategy = "Ordered"
+          message_group {
+            message {
+              plain_text_message {
+                value = "test"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, allow))
+}
+
+func testAccSlotConfig_subSlotSetting_promptAttemptsSpecification_withDefaults(rName string, allow bool) string {
 	return acctest.ConfigCompose(
 		testAccSlotConfig_base(rName, 60, true),
 		fmt.Sprintf(`
