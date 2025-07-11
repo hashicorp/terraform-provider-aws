@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -40,7 +41,6 @@ func newVectorBucketResource(context.Context) (resource.ResourceWithConfigure, e
 
 type vectorBucketResource struct {
 	framework.ResourceWithModel[vectorBucketResourceModel]
-	framework.WithNoUpdate
 	framework.WithImportByIdentity
 }
 
@@ -55,6 +55,11 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrForceDestroy: schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
 			"vector_bucket_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -162,6 +167,34 @@ func (r *vectorBucketResource) Delete(ctx context.Context, request resource.Dele
 	conn := r.Meta().S3VectorsClient(ctx)
 
 	arn := fwflex.StringValueFromFramework(ctx, data.VectorBucketARN)
+	if data.ForceDestroy.ValueBool() {
+		input := s3vectors.ListIndexesInput{
+			VectorBucketArn: aws.String(arn),
+		}
+
+		pages := s3vectors.NewListIndexesPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("listing S3 Vectors Vector Bucket (%s) indexes", arn), err.Error())
+
+				return
+			}
+
+			for _, v := range page.Indexes {
+				arn := aws.ToString(v.IndexArn)
+				err := deleteIndex(ctx, conn, arn)
+
+				if err != nil {
+					response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Vectors index (%s)", arn), err.Error())
+
+					return
+				}
+			}
+		}
+	}
+
 	input := s3vectors.DeleteVectorBucketInput{
 		VectorBucketArn: aws.String(arn),
 	}
@@ -219,6 +252,7 @@ type vectorBucketResourceModel struct {
 	framework.WithRegionModel
 	CreationTime            timetypes.RFC3339                                             `tfsdk:"creation_time"`
 	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	ForceDestroy            types.Bool                                                    `tfsdk:"force_destroy"`
 	VectorBucketARN         types.String                                                  `tfsdk:"vector_bucket_arn"`
 	VectorBucketName        types.String                                                  `tfsdk:"vector_bucket_name"`
 }

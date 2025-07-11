@@ -178,20 +178,26 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().S3VectorsClient(ctx)
 
 	arn := fwflex.StringValueFromFramework(ctx, data.IndexARN)
-	input := s3vectors.DeleteIndexInput{
-		IndexArn: aws.String(arn),
-	}
-	_, err := conn.DeleteIndex(ctx, &input)
-
-	if errs.IsA[*awstypes.NotFoundException](err) {
-		return
-	}
+	err := deleteIndex(ctx, conn, arn)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Vectors Index (%s)", arn), err.Error())
 
 		return
 	}
+}
+
+func deleteIndex(ctx context.Context, conn *s3vectors.Client, arn string) error {
+	input := s3vectors.DeleteIndexInput{
+		IndexArn: aws.String(arn),
+	}
+	_, err := conn.DeleteIndex(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		err = nil
+	}
+
+	return err
 }
 
 func findIndexByARN(ctx context.Context, conn *s3vectors.Client, arn string) (*awstypes.Index, error) {

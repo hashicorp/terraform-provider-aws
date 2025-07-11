@@ -207,11 +207,7 @@ func testAccCheckIndexAddVector(ctx context.Context, n string, key string, value
 			}},
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

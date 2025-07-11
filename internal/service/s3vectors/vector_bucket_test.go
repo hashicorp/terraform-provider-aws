@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -58,6 +60,7 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_arn"), tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -71,6 +74,7 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -148,6 +152,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccVectorBucketConfig_basic(rName),
@@ -204,6 +209,55 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccS3VectorsVectorBucket_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VectorBucket
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_vector_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVectorBucketConfig_forceDestroy(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
+				},
+			},
+			{
+				Config: testAccVectorBucketConfig_forceDestroy(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketAddIndex(ctx, resourceName, rName+"-index"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(true)),
+				},
 			},
 		},
 	})
@@ -256,6 +310,23 @@ func testAccCheckVectorBucketExists(ctx context.Context, n string, v *awstypes.V
 	}
 }
 
+func testAccCheckVectorBucketAddIndex(ctx context.Context, n string, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+
+		_, err := conn.CreateIndex(ctx, &s3vectors.CreateIndexInput{
+			DataType:        awstypes.DataTypeFloat32,
+			Dimension:       aws.Int32(3),
+			DistanceMetric:  awstypes.DistanceMetricCosine,
+			IndexName:       aws.String(name),
+			VectorBucketArn: aws.String(rs.Primary.Attributes["vector_bucket_arn"]),
+		})
+
+		return err
+	}
+}
+
 func testAccVectorBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3vectors_vector_bucket" "test" {
@@ -292,4 +363,13 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName)
+}
+
+func testAccVectorBucketConfig_forceDestroy(rName string, forceDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = %[1]q
+  force_destroy      = %[2]t
+}
+`, rName, forceDestroy)
 }
