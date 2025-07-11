@@ -164,6 +164,51 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 	})
 }
 
+func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VectorBucket
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_vector_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVectorBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVectorBucketConfig_encryptionConfigurationKMS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVectorBucketExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"kms_key_arn": knownvalue.NotNull(),
+							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAwsKms),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+			},
+		},
+	})
+}
+
 func testAccCheckVectorBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
@@ -227,6 +272,24 @@ resource "aws_s3vectors_vector_bucket" "test" {
   encryption_configuration {
     sse_type = "AES256"
   }
+}
+`, rName)
+}
+
+func testAccVectorBucketConfig_encryptionConfigurationKMS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3vectors_vector_bucket" "test" {
+  vector_bucket_name = %[1]q
+
+  encryption_configuration {
+    kms_key_arn = aws_kms_key.test.arn
+    sse_type    = "aws:kms"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 `, rName)
 }
