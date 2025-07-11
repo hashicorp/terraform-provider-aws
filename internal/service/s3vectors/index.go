@@ -117,7 +117,7 @@ func (r *indexResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	output, err := findIndexByName(ctx, conn, name)
+	output, err := findIndexByTwoPartKey(ctx, conn, data.VectorBucketName.ValueString(), name)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Vectors Index (%s)", name), err.Error())
@@ -202,9 +202,10 @@ func findIndexByARN(ctx context.Context, conn *s3vectors.Client, arn string) (*a
 	return findIndex(ctx, conn, &input)
 }
 
-func findIndexByName(ctx context.Context, conn *s3vectors.Client, name string) (*awstypes.Index, error) {
+func findIndexByTwoPartKey(ctx context.Context, conn *s3vectors.Client, vectorBucketName, indexName string) (*awstypes.Index, error) {
 	input := s3vectors.GetIndexInput{
-		IndexName: aws.String(name),
+		IndexName:        aws.String(indexName),
+		VectorBucketName: aws.String(vectorBucketName),
 	}
 
 	return findIndex(ctx, conn, &input)
