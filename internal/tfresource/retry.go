@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -198,55 +199,25 @@ func RetryGWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx 
 	})
 }
 
-// RetryUntilEqual retries the specified function until it returns a value equal to `t`.
-func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, t T, f func() (T, error)) (T, error) {
-	var output T
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-
-		output, err = f()
-
-		if err != nil {
-			return sdkretry.NonRetryableError(err)
-		}
-
-		if output != t {
-			return sdkretry.RetryableError(fmt.Errorf("output = %v, want %v", output, t))
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-
-		if err == nil && output != t {
-			err = fmt.Errorf("output = %v, want %v", output, t)
-		}
-	}
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return output, nil
-}
-
-// RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
-func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if NotFound(err) {
-			return false, nil
-		}
-
+// RetryUntilEqual retries the specified function until it returns a value equal to `target`.
+func RetryUntilEqual[T comparable](ctx context.Context, timeout time.Duration, target T, f func(context.Context) (T, error), opts ...backoff.Option) (T, error) {
+	t, err := retry.Op(f).If(func(t T, err error) (bool, error) {
 		if err != nil {
 			return false, err
 		}
+		return t != target, nil
+	})(ctx, timeout, opts...)
 
-		return true, ErrFoundResource
-	})
+	if TimedOut(err) {
+		err = fmt.Errorf("output = %v, want %v", t, target)
+	}
+
+	return t, err
+}
+
+// RetryUntilNotFound retries the specified function until it returns a retry.NotFoundError.
+func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func(context.Context) (any, error)) (any, error) {
+	return retry.Op(f).UntilNotFound()(ctx, timeout)
 }
 
 // RetryWhenNotFound retries the specified function when it returns a retry.NotFoundError.

@@ -157,7 +157,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_username     = "foo"
   master_password     = "Password1"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
@@ -190,7 +190,7 @@ resource "aws_redshift_cluster" "test" {
   database_name             = "testdb"
   master_username           = "foo"
   master_password           = "Password1"
-  node_type                 = "dc2.large"
+  node_type                 = "ra3.large"
   cluster_type              = "multi-node"
   number_of_nodes           = 2
   publicly_accessible       = false
@@ -247,7 +247,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_password     = "Password1"
   master_username     = "foo"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
 }
 
