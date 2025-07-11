@@ -20,6 +20,19 @@ resource "aws_s3vectors_vector_bucket" "example" {
 }
 ```
 
+### Encryption
+
+```terraform
+resource "aws_s3vectors_vector_bucket" "example" {
+  vector_bucket_name = "example-bucket"
+
+  encryption_configuration {
+    sse_type    = "aws:kms"
+    kms_key_arn = aws_kms_key.example.arn
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -28,6 +41,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `encryption_configuration` - (Optional, Forces new resource) Encryption configuration for the vector bucket.
+    * `kms_key_arn` - (Optional, Forces new resource) AWS KMS CMK ARN to use for the default encryption of the vector bucket. Allowed if and only if `sse_type` is set to `aws:kms`.
+    * `sse_type` - (Optional, Forces new resource) Server-side encryption type to use for the default encryption of the vector bucket. Valid values: `AES256`, `aws:kms`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference

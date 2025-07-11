@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,6 +54,7 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"encryption_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"vector_bucket_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -214,7 +217,13 @@ func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vect
 
 type vectorBucketResourceModel struct {
 	framework.WithRegionModel
-	CreationTime     timetypes.RFC3339 `tfsdk:"creation_time"`
-	VectorBucketARN  types.String      `tfsdk:"vector_bucket_arn"`
-	VectorBucketName types.String      `tfsdk:"vector_bucket_name"`
+	CreationTime            timetypes.RFC3339                                             `tfsdk:"creation_time"`
+	EncryptionConfiguration fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel] `tfsdk:"encryption_configuration"`
+	VectorBucketARN         types.String                                                  `tfsdk:"vector_bucket_arn"`
+	VectorBucketName        types.String                                                  `tfsdk:"vector_bucket_name"`
+}
+
+type encryptionConfigurationModel struct {
+	KMSKeyARN fwtypes.ARN                          `tfsdk:"kms_key_arn"`
+	SSEType   fwtypes.StringEnum[awstypes.SseType] `tfsdk:"sse_type"`
 }
