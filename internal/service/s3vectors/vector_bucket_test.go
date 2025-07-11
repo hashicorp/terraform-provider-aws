@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3TablesTableBucket_basic(t *testing.T) {
+func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,11 +51,17 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreatedAt), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_arn"), tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`TODO/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"kms_key_arn": knownvalue.Null(),
+							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_arn"), tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_name"), knownvalue.StringExact(rName)),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"vector_bucket_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`TODO/.+`)),
+						"vector_bucket_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+`)),
 					}),
 				},
 			},
@@ -70,7 +76,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 	})
 }
 
-func TestAccS3TablesTableBucket_disappears(t *testing.T) {
+func TestAccS3VectorsVectorBucket_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.VectorBucket
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -95,13 +101,8 @@ func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
 				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

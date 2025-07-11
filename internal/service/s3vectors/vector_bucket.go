@@ -54,7 +54,7 @@ func (r *vectorBucketResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"encryption_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[encryptionConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			"vector_bucket_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
