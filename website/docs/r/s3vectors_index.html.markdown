@@ -53,12 +53,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_s3vectors_index.example
-  id = "TODO"
+  id = "arn:aws:s3vectors:us-west-2:123456789012:bucket/example-bucket/index/example-index"
 }
 ```
 
 Using `terraform import`, import S3 Vectors Index using the `index_arn`. For example:
 
 ```console
-% terraform import aws_s3vectors_index.example TODO
+% terraform import aws_s3vectors_index.example arn:aws:s3vectors:us-west-2:123456789012:bucket/example-bucket/index/example-index
 ```
