@@ -211,7 +211,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 10 * time.Second
 	)
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findApplicationByName(ctx, conn, d.Id())
 	})
 

@@ -195,7 +195,7 @@ func (r *drtAccessRoleARNAssociationResource) Delete(ctx context.Context, reques
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)
 	})
 

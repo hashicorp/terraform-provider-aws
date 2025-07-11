@@ -1,4 +1,13 @@
 ## 6.4.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_bedrock_inference_profiles: Add `type` argument ([#43150](https://github.com/hashicorp/terraform-provider-aws/issues/43150))
+
+BUG FIXES:
+
+* resource/aws_bedrockagent_agent_action_group: Correctly set `parent_action_group_signature` on Read ([#43355](https://github.com/hashicorp/terraform-provider-aws/issues/43355))
+
 ## 6.3.0 (July 10, 2025)
 
 FEATURES:
