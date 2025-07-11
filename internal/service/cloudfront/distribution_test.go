@@ -1525,6 +1525,35 @@ func TestAccCloudFrontDistribution_grpcConfig(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_multiTenant(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_multiTenant(false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "connection_mode", "tenant-only"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema_config.0.required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema_config.0.comment", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema_config.0.default_value", "test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
@@ -4663,4 +4692,58 @@ resource "aws_cloudfront_distribution" "test" {
   }
 }
 `
+}
+
+func testAccDistributionConfig_multiTenant(enabled, retainOnDelete bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = %[1]t
+  retain_on_delete = %[2]t
+
+  connection_mode = "tenant-only"
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "test"
+      definition {
+        string_schema_config {
+          required      = false
+          comment       = "test"
+          default_value = "test"
+        }
+      }
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, enabled, retainOnDelete)
 }
