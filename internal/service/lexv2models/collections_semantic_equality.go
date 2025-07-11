@@ -133,6 +133,8 @@ func subSlotSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.
 	return false, diags
 }
 
+// valueElicitationSettingEqualityFunc checks semantic equality.
+// This specifically targets default values on PromptAttemptsSpecification
 func valueElicitationSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[ValueElicitationSettingData]) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
