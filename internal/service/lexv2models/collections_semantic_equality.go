@@ -166,6 +166,8 @@ func evalValueElicitationSetting[T valueElicitationSettinger](ctx context.Contex
 	case *ValueElicitationSettingData:
 		newSetting := any(newValueElicitationSetting).(*ValueElicitationSettingData)
 		if !oldSetting.DefaultValueSpecification.Equal(newSetting.DefaultValueSpecification) ||
+			!oldSetting.SlotConstraint.Equal(newSetting.SlotConstraint) ||
+			!oldSetting.SlotResolutionSetting.Equal(newSetting.SlotResolutionSetting) ||
 			!oldSetting.SampleUtterance.Equal(newSetting.SampleUtterance) ||
 			!oldSetting.WaitAndContinueSpecification.Equal(newSetting.WaitAndContinueSpecification) {
 			return false, diags
