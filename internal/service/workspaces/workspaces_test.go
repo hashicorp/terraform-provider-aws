@@ -29,6 +29,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"workspacePoolsADConfig":                                      testAccDirectory_poolsADConfig,
 			"workspacePoolsWorkspaceCreation":                             testAccDirectory_poolsWorkspaceCreation,
 			"workspacePoolsWorkspaceCreationAD":                           testAccDirectory_poolsWorkspaceCreationAD,
+			"tenancy":                                                     testAccDirectory_dedicatedTenancy,
 		},
 		"IpGroup": {
 			acctest.CtBasic:       testAccIPGroup_basic,
