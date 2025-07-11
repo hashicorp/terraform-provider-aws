@@ -68,6 +68,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceAgentPrepare,
+			TypeName: "aws_bedrockagent_agent_prepare",
+			Name:     "Agent Prepare",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceResource,
 			TypeName: "aws_bedrockagent_data_source",
 			Name:     "Data Source",
