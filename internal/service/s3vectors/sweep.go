@@ -15,7 +15,45 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_s3vectors_vector_bucket", sweepVectorBuckets)
+	awsv2.Register("aws_s3vectors_vector_bucket", sweepVectorBuckets, "aws_s3vectors_index")
+	awsv2.Register("aws_s3vectors_index", sweepIndexes)
+}
+
+func sweepIndexes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3VectorsClient(ctx)
+	var input s3vectors.ListVectorBucketsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := s3vectors.NewListVectorBucketsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.VectorBuckets {
+			input := s3vectors.ListIndexesInput{
+				VectorBucketName: v.VectorBucketName,
+			}
+
+			pages := s3vectors.NewListIndexesPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if err != nil {
+					return nil, err
+				}
+
+				for _, v := range page.Indexes {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newIndexResource, client,
+						framework.NewAttribute("index_arn", aws.ToString(v.IndexArn))))
+				}
+			}
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepVectorBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
