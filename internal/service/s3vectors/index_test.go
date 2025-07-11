@@ -9,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
+	"github.com/aws/aws-sdk-go-v2/service/s3vectors/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -106,6 +110,37 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3VectorsIndex_withVector(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Index
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3vectors_index.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckIndexAddVector(ctx, resourceName, "key1", []float32{1.0, 2.0}),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
@@ -148,6 +183,33 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *awstypes.Index) r
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckIndexAddVector(ctx context.Context, n string, key string, value []float32) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+
+		metadata, err := json.SmithyDocumentFromString(fmt.Sprintf(`{"id": %[1]q}`, key), document.NewLazyDocument)
+		if err != nil {
+			return err
+		}
+
+		_, err = conn.PutVectors(ctx, &s3vectors.PutVectorsInput{
+			IndexArn: aws.String(rs.Primary.Attributes["index_arn"]),
+			Vectors: []awstypes.PutInputVector{{
+				Key:      aws.String(key),
+				Data:     &awstypes.VectorDataMemberFloat32{Value: value},
+				Metadata: metadata,
+			}},
+		})
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
