@@ -43,26 +43,7 @@ func confirmationSettingsEqualityFunc(ctx context.Context, oldValue, newValue fw
 			return false, diags
 		}
 
-		oldPromptSpec, di := oldConfirmationSettings.PromptSpecification.ToPtr(ctx)
-		diags = append(diags, di...)
-		if diags.HasError() {
-			return false, diags
-		}
-
-		newPromptSpec, di := newConfirmationSettings.PromptSpecification.ToPtr(ctx)
-		diags = append(diags, di...)
-		if diags.HasError() {
-			return false, diags
-		}
-
-		if !oldPromptSpec.AllowInterrupt.Equal(newPromptSpec.AllowInterrupt) ||
-			!oldPromptSpec.MaxRetries.Equal(newPromptSpec.MaxRetries) ||
-			!oldPromptSpec.MessageGroup.Equal(newPromptSpec.MessageGroup) ||
-			!oldPromptSpec.MessageSelectionStrategy.Equal(newPromptSpec.MessageSelectionStrategy) {
-			return false, diags
-		}
-
-		return arePromptAttemptsEqual(ctx, oldPromptSpec.PromptAttemptsSpecification, newPromptSpec.PromptAttemptsSpecification, oldPromptSpec.MaxRetries.ValueInt64())
+		return evaluatePromptSpecification(ctx, oldConfirmationSettings.PromptSpecification, newConfirmationSettings.PromptSpecification)
 	}
 
 	return false, diags
@@ -134,35 +115,92 @@ func subSlotSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.
 				}
 
 				if oldValueElicitationSetting != nil && newValueElicitationSetting != nil {
-					if !oldValueElicitationSetting.DefaultValueSpecification.Equal(newValueElicitationSetting.DefaultValueSpecification) ||
-						!oldValueElicitationSetting.SampleUtterance.Equal(newValueElicitationSetting.SampleUtterance) ||
-						!oldValueElicitationSetting.WaitAndContinueSpecification.Equal(newValueElicitationSetting.WaitAndContinueSpecification) {
-						return false, diags
-					}
-
-					oldPromptSpec, di := oldValueElicitationSetting.PromptSpecification.ToPtr(ctx)
-					diags = append(diags, di...)
-					if diags.HasError() {
-						return false, diags
-					}
-
-					newPromptSpec, di := newValueElicitationSetting.PromptSpecification.ToPtr(ctx)
-					diags = append(diags, di...)
-					if diags.HasError() {
-						return false, diags
-					}
-
-					if !oldPromptSpec.AllowInterrupt.Equal(newPromptSpec.AllowInterrupt) ||
-						!oldPromptSpec.MaxRetries.Equal(newPromptSpec.MaxRetries) ||
-						!oldPromptSpec.MessageGroup.Equal(newPromptSpec.MessageGroup) ||
-						!oldPromptSpec.MessageSelectionStrategy.Equal(newPromptSpec.MessageSelectionStrategy) {
-						return false, diags
-					}
-
-					return arePromptAttemptsEqual(ctx, oldPromptSpec.PromptAttemptsSpecification, newPromptSpec.PromptAttemptsSpecification, oldPromptSpec.MaxRetries.ValueInt64())
+					return evalValueElicitationSetting(ctx, oldValueElicitationSetting, newValueElicitationSetting)
 				}
 			}
 		}
+	}
+
+	return false, diags
+}
+
+func valueElicitationSettingEqualityFunc(ctx context.Context, oldValue, newValue fwtypes.NestedCollectionValue[ValueElicitationSettingData]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldValueElicitationSetting, di := oldValue.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	newValueElicitationSetting, di := newValue.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if oldValueElicitationSetting != nil && newValueElicitationSetting != nil {
+		return evalValueElicitationSetting(ctx, oldValueElicitationSetting, newValueElicitationSetting)
+	}
+
+	return false, diags
+}
+
+type ValueElicitationSettinger interface {
+	*ValueElicitationSettingData | *SubSlotValueElicitationSettingData
+}
+
+func evalValueElicitationSetting[T ValueElicitationSettinger](ctx context.Context, oldValueElicitationSetting, newValueElicitationSetting T) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	switch oldSetting := any(oldValueElicitationSetting).(type) {
+	case *ValueElicitationSettingData:
+		newSetting := any(newValueElicitationSetting).(*ValueElicitationSettingData)
+		if !oldSetting.DefaultValueSpecification.Equal(newSetting.DefaultValueSpecification) ||
+			!oldSetting.SampleUtterance.Equal(newSetting.SampleUtterance) ||
+			!oldSetting.WaitAndContinueSpecification.Equal(newSetting.WaitAndContinueSpecification) {
+			return false, diags
+		}
+
+		return evaluatePromptSpecification(ctx, oldSetting.PromptSpecification, newSetting.PromptSpecification)
+	case *SubSlotValueElicitationSettingData:
+		newSetting := any(newValueElicitationSetting).(*SubSlotValueElicitationSettingData)
+		if !oldSetting.DefaultValueSpecification.Equal(newSetting.DefaultValueSpecification) ||
+			!oldSetting.SampleUtterance.Equal(newSetting.SampleUtterance) ||
+			!oldSetting.WaitAndContinueSpecification.Equal(newSetting.WaitAndContinueSpecification) {
+			return false, diags
+		}
+
+		return evaluatePromptSpecification(ctx, oldSetting.PromptSpecification, newSetting.PromptSpecification)
+	}
+
+	return false, diags
+}
+
+func evaluatePromptSpecification(ctx context.Context, oldSetting, newSetting fwtypes.ListNestedObjectValueOf[PromptSpecification]) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	oldPromptSpec, di := oldSetting.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	newPromptSpec, di := newSetting.ToPtr(ctx)
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	if oldPromptSpec != nil && newPromptSpec != nil {
+		if !oldPromptSpec.AllowInterrupt.Equal(newPromptSpec.AllowInterrupt) ||
+			!oldPromptSpec.MaxRetries.Equal(newPromptSpec.MaxRetries) ||
+			!oldPromptSpec.MessageGroup.Equal(newPromptSpec.MessageGroup) ||
+			!oldPromptSpec.MessageSelectionStrategy.Equal(newPromptSpec.MessageSelectionStrategy) {
+			return false, diags
+		}
+
+		return arePromptAttemptsEqual(ctx, oldPromptSpec.PromptAttemptsSpecification, newPromptSpec.PromptAttemptsSpecification, oldPromptSpec.MaxRetries.ValueInt64())
 	}
 
 	return false, diags
