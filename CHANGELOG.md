@@ -1,4 +1,9 @@
 ## 6.4.0 (Unreleased)
+
+BUG FIXES:
+
+* aws_bedrockagent_agent_action_group: Fix issue reading back value of `parent_action_group_signature` ([#43355](https://github.com/hashicorp/terraform-provider-aws/issues/43355))
+
 ## 6.3.0 (July 10, 2025)
 
 FEATURES:
