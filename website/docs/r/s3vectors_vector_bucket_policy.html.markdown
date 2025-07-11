@@ -20,7 +20,19 @@ resource "aws_s3vectors_vector_bucket_policy" "example" {
 
   policy = <<EOF
 {
-  TODO
+  "Version": "2012-10-17",
+  "Id": "writePolicy",
+  "Statement": [{
+    "Sid": "writeStatement",
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": "123456789012"
+    },
+    "Action": [
+      "s3vectors:PutVectors"
+    ],
+    "Resource": "*"
+  }]
 }
 EOF
 }

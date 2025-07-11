@@ -252,7 +252,7 @@ func testAccCheckVectorBucketExists(ctx context.Context, n string, v *awstypes.V
 
 		*v = *output
 
-		return err
+		return nil
 	}
 }
 

@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/s3vectors/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -25,11 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3VectorsIndex_basic(t *testing.T) {
+func TestAccS3VectorsVectorBucketPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.Index
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3vectors_index.test"
+	resourceName := "aws_s3vectors_vector_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -38,12 +36,12 @@ func TestAccS3VectorsIndex_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName),
+				Config: testAccVectorBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
+					testAccCheckVectorBucketPolicyExists(ctx, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -51,34 +49,29 @@ func TestAccS3VectorsIndex_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_type"), tfknownvalue.StringExact(awstypes.DataTypeFloat32)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dimension"), knownvalue.Int32Exact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("distance_metric"), tfknownvalue.StringExact(awstypes.DistanceMetricEuclidean)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("index_arn"), tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+/index/.+`))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("index_name"), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vector_bucket_arn"), knownvalue.NotNull()),
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						"index_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+/index/.+`)),
+						"vector_bucket_arn": tfknownvalue.RegionalARNRegexp("s3vectors", regexache.MustCompile(`bucket/.+`)),
 					}),
 				},
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "index_arn"),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vector_bucket_arn"),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "index_arn",
+				ImportStateVerifyIdentifierAttribute: "vector_bucket_arn",
+				ImportStateVerifyIgnore:              []string{names.AttrPolicy},
 			},
 		},
 	})
 }
 
-func TestAccS3VectorsIndex_disappears(t *testing.T) {
+func TestAccS3VectorsVectorBucketPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v awstypes.Index
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3vectors_index.test"
+	resourceName := "aws_s3vectors_vector_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -87,13 +80,13 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName),
+				Config: testAccVectorBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceIndex, resourceName),
+					testAccCheckVectorBucketPolicyExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceVectorBucketPolicy, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -106,16 +99,16 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVectorBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3vectors_index" {
+			if rs.Type != "aws_s3vectors_vector_bucket_policy" {
 				continue
 			}
 
-			_, err := tfs3vectors.FindIndexByARN(ctx, conn, rs.Primary.Attributes["index_arn"])
+			_, err := tfs3vectors.FindVectorBucketPolicyByARN(ctx, conn, rs.Primary.Attributes["vector_bucket_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -125,14 +118,14 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("S3 Vectors Index %s still exists", rs.Primary.ID)
+			return fmt.Errorf("S3 Vectors Vector Bucket Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIndexExists(ctx context.Context, n string, v *awstypes.Index) resource.TestCheckFunc {
+func testAccCheckVectorBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -141,31 +134,40 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *awstypes.Index) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
 
-		output, err := tfs3vectors.FindIndexByARN(ctx, conn, rs.Primary.Attributes["index_arn"])
+		_, err := tfs3vectors.FindVectorBucketPolicyByARN(ctx, conn, rs.Primary.Attributes["vector_bucket_arn"])
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 
-func testAccIndexConfig_basic(rName string) string {
+func testAccVectorBucketPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3vectors_vector_bucket" "test" {
-  vector_bucket_name = "%[1]s-bucket"
+  vector_bucket_name = %[1]q
 }
 
-resource "aws_s3vectors_index" "test" {
-  index_name         = %[1]q
-  vector_bucket_name = aws_s3vectors_vector_bucket.test.vector_bucket_name
+resource "aws_s3vectors_vector_bucket_policy" "test" {
+  vector_bucket_arn = aws_s3vectors_vector_bucket.test.vector_bucket_arn
 
-  data_type       = "float32"
-  dimension       = 2
-  distance_metric = "euclidean"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Id": "writePolicy",
+  "Statement": [{
+    "Sid": "writeStatement",
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": "${data.aws_caller_identity.current.account_id}"
+    },
+    "Action": [
+      "s3vectors:PutVectors"
+    ],
+    "Resource": "*"
+  }]
 }
+EOF
+}
+
+data "aws_caller_identity" "current" {}
 `, rName)
 }
