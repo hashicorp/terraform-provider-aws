@@ -1,5 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_rds_integration" "test" {
-{{- template "region" }}
   integration_name = var.rName
   source_arn       = aws_rds_cluster.test.arn
   target_arn       = aws_redshiftserverless_namespace.test.arn
@@ -11,18 +13,15 @@ resource "aws_rds_integration" "test" {
     aws_redshiftserverless_workgroup.test,
     aws_redshift_resource_policy.test,
   ]
-{{- template "tags" . }}
 }
 
 # testAccIntegrationConfig_base
 
 resource "aws_redshiftserverless_namespace" "test" {
-{{- template "region" }}
   namespace_name = var.rName
 }
 
 resource "aws_redshiftserverless_workgroup" "test" {
-{{- template "region" }}
   namespace_name = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name = var.rName
   base_capacity  = 8
@@ -71,7 +70,6 @@ resource "aws_redshiftserverless_workgroup" "test" {
 # The "aws_redshiftserverless_resource_policy" resource doesn't support the following action types.
 # Therefore we need to use the "aws_redshift_resource_policy" resource for RedShift-serverless instead.
 resource "aws_redshift_resource_policy" "test" {
-{{- template "region" }}
   resource_arn = aws_redshiftserverless_namespace.test.arn
   policy = jsonencode({
     Version = "2008-10-17"
@@ -133,7 +131,6 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_security_group" "test" {
-{{- template "region" }}
   name   = var.rName
   vpc_id = aws_vpc.test.id
 
@@ -153,13 +150,11 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_db_subnet_group" "test" {
-{{- template "region" }}
   name       = var.rName
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster_parameter_group" "test" {
-{{- template "region" }}
   name   = var.rName
   family = "aurora-mysql8.0"
 
@@ -174,7 +169,6 @@ resource "aws_rds_cluster_parameter_group" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-{{- template "region" }}
   cluster_identifier  = var.rName
   engine              = "aurora-mysql"
   engine_version      = "8.0.mysql_aurora.3.05.2"
@@ -191,7 +185,6 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-{{- template "region" }}
   identifier         = var.rName
   cluster_identifier = aws_rds_cluster.test.id
   instance_class     = "db.r6g.large"
@@ -200,7 +193,6 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-{{- template "region" }}
   cluster_identifier  = var.rName
   availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
@@ -215,4 +207,48 @@ resource "aws_redshift_cluster" "test" {
   encrypted                            = true
 }
 
-{{ template "acctest.ConfigVPCWithSubnets" 3 }}
+# acctest.ConfigVPCWithSubnets(rName, 3)
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.0.0"
+    }
+  }
+}
+
+provider "aws" {}
