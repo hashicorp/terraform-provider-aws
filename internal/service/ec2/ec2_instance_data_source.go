@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -312,6 +313,18 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"public_dns_name_dualstack": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_dns_name_ipv4": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_dns_name_ipv6": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -494,6 +507,11 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
 
+	// values for these are optionally set below
+	d.Set("public_dns_name_dualstack", "")
+	d.Set("public_dns_name_ipv4", "")
+	d.Set("public_dns_name_ipv6", "")
+
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
 
@@ -506,7 +524,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("iam_instance_profile", nil)
 	}
 
-	// iterate through network interfaces, and set subnet, network_interface, public_addr
+	// find primary network interface, and set subnet, network_interface, IP addresses & DNS names
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
@@ -530,6 +548,27 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 				}
 				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
 					return fmt.Errorf("setting ipv6_addresses: %w", err)
+				}
+
+				var ipv6, ipv4 net.IP
+				region := meta.(*conns.AWSClient).Region(ctx)
+
+				if len(ipV6Addresses) > 0 {
+					ipv6 = net.ParseIP(ipV6Addresses[0])
+					if ipv6 == nil {
+						return fmt.Errorf("parsing IPv6 address: %s", ipV6Addresses[0])
+					}
+					d.Set("public_dns_name_ipv6", calculatePublicDNSNameIPv6(region, ipv6))
+				}
+
+				ipv4 = net.ParseIP(aws.ToString(instance.PublicIpAddress))
+				if ipv4 != nil && ipv4.To4() != nil {
+					ipv4 = ipv4.To4()
+					d.Set("public_dns_name_ipv4", calculatePublicDNSNameIPv4(region, ipv4))
+				}
+
+				if ipv6 != nil && ipv4 != nil {
+					d.Set("public_dns_name_dualstack", calculatePublicDNSNameDualstack(region, ipv6, ipv4))
 				}
 			}
 		}
