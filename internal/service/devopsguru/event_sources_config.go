@@ -39,7 +39,7 @@ const (
 
 type eventSourcesConfigResource struct {
 	framework.ResourceWithModel[eventSourcesConfigResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *eventSourcesConfigResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

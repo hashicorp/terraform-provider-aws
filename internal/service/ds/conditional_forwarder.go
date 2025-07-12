@@ -84,7 +84,7 @@ func resourceConditionalForwarderCreate(ctx context.Context, d *schema.ResourceD
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findConditionalForwarderByTwoPartKey(ctx, conn, directoryID, domainName)
 	})
 

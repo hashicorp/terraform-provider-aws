@@ -115,7 +115,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppFlowConnectorProfile_Identity_ExistingResource_v5(t *testing.T) {
+func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV5(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ConnectorProfile
@@ -173,7 +173,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_v5(t *testing.T) {
 	})
 }
 
-func TestAccAppFlowConnectorProfile_Identity_ExistingResource_v6(t *testing.T) {
+func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV6(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ConnectorProfile

@@ -112,7 +112,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err = tfresource.RetryUntilEqual(ctx, timeout, autoEnableControls, func() (bool, error) {
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, autoEnableControls, func(ctx context.Context) (bool, error) {
 		output, err := findHubByARN(ctx, conn, arn)
 
 		if err != nil {

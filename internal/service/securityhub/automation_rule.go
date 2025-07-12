@@ -43,7 +43,7 @@ func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigur
 
 type automationRuleResource struct {
 	framework.ResourceWithModel[automationRuleResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

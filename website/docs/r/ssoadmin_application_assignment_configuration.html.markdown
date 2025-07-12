@@ -20,7 +20,7 @@ This resource can be used to adjust this default behavior if necessary.
 
 ```terraform
 resource "aws_ssoadmin_application_assignment_configuration" "example" {
-  application_arn     = aws_ssoadmin_application.example.application_arn
+  application_arn     = aws_ssoadmin_application.example.arn
   assignment_required = true
 }
 ```

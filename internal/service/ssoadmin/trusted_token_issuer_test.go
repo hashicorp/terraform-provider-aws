@@ -31,12 +31,11 @@ func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSOAdminTrustedTokenIssuer_basic,
-		acctest.CtDisappears:        testAccSSOAdminTrustedTokenIssuer_disappears,
-		"update":                    testAccSSOAdminTrustedTokenIssuer_update,
-		"tags":                      testAccSSOAdminTrustedTokenIssuer_tags,
-		"Identity":                  testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
-		"Identity_ExistingResource": testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource,
+		acctest.CtBasic:      testAccSSOAdminTrustedTokenIssuer_basic,
+		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
+		"update":             testAccSSOAdminTrustedTokenIssuer_update,
+		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
