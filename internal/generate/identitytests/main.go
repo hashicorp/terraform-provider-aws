@@ -147,34 +147,38 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		basicConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
+		basicConfigTmplFile := fmt.Sprintf("%s_basic.gtpl", sourceName)
+		basicConfigTmplPath := path.Join("testdata", "tmpl", basicConfigTmplFile)
 		var configTmplFile string
-		var configTmpl string
-		if _, err := os.Stat(basicConfigTmplFile); err == nil {
+		var configTmplPath string
+		if _, err := os.Stat(basicConfigTmplPath); err == nil {
 			configTmplFile = basicConfigTmplFile
+			configTmplPath = basicConfigTmplPath
 		} else if !errors.Is(err, os.ErrNotExist) {
-			g.Fatalf("accessing config template %q: %w", basicConfigTmplFile, err)
+			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
 		}
 
-		tagsConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
-		if configTmplFile == "" {
-			if _, err := os.Stat(tagsConfigTmplFile); err == nil {
+		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
+		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
+		if configTmplPath == "" {
+			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
 				configTmplFile = tagsConfigTmplFile
+				configTmplPath = tagsConfigTmplPath
 			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplFile, err)
+				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
 			}
 		}
 
-		if configTmplFile == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplFile, tagsConfigTmplFile)
+		if configTmplPath == "" {
+			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
 			continue
 		}
 
-		b, err := os.ReadFile(configTmplFile)
+		b, err := os.ReadFile(configTmplPath)
 		if err != nil {
-			g.Fatalf("reading config template %q: %w", configTmplFile, err)
+			g.Fatalf("reading config template %q: %w", configTmplPath, err)
 		}
-		configTmpl = string(b)
+		configTmpl := string(b)
 		resource.GenerateConfig = true
 
 		if resource.GenerateConfig {
@@ -194,7 +198,7 @@ func main() {
 
 			_, err = tfTemplates.New("body").Parse(configTmpl)
 			if err != nil {
-				g.Fatalf("parsing config template %q: %s", tagsConfigTmplFile, err)
+				g.Fatalf("parsing config template %q: %s", configTmplPath, err)
 			}
 
 			_, err = tfTemplates.New("region").Parse("")
@@ -211,24 +215,44 @@ func main() {
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
 
 			// if resource.HasV6_0SDKv2Fix {
-			commonV5 := common
-			commonV5.ExternalProviders = map[string]requiredProvider{
-				"aws": {
-					Source:  "hashicorp/aws",
-					Version: "5.100.0",
-				},
-			}
-			generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplates, commonV5)
+			if !resource.MutableIdentity {
+				tfTemplatesV5, err := tfTemplates.Clone()
+				if err != nil {
+					g.Fatalf("cloning Terraform config template: %s", err)
+				}
+				ext := filepath.Ext(configTmplFile)
+				name := strings.TrimSuffix(configTmplFile, ext)
+				configTmplV5File := name + "_v5.100.0" + ext
+				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+				if _, err := os.Stat(configTmplV5Path); err == nil {
+					b, err := os.ReadFile(configTmplV5Path)
+					if err != nil {
+						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+					}
+					configTmplV5 := string(b)
+					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+					if err != nil {
+						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+					}
+				}
+				commonV5 := common
+				commonV5.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "5.100.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
 
-			commonV6 := common
-			commonV6.ExternalProviders = map[string]requiredProvider{
-				"aws": {
-					Source:  "hashicorp/aws",
-					Version: "6.0.0",
-				},
+				commonV6 := common
+				commonV6.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "6.0.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
 			}
-			generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
-			// }
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
 			if err != nil {
