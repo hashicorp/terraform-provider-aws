@@ -940,6 +940,9 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{ $step := 1 -}}
 			// Step {{ $step }}: Create pre-Identity
 			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -957,6 +960,9 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 
 			// Step {{ ($step = inc $step) | print }}: v6.0 Identity set on refresh
 			{
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderNameAlternate),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1009,7 +1015,11 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 
 			// Step {{ ($step = inc $step) | print }}: Current version
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+				{{ else }}
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
