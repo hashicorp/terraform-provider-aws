@@ -931,6 +931,9 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 }
 {{ end }}
 {{ else }}
+{{ if .MutableIdentity }}
+// Resource Identity not supported for Mutable Identity
+{{ else }}
 func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 	{{- template "Init" . }}
 
@@ -1067,4 +1070,5 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 		},
 	})
 }
+{{ end }}
 {{ end }}
