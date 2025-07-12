@@ -1017,7 +1017,7 @@ func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{
 				{{ if .UseAlternateAccount -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-				{{ else }}
+				{{ else -}}
 					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/basic/"),
