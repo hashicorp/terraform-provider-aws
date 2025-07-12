@@ -164,7 +164,6 @@ func TestAccShieldApplicationLayerAutomaticResponse_Identity_ExistingResource(t 
 
 			// Step 3: Current version
 			{
-
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ApplicationLayerAutomaticResponse/basic/"),
 				ConfigVariables: config.Variables{

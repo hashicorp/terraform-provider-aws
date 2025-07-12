@@ -273,7 +273,6 @@ func TestAccPaymentCryptographyKey_Identity_ExistingResource(t *testing.T) {
 
 			// Step 3: Current version
 			{
-
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Key/basic/"),
 				ConfigVariables:          config.Variables{},

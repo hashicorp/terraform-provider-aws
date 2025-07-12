@@ -288,7 +288,6 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 
 			// Step 3: Current version
 			{
-
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AutomationRule/basic/"),
 				ConfigVariables: config.Variables{

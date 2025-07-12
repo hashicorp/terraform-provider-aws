@@ -288,7 +288,6 @@ func testAccResourceExplorer2View_Identity_ExistingResource(t *testing.T) {
 
 			// Step 3: Current version
 			{
-
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/View/basic/"),
 				ConfigVariables: config.Variables{
