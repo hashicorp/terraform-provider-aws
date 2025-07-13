@@ -227,7 +227,7 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverRule_delegate(t *testing.T) {
+func TestAccRoute53ResolverRule_delegationRecord(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule1 awstypes.ResolverRule
 	resourceName := "aws_route53_resolver_rule.test"
@@ -243,7 +243,7 @@ func TestAccRoute53ResolverRule_delegate(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_delegate(rName, delegationRecord, 0),
+				Config: testAccRuleConfig_delegationRecord(rName, delegationRecord, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule1),
 					resource.TestCheckResourceAttr(resourceName, "delegation_record", delegationRecord),
@@ -258,7 +258,7 @@ func TestAccRoute53ResolverRule_delegate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_delegate(rName, delegationRecord, 1),
+				Config: testAccRuleConfig_delegationRecord(rName, delegationRecord, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule1),
 					resource.TestCheckResourceAttr(resourceName, "delegation_record", delegationRecord),
@@ -714,7 +714,7 @@ resource "aws_route53_resolver_rule" "test" {
 `, rName, domainName)
 }
 
-func testAccRuleConfig_delegate(rName, delegationRecord string, resolverEndpointId int) string {
+func testAccRuleConfig_delegationRecord(rName, delegationRecord string, resolverEndpointId int) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
   delegation_record = %[2]q
