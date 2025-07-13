@@ -249,9 +249,9 @@ data "aws_route53_resolver_rule" "by_name_and_rule_type" {
 func testAccRuleDataSourceConfig_delegatationRecord(rName, delegationRecord string) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
-  delegation_record = %[2]q
-  rule_type   = "DELEGATE"
-  name        = %[1]q
+  delegation_record    = %[2]q
+  rule_type            = "DELEGATE"
+  name                 = %[1]q
   resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 }
 
