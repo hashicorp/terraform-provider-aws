@@ -61,7 +61,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"recurrence":              testAccRotation_recurrence,
 			"tags":                    testAccSSMContactsRotation_tagsSerial,
 			"Identity":                testAccSSMContactsRotation_IdentitySerial,
-			"Identity_RegionOverride": testAccRotation_Identity_RegionOverride,
+			"Identity_RegionOverride": testAccSSMContactsRotation_Identity_RegionOverride,
 		},
 		"RotationDataSource": {
 			acctest.CtBasic:   testAccRotationDataSource_basic,

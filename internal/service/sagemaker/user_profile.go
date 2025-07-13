@@ -32,16 +32,18 @@ import (
 
 // @SDKResource("aws_sagemaker_user_profile", name="User Profile")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("domain_id")
+// @IdentityAttribute("user_profile_name")
+// @IdAttrFormat("{domain_id}/{user_profile_name}")
+// @ImportIDHandler("userProfileImportID")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeUserProfileOutput")
 func resourceUserProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserProfileCreate,
 		ReadWithoutTimeout:   resourceUserProfileRead,
 		UpdateWithoutTimeout: resourceUserProfileUpdate,
 		DeleteWithoutTimeout: resourceUserProfileDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -954,13 +956,12 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI User Profile (%s): %s", name, err)
 	}
 
-	userProfileARN := aws.ToString(output.UserProfileArn)
-	domainID, userProfileName, err := decodeUserProfileName(userProfileARN)
+	domainID, userProfileName, err := parseUserProfileID(aws.ToString(output.UserProfileArn))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(userProfileARN)
+	d.SetId(createUserProfileID(domainID, userProfileName))
 
 	if _, err := waitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI User Profile (%s) create: %s", d.Id(), err)
@@ -973,7 +974,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	domainID, userProfileName, err := decodeUserProfileName(d.Id())
+	domainID, userProfileName, err := parseUserProfileID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -990,6 +991,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI User Profile (%s): %s", d.Id(), err)
 	}
 
+	d.SetId(createUserProfileID(domainID, userProfileName))
 	d.Set(names.AttrARN, userProfile.UserProfileArn)
 	d.Set("domain_id", userProfile.DomainId)
 	d.Set("home_efs_file_system_uid", userProfile.HomeEfsFileSystemUid)
@@ -1007,7 +1009,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	domainID, userProfileName, err := decodeUserProfileName(d.Id())
+	domainID, userProfileName, err := parseUserProfileID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -1037,7 +1039,7 @@ func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	domainID, userProfileName, err := decodeUserProfileName(d.Id())
+	domainID, userProfileName, err := parseUserProfileID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -1062,13 +1064,23 @@ func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func decodeUserProfileName(id string) (string, string, error) {
-	userProfileARN, err := arn.Parse(id)
-	if err != nil {
-		return "", "", err
+func createUserProfileID(domainID, userProfileName string) string {
+	return domainID + "/" + userProfileName
+}
+
+func parseUserProfileID(id string) (string, string, error) {
+	var userProfileResourceNameName string
+	if arn.IsARN(id) {
+		userProfileARN, err := arn.Parse(id)
+		if err != nil {
+			return "", "", err
+		}
+
+		userProfileResourceNameName = strings.TrimPrefix(userProfileARN.Resource, "user-profile/")
+	} else {
+		userProfileResourceNameName = id
 	}
 
-	userProfileResourceNameName := strings.TrimPrefix(userProfileARN.Resource, "user-profile/")
 	parts := strings.Split(userProfileResourceNameName, "/")
 
 	if len(parts) != 2 {
@@ -1165,4 +1177,23 @@ func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainI
 	}
 
 	return nil, err
+}
+
+type userProfileImportID struct{}
+
+func (userProfileImportID) Create(d *schema.ResourceData) string {
+	return createUserProfileID(d.Get("domain_id").(string), d.Get("user_profile_name").(string))
+}
+
+func (userProfileImportID) Parse(id string) (string, map[string]string, error) {
+	domainID, userProfileName, err := parseUserProfileID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]string{
+		"domain_id":         domainID,
+		"user_profile_name": userProfileName,
+	}
+	return id, result, nil
 }

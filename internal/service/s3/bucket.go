@@ -52,6 +52,7 @@ const (
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
 // @WrappedImport(false)
+// @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
@@ -775,7 +776,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 
@@ -1589,7 +1590,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 

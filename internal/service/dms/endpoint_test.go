@@ -3647,12 +3647,11 @@ resource "aws_redshift_cluster" "test" {
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
-  node_type          = "dc2.large"
+  node_type          = "ra3.large"
   cluster_type       = "single-node"
   encrypted          = true
 
-  automated_snapshot_retention_period = 0
-  skip_final_snapshot                 = true
+  skip_final_snapshot = true
 }
 
 data "aws_partition" "current" {}

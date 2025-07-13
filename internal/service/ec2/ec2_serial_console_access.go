@@ -17,6 +17,7 @@ import (
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
 // @Region(global=true)
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 func resourceSerialConsoleAccess() *schema.Resource {

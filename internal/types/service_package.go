@@ -97,30 +97,31 @@ type ServicePackageSDKResource struct {
 
 type Identity struct {
 	IsGlobalResource       bool   // All
-	Singleton              bool   // Singleton
-	ARN                    bool   // ARN
+	IsSingleton            bool   // Singleton
+	IsARN                  bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
 	IdentityAttribute      string // ARN, Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
+	IsMutable              bool
 }
 
 func (i Identity) HasInherentRegion() bool {
 	if i.IsGlobalResource {
 		return false
 	}
-	if i.Singleton {
+	if i.IsSingleton {
 		return true
 	}
-	if i.ARN && !i.IsGlobalARNFormat {
+	if i.IsARN && !i.IsGlobalARNFormat {
 		return true
 	}
 	return false
 }
 
-func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -138,6 +139,11 @@ func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -172,7 +178,7 @@ func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
 func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource:  isGlobalResource,
-		ARN:               true,
+		IsARN:             true,
 		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -206,8 +212,8 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
@@ -225,10 +231,16 @@ func RegionalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -243,9 +255,15 @@ func GlobalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -260,13 +278,18 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
 func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
@@ -285,7 +308,7 @@ func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: false,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
@@ -310,6 +333,20 @@ type IdentityOptsFunc func(opts *Identity)
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	return func(opts *Identity) {
 		opts.IdentityDuplicateAttrs = attrs
+	}
+}
+
+// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+// WithIdentityFix is for use ONLY for resource types that must be able to modify Resource Identity due to an error
+func WithIdentityFix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
 	}
 }
 

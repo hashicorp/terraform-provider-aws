@@ -260,7 +260,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating AWS Account (%s) name: %s", d.Id(), err)
 		}
 
-		_, err = tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), name, func() (string, error) {
+		_, err = tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutUpdate), name, func(ctx context.Context) (string, error) {
 			output, err := findAccountByID(ctx, connOrg, d.Id())
 
 			if err != nil {

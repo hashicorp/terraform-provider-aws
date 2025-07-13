@@ -22,7 +22,8 @@ func testAccSSMContactsRotation_IdentitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccSSMContactsRotation_Identity_Basic,
+		acctest.CtBasic:    testAccSSMContactsRotation_Identity_Basic,
+		"ExistingResource": testAccSSMContactsRotation_Identity_ExistingResource,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
