@@ -204,10 +204,39 @@ func (r *s3AccessPointAttachmentResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// s3_access_point.policy is write-only.
+	// Copy value from Plan.
+	policy := fwtypes.IAMPolicyNull()
+	s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if s3AccessPoint != nil {
+		policy = s3AccessPoint.Policy
+	}
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// s3_access_point.policy is write-only.
+	if !policy.IsNull() {
+		s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		s3AccessPoint.Policy = policy
+
+		tfS3AccessPoint, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, s3AccessPoint)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.S3AccessPoint = tfS3AccessPoint
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -238,11 +267,35 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 		return
 	}
 
+	// s3_access_point.policy is write-only.
+	// Copy value from State.
+	s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	policy := s3AccessPoint.Policy
+
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// s3_access_point.policy is write-only.
+	s3AccessPoint, diags = data.S3AccessPoint.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	s3AccessPoint.Policy = policy
+
+	tfS3AccessPoint, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, s3AccessPoint)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.S3AccessPoint = tfS3AccessPoint
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
