@@ -218,7 +218,7 @@ func main() {
 
 			// if resource.HasV6_0SDKv2Fix {
 			if !resource.MutableIdentity {
-				if resource.PreIdentityVersion != nil && resource.PreIdentityVersion.Equal(v5_100_0) {
+				if resource.PreIdentityVersion.Equal(v5_100_0) {
 					tfTemplatesV5, err := tfTemplates.Clone()
 					if err != nil {
 						g.Fatalf("cloning Terraform config template: %s", err)
@@ -246,16 +246,25 @@ func main() {
 						},
 					}
 					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
-				}
 
-				commonV6 := common
-				commonV6.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: "6.0.0",
-					},
+					commonV6 := common
+					commonV6.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "6.0.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+				} else {
+					commonPreIdentity := common
+					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: resource.PreIdentityVersion.String(),
+						},
+					}
+					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
 				}
-				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
