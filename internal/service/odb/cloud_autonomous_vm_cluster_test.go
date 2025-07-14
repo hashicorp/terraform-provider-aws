@@ -57,11 +57,11 @@ func TestAccODBCloudAutonomousVmClusterCreationBasic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
-			//testAccPreCheck(ctx, t)
+			autonomousVMClusterTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterTest.avmcWithMandatoryParamsOnly(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
@@ -99,7 +99,7 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterTest.avmcWithMandatoryParamsWithTag(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
@@ -149,11 +149,11 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
-			//testAccPreCheck(ctx, t)
+			autonomousVMClusterTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterTest.avmcWithMandatoryParamsOnly(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
@@ -167,7 +167,21 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func (autonomousVMClusterResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
+
+	input := &odb.ListCloudAutonomousVmClustersInput{}
+
+	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+func (autonomousVMClusterResourceTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
