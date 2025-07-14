@@ -240,6 +240,7 @@ variable "service_labels" {
     "notifications",
     "notificationscontacts",
     "oam",
+    "odb",
     "opensearch",
     "opensearchserverless",
     "opsworks",
