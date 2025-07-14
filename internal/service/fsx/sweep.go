@@ -20,16 +20,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_fsx_backup", sweepBackups)
 	awsv2.Register("aws_fsx_lustre_file_system", sweepLustreFileSystems, "aws_datasync_location", "aws_m2_environment")
-
-	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
-		Name: "aws_fsx_ontap_file_system",
-		F:    sweepONTAPFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_fsx_ontap_storage_virtual_machine",
-			"aws_m2_environment",
-		},
-	})
+	awsv2.Register("aws_fsx_ontap_file_system", sweepONTAPFileSystems, "aws_datasync_location", "aws_fsx_ontap_storage_virtual_machine", "aws_m2_environment")
 
 	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
 		Name: "aws_fsx_ontap_storage_virtual_machine",
@@ -121,27 +112,17 @@ func sweepLustreFileSystems(ctx context.Context, client *conns.AWSClient) ([]swe
 	return sweepResources, nil
 }
 
-func sweepONTAPFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepONTAPFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx ONTAP File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx ONTAP File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -157,13 +138,7 @@ func sweepONTAPFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx ONTAP File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepONTAPStorageVirtualMachine(region string) error {
