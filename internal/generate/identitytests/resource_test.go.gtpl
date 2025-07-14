@@ -667,6 +667,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					ConfigStateChecks: []statecheck.StateCheck{
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
 								{{ .ARNAttribute }}: knownvalue.NotNull(),
 							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
@@ -721,6 +724,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					ConfigStateChecks: []statecheck.StateCheck{
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
 								{{ .ARNAttribute }}: knownvalue.NotNull(),
 							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
@@ -774,6 +780,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					ConfigStateChecks: []statecheck.StateCheck{
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
 								{{ .ARNAttribute }}: knownvalue.NotNull(),
 							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
@@ -853,6 +862,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					ConfigStateChecks: []statecheck.StateCheck{
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
 								{{ .ARNAttribute }}: knownvalue.Null(),
 							}),
 						{{ else if .IsRegionalSingleton -}}
@@ -897,6 +909,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 					ConfigStateChecks: []statecheck.StateCheck{
 						{{ if .ArnIdentity -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
 								{{ .ARNAttribute }}: knownvalue.NotNull(),
 							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
@@ -985,6 +1000,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ConfigStateChecks: []statecheck.StateCheck{
 							{{ if .ArnIdentity -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+									{{ end -}}
 									{{ .ARNAttribute }}: knownvalue.NotNull(),
 								}),
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
@@ -1037,6 +1055,9 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						ConfigStateChecks: []statecheck.StateCheck{
 							{{ if .ArnIdentity -}}
 								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+									{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+									{{ end -}}
 									{{ .ARNAttribute }}: knownvalue.NotNull(),
 								}),
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
