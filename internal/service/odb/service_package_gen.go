@@ -16,9 +16,27 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newDataSourceCloudAutonomousVmCluster,
+			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
+			Name:     "Cloud Autonomous Vm Cluster",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceCloudVmCluster,
+			TypeName: "aws_odb_cloud_vm_cluster",
+			Name:     "Cloud Vm Cluster",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDbServersList,
+			TypeName: "aws_odb_db_servers_list",
+			Name:     "Db Servers List",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -39,9 +57,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceCloudAutonomousVmCluster,
+			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
+			Name:     "Cloud Autonomous Vm Cluster",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceCloudVmCluster,
+			TypeName: "aws_odb_cloud_vm_cluster",
+			Name:     "Cloud Vm Cluster",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
