@@ -174,6 +174,7 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
