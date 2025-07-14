@@ -22,18 +22,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_fsx_lustre_file_system", sweepLustreFileSystems, "aws_datasync_location", "aws_m2_environment")
 	awsv2.Register("aws_fsx_ontap_file_system", sweepONTAPFileSystems, "aws_datasync_location", "aws_fsx_ontap_storage_virtual_machine", "aws_m2_environment")
 	awsv2.Register("aws_fsx_ontap_storage_virtual_machine", sweepONTAPStorageVirtualMachine, "aws_fsx_ontap_volume")
-
 	awsv2.Register("aws_fsx_ontap_volume", sweepONTAPVolumes)
-
-	resource.AddTestSweepers("aws_fsx_openzfs_file_system", &resource.Sweeper{
-		Name: "aws_fsx_openzfs_file_system",
-		F:    sweepOpenZFSFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_fsx_openzfs_volume",
-			"aws_m2_environment",
-		},
-	})
+	awsv2.Register("aws_fsx_openzfs_file_system", sweepOpenZFSFileSystems, "aws_datasync_location", "aws_fsx_openzfs_volume", "aws_m2_environment")
 
 	resource.AddTestSweepers("aws_fsx_openzfs_volume", &resource.Sweeper{
 		Name: "aws_fsx_openzfs_volume",
@@ -161,13 +151,13 @@ func sweepONTAPStorageVirtualMachine(ctx context.Context, client *conns.AWSClien
 
 func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
+	var input fsx.DescribeVolumesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	var sweepResources []sweep.Sweepable
-
-	input := fsx.DescribeVolumesInput{}
 	pages := fsx.NewDescribeVolumesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +166,8 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			if v.VolumeType != awstypes.VolumeTypeOntap {
 				continue
 			}
-			// Skip root volumes
+
+			// Skip root volumes.
 			if v.OntapConfiguration != nil && aws.ToBool(v.OntapConfiguration.StorageVirtualMachineRoot) {
 				continue
 			}
@@ -185,7 +176,6 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			if v.OntapConfiguration != nil && v.OntapConfiguration.SnaplockConfiguration != nil {
 				bypassSnaplock = true
 			}
-
 			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VolumeId))
@@ -199,27 +189,17 @@ func sweepONTAPVolumes(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	return sweepResources, nil
 }
 
-func sweepOpenZFSFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepOpenZFSFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx OpenZFS File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx OpenZFS File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -235,13 +215,7 @@ func sweepOpenZFSFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx OpenZFS File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepOpenZFSVolume(region string) error {
