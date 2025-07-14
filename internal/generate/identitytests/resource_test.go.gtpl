@@ -814,7 +814,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			},
 		})
 	}
-{{ else if .HasV6_0SDKv2Fix }}
+{{ else if .HasV6_0NullValuesError }}
 	func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 		{{- template "Init" . }}
 

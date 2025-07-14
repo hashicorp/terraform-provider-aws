@@ -424,7 +424,7 @@ type ResourceDatum struct {
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
 	IDAttrFormat                string
-	HasV6_0SDKv2Fix             bool
+	HasV6_0NullValuesError      bool
 	HasV6_0RefreshError         bool
 	RequiredEnvVars             []string
 }
@@ -743,7 +743,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			// TODO: allow underscore?
 			case "V60SDKv2Fix":
-				d.HasV6_0SDKv2Fix = true
+				d.HasV6_0NullValuesError = true
 
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
@@ -1006,6 +1006,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.HasRegionOverrideTest = b
+					}
+				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60NullValuesError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0NullValuesError = b
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
