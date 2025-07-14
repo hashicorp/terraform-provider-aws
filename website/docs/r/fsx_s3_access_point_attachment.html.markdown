@@ -19,6 +19,15 @@ resource "aws_fsx_s3_access_point_attachment" "example" {
 
   openzfs_configuration {
     volume_id = aws_fsx_openzfs_volume.example.id
+
+    file_system_identity {
+      type = "POSIX"
+
+      posix_user {
+        uid = 1001
+        gid = 1001
+      }
+    }
   }
 }
 ```
@@ -40,15 +49,36 @@ The following arguments are optional:
 
 The `openzfs_configuration` configuration block supports the following arguments:
 
-* TODO
+* `file_system_identity` - (Required) File system user identity to use for authorizing file read and write requests that are made using the S3 access point. See [`file_system_identity` Block](#file_system_identity-block) for details.
 * `volume_id` - (Required) ID of the FSx for OpenZFS volume to which the S3 access point is attached.
+
+### `file_system_identity` Block
+
+The `file_system_identity` configuration block supports the following arguments:
+
+* `posix_user` - (Required) UID and GIDs of the file system POSIX user. See [`posix_user` Block](#posix_user-block) for details.
+* `type` - (Required) FSx for OpenZFS user identity type. Valid values: `POSIX`.
+
+### `posix_user` Block
+
+The `posix_user` configuration block supports the following arguments:
+
+* `gid` - (Required) GID of the file system user.
+* `secondary_gids` - (Optional) List of secondary GIDs for the file system user..
+* `uid` - (Required) UID of the file system user.
 
 ### `s3_access_point` Block
 
 The `s3_access_point` configuration block supports the following arguments:
 
 * `policy` - (Required) Access policy associated with the S3 access point configuration.
-* TODO
+* `vpc_configuration` - (Optional) Amazon S3 restricts access to the S3 access point to requests made from the specified VPC. See [`vpc_configuration` Block](#vpc_configuration-block) for details.
+
+### `vpc_configuration` Block
+
+The `vpc_configuration` configuration block supports the following arguments:
+
+* `vpc_id` - (Required) VPC ID.
 
 ## Attribute Reference
 
