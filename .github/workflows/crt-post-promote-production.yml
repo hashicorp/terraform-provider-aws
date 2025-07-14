@@ -38,3 +38,17 @@ jobs:
             --ref main \
             --field previous_version=${{ github.event.client_payload.payload.version }} \
             update-changelog.yml
+  post-publish:
+    name: Runs post publish actions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initiate Workflow
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run \
+            --repo ${{ github.repository }} \
+            --ref main \
+            --field release_tag=${{ github.event.client_payload.payload.version }} \
+            post_publish.yml
