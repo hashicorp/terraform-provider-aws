@@ -1353,8 +1353,8 @@ github.com/hashicorp/hc-install v0.4.0 h1:cZkRFr1WVa0Ty6x5fTvL1TuO1flul231rWkGH9
 github.com/hashicorp/hc-install v0.4.0/go.mod h1:5d155H8EC5ewegao9A4PUTMNPZaq+TbOzkJJZ4vrXeI=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/hashicorp/hcl/v2 v2.23.1-0.20250203194505-ba0759438da2 h1:JP8y98OtHTujECs4s/HxlKc5yql/RlC99Dt1Iz4R+lM=
-github.com/hashicorp/hcl/v2 v2.23.1-0.20250203194505-ba0759438da2/go.mod h1:k+HgkLpoWu9OS81sy4j1XKDXaWm/rLysG33v5ibdDnc=
+github.com/hashicorp/hcl/v2 v2.24.0 h1:2QJdZ454DSsYGoaE6QheQZjtKZSUs9Nh2izTWiwQxvE=
+github.com/hashicorp/hcl/v2 v2.24.0/go.mod h1:oGoO1FIQYfn/AgyOhlg9qLC6/nOJPX3qGbkZpYAcqfM=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
 github.com/hashicorp/mdns v1.0.4/go.mod h1:mtBihi+LeNXGtG8L9dX59gAEa12BDtBQSp4v/YAJqrc=
@@ -1867,8 +1867,8 @@ github.com/tenntenn/modver v1.0.1 h1:2klLppGhDgzJrScMpkj9Ujy3rXPUspSjAcev9tSEBgA
 github.com/tenntenn/modver v1.0.1/go.mod h1:bePIyQPb7UeioSRkw3Q0XeMhYZSMx9B8ePqg6SAMGH0=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3 h1:f+jULpRQGxTSkNYKJ51yaw6ChIqO+Je8UqsTKN/cDag=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3/go.mod h1:ON8b8w4BN/kE1EOhwT0o+d62W65a6aPw1nouo9LMgyY=
-github.com/terraform-linters/tflint v0.58.0 h1:DIHtMHolcNNrnR2vFKAlrSWzppvXAWJ8S5kSb488kmg=
-github.com/terraform-linters/tflint v0.58.0/go.mod h1:cdKZeERrzEA791ZvIjj0Q4f+KX0AhaYh/hCgm1vNcyE=
+github.com/terraform-linters/tflint v0.58.1 h1:GUgfonXrRvM2qKCQ4TDqQTssdeMQm/RlnjyuQ7wDj8k=
+github.com/terraform-linters/tflint v0.58.1/go.mod h1:W0Cizbz8cxKxjgQV/SsqTJxlGXN7JnAUZ6nvmMbhylI=
 github.com/terraform-linters/tflint-plugin-sdk v0.22.0 h1:holOVJW0hjf0wkjtnYyPWRooQNp8ETUcKE86rdYkH5U=
 github.com/terraform-linters/tflint-plugin-sdk v0.22.0/go.mod h1:Cag3YJjBpHdQzI/limZR+Cj7WYPLTIE61xsCdIXoeUI=
 github.com/terraform-linters/tflint-ruleset-terraform v0.12.0 h1:158C56w1lJ4DSezzz54ISbkrgmQKBEy8iHSBFwxsBVs=
