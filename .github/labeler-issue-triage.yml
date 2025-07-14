@@ -505,6 +505,8 @@ service/notificationscontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/odb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
