@@ -29,7 +29,7 @@ var (
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}, nil}
 
 	// ListOfInt64Type is a custom type used for defining a List of int64s.
-	ListOfInt64Type = listTypeOf[ARN]{basetypes.ListType{ElemType: basetypes.Int64Type{}}, nil}
+	ListOfInt64Type = listTypeOf[basetypes.Int64Value]{basetypes.ListType{ElemType: basetypes.Int64Type{}}, nil}
 
 	// ListOfStringType is a custom type used for defining a List of strings.
 	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}, nil}
