@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/dlclark/regexp2"
+	"github.com/hashicorp/go-version"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
@@ -133,6 +134,7 @@ func main() {
 			"inc": func(i int) int {
 				return i + 1
 			},
+			"NewVersion": version.NewVersion,
 		}
 		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
 		if err != nil {
@@ -216,33 +218,35 @@ func main() {
 
 			// if resource.HasV6_0SDKv2Fix {
 			if !resource.MutableIdentity {
-				tfTemplatesV5, err := tfTemplates.Clone()
-				if err != nil {
-					g.Fatalf("cloning Terraform config template: %s", err)
-				}
-				ext := filepath.Ext(configTmplFile)
-				name := strings.TrimSuffix(configTmplFile, ext)
-				configTmplV5File := name + "_v5.100.0" + ext
-				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-				if _, err := os.Stat(configTmplV5Path); err == nil {
-					b, err := os.ReadFile(configTmplV5Path)
+				if resource.PreIdentityVersion != nil && resource.PreIdentityVersion.Equal(v5_100_0) {
+					tfTemplatesV5, err := tfTemplates.Clone()
 					if err != nil {
-						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						g.Fatalf("cloning Terraform config template: %s", err)
 					}
-					configTmplV5 := string(b)
-					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-					if err != nil {
-						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+					ext := filepath.Ext(configTmplFile)
+					name := strings.TrimSuffix(configTmplFile, ext)
+					configTmplV5File := name + "_v5.100.0" + ext
+					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+					if _, err := os.Stat(configTmplV5Path); err == nil {
+						b, err := os.ReadFile(configTmplV5Path)
+						if err != nil {
+							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						}
+						configTmplV5 := string(b)
+						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+						if err != nil {
+							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+						}
 					}
+					commonV5 := common
+					commonV5.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "5.100.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
 				}
-				commonV5 := common
-				commonV5.ExternalProviders = map[string]requiredProvider{
-					"aws": {
-						Source:  "hashicorp/aws",
-						Version: "5.100.0",
-					},
-				}
-				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
 
 				commonV6 := common
 				commonV6.ExternalProviders = map[string]requiredProvider{
@@ -271,6 +275,10 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
 
 type serviceRecords struct {
 	primary    data.ServiceRecord
@@ -427,6 +435,7 @@ type ResourceDatum struct {
 	HasV6_0NullValuesError      bool
 	HasV6_0RefreshError         bool
 	RequiredEnvVars             []string
+	PreIdentityVersion          *version.Version
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -611,6 +620,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
 		plannableImportAction: importActionNoop,
+		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
 	}
 	hasIdentity := false
 	skip := false
@@ -1021,6 +1031,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.HasV6_0RefreshError = b
 					}
+				}
+				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
+					version, err := version.NewVersion(attr)
+					if err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preIdentityVersion value: %q at %s. Should be version value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.PreIdentityVersion = version
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
