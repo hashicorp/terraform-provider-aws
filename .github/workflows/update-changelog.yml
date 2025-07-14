@@ -22,20 +22,20 @@ jobs:
         id: version
         run: |
           PREV_VERSION="${{ github.event.inputs.previous_version }}"
-          
+
           # Remove 'v' prefix if present
           PREV_VERSION=${PREV_VERSION#v}
-          
+
           # Split version into parts
           IFS='.' read -ra VERSION_PARTS <<< "$PREV_VERSION"
           MAJOR=${VERSION_PARTS[0]}
           MINOR=${VERSION_PARTS[1]}
           PATCH=${VERSION_PARTS[2]}
-          
+
           # Increment minor version and reset patch to 0
           NEXT_MINOR=$((MINOR + 1))
           NEXT_VERSION="${MAJOR}.${NEXT_MINOR}.0"
-          
+
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "branch_name=changelog_update_after_${PREV_VERSION}_release" >> $GITHUB_OUTPUT
 
@@ -48,18 +48,18 @@ jobs:
       - name: Update CHANGELOG.md
         run: |
           NEXT_VERSION="${{ steps.version.outputs.next_version }}"
-          
+
           # Check if CHANGELOG.md exists
           if [ ! -f "CHANGELOG.md" ]; then
             echo "# Changelog" > CHANGELOG.md
             echo "" >> CHANGELOG.md
           fi
-          
+
           # Create a temporary file with the new entry at the top
           {
             echo "## $NEXT_VERSION (Unreleased)"
             echo ""
-          
+
             # Add the existing content, skipping the first line if it's just "# Changelog"
             if head -1 CHANGELOG.md | grep -q "^# Changelog$"; then
               tail -n +2 CHANGELOG.md
@@ -67,7 +67,7 @@ jobs:
               cat CHANGELOG.md
             fi
           } > CHANGELOG.tmp
-          
+
           # Replace the original file
           mv CHANGELOG.tmp CHANGELOG.md
 

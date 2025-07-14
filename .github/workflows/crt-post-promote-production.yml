@@ -51,4 +51,4 @@ jobs:
             --repo ${{ github.repository }} \
             --ref main \
             --field release_tag=${{ github.event.client_payload.payload.version }} \
-            post_publish.yml
+            post-publish.yml
