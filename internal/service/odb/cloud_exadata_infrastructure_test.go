@@ -41,6 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
@@ -95,6 +96,39 @@ var exaInfraTestResource = cloudExaDataInfraResourceTest{
 	displayNamePrefix: "Ofake-exa",
 }
 
+func TestAccODBCloudExadataInfrastructureCreate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
+	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
+	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			exaInfraTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccODBCloudExadataInfrastructureCreateWithAllParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -124,6 +158,111 @@ func TestAccODBCloudExadataInfrastructureCreateWithAllParameters(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
+	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
+	var cloudExaDataInfrastructure3 odbtypes.CloudExadataInfrastructure
+	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
+	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			//testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigAddTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
+							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigRemoveTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure3),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure3.CloudExadataInfrastructureId)) != 0 {
+							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudExadataInfrastructure_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
+
+	rName := sdkacctest.RandomWithPrefix("")
+	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			//testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudExadataInfrastructure, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -261,11 +400,61 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
 		days_of_week =	[]
         hours_of_day =	[]
         is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 3
-        months = ["FEBRUARY","MAY","AUGUST","NOVEMBER"]
+        lead_time_in_weeks = 0
+        months = []
         patching_mode = "ROLLING"
-        preference = "CUSTOM_PREFERENCE"
-		weeks_of_month =[2,4]
+        preference = "NO_PREFERENCE"
+		weeks_of_month =[]
+  }
+}
+`, displayName)
+	return exaInfra
+}
+func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfigAddTags(displayName string) string {
+	exaInfra := fmt.Sprintf(`
+resource "aws_odb_cloud_exadata_infrastructure" "test" {
+  display_name          = %[1]q
+  shape             	= "Exadata.X9M"
+  storage_count      	= 3
+  compute_count         = 2
+  availability_zone_id 	= "use1-az6"
+maintenance_window = {
+  		custom_action_timeout_in_mins = 16
+		days_of_week =	[]
+        hours_of_day =	[]
+        is_custom_action_timeout_enabled = true
+        lead_time_in_weeks = 0
+        months = []
+        patching_mode = "ROLLING"
+        preference = "NO_PREFERENCE"
+		weeks_of_month =[]
+  }
+   tags = {
+    "env"= "dev"
+  }
+}
+`, displayName)
+	return exaInfra
+}
+
+func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfigRemoveTags(displayName string) string {
+	exaInfra := fmt.Sprintf(`
+resource "aws_odb_cloud_exadata_infrastructure" "test" {
+  display_name          = %[1]q
+  shape             	= "Exadata.X9M"
+  storage_count      	= 3
+  compute_count         = 2
+  availability_zone_id 	= "use1-az6"
+maintenance_window = {
+  		custom_action_timeout_in_mins = 16
+		days_of_week =	[]
+        hours_of_day =	[]
+        is_custom_action_timeout_enabled = true
+        lead_time_in_weeks = 0
+        months = []
+        patching_mode = "ROLLING"
+        preference = "NO_PREFERENCE"
+		weeks_of_month =[]
   }
 }
 `, displayName)
