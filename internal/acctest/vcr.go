@@ -375,7 +375,7 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	defer providerMetas.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
@@ -385,6 +385,8 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 		}
 
 		delete(providerMetas, testName)
+	} else {
+		t.Log("provider meta not found for test", testName)
 	}
 
 	// Save the randomness seed.
@@ -393,7 +395,7 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	defer randomnessSources.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
@@ -401,6 +403,8 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 		}
 
 		delete(randomnessSources, testName)
+	} else {
+		t.Log("randomness source not found for test", testName)
 	}
 }
 
@@ -409,8 +413,12 @@ func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(ctx, t)
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.ParallelTest(t, c)
@@ -421,8 +429,12 @@ func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(ctx, t)
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.Test(t, c)
