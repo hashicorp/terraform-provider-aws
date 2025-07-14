@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
@@ -21,7 +22,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_fsx_ontap_storage_virtual_machine", sweepONTAPStorageVirtualMachine, "aws_fsx_ontap_volume")
 	awsv2.Register("aws_fsx_ontap_volume", sweepONTAPVolumes)
 	awsv2.Register("aws_fsx_openzfs_file_system", sweepOpenZFSFileSystems, "aws_datasync_location", "aws_fsx_openzfs_volume", "aws_m2_environment")
-	awsv2.Register("aws_fsx_openzfs_volume", sweepOpenZFSVolume)
+	awsv2.Register("aws_fsx_openzfs_volume", sweepOpenZFSVolume, "aws_fsx_s3_access_point_attachment")
+	awsv2.Register("aws_fsx_s3_access_point_attachment", sweepS3AccessPointAttachments)
 	awsv2.Register("aws_fsx_windows_file_system", sweepWindowsFileSystems, "aws_datasync_location", "aws_m2_environment", "aws_storagegateway_file_system_association")
 }
 
@@ -228,6 +230,28 @@ func sweepOpenZFSVolume(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 			d.SetId(aws.ToString(v.VolumeId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepS3AccessPointAttachments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.FSxClient(ctx)
+	var input fsx.DescribeS3AccessPointAttachmentsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := fsx.NewDescribeS3AccessPointAttachmentsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.S3AccessPointAttachments {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newS3AccessPointAttachmentResource, client,
+				framework.NewAttribute("name", aws.ToString(v.Name))))
 		}
 	}
 
