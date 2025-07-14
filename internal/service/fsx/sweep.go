@@ -18,10 +18,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_fsx_backup", &resource.Sweeper{
-		Name: "aws_fsx_backup",
-		F:    sweepBackups,
-	})
+	awsv2.Register("aws_fsx_backup", sweepBackups)
 
 	resource.AddTestSweepers("aws_fsx_lustre_file_system", &resource.Sweeper{
 		Name: "aws_fsx_lustre_file_system",
@@ -78,27 +75,17 @@ func RegisterSweepers() {
 	})
 }
 
-func sweepBackups(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepBackups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeBackupsInput{}
+	var input fsx.DescribeBackupsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeBackupsPaginator(conn, input)
+	pages := fsx.NewDescribeBackupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx Backup sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx Backups (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Backups {
@@ -110,13 +97,7 @@ func sweepBackups(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx Backups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepLustreFileSystems(region string) error {

@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -62,6 +63,7 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$`), ""),
+					fwvalidators.SuffixNoneOf("-ext-s3alias"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
