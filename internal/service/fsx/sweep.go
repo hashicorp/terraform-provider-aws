@@ -5,13 +5,10 @@ package fsx
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -25,16 +22,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_fsx_ontap_volume", sweepONTAPVolumes)
 	awsv2.Register("aws_fsx_openzfs_file_system", sweepOpenZFSFileSystems, "aws_datasync_location", "aws_fsx_openzfs_volume", "aws_m2_environment")
 	awsv2.Register("aws_fsx_openzfs_volume", sweepOpenZFSVolume)
-
-	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
-		Name: "aws_fsx_windows_file_system",
-		F:    sweepWindowsFileSystems,
-		Dependencies: []string{
-			"aws_datasync_location",
-			"aws_m2_environment",
-			"aws_storagegateway_file_system_association",
-		},
-	})
+	awsv2.Register("aws_fsx_windows_file_system", sweepWindowsFileSystems, "aws_datasync_location", "aws_m2_environment", "aws_storagegateway_file_system_association")
 }
 
 func sweepBackups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -246,27 +234,17 @@ func sweepOpenZFSVolume(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 	return sweepResources, nil
 }
 
-func sweepWindowsFileSystems(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepWindowsFileSystems(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeFileSystemsInput{}
+	var input fsx.DescribeFileSystemsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeFileSystemsPaginator(conn, input)
+	pages := fsx.NewDescribeFileSystemsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FSx Windows File System sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FSx Windows File Systems (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.FileSystems {
@@ -283,11 +261,5 @@ func sweepWindowsFileSystems(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FSx Windows File Systems (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
