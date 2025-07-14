@@ -69,7 +69,18 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"s3_access_point": framework.ResourceOptionalComputedListOfObjectsAttribute[s3AccessPointModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured()),
+			"s3_access_point_alias": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"s3_access_point_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.S3AccessPointAttachmentType](),
 				Required:   true,
@@ -161,6 +172,47 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
+			"s3_access_point": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessPointModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPolicy: schema.StringAttribute{
+							CustomType: fwtypes.IAMPolicyType,
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"vpc_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessPointVpcConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrVPCID: schema.StringAttribute{
+										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -204,39 +256,13 @@ func (r *s3AccessPointAttachmentResource) Create(ctx context.Context, request re
 		return
 	}
 
-	// s3_access_point.policy is write-only.
-	// Copy value from Plan.
-	policy := fwtypes.IAMPolicyNull()
-	s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if s3AccessPoint != nil {
-		policy = s3AccessPoint.Policy
-	}
-
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// s3_access_point.policy is write-only.
-	if !policy.IsNull() {
-		s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		s3AccessPoint.Policy = policy
-
-		tfS3AccessPoint, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, s3AccessPoint)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		data.S3AccessPoint = tfS3AccessPoint
+	if v := output.S3AccessPoint; v != nil {
+		data.S3AccessPointAlias = fwflex.StringToFramework(ctx, v.Alias)
+		data.S3AccessPointARN = fwflex.StringToFramework(ctx, v.ResourceARN)
+	} else {
+		data.S3AccessPointAlias = types.StringNull()
+		data.S3AccessPointARN = types.StringNull()
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -269,12 +295,20 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 
 	// s3_access_point.policy is write-only.
 	// Copy value from State.
+	policy := fwtypes.IAMPolicyNull()
 	s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	policy := s3AccessPoint.Policy
+	if s3AccessPoint != nil {
+		policy = s3AccessPoint.Policy
+	}
+
+	if policy.IsNull() && output.S3AccessPoint.VpcConfiguration == nil {
+		// S3 access point alias and ARN are handled at the top level.
+		output.S3AccessPoint = nil
+	}
 
 	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
@@ -283,19 +317,21 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 	}
 
 	// s3_access_point.policy is write-only.
-	s3AccessPoint, diags = data.S3AccessPoint.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	s3AccessPoint.Policy = policy
+	if !policy.IsNull() {
+		s3AccessPoint, diags := data.S3AccessPoint.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		s3AccessPoint.Policy = policy
 
-	tfS3AccessPoint, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, s3AccessPoint)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
+		tfS3AccessPoint, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, s3AccessPoint)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.S3AccessPoint = tfS3AccessPoint
 	}
-	data.S3AccessPoint = tfS3AccessPoint
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -448,6 +484,8 @@ type s3AccessPointAttachmentResourceModel struct {
 	Name                 types.String                                                            `tfsdk:"name"`
 	OpenZFSConfiguration fwtypes.ListNestedObjectValueOf[s3AccessPointOpenZFSConfigurationModel] `tfsdk:"openzfs_configuration"`
 	S3AccessPoint        fwtypes.ListNestedObjectValueOf[s3AccessPointModel]                     `tfsdk:"s3_access_point"`
+	S3AccessPointAlias   types.String                                                            `tfsdk:"s3_access_point_alias"`
+	S3AccessPointARN     types.String                                                            `tfsdk:"s3_access_point_arn"`
 	Timeouts             timeouts.Value                                                          `tfsdk:"timeouts"`
 	Type                 fwtypes.StringEnum[awstypes.S3AccessPointAttachmentType]                `tfsdk:"type"`
 }
@@ -469,9 +507,7 @@ type openZFSPosixFileSystemUserModel struct {
 }
 
 type s3AccessPointModel struct {
-	Alias            types.String                                                        `tfsdk:"alias"`
 	Policy           fwtypes.IAMPolicy                                                   `tfsdk:"policy"`
-	ResourceARN      fwtypes.ARN                                                         `tfsdk:"resource_arn"`
 	VPCConfiguration fwtypes.ListNestedObjectValueOf[s3AccessPointVpcConfigurationModel] `tfsdk:"vpc_configuration"`
 }
 

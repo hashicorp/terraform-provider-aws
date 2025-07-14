@@ -84,8 +84,8 @@ The `vpc_configuration` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `s3_access_point.0.alias` - S3 access point's alias.
-* `s3_access_point.0.resource_arn` - S3 access point's ARN.
+* `s3_access_point_alias` - S3 access point's alias.
+* `s3_access_point_arn` - S3 access point's ARN.
 
 ## Timeouts
 
