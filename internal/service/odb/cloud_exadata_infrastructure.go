@@ -59,6 +59,8 @@ const (
 	ExaInfraDBServerTypeNotAvailable      = "DB_Server_Type_NA"
 )
 
+var ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
+
 type resourceCloudExadataInfrastructure struct {
 	framework.ResourceWithModel[cloudExadataInfrastructureResourceModel]
 	framework.WithTimeouts
@@ -728,6 +730,11 @@ func (r *resourceCloudExadataInfrastructure) expandMaintenanceWindow(ctx context
 			hasError = true
 			err = errors.Join(err, errors.New("default maintenance window can't have months with values"))
 		}
+		odbTypeMW.DaysOfWeek = nil
+		odbTypeMW.HoursOfDay = nil
+		odbTypeMW.WeeksOfMonth = nil
+		odbTypeMW.Months = nil
+		odbTypeMW.LeadTimeInWeeks = nil
 	}
 
 	if hasError {
@@ -790,6 +797,16 @@ func (r *resourceCloudExadataInfrastructure) flattenMaintenanceWindow(ctx contex
 		Preference:                   fwtypes.StringEnumValue(obdExaInfraMW.Preference),
 		WeeksOfMonth:                 weeksOfMonthRead,
 	}
+	if obdExaInfraMW.LeadTimeInWeeks == nil {
+		flattenMW.LeadTimeInWeeks = types.Int32Value(0)
+	}
+	if obdExaInfraMW.CustomActionTimeoutInMins == nil {
+		flattenMW.CustomActionTimeoutInMins = types.Int32Value(0)
+	}
+	if obdExaInfraMW.IsCustomActionTimeoutEnabled == nil {
+		flattenMW.IsCustomActionTimeoutEnabled = types.BoolValue(false)
+	}
+
 	result, _ := fwtypes.NewObjectValueOf[cloudExadataInfraMaintenanceWindowResourceModel](ctx, &flattenMW)
 	return result
 }
