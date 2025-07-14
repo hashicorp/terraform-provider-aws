@@ -186,6 +186,7 @@ The following arguments are optional:
 * `name` - (Required) A name for the input that you can reference.
 * `type` - (Required) The data type of the input. If the input doesn’t match this type at runtime, a validation error will be thrown.
 * `expression` - (Required) An expression that formats the input for the node. For an explanation of how to create expressions, see [Expressions in Prompt flows in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-expressions.html).
+* `category` - (Optional) How input data flows between iterations in a DoWhile loop.
 
 ### Node Output
 
@@ -197,6 +198,7 @@ The following arguments are optional:
 * `agent` - (Optional) Contains configurations for an agent node in your flow. Invokes an alias of an agent and returns the response. See [Agent Node Configuration](#agent-node-configuration) for more information.
 * `collector` - (Optional) Contains configurations for a collector node in your flow. Collects an iteration of inputs and consolidates them into an array of outputs. This object has no fields.
 * `condition` - (Optional) Contains configurations for a Condition node in your flow. Defines conditions that lead to different branches of the flow. See [Condition Node Configuration](#condition-node-configuration) for more information.
+* `inline_code` - (Optional) Contains configurations for an inline code node in your flow. See [Inline Code Node Configuration](#inline-code-node-configuration) for more information.
 * `input` - (Optional) Contains configurations for an input flow node in your flow. The node `inputs` can’t be specified for this node. This object has no fields.
 * `iterator` - (Optional) Contains configurations for an iterator node in your flow. Takes an input that is an array and iteratively sends each item of the array as an output to the following node. The size of the array is also returned in the output. The output flow node at the end of the flow iteration will return a response for each member of the array. To return only one response, you can include a collector node downstream from the iterator node. This object has no fields.
 * `knowledge_base` - (Optional) Contains configurations for a knowledge base node in your flow. Queries a knowledge base and returns the retrieved results or generated response. See [Knowledge Base Node Configuration](#knowledge-base-node-configuration) for more information.
@@ -219,6 +221,11 @@ The following arguments are optional:
 
 * `name` - (Required) A name for the condition that you can reference.
 * `expression` - (Optional) Defines the condition. You must refer to at least one of the inputs in the condition. For more information, expand the Condition node section in [Node types in prompt flows](https://docs.aws.amazon.com/bedrock/latest/userguide/flows-how-it-works.html#flows-nodes).
+
+### Inline Code Node Configuration
+
+* `code` - (Required) The code that's executed in your inline code node.
+* `language` - (Required) The programming language used by your inline code node.
 
 ### Knowledge Base Node Configuration
 
