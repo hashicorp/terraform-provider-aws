@@ -25,13 +25,15 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 		},
 		"RoutingControl": {
 			acctest.CtBasic:         testAccRoutingControl_basic,
+			acctest.CtValue1Updated: testAccRoutingControl_updated,
 			acctest.CtDisappears:    testAccRoutingControl_disappears,
 			"nonDefaultControlPane": testAccRoutingControl_nonDefaultControlPanel,
 		},
 		"SafetyRule": {
-			"assertionRule":      testAccSafetyRule_assertionRule,
-			"gatingRule":         testAccSafetyRule_gatingRule,
-			acctest.CtDisappears: testAccSafetyRule_disappears,
+			"assertionRule":         testAccSafetyRule_assertionRule,
+			"gatingRule":            testAccSafetyRule_gatingRule,
+			acctest.CtValue1Updated: testAccSafetyRule_updated,
+			acctest.CtDisappears:    testAccSafetyRule_disappears,
 		},
 	}
 

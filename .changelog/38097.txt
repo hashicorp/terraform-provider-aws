@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_route53recoverycontrolconfig_routing_control: Fixes an issue where updating a routing control can result in a "Malformed control panel arn" error
+resource/aws_route53recoverycontrolconfig_safety_rule: Fixes an issue where updating the name of the safety rule without an update to wait_period_ms would update the resource but return a assertion rule error
+```
