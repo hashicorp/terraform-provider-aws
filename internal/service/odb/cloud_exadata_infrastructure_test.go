@@ -329,20 +329,6 @@ func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *tes
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListCloudExadataInfrastructuresInput{}
-
-	_, err := conn.ListCloudExadataInfrastructures(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
 
 /*
 	func testAccCheckCloudExadataInfrastructureNotRecreated(before, after *odb.DescribeCloudExadataInfrastructureResponse) resource.TestCheckFunc {

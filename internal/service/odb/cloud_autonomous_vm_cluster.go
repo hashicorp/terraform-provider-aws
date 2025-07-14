@@ -133,13 +133,11 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Computed: true,
 			},
 			"db_servers": schema.SetAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
-					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"description": schema.StringAttribute{
@@ -237,19 +235,15 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Computed: true,
 			},
 			"scan_listener_port_non_tls": schema.Int32Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
-					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			"scan_listener_port_tls": schema.Int32Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
-					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			"shape": schema.StringAttribute{
@@ -295,7 +289,6 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				CustomType: fwtypes.NewObjectTypeOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel](ctx),
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
-					objectplanmodifier.UseStateForUnknown(),
 				},
 				AttributeTypes: map[string]attr.Type{
 					"days_of_week": types.SetType{
@@ -338,19 +331,26 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	}
 
 	input := odb.CreateCloudAutonomousVmClusterInput{
-		ClientToken:       aws.String(id.UniqueId()),
-		Tags:              getTagsIn(ctx),
-		MaintenanceWindow: mapAVMCMaintenanceWindowToOdbMaintenanceWindow(ctx, plan.MaintenanceWindow),
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithIgnoredFieldNamesAppend("Tags"),
-		flex.WithIgnoredFieldNamesAppend("MaintenanceWindow"))...)
+	inputMW, err := r.expandMaintenanceWindow(ctx, plan.MaintenanceWindow)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudAutonomousVmCluster, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	input.MaintenanceWindow = inputMW
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateCloudAutonomousVmCluster(ctx, &input)
 	if err != nil {
-		fmt.Println("CreateCloudAutonomousVmCluster failed", err)
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudAutonomousVmCluster, plan.DisplayName.ValueString(), err),
 			err.Error(),
@@ -389,12 +389,11 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	}
 
 	if createdAVMC.MaintenanceWindow != nil {
-		plan.MaintenanceWindow = mapToCloudAutonomousVmClusterMaintenanceWindowResourceModel(ctx, createdAVMC.MaintenanceWindow)
+		plan.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, createdAVMC.MaintenanceWindow)
 	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, createdAVMC, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
+	resp.Diagnostics.Append(flex.Flatten(ctx, createdAVMC, &plan,
 		flex.WithIgnoredFieldNamesAppend("TimeOrdsCertificateExpires"),
-		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"),
-		flex.WithIgnoredFieldNamesAppend("MaintenanceWindow"))...)
+		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"))...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -435,13 +434,11 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 	} else {
 		state.TimeDatabaseSslCertificateExpires = types.StringValue(NotAvailableValues)
 	}
-	if out.MaintenanceWindow != nil {
-		state.MaintenanceWindow = mapToCloudAutonomousVmClusterMaintenanceWindowResourceModel(ctx, out.MaintenanceWindow)
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
+	state.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, out.MaintenanceWindow)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state,
 		flex.WithIgnoredFieldNamesAppend("TimeOrdsCertificateExpires"),
-		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"),
-		flex.WithIgnoredFieldNamesAppend("MaintenanceWindow"))...)
+		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"))...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -483,13 +480,10 @@ func (r *resourceCloudAutonomousVmCluster) Update(ctx context.Context, req resou
 	} else {
 		plan.TimeOrdsCertificateExpires = types.StringValue(NotAvailableValues)
 	}
-	if updatedAVMC.MaintenanceWindow != nil {
-		plan.MaintenanceWindow = mapToCloudAutonomousVmClusterMaintenanceWindowResourceModel(ctx, updatedAVMC.MaintenanceWindow)
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedAVMC, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
+	plan.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, updatedAVMC.MaintenanceWindow)
+	resp.Diagnostics.Append(flex.Flatten(ctx, updatedAVMC, &plan,
 		flex.WithIgnoredFieldNamesAppend("TimeOrdsCertificateExpires"),
-		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"), flex.WithIgnoredFieldNamesAppend("MaintenanceWindow"))...)
+		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"))...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -715,14 +709,12 @@ func sweepCloudAutonomousVmClusters(ctx context.Context, client *conns.AWSClient
 	return sweepResources, nil
 }
 
-func mapAVMCMaintenanceWindowToOdbMaintenanceWindow(ctx context.Context, avmcMaintenanceWindowFwTypesObj fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel]) *odbtypes.MaintenanceWindow {
-	if avmcMaintenanceWindowFwTypesObj.IsNull() {
-		return nil
+func (r *resourceCloudAutonomousVmCluster) expandMaintenanceWindow(ctx context.Context, avmcMaintenanceWindowFwTypesObj fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel]) (*odbtypes.MaintenanceWindow, error) {
+	if avmcMaintenanceWindowFwTypesObj.IsNull() || avmcMaintenanceWindowFwTypesObj.IsUnknown() {
+		return nil, errors.New("maintenance window cannot be null")
 	}
-	if avmcMaintenanceWindowFwTypesObj.IsUnknown() {
-		return nil
-	}
-
+	hasError := false
+	var err error
 	var avmcMaintenanceWindowResource cloudAutonomousVmClusterMaintenanceWindowResourceModel
 
 	avmcMaintenanceWindowFwTypesObj.As(ctx, &avmcMaintenanceWindowResource, basetypes.ObjectAsOptions{
@@ -730,31 +722,44 @@ func mapAVMCMaintenanceWindowToOdbMaintenanceWindow(ctx context.Context, avmcMai
 		UnhandledUnknownAsEmpty: true,
 	})
 
-	var daysOfWeekNames []odbtypes.DayOfWeekName
-	avmcMaintenanceWindowResource.DaysOfWeek.ElementsAs(ctx, &daysOfWeekNames, false)
-	daysOfWeek := make([]odbtypes.DayOfWeek, 0, len(daysOfWeekNames))
+	var daysOfWeek []odbtypes.DayOfWeek = nil
 
-	for _, dayOfWeek := range daysOfWeekNames {
-		daysOfWeek = append(daysOfWeek, odbtypes.DayOfWeek{
-			Name: dayOfWeek,
-		})
+	if !avmcMaintenanceWindowResource.DaysOfWeek.IsNull() {
+		var daysOfWeekNames []odbtypes.DayOfWeekName
+		avmcMaintenanceWindowResource.DaysOfWeek.ElementsAs(ctx, &daysOfWeekNames, false)
+		daysOfWeek = make([]odbtypes.DayOfWeek, 0, len(daysOfWeekNames))
+		for _, dayOfWeek := range daysOfWeekNames {
+			daysOfWeek = append(daysOfWeek, odbtypes.DayOfWeek{
+				Name: dayOfWeek,
+			})
+		}
 	}
 
-	var hoursOfTheDay []int32
-	avmcMaintenanceWindowResource.HoursOfDay.ElementsAs(ctx, &hoursOfTheDay, false)
-
-	var monthNames []odbtypes.MonthName
-	avmcMaintenanceWindowResource.Months.ElementsAs(ctx, &monthNames, false)
-	months := make([]odbtypes.Month, 0, len(monthNames))
-	for _, month := range monthNames {
-		months = append(months, odbtypes.Month{
-			Name: month,
-		})
+	var hoursOfTheDay []int32 = nil
+	if !avmcMaintenanceWindowResource.HoursOfDay.IsNull() {
+		avmcMaintenanceWindowResource.HoursOfDay.ElementsAs(ctx, &hoursOfTheDay, false)
 	}
 
-	var weeksOfMonth []int32
-	avmcMaintenanceWindowResource.WeeksOfMonth.ElementsAs(ctx, &weeksOfMonth, false)
+	var months []odbtypes.Month = nil
+	if !avmcMaintenanceWindowResource.Months.IsNull() {
+		var monthNames []odbtypes.MonthName
+		avmcMaintenanceWindowResource.Months.ElementsAs(ctx, &monthNames, false)
+		months = make([]odbtypes.Month, 0, len(monthNames))
+		for _, month := range monthNames {
+			months = append(months, odbtypes.Month{
+				Name: month,
+			})
+		}
+	}
 
+	var weeksOfMonth []int32 = nil
+	if !avmcMaintenanceWindowResource.WeeksOfMonth.IsNull() {
+		avmcMaintenanceWindowResource.WeeksOfMonth.ElementsAs(ctx, &weeksOfMonth, false)
+	}
+	if avmcMaintenanceWindowResource.Preference.IsNull() || avmcMaintenanceWindowResource.WeeksOfMonth.IsUnknown() {
+		hasError = true
+		err = errors.Join(err, errors.New("cloud autonomous vm cluster maintenance window must set preference "))
+	}
 	odbTypeMW := odbtypes.MaintenanceWindow{
 		DaysOfWeek:      daysOfWeek,
 		HoursOfDay:      hoursOfTheDay,
@@ -763,59 +768,87 @@ func mapAVMCMaintenanceWindowToOdbMaintenanceWindow(ctx context.Context, avmcMai
 		Preference:      avmcMaintenanceWindowResource.Preference.ValueEnum(),
 		WeeksOfMonth:    weeksOfMonth,
 	}
-	return &odbTypeMW
+	if odbTypeMW.HoursOfDay != nil && len(odbTypeMW.HoursOfDay) == 0 {
+		hasError = true
+		err = errors.Join(err, errors.New("cloud autonomous vm cluster hours-of-day can't be empty. Give a valid vale or remove the property "))
+	}
+	if odbTypeMW.DaysOfWeek != nil && len(odbTypeMW.DaysOfWeek) == 0 {
+		hasError = true
+		err = errors.Join(err, errors.New("cloud autonomous vm cluster days-of-week can't be empty. Give a valid vale or remove the property "))
+	}
+	if odbTypeMW.Months != nil && len(odbTypeMW.Months) == 0 {
+		hasError = true
+		err = errors.Join(err, errors.New("cloud autonomous vm cluster months can't be empty. Give a valid vale or remove the property "))
+	}
+
+	if hasError {
+		return nil, err
+	}
+	return &odbTypeMW, err
 }
 
-func mapToCloudAutonomousVmClusterMaintenanceWindowResourceModel(ctx context.Context, avmcMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel] {
+func (r *resourceCloudAutonomousVmCluster) flattenMaintenanceWindow(ctx context.Context, avmcMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel] {
 	//days of week
-	daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
-	for _, dayOfWeek := range avmcMW.DaysOfWeek {
-		dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
-		daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
-	}
-	setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
-	daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
-		SetValue: setValueOfDaysOfWeek,
-	}
-	//hours of the day
-	hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
-	for _, hourOfTheDay := range avmcMW.HoursOfDay {
-		daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
-		hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
-	}
-	setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
-	hoursOfTheDayRead := fwtypes.SetValueOf[types.Int32]{
-		SetValue: setValuesOfHoursOfTheDay,
-	}
-	//monts
-	months := make([]attr.Value, 0, len(avmcMW.Months))
-	for _, month := range avmcMW.Months {
-		monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
-		months = append(months, monthStringValue)
-	}
-	setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
-	monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
-		SetValue: setValuesOfMonth,
-	}
-	//weeks of month
-	weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
-	for _, weekOfMonth := range avmcMW.WeeksOfMonth {
-		weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
-		weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
-	}
-	setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
-	weeksOfMonthRead := fwtypes.SetValueOf[types.Int32]{
-		SetValue: setValuesOfWeekOfMonth,
+	computedMW := cloudAutonomousVmClusterMaintenanceWindowResourceModel{}
+	if avmcMW.DaysOfWeek != nil {
+		daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
+		for _, dayOfWeek := range avmcMW.DaysOfWeek {
+			dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
+			daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
+		}
+
+		setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
+		daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
+			SetValue: setValueOfDaysOfWeek,
+		}
+		computedMW.DaysOfWeek = daysOfWeekRead
 	}
 
-	computedMW := cloudAutonomousVmClusterMaintenanceWindowResourceModel{
-		DaysOfWeek:      daysOfWeekRead,
-		HoursOfDay:      hoursOfTheDayRead,
-		LeadTimeInWeeks: types.Int32PointerValue(avmcMW.LeadTimeInWeeks),
-		Months:          monthsRead,
-		Preference:      fwtypes.StringEnumValue(avmcMW.Preference),
-		WeeksOfMonth:    weeksOfMonthRead,
+	//hours of the day
+	if avmcMW.HoursOfDay != nil {
+		hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
+		for _, hourOfTheDay := range avmcMW.HoursOfDay {
+			daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
+			hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
+		}
+		setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
+		hoursOfTheDayRead := fwtypes.SetValueOf[types.Int32]{
+			SetValue: setValuesOfHoursOfTheDay,
+		}
+		computedMW.HoursOfDay = hoursOfTheDayRead
 	}
+
+	//months
+	if avmcMW.Months != nil {
+		months := make([]attr.Value, 0, len(avmcMW.Months))
+		for _, month := range avmcMW.Months {
+			monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
+			months = append(months, monthStringValue)
+		}
+		setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
+		monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
+			SetValue: setValuesOfMonth,
+		}
+		computedMW.Months = monthsRead
+	}
+
+	//weeks of month
+	if avmcMW.WeeksOfMonth != nil {
+		weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
+		for _, weekOfMonth := range avmcMW.WeeksOfMonth {
+			weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
+			weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
+		}
+		setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
+		weeksOfMonthRead := fwtypes.SetValueOf[types.Int32]{
+			SetValue: setValuesOfWeekOfMonth,
+		}
+		computedMW.WeeksOfMonth = weeksOfMonthRead
+	}
+
+	computedMW.LeadTimeInWeeks = types.Int32PointerValue(avmcMW.LeadTimeInWeeks)
+	computedMW.Preference = fwtypes.StringEnumValue(avmcMW.Preference)
+
 	result, _ := fwtypes.NewObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel](ctx, &computedMW)
 	return result
 }
@@ -834,7 +867,7 @@ type cloudAutonomousVmClusterResourceModel struct {
 	CpuCoreCount                                 types.Int32                                                                   `tfsdk:"cpu_core_count"`
 	CpuCoreCountPerNode                          types.Int32                                                                   `tfsdk:"cpu_core_count_per_node"`
 	CpuPercentage                                types.Float32                                                                 `tfsdk:"cpu_percentage"`
-	CreatedAt                                    types.String                                                                  `tfsdk:"created_at"`
+	CreatedAt                                    types.String                                                                  `tfsdk:"created_at" autoflex:",noflatten"`
 	DataStorageSizeInGBs                         types.Float64                                                                 `tfsdk:"data_storage_size_in_gbs"`
 	DataStorageSizeInTBs                         types.Float64                                                                 `tfsdk:"data_storage_size_in_tbs"`
 	DbNodeStorageSizeInGBs                       types.Int32                                                                   `tfsdk:"odb_node_storage_size_in_gbs"`
@@ -875,7 +908,7 @@ type cloudAutonomousVmClusterResourceModel struct {
 	TagsAll                                      tftags.Map                                                                    `tfsdk:"tags_all"`
 	TimeOrdsCertificateExpires                   types.String                                                                  `tfsdk:"time_ords_certificate_expires"`
 	TimeDatabaseSslCertificateExpires            types.String                                                                  `tfsdk:"time_database_ssl_certificate_expires"`
-	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel] `tfsdk:"maintenance_window"`
+	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowResourceModel] `tfsdk:"maintenance_window" autoflex:"-"`
 }
 
 type cloudAutonomousVmClusterMaintenanceWindowResourceModel struct {
