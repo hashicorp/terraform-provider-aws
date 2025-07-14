@@ -1008,6 +1008,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.HasRegionOverrideTest = b
 					}
 				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0RefreshError = b
+					}
+				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
