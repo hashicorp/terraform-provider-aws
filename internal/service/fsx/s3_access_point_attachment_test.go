@@ -68,6 +68,99 @@ func TestAccFSxS3AccessPointAttachment_basic(t *testing.T) {
 	})
 }
 
+func TestAccFSxS3AccessPointAttachment_policy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.S3AccessPointAttachment
+	resourceName := "aws_fsx_s3_access_point_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3AccessPointAttachmentConfig_policy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"policy": knownvalue.NotNull(),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxS3AccessPointAttachment_vpcConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.S3AccessPointAttachment
+	resourceName := "aws_fsx_s3_access_point_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3AccessPointAttachmentConfig_vpcConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"policy":            knownvalue.Null(),
+							"vpc_configuration": knownvalue.ListSizeExact(1),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.S3AccessPointAttachment
+	resourceName := "aws_fsx_s3_access_point_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3AccessPointAttachmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffsx.ResourceS3AccessPointAttachment, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckS3AccessPointAttachmentExists(ctx context.Context, n string, v *awstypes.S3AccessPointAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -152,6 +245,76 @@ resource "aws_fsx_s3_access_point_attachment" "test" {
         uid = 1001
         gid = 1001
       }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccS3AccessPointAttachmentConfig_policy(rName string) string {
+	return acctest.ConfigCompose(testAccS3AccessPointAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_s3_access_point_attachment" "test" {
+  name = %[1]q
+  type = "OPENZFS"
+
+  openzfs_configuration {
+    volume_id = aws_fsx_openzfs_volume.test.id
+
+    file_system_identity {
+      type = "POSIX"
+
+      posix_user {
+        uid = 1001
+        gid = 1001
+
+        secondary_gids = [1002, 1003]
+      }
+    }
+  }
+
+  s3_access_point {
+    policy = jsonencode({
+      Version = "2008-10-17"
+      Statement = [{
+        Effect = "Allow"
+        Action = "s3:GetObjectTagging"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Resource = "arn:${data.aws_partition.current.partition}:s3:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:accesspoint/%[1]s/object/*"
+      }]
+    })
+  }
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+`, rName))
+}
+
+func testAccS3AccessPointAttachmentConfig_vpcConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccS3AccessPointAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_s3_access_point_attachment" "test" {
+  name = %[1]q
+  type = "OPENZFS"
+
+  openzfs_configuration {
+    volume_id = aws_fsx_openzfs_volume.test.id
+
+    file_system_identity {
+      type = "POSIX"
+
+      posix_user {
+        uid = 1001
+        gid = 1001
+      }
+    }
+  }
+
+  s3_access_point {
+    vpc_configuration {
+      vpc_id = aws_vpc.test.id
     }
   }
 }
