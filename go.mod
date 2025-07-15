@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.231.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.232.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.58.1
@@ -116,7 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emr v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/evs v1.0.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.29.4
@@ -194,10 +194,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/polly v1.48.4
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.87.0
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.99.1
@@ -217,10 +217,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.24.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.83.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.200.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.10
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.5
