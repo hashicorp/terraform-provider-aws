@@ -39,6 +39,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttrPair("aws_cognito_user_pool.test", names.AttrID, resourceName, names.AttrUserPoolID),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -19,19 +18,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cognitoidp_log_delivery_configuration", name="Log Delivery Configuration")
+// @IdentityAttribute("user_pool_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.LogDeliveryConfigurationType")
+// @Testing(importStateIdFunc="testAccLogDeliveryConfigurationImportStateIdFunc")
+// @Testing(importStateIdAttribute="user_pool_id")
 func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &LogDeliveryConfigurationResource{}
 	return r, nil
@@ -41,18 +42,9 @@ const (
 	ResNameLogDeliveryConfiguration = "Log Delivery Configuration"
 )
 
-/*
-	func newManagedUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
-		return &managedUserPoolClientResource{}, nil
-	}
-
-	type managedUserPoolClientResource struct {
-		framework.ResourceWithModel[managedUserPoolClientResourceModel]
-		framework.WithNoOpDelete
-	}
-*/
 type LogDeliveryConfigurationResource struct {
 	framework.ResourceWithModel[resourceLogDeliveryConfigurationModel]
+	framework.WithImportByIdentity
 }
 
 func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -259,7 +251,7 @@ func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	// To "delete" a log delivery configuration, we set an empty configuration
+	// set an empty configuration
 	input := cognitoidentityprovider.SetLogDeliveryConfigurationInput{
 		UserPoolId:        state.UserPoolID.ValueStringPointer(),
 		LogConfigurations: []awstypes.LogConfigurationType{},
@@ -277,10 +269,6 @@ func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resou
 		)
 		return
 	}
-}
-
-func (r *LogDeliveryConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrUserPoolID), req, resp)
 }
 
 func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID string) (*awstypes.LogDeliveryConfigurationType, error) {
@@ -331,10 +319,4 @@ type firehoseConfigurationModel struct {
 
 type s3ConfigurationModel struct {
 	BucketArn fwtypes.ARN `tfsdk:"bucket_arn"`
-}
-
-func sweepLogDeliveryConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	// Log delivery configurations are tied to user pools, so we don't need a separate sweeper
-	// They will be cleaned up when user pools are swept
-	return nil, nil
 }
