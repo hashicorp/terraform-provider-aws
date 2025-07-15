@@ -111,7 +111,7 @@ func (e *invocationEphemeralResource) Open(ctx context.Context, req ephemeral.Op
 	if output.FunctionError != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Lambda, create.ErrActionOpening, ResNameInvocation, data.FunctionName.String(), errors.New(aws.ToString(output.FunctionError))),
-			err.Error(),
+			"",
 		)
 		return
 	}

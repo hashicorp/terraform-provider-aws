@@ -1,4 +1,22 @@
-## 6.3.0 (Unreleased)
+## 6.4.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_bedrockagent_flow` ([#42201](https://github.com/hashicorp/terraform-provider-aws/issues/42201))
+
+ENHANCEMENTS:
+
+* data-source/aws_bedrock_inference_profiles: Add `type` argument ([#43150](https://github.com/hashicorp/terraform-provider-aws/issues/43150))
+* resource/aws_acm_certificate: Support `options.export` argument to issue an exportable certificate ([#43207](https://github.com/hashicorp/terraform-provider-aws/issues/43207))
+* resource/aws_cloudwatch_log_metric_filter: Add `apply_on_transformed_logs` argument ([#43381](https://github.com/hashicorp/terraform-provider-aws/issues/43381))
+
+BUG FIXES:
+
+* resource/aws_bedrockagent_agent_action_group: Correctly set `parent_action_group_signature` on Read ([#43355](https://github.com/hashicorp/terraform-provider-aws/issues/43355))
+* resource/aws_datazone_environment_blueprint_configuration: Fix `Inappropriate value for attribute "regional_parameters"` errors during planning. This fixes a regression introduced in [v6.0.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#600-june-18-2025) ([#43382](https://github.com/hashicorp/terraform-provider-aws/issues/43382))
+* resource/aws_lexv2models_slot: Fix error when `sub_slot_setting.slot_specification.value_elicitation_setting.prompt_specification.prompt_attempts_specification` and `value_elicitation_setting.prompt_specification.prompt_attempts_specification` have default values ([#43358](https://github.com/hashicorp/terraform-provider-aws/issues/43358))
+
+## 6.3.0 (July 10, 2025)
 
 FEATURES:
 
@@ -6,7 +24,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_distribution: Add `anycast_ip_list_id` attribute ([#43196](https://github.com/hashicorp/terraform-provider-aws/issues/43196))
 * data-source/aws_networkmanager_core_network_policy_document: Add `core_network_configuration.dns_support` and `core_network_configuration.security_group_referencing_support` arguments ([#43277](https://github.com/hashicorp/terraform-provider-aws/issues/43277))
+* resource/aws_cloudfront_distribution: Add `anycast_ip_list_id` argument ([#43196](https://github.com/hashicorp/terraform-provider-aws/issues/43196))
 * resource/aws_dynamodb_table: Add `replica.consistency_mode` argument in support of [multi-Region strong consistency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/V2globaltables_HowItWorks.html#V2globaltables_HowItWorks.choosing-consistency-mode) for Amazon DynamoDB global tables ([#43236](https://github.com/hashicorp/terraform-provider-aws/issues/43236))
 
 BUG FIXES:

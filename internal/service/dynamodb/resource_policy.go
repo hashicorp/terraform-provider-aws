@@ -96,7 +96,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 	})
 

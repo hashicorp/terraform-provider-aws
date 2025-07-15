@@ -520,7 +520,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.TargetGroups[0].TargetGroupArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findTargetGroupByARN(ctx, conn, d.Id())
 	})
 
