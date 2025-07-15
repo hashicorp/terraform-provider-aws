@@ -5,6 +5,7 @@ package odb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 
@@ -42,8 +43,13 @@ func (d *dataSourceGiVersionsList) Schema(ctx context.Context, req datasource.Sc
 		},
 		Blocks: map[string]schema.Block{
 			"gi_versions": schema.ListNestedBlock{
-				Description: "List of GI Versions.",
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[giVersionSummaryModel](ctx),
+				Description: fmt.Sprint(" (structure)\n " +
+					"Information about a specific version of Oracle Grid\n" +
+					"Infrastructure (GI) software that can be installed on a VM\n " +
+					"cluster.\n\n " +
+					"version -> (string)\n " +
+					"The GI software version."),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[giVersionSummaryModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"version": schema.StringAttribute{
