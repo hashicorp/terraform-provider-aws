@@ -281,9 +281,5 @@ func sweepPrecheck(ctx context.Context, client *conns.AWSClient) (bool, error) {
 		})
 		return true, nil
 	}
-	if err != nil {
-		return false, err
-	}
-
-	return false, nil
+	return false, err
 }
