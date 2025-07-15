@@ -109,6 +109,7 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx con
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	plan.ID = flex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, plan.TransitGatewayAttachmentId), createTimeout)
@@ -119,7 +120,7 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx con
 		)
 		return
 	}
-	plan.ID = flex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 

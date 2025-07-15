@@ -448,6 +448,38 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -464,7 +496,7 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t 
 		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallConfig_transitGatewayAttachment(rName, true, 0, 2),
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, true, 0, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
@@ -478,7 +510,7 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 2),
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
@@ -507,7 +539,7 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZ
 		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 2),
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
@@ -521,7 +553,7 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZ
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 1, 3),
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),

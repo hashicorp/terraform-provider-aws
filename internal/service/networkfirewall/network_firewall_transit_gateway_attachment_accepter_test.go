@@ -207,13 +207,10 @@ resource "aws_networkfirewall_firewall" "test" {
   firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
   transit_gateway_id                  = aws_ec2_transit_gateway.test.id
 
-  dynamic "availability_zone_mapping" {
-	for_each = data.aws_availability_zones.available.zone_ids
-	content {	
-	  availability_zone_id = availability_zone_mapping.value
-	}
+  availability_zone_mapping {
+	availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
   }
-  
+
   depends_on = [
 	aws_ram_resource_association.test,
 	aws_ram_principal_association.test,
