@@ -188,13 +188,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			"time_zone": schema.StringAttribute{
 				Computed: true,
 			},
-			"total_autonomous_data_storage_in_tbs": schema.Float32Attribute{
-				Computed: true,
-			},
 			"total_container_databases": schema.Int32Attribute{
-				Computed: true,
-			},
-			"total_cpus": schema.Float32Attribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
@@ -279,66 +273,54 @@ func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datas
 
 func (d *dataSourceCloudAutonomousVmCluster) flattenMaintenanceWindow(ctx context.Context, avmcMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] {
 	//days of week
-	computedMW := cloudAutonomousVmClusterMaintenanceWindowDataSourceModel{}
-	if avmcMW.DaysOfWeek != nil {
-		daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
-		for _, dayOfWeek := range avmcMW.DaysOfWeek {
-			dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
-			daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
-		}
-
-		setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
-		daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
-			SetValue: setValueOfDaysOfWeek,
-		}
-		computedMW.DaysOfWeek = daysOfWeekRead
+	daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
+	for _, dayOfWeek := range avmcMW.DaysOfWeek {
+		dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
+		daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
 	}
-
+	setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
+	daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
+		SetValue: setValueOfDaysOfWeek,
+	}
 	//hours of the day
-	if avmcMW.HoursOfDay != nil {
-		hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
-		for _, hourOfTheDay := range avmcMW.HoursOfDay {
-			daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
-			hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
-		}
-		setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
-		hoursOfTheDayRead := fwtypes.SetValueOf[types.Int32]{
-			SetValue: setValuesOfHoursOfTheDay,
-		}
-		computedMW.HoursOfDay = hoursOfTheDayRead
+	hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
+	for _, hourOfTheDay := range avmcMW.HoursOfDay {
+		daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
+		hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
 	}
-
-	//months
-	if avmcMW.Months != nil {
-		months := make([]attr.Value, 0, len(avmcMW.Months))
-		for _, month := range avmcMW.Months {
-			monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
-			months = append(months, monthStringValue)
-		}
-		setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
-		monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
-			SetValue: setValuesOfMonth,
-		}
-		computedMW.Months = monthsRead
+	setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
+	hoursOfTheDayRead := fwtypes.SetValueOf[types.Int32]{
+		SetValue: setValuesOfHoursOfTheDay,
 	}
-
+	//monts
+	months := make([]attr.Value, 0, len(avmcMW.Months))
+	for _, month := range avmcMW.Months {
+		monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
+		months = append(months, monthStringValue)
+	}
+	setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
+	monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
+		SetValue: setValuesOfMonth,
+	}
 	//weeks of month
-	if avmcMW.WeeksOfMonth != nil {
-		weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
-		for _, weekOfMonth := range avmcMW.WeeksOfMonth {
-			weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
-			weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
-		}
-		setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
-		weeksOfMonthRead := fwtypes.SetValueOf[types.Int32]{
-			SetValue: setValuesOfWeekOfMonth,
-		}
-		computedMW.WeeksOfMonth = weeksOfMonthRead
+	weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
+	for _, weekOfMonth := range avmcMW.WeeksOfMonth {
+		weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
+		weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
+	}
+	setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
+	weeksOfMonthRead := fwtypes.SetValueOf[types.Int32]{
+		SetValue: setValuesOfWeekOfMonth,
 	}
 
-	computedMW.LeadTimeInWeeks = types.Int32PointerValue(avmcMW.LeadTimeInWeeks)
-	computedMW.Preference = fwtypes.StringEnumValue(avmcMW.Preference)
-
+	computedMW := cloudAutonomousVmClusterMaintenanceWindowDataSourceModel{
+		DaysOfWeek:      daysOfWeekRead,
+		HoursOfDay:      hoursOfTheDayRead,
+		LeadTimeInWeeks: types.Int32PointerValue(avmcMW.LeadTimeInWeeks),
+		Months:          monthsRead,
+		Preference:      fwtypes.StringEnumValue(avmcMW.Preference),
+		WeeksOfMonth:    weeksOfMonthRead,
+	}
 	result, _ := fwtypes.NewObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel](ctx, &computedMW)
 	return result
 }
@@ -392,9 +374,7 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	TimeDatabaseSslCertificateExpires            types.String                                                                    `tfsdk:"time_database_ssl_certificate_expires" autoflex:",noflatten"`
 	TimeOrdsCertificateExpires                   types.String                                                                    `tfsdk:"time_ords_certificate_expires" autoflex:",noflatten"`
 	TimeZone                                     types.String                                                                    `tfsdk:"time_zone"`
-	TotalAutonomousDataStorageInTBs              types.Float32                                                                   `tfsdk:"total_autonomous_data_storage_in_tbs"`
 	TotalContainerDatabases                      types.Int32                                                                     `tfsdk:"total_container_databases"`
-	TotalCpus                                    types.Float32                                                                   `tfsdk:"total_cpus"`
 	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" autoflex:",noflatten"`
 	Tags                                         tftags.Map                                                                      `tfsdk:"tags"`
 }

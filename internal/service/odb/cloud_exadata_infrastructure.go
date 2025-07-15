@@ -272,16 +272,9 @@ func (r *resourceCloudExadataInfrastructure) Create(ctx context.Context, req res
 	}
 
 	input := odb.CreateCloudExadataInfrastructureInput{
-		Tags: getTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
+		MaintenanceWindow: r.expandMaintenanceWindow(ctx, plan.MaintenanceWindow),
 	}
-	maintenanceWindowInput, err := r.expandMaintenanceWindow(ctx, plan.MaintenanceWindow)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudExadataInfrastructure, plan.DisplayName.ValueString(), err),
-			err.Error(),
-		)
-	}
-	input.MaintenanceWindow = maintenanceWindowInput
 
 	if !plan.CustomerContactsToSendToOCI.IsNull() && !plan.CustomerContactsToSendToOCI.IsUnknown() {
 		input.CustomerContactsToSendToOCI = r.expandCustomerContacts(ctx, plan.CustomerContactsToSendToOCI)
@@ -369,12 +362,12 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 	state.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, out.MaintenanceWindow)
 
 	if out.DatabaseServerType == nil {
-		state.DatabaseServerType = types.StringValue("ExaInfraDBServerTypeNotAvailable")
+		state.DatabaseServerType = types.StringValue(ExaInfraDBServerTypeNotAvailable)
 	} else {
 		state.DatabaseServerType = types.StringValue(*out.DatabaseServerType)
 	}
 	if out.StorageServerType == nil {
-		state.StorageServerType = types.StringValue("ExaInfraStorageServerTypeNotAvailable")
+		state.StorageServerType = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
 	} else {
 		state.StorageServerType = types.StringValue(*out.StorageServerType)
 	}
@@ -401,24 +394,9 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 
 		updatedMW := odb.UpdateCloudExadataInfrastructureInput{
 			CloudExadataInfrastructureId: plan.CloudExadataInfrastructureId.ValueStringPointer(),
+			MaintenanceWindow:            r.expandMaintenanceWindow(ctx, plan.MaintenanceWindow),
 		}
-		mwInput, err := r.expandMaintenanceWindow(ctx, plan.MaintenanceWindow)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionUpdating, ResNameCloudExadataInfrastructure, state.CloudExadataInfrastructureId.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
-		updatedMW.MaintenanceWindow = mwInput
 
-		/*if updatedMW.MaintenanceWindow != nil {
-			fmt.Println("MW preference : ", updatedMW.MaintenanceWindow.Preference)
-			fmt.Println("MW hours : ", updatedMW.MaintenanceWindow.HoursOfDay)
-			fmt.Println("MW weeks : ", updatedMW.MaintenanceWindow.WeeksOfMonth)
-		} else {
-			fmt.Println("Nil MW")
-		}*/
 		out, err := conn.UpdateCloudExadataInfrastructure(ctx, &updatedMW)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -634,49 +612,14 @@ func FindOdbExadataInfraResourceByID(ctx context.Context, conn *odb.Client, id s
 
 	return out.CloudExadataInfrastructure, nil
 }
-func (r *resourceCloudExadataInfrastructure) expandMaintenanceWindow(ctx context.Context, exaInfraMWResourceObj fwtypes.ObjectValueOf[cloudExadataInfraMaintenanceWindowResourceModel]) (*odbtypes.MaintenanceWindow, error) {
+func (r *resourceCloudExadataInfrastructure) expandMaintenanceWindow(ctx context.Context, exaInfraMWResourceObj fwtypes.ObjectValueOf[cloudExadataInfraMaintenanceWindowResourceModel]) *odbtypes.MaintenanceWindow {
 
-	hasError := false
-	var err error
 	var exaInfraMWResource cloudExadataInfraMaintenanceWindowResourceModel
 
 	exaInfraMWResourceObj.As(ctx, &exaInfraMWResource, basetypes.ObjectAsOptions{
 		UnhandledNullAsEmpty:    true,
 		UnhandledUnknownAsEmpty: true,
 	})
-
-	if exaInfraMWResource.DaysOfWeek.IsNull() || exaInfraMWResource.DaysOfWeek.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("daysOfWeeks can not be null or unknown"))
-	}
-	if exaInfraMWResource.HoursOfDay.IsNull() || exaInfraMWResource.HoursOfDay.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("hoursOfDay can not be null or unknown"))
-	}
-	if exaInfraMWResource.WeeksOfMonth.IsNull() || exaInfraMWResource.WeeksOfMonth.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("weeksOfMonth can not be null or unknown"))
-	}
-	if exaInfraMWResource.Months.IsNull() || exaInfraMWResource.Months.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("months can not be null or unknown"))
-	}
-	if exaInfraMWResource.IsCustomActionTimeoutEnabled.IsNull() || exaInfraMWResource.IsCustomActionTimeoutEnabled.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("isCustomActionTimeoutEnabled can not be null or unknown"))
-	}
-	if exaInfraMWResource.CustomActionTimeoutInMins.IsNull() || exaInfraMWResource.CustomActionTimeoutInMins.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("customActionTimeoutInMins can not be null or unknown"))
-	}
-	if exaInfraMWResource.WeeksOfMonth.IsNull() || exaInfraMWResource.WeeksOfMonth.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("weeksOfMonth can not be null or unknown"))
-	}
-	if exaInfraMWResource.LeadTimeInWeeks.IsNull() || exaInfraMWResource.LeadTimeInWeeks.IsUnknown() {
-		hasError = true
-		err = errors.Join(err, errors.New("leadTimeInWeeks can not be null or unknown"))
-	}
 
 	var daysOfWeekNames []odbtypes.DayOfWeekName
 	exaInfraMWResource.DaysOfWeek.ElementsAs(ctx, &daysOfWeekNames, false)
@@ -713,35 +656,24 @@ func (r *resourceCloudExadataInfrastructure) expandMaintenanceWindow(ctx context
 		Preference:                   exaInfraMWResource.Preference.ValueEnum(),
 		WeeksOfMonth:                 weeksOfMonth,
 	}
-	if odbTypeMW.Preference == odbtypes.PreferenceTypeNoPreference {
-		if len(odbTypeMW.DaysOfWeek) != 0 {
-			hasError = true
-			err = errors.Join(err, errors.New("default maintenance window can't have daysOfWeek with values"))
-		}
-		if len(odbTypeMW.HoursOfDay) != 0 {
-			hasError = true
-			err = errors.Join(err, errors.New("default maintenance window can't have hoursOfDay with values"))
-		}
-		if len(odbTypeMW.WeeksOfMonth) != 0 {
-			hasError = true
-			err = errors.Join(err, errors.New("default maintenance window can't have weeksOfMonth with values"))
-		}
-		if len(odbTypeMW.Months) != 0 {
-			hasError = true
-			err = errors.Join(err, errors.New("default maintenance window can't have months with values"))
-		}
+
+	if len(odbTypeMW.DaysOfWeek) == 0 {
 		odbTypeMW.DaysOfWeek = nil
+	}
+	if len(odbTypeMW.HoursOfDay) == 0 {
 		odbTypeMW.HoursOfDay = nil
+	}
+	if len(odbTypeMW.WeeksOfMonth) == 0 {
 		odbTypeMW.WeeksOfMonth = nil
+	}
+	if len(odbTypeMW.Months) == 0 {
 		odbTypeMW.Months = nil
+	}
+	if *odbTypeMW.LeadTimeInWeeks == 0 {
 		odbTypeMW.LeadTimeInWeeks = nil
 	}
 
-	if hasError {
-		return nil, err
-	}
-
-	return &odbTypeMW, nil
+	return &odbTypeMW
 }
 
 func (r *resourceCloudExadataInfrastructure) flattenMaintenanceWindow(ctx context.Context, obdExaInfraMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudExadataInfraMaintenanceWindowResourceModel] {
