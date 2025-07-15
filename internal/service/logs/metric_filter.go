@@ -41,6 +41,11 @@ func resourceMetricFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"apply_on_transformed_logs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrLogGroupName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -105,11 +110,6 @@ func resourceMetricFilter() *schema.Resource {
 					return strings.TrimSpace(s)
 				},
 			},
-			"apply_on_transformed_logs": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 		},
 	}
 }
@@ -120,12 +120,15 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta a
 
 	name := d.Get(names.AttrName).(string)
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
-	input := &cloudwatchlogs.PutMetricFilterInput{
-		FilterName:             aws.String(name),
-		FilterPattern:          aws.String(strings.TrimSpace(d.Get("pattern").(string))),
-		LogGroupName:           aws.String(logGroupName),
-		MetricTransformations:  expandMetricTransformations(d.Get("metric_transformation").([]any)),
-		ApplyOnTransformedLogs: d.Get("apply_on_transformed_logs").(bool),
+	input := cloudwatchlogs.PutMetricFilterInput{
+		FilterName:            aws.String(name),
+		FilterPattern:         aws.String(strings.TrimSpace(d.Get("pattern").(string))),
+		LogGroupName:          aws.String(logGroupName),
+		MetricTransformations: expandMetricTransformations(d.Get("metric_transformation").([]any)),
+	}
+
+	if v, ok := d.GetOk("apply_on_transformed_logs"); ok {
+		input.ApplyOnTransformedLogs = v.(bool)
 	}
 
 	// Creating multiple filters on the same log group can sometimes cause
@@ -135,7 +138,7 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta a
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := conn.PutMetricFilter(ctx, input)
+	_, err := conn.PutMetricFilter(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
@@ -164,13 +167,13 @@ func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
+	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
 	d.Set(names.AttrLogGroupName, mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting metric_transformation: %s", err)
 	}
 	d.Set(names.AttrName, mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
-	d.Set("apply_on_transformed_logs", mf.ApplyOnTransformedLogs)
 
 	return diags
 }
@@ -187,10 +190,11 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Metric Filter: %s", d.Id())
-	_, err := conn.DeleteMetricFilter(ctx, &cloudwatchlogs.DeleteMetricFilterInput{
+	input := cloudwatchlogs.DeleteMetricFilterInput{
 		FilterName:   aws.String(d.Id()),
 		LogGroupName: aws.String(d.Get(names.AttrLogGroupName).(string)),
-	})
+	}
+	_, err := conn.DeleteMetricFilter(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
