@@ -294,6 +294,46 @@ resource "aws_cloudwatch_log_delivery" "example" {
 }
 ```
 
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # other config
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
+  region = "us-east-1"
+
+  # other config
+}
+
+resource "aws_cloudwatch_log_delivery_source" "example" {
+  region = "us-east-1"
+
+  name         = "cloudfront-logs-source"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.example.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "example" {
+  region = "us-east-1"
+
+  name          = "firehose-destination"
+  output_format = "json"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_kinesis_firehose_delivery_stream.cloudfront_logs.arn
+  }
+}
+resource "aws_cloudwatch_log_delivery" "example" {
+  region = "us-east-1"
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
