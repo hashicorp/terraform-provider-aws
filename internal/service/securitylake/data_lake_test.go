@@ -601,7 +601,7 @@ func testAccCheckDataLakeExists(ctx context.Context, n string, v *types.DataLake
 	}
 }
 
-const testAccDataLakeConfigConfig_base = testAccDataLakeConfigConfig_base_iam + `
+const testAccDataLakeConfigConfig_base_kmsKey = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -624,7 +624,7 @@ POLICY
 
 func testAccDataLakeConfigConfig_base_regionOverride() string {
 	return acctest.ConfigCompose(
-		testAccDataLakeConfigConfig_base_iam,
+		testAccDataLakeConfigConfig_base,
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   region = %[1]q
@@ -649,7 +649,7 @@ POLICY
 `, acctest.AlternateRegion()))
 }
 
-const testAccDataLakeConfigConfig_base_iam = `
+const testAccDataLakeConfigConfig_base = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -850,7 +850,10 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_lifeCycle(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		testAccDataLakeConfigConfig_base_kmsKey,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -886,7 +889,10 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		testAccDataLakeConfigConfig_base_kmsKey,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
