@@ -236,6 +236,59 @@ func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
 	})
 }
 
+func TestAccODBCloudExadataUpdateMaintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
+	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
+	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
+	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			//testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window.preference", "NO_PREFERENCE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: exaInfraTestResource.basicWithCustomMaintenanceWindow(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
+							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window.preference", "CUSTOM_PREFERENCE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccODBCloudExadataInfrastructure_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -441,6 +494,29 @@ maintenance_window = {
         patching_mode = "ROLLING"
         preference = "NO_PREFERENCE"
 		weeks_of_month =[]
+  }
+}
+`, displayName)
+	return exaInfra
+}
+func (cloudExaDataInfraResourceTest) basicWithCustomMaintenanceWindow(displayName string) string {
+	exaInfra := fmt.Sprintf(`
+resource "aws_odb_cloud_exadata_infrastructure" "test" {
+  display_name          = %[1]q
+  shape             	= "Exadata.X9M"
+  storage_count      	= 3
+  compute_count         = 2
+  availability_zone_id 	= "use1-az6"
+  maintenance_window = {
+  		custom_action_timeout_in_mins = 16
+		days_of_week =	["MONDAY", "TUESDAY"]
+        hours_of_day =	[11,16]
+        is_custom_action_timeout_enabled = true
+        lead_time_in_weeks = 3
+        months = ["FEBRUARY","MAY","AUGUST","NOVEMBER"]
+        patching_mode = "ROLLING"
+        preference = "CUSTOM_PREFERENCE"
+		weeks_of_month =[2,4]
   }
 }
 `, displayName)
