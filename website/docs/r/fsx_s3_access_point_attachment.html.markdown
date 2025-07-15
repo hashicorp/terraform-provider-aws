@@ -6,7 +6,7 @@ description: |-
   Manages an Amazon FSx S3 Access Point attachment.
 ---
 
-# Resource: aws_fsx_openzfs_file_system
+# Resource: aws_fsx_s3_access_point_attachment
 
 Manages an Amazon FSx S3 Access Point attachment.
 
