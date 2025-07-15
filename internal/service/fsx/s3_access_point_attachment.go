@@ -61,8 +61,7 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$`), ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$`), "must between 3 and 50 lowercase letters, numbers, or hyphens"),
 					fwvalidators.SuffixNoneOf("-ext-s3alias"),
 				},
 				PlanModifiers: []planmodifier.String{
@@ -257,13 +256,8 @@ func (r *s3AccessPointAttachmentResource) Create(ctx context.Context, request re
 	}
 
 	// Set values for unknowns.
-	if v := output.S3AccessPoint; v != nil {
-		data.S3AccessPointAlias = fwflex.StringToFramework(ctx, v.Alias)
-		data.S3AccessPointARN = fwflex.StringToFramework(ctx, v.ResourceARN)
-	} else {
-		data.S3AccessPointAlias = types.StringNull()
-		data.S3AccessPointARN = types.StringNull()
-	}
+	data.S3AccessPointAlias = fwflex.StringToFramework(ctx, output.S3AccessPoint.Alias)
+	data.S3AccessPointARN = fwflex.StringToFramework(ctx, output.S3AccessPoint.ResourceARN)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -305,8 +299,10 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 		policy = s3AccessPoint.Policy
 	}
 
+	// S3 access point alias and ARN are handled at the top level.
+	data.S3AccessPointAlias = fwflex.StringToFramework(ctx, output.S3AccessPoint.Alias)
+	data.S3AccessPointARN = fwflex.StringToFramework(ctx, output.S3AccessPoint.ResourceARN)
 	if policy.IsNull() && output.S3AccessPoint.VpcConfiguration == nil {
-		// S3 access point alias and ARN are handled at the top level.
 		output.S3AccessPoint = nil
 	}
 
@@ -378,8 +374,17 @@ func findS3AccessPointAttachmentByName(ctx context.Context, conn *fsx.Client, na
 	input := fsx.DescribeS3AccessPointAttachmentsInput{
 		Names: []string{name},
 	}
+	output, err := findS3AccessPointAttachment(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.S3AccessPointAttachment]())
 
-	return findS3AccessPointAttachment(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.S3AccessPointAttachment]())
+	if err != nil {
+		return nil, err
+	}
+
+	if output.S3AccessPoint == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, nil
 }
 
 func findS3AccessPointAttachment(ctx context.Context, conn *fsx.Client, input *fsx.DescribeS3AccessPointAttachmentsInput, filter tfslices.Predicate[*awstypes.S3AccessPointAttachment]) (*awstypes.S3AccessPointAttachment, error) {
