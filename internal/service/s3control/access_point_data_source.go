@@ -43,7 +43,7 @@ func (d *accessPointDataSource) Schema(ctx context.Context, request datasource.S
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"bucket": schema.StringAttribute{
+			names.AttrBucket: schema.StringAttribute{
 				Computed: true,
 			},
 			"bucket_account_id": schema.StringAttribute{
