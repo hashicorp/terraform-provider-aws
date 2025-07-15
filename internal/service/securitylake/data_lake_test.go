@@ -372,7 +372,7 @@ func testAccDataLake_metaStoreUpdate(t *testing.T) {
 				Config: testAccDataLakeConfig_metaStoreUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_v1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_updated", "arn"),
 				),
 			},
 			{
@@ -608,31 +608,6 @@ const testAccDataLakeConfigConfig_base = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "meta_store_manager_v1" {
-  name               = "AmazonSecurityLakeMetaStoreManagerV1"
-  path               = "/service-role/"
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowLambda",
-    "Effect": "Allow",
-    "Principal": {
-      "Service": [
-        "lambda.amazonaws.com"
-      ]
-    },
-    "Action": "sts:AssumeRole"
-  }]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "datalake_v1" {
-  role       = aws_iam_role.meta_store_manager_v1.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
-}
-
 resource "aws_iam_role" "meta_store_manager" {
   name               = "AmazonSecurityLakeMetaStoreManagerV2"
   path               = "/service-role/"
@@ -673,6 +648,33 @@ resource "aws_iam_role" "datalake_s3_replication" {
   }]
 }
 POLICY
+}
+
+# These are required in all configurations because the role stays registered with the Lake Formation Data Lake
+# after the MetaStoreManager role is updated.
+resource "aws_iam_role" "meta_store_manager_updated" {
+  name               = "AmazonSecurityLakeMetaStoreManagerV1"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowLambda",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": [
+        "lambda.amazonaws.com"
+      ]
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "datalake_updated" {
+  role       = aws_iam_role.meta_store_manager_updated.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
 }
 
 resource "aws_iam_role_policy" "datalake_s3_replication" {
@@ -879,7 +881,9 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_metaStore(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -887,30 +891,23 @@ resource "aws_securitylake_data_lake" "test" {
     region = %[2]q
   }
 
-  tags = {
-    Name = %[1]q
-  }
-
-  depends_on = [aws_iam_role.meta_store_manager]
+  depends_on = [aws_iam_role_policy_attachment.datalake]
 }
 `, rName, acctest.Region()))
 }
 
 func testAccDataLakeConfig_metaStoreUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base,
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
 		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
-  meta_store_manager_role_arn = aws_iam_role.meta_store_manager_v1.arn
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager_updated.arn
 
   configuration {
     region = %[2]q
   }
 
-  tags = {
-    Name = %[1]q
-  }
-
-  depends_on = [aws_iam_role.meta_store_manager_v1]
+  depends_on = [aws_iam_role_policy_attachment.datalake_updated]
 }
 `, rName, acctest.Region()))
 }
