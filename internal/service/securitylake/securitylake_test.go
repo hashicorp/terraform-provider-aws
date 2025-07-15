@@ -94,21 +94,32 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDeleteGlueDatabase(ctx context.Context, t *testing.T) {
+func testAccDeleteGlueDatabases(ctx context.Context, t *testing.T, regions ...string) {
+	t.Helper()
+
+	// The Context returned by t.Context() is canceled when the test ends.
+	ctx = context.WithoutCancel(ctx)
+
+	for _, region := range regions {
+		deleteGlueDatabase(ctx, t, region)
+	}
+}
+
+func deleteGlueDatabase(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
 	// e.g. "amazon_security_lake_glue_db_us-east-1"
-	databaseName := "amazon_security_lake_glue_db_" + strings.ReplaceAll(acctest.Region(), "-", "_")
+	databaseName := "amazon_security_lake_glue_db_" + strings.ReplaceAll(region, "-", "_")
 	input := glue.DeleteDatabaseInput{
 		Name: aws.String(databaseName),
 	}
-	_, err := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx).DeleteDatabase(ctx, &input)
-
+	_, err := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx).DeleteDatabase(ctx, &input, func(o *glue.Options) {
+		o.Region = region
+	})
 	if errs.IsA[*gluetypes.EntityNotFoundException](err) {
 		return
 	}
-
 	if err != nil {
-		t.Errorf("deleting Glue Database (%s): %s", databaseName, err)
+		t.Errorf("deleting Glue Database (%s) in %q: %s", databaseName, region, err)
 	}
 }
