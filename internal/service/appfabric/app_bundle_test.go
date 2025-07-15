@@ -438,9 +438,3 @@ resource "aws_appfabric_app_bundle" "test" {
 }
 `, region)
 }
-
-func testAccAppBundleConfig_identityV5() string {
-	return `
-resource "aws_appfabric_app_bundle" "test" {}
-`
-}

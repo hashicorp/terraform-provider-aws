@@ -463,28 +463,6 @@ resource "aws_codepipeline_webhook" "test" {
 `, rName))
 }
 
-func testAccWebhookConfig_regionOverride(rName, githubToken string) string {
-	return acctest.ConfigCompose(testAccWebhookConfig_base(rName, githubToken), fmt.Sprintf(`
-resource "aws_codepipeline_webhook" "test" {
-  region = %[2]q
-
-  name            = %[1]q
-  authentication  = "GITHUB_HMAC"
-  target_action   = "Source"
-  target_pipeline = aws_codepipeline.test.name
-
-  authentication_configuration {
-    secret_token = "super-secret"
-  }
-
-  filter {
-    json_path    = "$.ref"
-    match_equals = "refs/head/{Branch}"
-  }
-}
-`, rName, acctest.AlternateRegion()))
-}
-
 func testAccWebhookConfig_filters(rName, githubToken string) string {
 	return acctest.ConfigCompose(testAccWebhookConfig_base(rName, githubToken), fmt.Sprintf(`
 resource "aws_codepipeline_webhook" "test" {
