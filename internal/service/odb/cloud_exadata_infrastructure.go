@@ -6,8 +6,10 @@ package odb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -75,10 +77,12 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"activated_storage_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of storage servers requested for the Exadata infrastructure",
 			},
 			"additional_storage_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: " The number of storage servers requested for the Exadata infrastructure",
 			},
 			"database_server_type": schema.StringAttribute{
 				Optional: true,
@@ -87,6 +91,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
 			},
 			"storage_server_type": schema.StringAttribute{
 				Optional: true,
@@ -95,11 +100,13 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"available_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of available storage, in gigabytes (GB), for the Exadata infrastructure",
 			},
 			"availability_zone": schema.StringAttribute{
 				Optional: true,
@@ -108,6 +115,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource",
 			},
 			"availability_zone_id": schema.StringAttribute{
 				Required: true,
@@ -115,6 +123,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: " The AZ ID of the AZ where the Exadata infrastructure is located. Changing this will force terraform to create new resource",
 			},
 			"compute_count": schema.Int32Attribute{
 				Optional: true,
@@ -123,9 +132,11 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					int32planmodifier.RequiresReplace(),
 					int32planmodifier.UseStateForUnknown(),
 				},
+				Description: " The number of compute instances that the Exadata infrastructure is located",
 			},
 			"cpu_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores that are allocated to the Exadata infrastructure",
 			},
 			"customer_contacts_to_send_to_oci": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -135,73 +146,94 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					setplanmodifier.RequiresReplace(),
 					setplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The size of the Exadata infrastructure's data disk group, in terabytes (TB)",
 			},
 			"db_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The size of the Exadata infrastructure's local node storage, in gigabytes (GB)",
 			},
 			"db_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The software version of the database servers (dom0) in the Exadata infrastructure",
 			},
 			"display_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The user-friendly name for the Exadata infrastructure. Changing this will force terraform to create a new resource",
 			},
 			"last_maintenance_run_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The Oracle Cloud Identifier (OCID) of the last maintenance run for the Exadata infrastructure",
 			},
 			"max_cpu_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores available on the Exadata infrastructure",
 			},
 			"max_data_storage_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of data disk group storage, in terabytes (TB), that's available on the Exadata infrastructure",
 			},
 			"max_db_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of local node storage, in gigabytes (GB), that's available on the Exadata infrastructure",
 			},
 			"max_memory_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of memory in gigabytes (GB) available on the Exadata infrastructure",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of memory, in gigabytes (GB), that's allocated on the Exadata infrastructure",
 			},
 			"monthly_db_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The monthly software version of the database servers in the Exadata infrastructure",
 			},
 			"monthly_storage_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The monthly software version of the storage servers installed on the Exadata infrastructure",
 			},
 			"next_maintenance_run_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The OCID of the next maintenance run for the Exadata infrastructure",
 			},
 			"ocid": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The OCID of the Exadata infrastructure",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor for the Exadata infrastructure",
 			},
 			"oci_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The HTTPS link to the Exadata infrastructure in OCI",
 			},
 			"percent_progress": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of progress made on the current operation on the Exadata infrastructure, expressed as a percentage",
 			},
 			"shape": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The model name of the Exadata infrastructure. Changing this will force terraform to create new resource",
 			},
 			"status": schema.StringAttribute{
-				CustomType: statusType,
-				Computed:   true,
+				CustomType:  statusType,
+				Computed:    true,
+				Description: "The current status of the Exadata infrastructure",
 			},
 			"status_reason": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Additional information about the status of the Exadata infrastructure",
 			},
 			"storage_count": schema.Int32Attribute{
 				Optional: true,
@@ -210,9 +242,11 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 					int32planmodifier.RequiresReplace(),
 					int32planmodifier.UseStateForUnknown(),
 				},
+				Description: "TThe number of storage servers that are activated for the Exadata infrastructure",
 			},
 			"storage_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The software version of the storage servers on the Exadata infrastructure.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -220,16 +254,27 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				Computed: true,
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The time when the Exadata infrastructure was created",
 			},
 			"compute_model": schema.StringAttribute{
 				CustomType: computeModelType,
 				Computed:   true,
+				Description: fmt.Sprint("The OCI model compute model used when you create or clone an\n " +
+					" instance: ECPU or OCPU. An ECPU is an abstracted measure of\n " +
+					"compute resources. ECPUs are based on the number of cores\n " +
+					"elastically allocated from a pool of compute and storage servers.\n " +
+					" An OCPU is a legacy physical measure of compute resources. OCPUs\n " +
+					"are based on the physical core of a processor with\n " +
+					" hyper-threading enabled."),
 			},
 			"maintenance_window": schema.ObjectAttribute{
-				Required:   true,
-				CustomType: fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowResourceModel](ctx),
-
+				Required:    true,
+				CustomType:  fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowResourceModel](ctx),
+				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 				AttributeTypes: map[string]attr.Type{
 					"custom_action_timeout_in_mins": types.Int32Type,
 					"days_of_week": types.SetType{
@@ -380,6 +425,7 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 }
 
 func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	fmt.Println("update called")
 	var plan, state cloudExadataInfrastructureResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -389,7 +435,7 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 	conn := r.Meta().ODBClient(ctx)
 
 	if !state.MaintenanceWindow.Equal(plan.MaintenanceWindow) {
-
+		fmt.Println("update called")
 		//we need to call update maintenance window
 
 		updatedMW := odb.UpdateCloudExadataInfrastructureInput{
