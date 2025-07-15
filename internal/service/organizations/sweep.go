@@ -112,7 +112,7 @@ func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.Option
 }
 
 func sweepDelegatedAdministrators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	if skip, err := sweepOrganizationsPrecheck(ctx, client); err != nil {
+	if skip, err := sweepPrecheck(ctx, client); err != nil {
 		return nil, err
 	} else if skip {
 		return nil, nil
@@ -176,7 +176,7 @@ func sweepListDelegatedServices(ctx context.Context, client *conns.AWSClient, r 
 }
 
 func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	if skip, err := sweepOrganizationsPrecheck(ctx, client); err != nil {
+	if skip, err := sweepPrecheck(ctx, client); err != nil {
 		return nil, err
 	} else if skip {
 		return nil, nil
@@ -264,7 +264,7 @@ func (ous organizationalUnitSweeper) Delete(ctx context.Context, optFns ...tfres
 	return nil
 }
 
-func sweepOrganizationsPrecheck(ctx context.Context, client *conns.AWSClient) (bool, error) {
+func sweepPrecheck(ctx context.Context, client *conns.AWSClient) (bool, error) {
 	conn := client.OrganizationsClient(ctx)
 
 	orgInput := organizations.DescribeOrganizationInput{}
