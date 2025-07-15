@@ -309,54 +309,6 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
 			},
-		},
-	})
-}
-
-func testAccDataLake_lifeCycleUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_securitylake_data_lake.test"
-
-	t.Cleanup(func() {
-		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
-	})
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataLakeConfig_lifeCycle(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
-			},
 			{
 				Config: testAccDataLakeConfig_lifeCycleUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
