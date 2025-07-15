@@ -14,7 +14,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,8 +35,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 func newResourceNetworkFirewallTransitGatewayAttachmentAccepter(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceNetworkFirewallTransitGatewayAttachmentAccepter{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(60 * time.Minute)
+	r.SetDefaultDeleteTimeout(60 * time.Minute)
 
 	return r, nil
 }
@@ -56,6 +55,7 @@ type resourceNetworkFirewallTransitGatewayAttachmentAccepter struct {
 func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
 			names.AttrTransitGatewayAttachmentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -119,7 +119,7 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx con
 		)
 		return
 	}
-
+	plan.ID = flex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -150,7 +150,6 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Read(ctx conte
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -194,13 +193,9 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Delete(ctx con
 	}
 }
 
-func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2awstypes.TransitGatewayAttachmentState, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(ec2awstypes.TransitGatewayAttachmentStatePending),
+		Pending:                   enum.Slice(ec2awstypes.TransitGatewayAttachmentStatePending, ec2awstypes.TransitGatewayAttachmentStatePendingAcceptance),
 		Target:                    enum.Slice(ec2awstypes.TransitGatewayAttachmentStateAvailable),
 		Refresh:                   statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx, conn, id),
 		Timeout:                   timeout,
@@ -218,7 +213,7 @@ func waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx context.Cont
 
 func waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachmentStatus, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(ec2awstypes.TransitGatewayAttachmentStateDeleting),
+		Pending: enum.Slice(ec2awstypes.TransitGatewayAttachmentStateDeleting, ec2awstypes.TransitGatewayAttachmentStateAvailable),
 		Target:  enum.Slice(ec2awstypes.TransitGatewayAttachmentStateDeleted),
 		Refresh: statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx, conn, id),
 		Timeout: timeout,
@@ -261,6 +256,7 @@ func findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx context.Context
 
 type resourceNetworkFirewallTransitGatewayAttachmentAccepterModel struct {
 	framework.WithRegionModel
+	ID                         types.String   `tfsdk:"id"`
 	TransitGatewayAttachmentId types.String   `tfsdk:"transit_gateway_attachment_id"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
 }

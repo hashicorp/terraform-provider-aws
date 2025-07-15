@@ -150,8 +150,16 @@ func testAccCheckNetworkFirewallTransitGatewayAttachmentAccepterExists(ctx conte
 func testAccNetworkFirewallTransitGatewayAttachmentAccepterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
-		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+		
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
