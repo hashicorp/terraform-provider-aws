@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceDbSystemShapesList,
+			TypeName: "aws_odb_db_system_shapes_list",
+			Name:     "Db System Shapes List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceGiVersionsList,
 			TypeName: "aws_odb_gi_versions_list",
 			Name:     "Gi Versions List",

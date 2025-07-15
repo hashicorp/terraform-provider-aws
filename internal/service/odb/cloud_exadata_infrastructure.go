@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -86,20 +85,24 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 			},
 			"database_server_type": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
+			},
+			"database_server_type_computed": schema.StringAttribute{
+				Computed:    true,
 				Description: "The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
 			},
 			"storage_server_type": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
+			},
+			"storage_server_type_computed": schema.StringAttribute{
+				Computed:    true,
 				Description: "The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation",
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -272,9 +275,6 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				Required:    true,
 				CustomType:  fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowResourceModel](ctx),
 				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
-				},
 				AttributeTypes: map[string]attr.Type{
 					"custom_action_timeout_in_mins": types.Int32Type,
 					"days_of_week": types.SetType{
@@ -362,14 +362,16 @@ func (r *resourceCloudExadataInfrastructure) Create(ctx context.Context, req res
 	plan.CreatedAt = types.StringValue(createdExaInfra.CreatedAt.Format(time.RFC3339))
 
 	if createdExaInfra.DatabaseServerType == nil {
-		plan.DatabaseServerType = types.StringValue(ExaInfraDBServerTypeNotAvailable)
+		plan.DatabaseServerTypeComputed = types.StringValue(ExaInfraDBServerTypeNotAvailable)
 	} else {
 		plan.DatabaseServerType = types.StringValue(*createdExaInfra.DatabaseServerType)
+		plan.DatabaseServerTypeComputed = types.StringValue(*createdExaInfra.DatabaseServerType)
 	}
 	if createdExaInfra.StorageServerType == nil {
-		plan.StorageServerType = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
+		plan.StorageServerTypeComputed = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
 	} else {
 		plan.StorageServerType = types.StringValue(*createdExaInfra.StorageServerType)
+		plan.StorageServerTypeComputed = types.StringValue(*createdExaInfra.StorageServerType)
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdExaInfra, &plan)...)
 
@@ -407,14 +409,16 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 	state.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, out.MaintenanceWindow)
 
 	if out.DatabaseServerType == nil {
-		state.DatabaseServerType = types.StringValue(ExaInfraDBServerTypeNotAvailable)
+		state.DatabaseServerTypeComputed = types.StringValue(ExaInfraDBServerTypeNotAvailable)
 	} else {
 		state.DatabaseServerType = types.StringValue(*out.DatabaseServerType)
+		state.DatabaseServerTypeComputed = types.StringValue(*out.DatabaseServerType)
 	}
 	if out.StorageServerType == nil {
-		state.StorageServerType = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
+		state.StorageServerTypeComputed = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
 	} else {
 		state.StorageServerType = types.StringValue(*out.StorageServerType)
+		state.StorageServerTypeComputed = types.StringValue(*out.StorageServerType)
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 
@@ -425,7 +429,7 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 }
 
 func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	fmt.Println("update called")
+
 	var plan, state cloudExadataInfrastructureResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -435,7 +439,7 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 	conn := r.Meta().ODBClient(ctx)
 
 	if !state.MaintenanceWindow.Equal(plan.MaintenanceWindow) {
-		fmt.Println("update called")
+
 		//we need to call update maintenance window
 
 		updatedMW := odb.UpdateCloudExadataInfrastructureInput{
@@ -474,14 +478,16 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 	plan.CreatedAt = types.StringValue(updatedExaInfra.CreatedAt.Format(time.RFC3339))
 	plan.MaintenanceWindow = r.flattenMaintenanceWindow(ctx, updatedExaInfra.MaintenanceWindow)
 	if updatedExaInfra.DatabaseServerType == nil {
-		plan.DatabaseServerType = types.StringValue(ExaInfraDBServerTypeNotAvailable)
+		plan.DatabaseServerTypeComputed = types.StringValue(ExaInfraDBServerTypeNotAvailable)
 	} else {
 		plan.DatabaseServerType = types.StringValue(*updatedExaInfra.DatabaseServerType)
+		plan.DatabaseServerTypeComputed = types.StringValue(*updatedExaInfra.DatabaseServerType)
 	}
 	if updatedExaInfra.StorageServerType == nil {
-		plan.StorageServerType = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
+		plan.StorageServerTypeComputed = types.StringValue(ExaInfraStorageServerTypeNotAvailable)
 	} else {
 		plan.StorageServerType = types.StringValue(*updatedExaInfra.StorageServerType)
+		plan.StorageServerTypeComputed = types.StringValue(*updatedExaInfra.StorageServerType)
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, updatedExaInfra, &plan)...)
@@ -795,8 +801,10 @@ type cloudExadataInfrastructureResourceModel struct {
 	framework.WithRegionModel
 	ActivatedStorageCount         types.Int32                                                            `tfsdk:"activated_storage_count"`
 	AdditionalStorageCount        types.Int32                                                            `tfsdk:"additional_storage_count"`
-	DatabaseServerType            types.String                                                           `tfsdk:"database_server_type"`
-	StorageServerType             types.String                                                           `tfsdk:"storage_server_type"`
+	DatabaseServerType            types.String                                                           `tfsdk:"database_server_type" autoflex:"-"`
+	DatabaseServerTypeComputed    types.String                                                           `tfsdk:"database_server_type_computed" autoflex:"-"`
+	StorageServerType             types.String                                                           `tfsdk:"storage_server_type" autoflex:"-"`
+	StorageServerTypeComputed     types.String                                                           `tfsdk:"storage_server_type_computed" autoflex:"-"`
 	AvailabilityZone              types.String                                                           `tfsdk:"availability_zone"`
 	AvailabilityZoneId            types.String                                                           `tfsdk:"availability_zone_id"`
 	AvailableStorageSizeInGBs     types.Int32                                                            `tfsdk:"available_storage_size_in_gbs"`
