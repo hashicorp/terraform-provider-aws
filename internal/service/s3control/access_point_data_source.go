@@ -86,7 +86,6 @@ func (d *accessPointDataSource) Read(ctx context.Context, request datasource.Rea
 	if accountID == "" {
 		accountID = d.Meta().AccountID(ctx)
 	}
-
 	output, err := findAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
@@ -99,6 +98,8 @@ func (d *accessPointDataSource) Read(ctx context.Context, request datasource.Rea
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.AccountID = fwflex.StringValueToFramework(ctx, accountID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
