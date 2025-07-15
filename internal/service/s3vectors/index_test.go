@@ -198,14 +198,15 @@ func testAccCheckIndexAddVector(ctx context.Context, n string, key string, value
 			return err
 		}
 
-		_, err = conn.PutVectors(ctx, &s3vectors.PutVectorsInput{
+		input := s3vectors.PutVectorsInput{
 			IndexArn: aws.String(rs.Primary.Attributes["index_arn"]),
 			Vectors: []awstypes.PutInputVector{{
 				Key:      aws.String(key),
 				Data:     &awstypes.VectorDataMemberFloat32{Value: value},
 				Metadata: metadata,
 			}},
-		})
+		}
+		_, err = conn.PutVectors(ctx, &input)
 
 		return err
 	}

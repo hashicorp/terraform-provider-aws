@@ -57,7 +57,7 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.Null(),
-							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
+							"sse_type":          tfknownvalue.StringExact(awstypes.SseTypeAes256),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
@@ -141,7 +141,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.Null(),
-							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
+							"sse_type":          tfknownvalue.StringExact(awstypes.SseTypeAes256),
 						}),
 					})),
 				},
@@ -198,7 +198,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKMSKeyARN: knownvalue.NotNull(),
-							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAwsKms),
+							"sse_type":          tfknownvalue.StringExact(awstypes.SseTypeAwsKms),
 						}),
 					})),
 				},
@@ -315,13 +315,14 @@ func testAccCheckVectorBucketAddIndex(ctx context.Context, n string, name string
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
 
-		_, err := conn.CreateIndex(ctx, &s3vectors.CreateIndexInput{
+		input := s3vectors.CreateIndexInput{
 			DataType:        awstypes.DataTypeFloat32,
 			Dimension:       aws.Int32(3),
 			DistanceMetric:  awstypes.DistanceMetricCosine,
 			IndexName:       aws.String(name),
 			VectorBucketArn: aws.String(rs.Primary.Attributes["vector_bucket_arn"]),
-		})
+		}
+		_, err := conn.CreateIndex(ctx, &input)
 
 		return err
 	}
