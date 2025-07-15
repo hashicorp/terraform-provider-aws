@@ -1,4 +1,5 @@
 resource "aws_codepipeline_webhook" "test" {
+{{- template "region" }}
   name            = var.GITHUB_TOKEN
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
@@ -12,6 +13,8 @@ resource "aws_codepipeline_webhook" "test" {
     json_path    = "$.ref"
     match_equals = "refs/head/{Branch}"
   }
+
+{{- template "tags" . }}
 }
 
 # testAccWebhookConfig_base

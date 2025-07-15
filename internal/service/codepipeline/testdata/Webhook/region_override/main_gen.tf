@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_codepipeline_webhook" "test" {
+  region = var.region
+
   name            = var.GITHUB_TOKEN
   authentication  = "GITHUB_HMAC"
   target_action   = "Source"
