@@ -22,7 +22,11 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_organizations_account", sweepAccounts)
+	awsv2.Register("aws_organizations_account", sweepAccounts,
+		"aws_organizations_delegated_administrator",
+	)
+
+	awsv2.Register("aws_organizations_delegated_administrator", sweepDelegatedAdministrators)
 
 	awsv2.Register("aws_organizations_organizational_unit", sweepOrganizationalUnits,
 		"aws_organizations_account")
@@ -105,6 +109,82 @@ func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.Option
 		return err
 	}
 	return nil
+}
+
+func sweepDelegatedAdministrators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	orgInput := organizations.DescribeOrganizationInput{}
+	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not part of an AWS Organization",
+		})
+		return nil, nil
+	}
+	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not the management account of an AWS Organization",
+		})
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	r := resourceDelegatedAdministrator()
+	var sweepResources []sweep.Sweepable
+
+	input := organizations.ListDelegatedAdministratorsInput{}
+	pages := organizations.NewListDelegatedAdministratorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, delegatedAdministrator := range page.DelegatedAdministrators {
+			delegatedServices, err := sweepListDelegatedServices(ctx, client, r, delegatedAdministrator.Id)
+			if err != nil {
+				return nil, err
+			}
+
+			sweepResources = append(sweepResources, delegatedServices...)
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepListDelegatedServices(ctx context.Context, client *conns.AWSClient, r *schema.Resource, accountID *string) ([]sweep.Sweepable, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	input := organizations.ListDelegatedServicesForAccountInput{
+		AccountId: accountID,
+	}
+	pages := organizations.NewListDelegatedServicesForAccountPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, delegatedService := range page.DelegatedServices {
+			servicePrincipal := aws.ToString(delegatedService.ServicePrincipal)
+			id := delegatedAdministratorCreateResourceID(aws.ToString(accountID), servicePrincipal)
+
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("account_id", accountID)
+			d.Set("service_principal", servicePrincipal)
+
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
