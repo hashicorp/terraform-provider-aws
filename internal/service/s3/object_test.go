@@ -1335,6 +1335,31 @@ func TestAccS3Object_tagsViaObjectLambdaAccessPointARN(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_viaDirectoryBucketAccessPointAlias(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_viaDirectoryBucketAccessPointAlias(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -2478,6 +2503,15 @@ resource "aws_s3control_object_lambda_access_point" "test" {
 `, rName))
 }
 
+func testAccObjectConfig_baseDirectoryBucketAccessPoint(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_basic(rName), `
+resource "aws_s3_access_point" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = local.access_point_name
+}
+`)
+}
+
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2918,6 +2952,16 @@ resource "aws_s3_object" "object" {
     Key4 = "DDD"
     Key5 = "E:/"
   }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_viaDirectoryBucketAccessPointAlias(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseDirectoryBucketAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3_access_point.test.alias
+  key     = %[1]q
+  content = %[2]q
 }
 `, key, content))
 }
