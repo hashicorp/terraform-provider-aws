@@ -950,7 +950,7 @@ resource "aws_securitylake_data_lake" "region_2" {
     Name = %[1]q
   }
 
-  depends_on = [[aws_iam_role_policy_attachment.datalake], aws_iam_role_policy.datalake_s3_replication, aws_securitylake_data_lake.test]
+  depends_on = [aws_iam_role_policy_attachment.datalake, aws_iam_role_policy.datalake_s3_replication, aws_securitylake_data_lake.test]
 }
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
