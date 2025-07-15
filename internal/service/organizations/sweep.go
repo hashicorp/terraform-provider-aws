@@ -112,25 +112,13 @@ func (as accountSweeper) Delete(ctx context.Context, optFns ...tfresource.Option
 }
 
 func sweepDelegatedAdministrators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.OrganizationsClient(ctx)
-
-	orgInput := organizations.DescribeOrganizationInput{}
-	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
-	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not part of an AWS Organization",
-		})
-		return nil, nil
-	}
-	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not the management account of an AWS Organization",
-		})
-		return nil, nil
-	}
-	if err != nil {
+	if skip, err := sweepOrganizationsPrecheck(ctx, client); err != nil {
 		return nil, err
+	} else if skip {
+		return nil, nil
 	}
+
+	conn := client.OrganizationsClient(ctx)
 
 	r := resourceDelegatedAdministrator()
 	var sweepResources []sweep.Sweepable
@@ -188,25 +176,13 @@ func sweepListDelegatedServices(ctx context.Context, client *conns.AWSClient, r 
 }
 
 func sweepOrganizationalUnits(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	conn := client.OrganizationsClient(ctx)
-
-	orgInput := organizations.DescribeOrganizationInput{}
-	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
-	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not part of an AWS Organization",
-		})
-		return nil, nil
-	}
-	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
-		tflog.Info(ctx, "Skipping sweeper", map[string]any{
-			"skip_reason": "Not the management account of an AWS Organization",
-		})
-		return nil, nil
-	}
-	if err != nil {
+	if skip, err := sweepOrganizationsPrecheck(ctx, client); err != nil {
 		return nil, err
+	} else if skip {
+		return nil, nil
 	}
+
+	conn := client.OrganizationsClient(ctx)
 
 	r := resourceOrganizationalUnit()
 	var sweepResources []sweep.Sweepable
@@ -286,4 +262,28 @@ func (ous organizationalUnitSweeper) Delete(ctx context.Context, optFns ...tfres
 		return err
 	}
 	return nil
+}
+
+func sweepOrganizationsPrecheck(ctx context.Context, client *conns.AWSClient) (bool, error) {
+	conn := client.OrganizationsClient(ctx)
+
+	orgInput := organizations.DescribeOrganizationInput{}
+	orgOutput, err := conn.DescribeOrganization(ctx, &orgInput)
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not part of an AWS Organization",
+		})
+		return true, nil
+	}
+	if aws.ToString(orgOutput.Organization.MasterAccountId) != client.AccountID(ctx) {
+		tflog.Info(ctx, "Skipping sweeper", map[string]any{
+			"skip_reason": "Not the management account of an AWS Organization",
+		})
+		return true, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return false, nil
 }
