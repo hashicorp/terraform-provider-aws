@@ -21,7 +21,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags(t *testing.T) {
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -202,7 +202,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_null(t *testing.T) {
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -263,7 +263,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_EmptyMap(t *testing.T) {
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -312,7 +312,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_AddOnUpdate(t *testing.T) {
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -390,7 +390,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -479,7 +479,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -616,7 +616,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckBrowserSettingsDestroy(ctx),
@@ -704,7 +704,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_providerOnly(t *testin
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -884,7 +884,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_nonOverlapping(t *test
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1043,7 +1043,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_overlapping(t *testing
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1218,7 +1218,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_updateToProviderOnly(t
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1306,7 +1306,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_updateToResourceOnly(t
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1393,7 +1393,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_emptyResourceTag(t *te
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1458,7 +1458,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_emptyProviderOnlyTag(t
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1515,7 +1515,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_nullOverlappingResourc
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1583,7 +1583,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_DefaultTags_nullNonOverlappingReso
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1653,7 +1653,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_ComputedTag_OnCreate(t *testing.T)
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1707,7 +1707,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1802,7 +1802,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -1887,7 +1887,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
@@ -2045,7 +2045,7 @@ func TestAccWorkSpacesWebBrowserSettings_tags_IgnoreTags_Overlap_ResourceTag(t *
 	var v types.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckBrowserSettingsDestroy(ctx),
