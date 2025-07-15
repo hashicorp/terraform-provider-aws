@@ -1153,7 +1153,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	var tf common.Destination
 	if test == "basic_v5.100.0" {
 		tf = g.NewFileDestinationWithFormatter(mainPath, func(b []byte) ([]byte, error) {
-			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`)
+			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 			return re.ReplaceAll(b, []byte("$1.name")), nil
 		})
 	} else {
