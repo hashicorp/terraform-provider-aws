@@ -54,7 +54,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the rule
-* `debug_log_delivery_accounts` - (Optional) List of AWS account identifiers to exclude from the rule
+* `debug_log_delivery_accounts` - (Optional) List of accounts that you can enable debug logging for your organization AWS Config Custom Policy rule. List is null when debug logging is enabled for all accounts.
 * `excluded_accounts` - (Optional) List of AWS account identifiers to exclude from the rule
 * `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config Rule Lambda Function
 * `maximum_execution_frequency` - (Optional) Maximum frequency with which AWS Config runs evaluations for a rule, if the rule is triggered at a periodic frequency. Defaults to `TwentyFour_Hours` for periodic frequency triggered rules. Valid values: `One_Hour`, `Three_Hours`, `Six_Hours`, `Twelve_Hours`, or `TwentyFour_Hours`.
