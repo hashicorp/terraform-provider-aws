@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -234,6 +236,67 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_regional_parameters(t *tes
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.%%", endpoints.UsWest2RegionID), "1"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("regional_parameters.%s.key2", endpoints.UsWest2RegionID), acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/43316.
+func TestAccDataZoneEnvironmentBlueprintConfiguration_upgradeFromV5_100_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environmentblueprintconfiguration datazone.GetEnvironmentBlueprintConfigurationOutput
+	domainName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment_blueprint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.DataZoneServiceID),
+		CheckDestroy: testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
+				},
+				Config:      testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				ExpectError: regexache.MustCompile(`Incorrect attribute value type`),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccEnvironmentBlueprintConfigurationConfig_regional_parameters(domainName, endpoints.UsWest2RegionID, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
