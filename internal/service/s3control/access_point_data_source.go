@@ -40,6 +40,12 @@ func (d *accessPointDataSource) Schema(ctx context.Context, request datasource.S
 			names.AttrAlias: schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+			},
+			"bucket": schema.StringAttribute{
+				Computed: true,
+			},
 			"bucket_account_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -57,6 +63,11 @@ func (d *accessPointDataSource) Schema(ctx context.Context, request datasource.S
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
+			"network_origin": schema.StringAttribute{
+				Computed: true,
+			},
+			"public_access_block_configuration": framework.DataSourceComputedListOfObjectAttribute[publicAccessBlockConfigurationModel](ctx),
+			names.AttrVPCConfiguration:          framework.DataSourceComputedListOfObjectAttribute[vpcConfigurationModel](ctx),
 		},
 	}
 }
@@ -94,11 +105,27 @@ func (d *accessPointDataSource) Read(ctx context.Context, request datasource.Rea
 
 type accessPointDataSourceModel struct {
 	framework.WithRegionModel
-	AccountID       types.String        `tfsdk:"account_id"`
-	Alias           types.String        `tfsdk:"alias"`
-	BucketAccountID types.String        `tfsdk:"bucket_account_id"`
-	DataSourceID    types.String        `tfsdk:"data_source_id"`
-	DataSourceType  types.String        `tfsdk:"data_source_type"`
-	Endpoints       fwtypes.MapOfString `tfsdk:"endpoints"`
-	Name            types.String        `tfsdk:"name"`
+	AccessPointARN                 types.String                                                         `tfsdk:"arn"`
+	AccountID                      types.String                                                         `tfsdk:"account_id"`
+	Alias                          types.String                                                         `tfsdk:"alias"`
+	Bucket                         types.String                                                         `tfsdk:"bucket"`
+	BucketAccountID                types.String                                                         `tfsdk:"bucket_account_id"`
+	DataSourceID                   types.String                                                         `tfsdk:"data_source_id"`
+	DataSourceType                 types.String                                                         `tfsdk:"data_source_type"`
+	Endpoints                      fwtypes.MapOfString                                                  `tfsdk:"endpoints"`
+	Name                           types.String                                                         `tfsdk:"name"`
+	NetworkOrigin                  types.String                                                         `tfsdk:"network_origin"`
+	PublicAccessBlockConfiguration fwtypes.ListNestedObjectValueOf[publicAccessBlockConfigurationModel] `tfsdk:"public_access_block_configuration"`
+	VPCConfiguration               fwtypes.ListNestedObjectValueOf[vpcConfigurationModel]               `tfsdk:"vpc_configuration"`
+}
+
+type publicAccessBlockConfigurationModel struct {
+	BlockPublicACLs       types.Bool `tfsdk:"block_public_acls"`
+	BlockPublicPolicy     types.Bool `tfsdk:"block_public_policy"`
+	IgnorePublicACLs      types.Bool `tfsdk:"ignore_public_acls"`
+	RestrictPublicBuckets types.Bool `tfsdk:"restrict_public_buckets"`
+}
+
+type vpcConfigurationModel struct {
+	VpcID types.String `tfsdk:"vpc_id"`
 }

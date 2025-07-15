@@ -277,7 +277,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta a
 			d.Set(names.AttrARN, c.RegionalARNWithAccount(ctx, "s3express", accountID, "accesspoint/"+aws.ToString(output.Name)))
 			d.Set(names.AttrBucket, output.Bucket)
 		default:
-			return sdkdiag.AppendErrorf(diags, "unknown S3 Access Point service %s", service)
+			return sdkdiag.AppendErrorf(diags, "unknown S3 Access Point service (%s)", service)
 		}
 	}
 
