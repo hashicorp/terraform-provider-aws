@@ -284,10 +284,15 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.Firewall.FirewallArn))
 
-	if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+	if output.Firewall.TransitGatewayId != nil {
+		if _, err := waitFirewallTransitGatewayAttachment(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) create: %s", d.Id(), err)
+		}
+	} else {
+		if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+		}
 	}
-
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
@@ -642,11 +647,44 @@ func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn strin
 	}
 }
 
+func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findFirewallByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.FirewallStatus.TransitGatewayAttachmentSyncState.TransitGatewayAttachmentStatus), nil
+	}
+}
+
 func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
 		Refresh: statusFirewall(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkfirewall.DescribeFirewallOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatusCreating),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStatusPendingAcceptance, awstypes.TransitGatewayAttachmentStatusReady),
+		Refresh: statusFirewallTransitGatewayAttachment(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
