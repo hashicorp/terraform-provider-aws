@@ -93,7 +93,7 @@ func TestAccFSxS3AccessPointAttachment_policy(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"policy": knownvalue.NotNull(),
+							names.AttrPolicy: knownvalue.NotNull(),
 						}),
 					})),
 				},
@@ -127,8 +127,8 @@ func TestAccFSxS3AccessPointAttachment_vpcConfiguration(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"policy":            knownvalue.Null(),
-							"vpc_configuration": knownvalue.ListSizeExact(1),
+							names.AttrPolicy:            knownvalue.Null(),
+							names.AttrVPCConfiguration: knownvalue.ListSizeExact(1),
 						}),
 					})),
 				},

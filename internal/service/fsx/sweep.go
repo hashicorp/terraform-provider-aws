@@ -251,7 +251,7 @@ func sweepS3AccessPointAttachments(ctx context.Context, client *conns.AWSClient)
 
 		for _, v := range page.S3AccessPointAttachments {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newS3AccessPointAttachmentResource, client,
-				framework.NewAttribute("name", aws.ToString(v.Name))))
+				framework.NewAttribute(names.AttrName, aws.ToString(v.Name))))
 		}
 	}
 

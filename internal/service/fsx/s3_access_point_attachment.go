@@ -190,7 +190,7 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"vpc_configuration": schema.ListNestedBlock{
+						names.AttrVPCConfiguration: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3AccessPointVpcConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
