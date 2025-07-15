@@ -1252,7 +1252,7 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
+func TestAccS3Object_tagsViaMultiRegionAccessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
@@ -1266,7 +1266,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_tagsViaMultiRegionAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -1277,7 +1277,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTagsViaMultiRegionAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
@@ -1354,6 +1354,47 @@ func TestAccS3Object_viaDirectoryBucketAccessPointAlias(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_tagsViaFSxAccessPointARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_tagsViaFSxAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_updatedTagsViaFSxAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 		},
@@ -2512,6 +2553,45 @@ resource "aws_s3_access_point" "test" {
 `)
 }
 
+func testAccObjectConfig_baseFSxAccessPoint(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_fsx_openzfs_file_system" "test" {
+  storage_capacity    = 64
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "SINGLE_AZ_HA_2"
+  throughput_capacity = 320
+  skip_final_backup   = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fsx_openzfs_volume" "test" {
+  name             = %[1]q
+  parent_volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
+}
+
+resource "aws_fsx_s3_access_point_attachment" "test" {
+  name = %[1]q
+  type = "OPENZFS"
+
+  openzfs_configuration {
+    volume_id = aws_fsx_openzfs_volume.test.id
+
+    file_system_identity {
+      type = "POSIX"
+
+      posix_user {
+        uid = 1001
+        gid = 1001
+      }
+    }
+  }
+}
+`, rName))
+}
+
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2890,7 +2970,7 @@ resource "aws_s3_object" "object" {
 `, key, content))
 }
 
-func testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_tagsViaMultiRegionAccessPointARN(rName, key, content string) string {
 	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
@@ -2906,7 +2986,7 @@ resource "aws_s3_object" "object" {
 `, key, content))
 }
 
-func testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_updatedTagsViaMultiRegionAccessPointARN(rName, key, content string) string {
 	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
@@ -2962,6 +3042,39 @@ resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.alias
   key     = %[1]q
   content = %[2]q
+}
+`, key, content))
+}
+
+func testAccObjectConfig_tagsViaFSxAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseFSxAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_fsx_s3_access_point_attachment.test.s3_access_point_arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_updatedTagsViaFSxAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseFSxAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_fsx_s3_access_point_attachment.test.s3_access_point_arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
 }
 `, key, content))
 }
