@@ -28,6 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudExadataInfrastructuresList,
+			TypeName: "aws_odb_cloud_exadata_infrastructures_list",
+			Name:     "Cloud Exadata Infrastructures List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceCloudVmCluster,
 			TypeName: "aws_odb_cloud_vm_cluster",
 			Name:     "Cloud Vm Cluster",
