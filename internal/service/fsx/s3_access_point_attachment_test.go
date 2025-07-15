@@ -127,7 +127,7 @@ func TestAccFSxS3AccessPointAttachment_vpcConfiguration(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_access_point"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrPolicy:            knownvalue.Null(),
+							names.AttrPolicy:           knownvalue.Null(),
 							names.AttrVPCConfiguration: knownvalue.ListSizeExact(1),
 						}),
 					})),
