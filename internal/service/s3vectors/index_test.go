@@ -129,7 +129,7 @@ func TestAccS3VectorsIndex_withVector(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &v),
-					testAccCheckIndexAddVector(ctx, resourceName, "key1", []float32{1.0, 2.0}),
+					testAccCheckIndexAddVector(ctx, resourceName, acctest.CtKey1, []float32{1.0, 2.0}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

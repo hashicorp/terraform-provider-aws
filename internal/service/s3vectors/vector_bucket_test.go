@@ -56,7 +56,7 @@ func TestAccS3VectorsVectorBucket_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrCreationTime), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"kms_key_arn": knownvalue.Null(),
+							names.AttrKMSKeyARN: knownvalue.Null(),
 							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
 						}),
 					})),
@@ -140,7 +140,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationAES256(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"kms_key_arn": knownvalue.Null(),
+							names.AttrKMSKeyARN: knownvalue.Null(),
 							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAes256),
 						}),
 					})),
@@ -197,7 +197,7 @@ func TestAccS3VectorsVectorBucket_encryptionConfigurationKMS(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEncryptionConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"kms_key_arn": knownvalue.NotNull(),
+							names.AttrKMSKeyARN: knownvalue.NotNull(),
 							"sse_type":    tfknownvalue.StringExact(awstypes.SseTypeAwsKms),
 						}),
 					})),
