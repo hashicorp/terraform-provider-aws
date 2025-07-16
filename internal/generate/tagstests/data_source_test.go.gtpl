@@ -11,7 +11,7 @@
 {{ end }}
 
 {{ define "Test" -}}
-resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
 {{- end }}
 
 {{ define "TestCaseSetup" -}}
@@ -133,7 +133,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +161,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -185,7 +185,7 @@ func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +209,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -243,7 +243,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +283,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{

@@ -19,7 +19,7 @@ func TestAccBackupReportPlanDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +47,7 @@ func TestAccBackupReportPlanDataSource_tags_NullMap(t *testing.T) {
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,7 +71,7 @@ func TestAccBackupReportPlanDataSource_tags_EmptyMap(t *testing.T) {
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func TestAccBackupReportPlanDataSource_tags_DefaultTags_nonOverlapping(t *testin
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccBackupReportPlanDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccBackupReportPlanDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *te
 	dataSourceName := "data.aws_backup_report_plan.test"
 	rName := randomReportPlanName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.BackupServiceID),
 		Steps: []resource.TestStep{
