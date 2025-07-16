@@ -325,6 +325,86 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 	})
 }
 
+func TestAccDataSyncLocationObjectStorage_emptyAgentArns(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationObjectStorageConfig_emptyAgentArns(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSyncLocationObjectStorage_noAgentArns(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationObjectStorageConfig_noAgentArns(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLocationObjectStorageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
@@ -482,4 +562,27 @@ resource "aws_datasync_location_object_storage" "test" {
   server_certificate = "%[3]s"
 }
 `, rName, domain, acctest.TLSPEMEscapeNewlines(certificate)))
+}
+
+func testAccLocationObjectStorageConfig_emptyAgentArns(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  agent_arns      = []
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain)
+}
+
+func testAccLocationObjectStorageConfig_noAgentArns(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain)
 }
