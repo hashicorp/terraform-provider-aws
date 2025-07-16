@@ -277,6 +277,8 @@ resource "aws_lambda_function" "example" {
   * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
   * No special configuration is required to use S3 or Firehose as the log destination
 
+For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
+
 **Example: Exporting Lambda Logs to S3 Bucket**
 
 ```terraform
