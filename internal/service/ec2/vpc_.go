@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -264,7 +263,8 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	vpc, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Vpc, error) {
 		return findVPCByID(ctx, conn, d.Id())
@@ -281,14 +281,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	ownerID := aws.ToString(vpc.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpcARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
@@ -743,4 +736,8 @@ func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID
 	}
 
 	return output, nil
+}
+
+func vpcARN(ctx context.Context, c *conns.AWSClient, accountID, vpcID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "vpc/"+vpcID)
 }
