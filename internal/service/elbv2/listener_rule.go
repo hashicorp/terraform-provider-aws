@@ -51,6 +51,7 @@ const (
 // @Testing(importIgnore="action.0.forward")
 // @Testing(plannableImportAction="NoOp")
 // @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
