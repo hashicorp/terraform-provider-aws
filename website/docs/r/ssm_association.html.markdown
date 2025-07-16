@@ -170,7 +170,7 @@ resource "aws_ssm_association" "database_association" {
   name = aws_ssm_document.system_update.name # Use the name of the document as the association name
   targets {
     key    = "tag:Role"
-    values = ["WebServer","Database"]
+    values = ["WebServer", "Database"]
   }
 
   parameters = {
