@@ -10,11 +10,12 @@ require (
 	github.com/ProtonMail/go-crypto v1.3.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
+	github.com/YakDriver/smarterr v0.5.0
 	github.com/aws/aws-sdk-go-v2 v1.36.5
 	github.com/aws/aws-sdk-go-v2/config v1.29.17
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.70
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.83
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.84
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.33.0
@@ -104,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.232.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.46.3
@@ -143,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.4
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.4
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.5
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.19.0
@@ -314,7 +315,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
-	github.com/agext/levenshtein v1.2.2 // indirect
+	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.11 // indirect
@@ -351,7 +352,7 @@ require (
 	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
+	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
@@ -373,7 +374,7 @@ require (
 	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )

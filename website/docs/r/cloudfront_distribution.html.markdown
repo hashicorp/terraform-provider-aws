@@ -243,23 +243,12 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
 
 ```terraform
-provider "aws" {
-  region = var.region
-}
-
-provider "aws" {
-  region = "us-east-1"
-  alias  = "us_east_1"
-}
-
 resource "aws_cloudfront_distribution" "example" {
-  provider = aws.us_east_1
-
   # other config...
 }
 
 resource "aws_cloudwatch_log_delivery_source" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name         = "example"
   log_type     = "ACCESS_LOGS"
@@ -272,7 +261,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery_destination" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name          = "s3-destination"
   output_format = "parquet"
@@ -283,7 +272,7 @@ resource "aws_cloudwatch_log_delivery_destination" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
@@ -291,6 +280,46 @@ resource "aws_cloudwatch_log_delivery" "example" {
   s3_delivery_configuration {
     suffix_path = "/123456678910/{DistributionId}/{yyyy}/{MM}/{dd}/{HH}"
   }
+}
+```
+
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # other config
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
+  region = "us-east-1"
+
+  # other config
+}
+
+resource "aws_cloudwatch_log_delivery_source" "example" {
+  region = "us-east-1"
+
+  name         = "cloudfront-logs-source"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.example.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "example" {
+  region = "us-east-1"
+
+  name          = "firehose-destination"
+  output_format = "json"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_kinesis_firehose_delivery_stream.cloudfront_logs.arn
+  }
+}
+resource "aws_cloudwatch_log_delivery" "example" {
+  region = "us-east-1"
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
 }
 ```
 
