@@ -36,7 +36,7 @@ import (
 
 // @SDKResource("aws_security_group", name="Security Group")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroup")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
 func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011

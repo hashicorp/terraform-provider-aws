@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -104,7 +104,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
-		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeKeyPair),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeKeyPair),
 	}
 
 	output, err := conn.ImportKeyPair(ctx, &input)

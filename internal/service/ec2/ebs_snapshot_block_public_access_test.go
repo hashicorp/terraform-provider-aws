@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -47,7 +47,7 @@ func testAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ResourceName: resourceName,
-				Config:       testAccEBSSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockAllSharing)),
+				Config:       testAccEBSSnapshotBlockPublicAccess_basic(string(awstypes.SnapshotBlockPublicAccessStateBlockAllSharing)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-all-sharing"),
 				),
@@ -59,7 +59,7 @@ func testAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 			},
 			{
 				ResourceName: resourceName,
-				Config:       testAccEBSSnapshotBlockPublicAccess_basic(string(types.SnapshotBlockPublicAccessStateBlockNewSharing)),
+				Config:       testAccEBSSnapshotBlockPublicAccess_basic(string(awstypes.SnapshotBlockPublicAccessStateBlockNewSharing)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
@@ -146,8 +146,8 @@ func testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx context.Context) resour
 			return err
 		}
 
-		if response.State != types.SnapshotBlockPublicAccessStateUnblocked {
-			return fmt.Errorf("EBS encryption by default is not in expected state (%s)", types.SnapshotBlockPublicAccessStateUnblocked)
+		if response.State != awstypes.SnapshotBlockPublicAccessStateUnblocked {
+			return fmt.Errorf("EBS encryption by default is not in expected state (%s)", awstypes.SnapshotBlockPublicAccessStateUnblocked)
 		}
 		return nil
 	}

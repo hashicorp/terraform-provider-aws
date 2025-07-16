@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -230,7 +230,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]any {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkInterfaceAttachment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
