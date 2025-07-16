@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_codebuild_project" "test" {
+  region = var.region
+
   name         = var.rName
   service_role = aws_iam_role.test.arn
 

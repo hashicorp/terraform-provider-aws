@@ -1,4 +1,5 @@
 resource "aws_codebuild_project" "test" {
+{{- template "region" }}
   name         = var.rName
   service_role = aws_iam_role.test.arn
 
@@ -16,6 +17,7 @@ resource "aws_codebuild_project" "test" {
     location = var.AWS_CODEBUILD_GITHUB_SOURCE_LOCATION
     type     = "GITHUB"
   }
+{{- template "tags" . }}
 }
 
 # testAccProjectConfig_baseServiceRole
