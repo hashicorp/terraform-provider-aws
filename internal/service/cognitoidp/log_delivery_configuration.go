@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_cognitoidp_log_delivery_configuration", name="Log Delivery Configuration")
+// @FrameworkResource("aws_cognito_log_delivery_configuration", name="Log Delivery Configuration")
 // @IdentityAttribute("user_pool_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.LogDeliveryConfigurationType")
 // @Testing(importStateIdFunc="testAccLogDeliveryConfigurationImportStateIdFunc")
@@ -37,10 +37,6 @@ func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWith
 	r := &LogDeliveryConfigurationResource{}
 	return r, nil
 }
-
-const (
-	ResNameLogDeliveryConfiguration = "Log Delivery Configuration"
-)
 
 type LogDeliveryConfigurationResource struct {
 	framework.ResourceWithModel[resourceLogDeliveryConfigurationModel]
@@ -96,7 +92,7 @@ func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resou
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"stream_arn": schema.StringAttribute{
+									names.AttrStreamARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
 									},
@@ -142,14 +138,14 @@ func (r *LogDeliveryConfigurationResource) Create(ctx context.Context, req resou
 	out, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, ResNameLogDeliveryConfiguration, plan.UserPoolID.String(), err),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, "Log Delivery Configuration", plan.UserPoolID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.LogDeliveryConfiguration == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, ResNameLogDeliveryConfiguration, plan.UserPoolID.String(), nil),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, "Log Delivery Configuration", plan.UserPoolID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -180,7 +176,7 @@ func (r *LogDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, ResNameLogDeliveryConfiguration, state.UserPoolID.String(), err),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, "Log Delivery Configuration", state.UserPoolID.String(), err),
 			err.Error(),
 		)
 		return
@@ -220,14 +216,14 @@ func (r *LogDeliveryConfigurationResource) Update(ctx context.Context, req resou
 		out, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, ResNameLogDeliveryConfiguration, plan.UserPoolID.String(), err),
+				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, "Log Delivery Configuration", plan.UserPoolID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.LogDeliveryConfiguration == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, ResNameLogDeliveryConfiguration, plan.UserPoolID.String(), nil),
+				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, "Log Delivery Configuration", plan.UserPoolID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -264,7 +260,7 @@ func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resou
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionDeleting, ResNameLogDeliveryConfiguration, state.UserPoolID.String(), err),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionDeleting, "Log Delivery Configuration", state.UserPoolID.String(), err),
 			err.Error(),
 		)
 		return

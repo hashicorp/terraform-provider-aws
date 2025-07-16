@@ -1,12 +1,12 @@
 ---
 subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
-page_title: "AWS: aws_cognitoidp_log_delivery_configuration"
+page_title: "AWS: aws_cognito_log_delivery_configuration"
 description: |-
   Manages an AWS Cognito IDP (Identity Provider) Log Delivery Configuration.
 ---
 
-# Resource: aws_cognitoidp_log_delivery_configuration
+# Resource: aws_cognito_log_delivery_configuration
 
 Manages an AWS Cognito IDP (Identity Provider) Log Delivery Configuration.
 
@@ -23,7 +23,7 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "example" {
+resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
@@ -106,7 +106,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   }
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "example" {
+resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
@@ -141,7 +141,7 @@ resource "aws_s3_bucket" "example" {
   force_destroy = true
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "example" {
+resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
@@ -164,6 +164,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `log_configurations` - (Optional) Configuration block for log delivery. At least one configuration block is required. See [Log Configurations](#log-configurations) below.
+* `region` - (Optional) The AWS region.
 
 ### Log Configurations
 
@@ -201,7 +202,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_cognitoidp_log_delivery_configuration.example
+  to = aws_cognito_log_delivery_configuration.example
   id = "us-west-2_example123"
 }
 ```
@@ -209,5 +210,5 @@ import {
 Using `terraform import`, import Cognito IDP (Identity Provider) Log Delivery Configuration using the `user_pool_id`. For example:
 
 ```console
-% terraform import aws_cognitoidp_log_delivery_configuration.example us-west-2_example123
+% terraform import aws_cognito_log_delivery_configuration.example us-west-2_example123
 ```

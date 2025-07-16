@@ -44,6 +44,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newLogDeliveryConfigurationResource,
+			TypeName: "aws_cognito_log_delivery_configuration",
+			Name:     "Log Delivery Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrUserPoolID),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newManagedUserPoolClientResource,
 			TypeName: "aws_cognito_managed_user_pool_client",
 			Name:     "Managed User Pool Client",
@@ -54,16 +64,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_cognito_user_pool_client",
 			Name:     "User Pool Client",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
-			Factory:  newLogDeliveryConfigurationResource,
-			TypeName: "aws_cognitoidp_log_delivery_configuration",
-			Name:     "Log Delivery Configuration",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrUserPoolID),
-			Import: inttypes.FrameworkImport{
-				WrappedImport: true,
-			},
 		},
 	}
 }

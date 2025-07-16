@@ -23,7 +23,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LogDeliveryConfigurationType
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,7 +110,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 func TestAccCognitoIDPLogDeliveryConfiguration_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

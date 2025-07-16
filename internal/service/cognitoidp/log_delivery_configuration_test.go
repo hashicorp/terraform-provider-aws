@@ -25,7 +25,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -60,7 +60,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -105,7 +105,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -137,7 +137,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -163,7 +163,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cognitoidp_log_delivery_configuration.test"
+	resourceName := "aws_cognito_log_delivery_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -182,7 +182,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "ERROR"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_configurations.1.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_configurations.1.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context) resource.T
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cognitoidp_log_delivery_configuration" {
+			if rs.Type != "aws_cognito_log_delivery_configuration" {
 				continue
 			}
 
@@ -215,7 +215,7 @@ func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context) resource.T
 				return err
 			}
 
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingDestroyed, tfcognitoidp.ResNameLogDeliveryConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingDestroyed, "Log Delivery Configuration", rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -226,11 +226,11 @@ func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, name string
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, tfcognitoidp.ResNameLogDeliveryConfiguration, name, errors.New("not found"))
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, tfcognitoidp.ResNameLogDeliveryConfiguration, name, errors.New("not set"))
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
@@ -238,7 +238,7 @@ func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, name string
 		resp, err := tfcognitoidp.FindLogDeliveryConfigurationByUserPoolID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID])
 
 		if err != nil {
-			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, tfcognitoidp.ResNameLogDeliveryConfiguration, rs.Primary.ID, err)
+			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", rs.Primary.ID, err)
 		}
 
 		*logDeliveryConfiguration = *resp
@@ -268,7 +268,7 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "test" {
+resource "aws_cognito_log_delivery_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
@@ -351,7 +351,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "test" {
+resource "aws_cognito_log_delivery_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
@@ -385,7 +385,7 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cognitoidp_log_delivery_configuration" "test" {
+resource "aws_cognito_log_delivery_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
