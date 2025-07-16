@@ -143,14 +143,3 @@ func (odbNetworkDataSourceTestCase) testAccOdbNetworkDataSourcePreCheck(ctx cont
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
-/*func (odbNetworkDataSourceTestCase) basicOdbNetworkDataSourceHardCoded(id string) string {
-	networkRes := fmt.Sprintf(`
-data "aws_odb_network" "test" {
-  id = %[1]q
-}
-
-`, id)
-	fmt.Println(networkRes)
-	return networkRes
-}*/
