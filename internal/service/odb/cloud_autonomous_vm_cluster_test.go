@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -35,7 +34,7 @@ type autonomousVMClusterResourceTest struct {
 	autonomousVmClusterDisplayNamePrefix string
 }
 
-var autonomousVMClusterTest = autonomousVMClusterResourceTest{
+var autonomousVMClusterResourceTestEntity = autonomousVMClusterResourceTest{
 	exaInfraDisplayNamePrefix:            "Ofake-exa",
 	odbNetDisplayNamePrefix:              "odb-net",
 	autonomousVmClusterDisplayNamePrefix: "Ofake-avmc",
@@ -48,25 +47,23 @@ func TestAccODBCloudAutonomousVmClusterCreationBasic(t *testing.T) {
 	}
 
 	var cloudAVMC odbtypes.CloudAutonomousVmCluster
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.autonomousVmClusterDisplayNamePrefix)
-	odbDisplayNamePrefix := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.odbNetDisplayNamePrefix)
-	exaDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.exaInfraDisplayNamePrefix)
+
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
-			autonomousVMClusterTest.testAccPreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterTest.avmcWithMandatoryParamsOnly(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterTest.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
 				),
 			},
 			{
@@ -86,27 +83,22 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 	}
 
 	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.autonomousVmClusterDisplayNamePrefix)
-	odbDisplayNamePrefix := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.odbNetDisplayNamePrefix)
-	exaDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.exaInfraDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
-			//testAccPreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterTest.avmcWithMandatoryParamsWithTag(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterTest.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -115,15 +107,14 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: autonomousVMClusterTest.avmcWithMandatoryParamsOnly(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasicWithTags(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterTest.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(avmc1.CloudAutonomousVmClusterId), *(avmc2.CloudAutonomousVmClusterId)) != 0 {
-							return errors.New("Shouldn't create a new autonomous vm cluster")
+							return errors.New("shouldn't create a new autonomous vm cluster")
 						}
 						return nil
 					}),
@@ -138,27 +129,22 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var cloudautonomousvmcluster odbtypes.CloudAutonomousVmCluster
-	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.autonomousVmClusterDisplayNamePrefix)
-	odbDisplayNamePrefix := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.odbNetDisplayNamePrefix)
-	exaDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterTest.exaInfraDisplayNamePrefix)
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
-			autonomousVMClusterTest.testAccPreCheck(ctx, t)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             autonomousVMClusterTest.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterTest.avmcWithMandatoryParamsOnly(autonomousVMClusterTest.exaInfra(exaDisplayName), autonomousVMClusterTest.odbNetwork(odbDisplayNamePrefix), avmcDisplayName),
+				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					autonomousVMClusterTest.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -190,7 +176,7 @@ func (autonomousVMClusterResourceTest) testAccCheckCloudAutonomousVmClusterDestr
 				continue
 			}
 
-			_, err := tfodb.FindCloudAutonomousVmClusterByID(ctx, conn, rs.Primary.ID)
+			_, err := autonomousVMClusterResourceTestEntity.findAVMC(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -218,7 +204,7 @@ func (autonomousVMClusterResourceTest) checkCloudAutonomousVmClusterExists(ctx c
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 		fmt.Println("")
-		resp, err := autonomousVMClusterResourceTest{}.findVMC(ctx, conn, rs.Primary.ID)
+		resp, err := autonomousVMClusterResourceTestEntity.findAVMC(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudAutonomousVmCluster, rs.Primary.ID, err)
 		}
@@ -229,7 +215,7 @@ func (autonomousVMClusterResourceTest) checkCloudAutonomousVmClusterExists(ctx c
 	}
 }
 
-func (autonomousVMClusterResourceTest) findVMC(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudAutonomousVmCluster, error) {
+func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudAutonomousVmCluster, error) {
 	input := odb.GetCloudAutonomousVmClusterInput{
 		CloudAutonomousVmClusterId: aws.String(id),
 	}
@@ -251,21 +237,6 @@ func (autonomousVMClusterResourceTest) findVMC(ctx context.Context, conn *odb.Cl
 	return out.CloudAutonomousVmCluster, nil
 }
 
-/*func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListCloudAutonomousVmClustersInput{}
-
-	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}*/
-
 /*func testAccCheckCloudAutonomousVmClusterNotRecreated(before, after *odb.DescribeCloudAutonomousVmClusterResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.CloudAutonomousVmClusterId), aws.ToString(after.CloudAutonomousVmClusterId); before != after {
@@ -276,54 +247,114 @@ func (autonomousVMClusterResourceTest) findVMC(ctx context.Context, conn *odb.Cl
 	}
 }*/
 
-// exa_rkmma5b09a
-func testAccCloudAutonomousVmClusterConfig_basic_with_db_servers(rName string) string {
-	res := fmt.Sprintf(`
+func (autonomousVMClusterResourceTest) avmcBasic() string {
 
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 
-resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  display_name             = %[1]q
-  cloud_exadata_infrastructure_id              = "exa_ky7jabi90t"
-  autonomous_data_storage_size_in_tbs          = 5
-  is_mtls_enabled_vm_cluster                   = false
-  license_model                                = "LICENSE_INCLUDED"
-  memory_per_oracle_compute_unit_in_gbs        = 2
-  odb_network_id                               = "odbnet_fjey4b8oth"
-  total_container_databases                    = 1
-  cpu_core_count_per_node                      = 40
-  db_servers								   = ["dbs_7zuqmh4045","dbs_o1p7nape7g"]	
-  tags = {
-    "env"= "dev"
-  }
-
-
-
-
-}
-`, rName)
-	fmt.Println(res)
-	return res
-}
-
-func (autonomousVMClusterResourceTest) avmcWithMandatoryParamsOnly(exaInfra, odbNetwork, avmcDisplayName string) string {
+	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
 	res := fmt.Sprintf(`
 %s
 
 %s
 
+data "aws_odb_db_servers_list" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  	display_name             				= %[1]q
-    cloud_exadata_infrastructure_id         = "exa_ky7jabi90t"
-  	odb_network_id                          = "odbnet_fjey4b8oth"
+    cloud_exadata_infrastructure_id         = aws_odb_cloud_exadata_infrastructure.test.id
+  	odb_network_id                          =aws_odb_network.test.id
+	display_name             				= %[3]q
   	autonomous_data_storage_size_in_tbs     = 5
   	memory_per_oracle_compute_unit_in_gbs   = 2
   	total_container_databases               = 1
-  	cpu_core_count_per_node                 = 4
+  	cpu_core_count_per_node                 = 40
+    license_model                                = "LICENSE_INCLUDED"
+    db_servers								   = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+    scan_listener_port_tls = 8561
+    scan_listener_port_non_tls = 1024
+    maintenance_window = {
+		 preference = "NO_PREFERENCE"
+		 days_of_week =	[]
+         hours_of_day =	[]
+         months = []
+         weeks_of_month =[]
+         lead_time_in_weeks = 0
+    }
 
 }
-`, exaInfra, odbNetwork, avmcDisplayName)
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
 
 	return res
+}
+
+func (autonomousVMClusterResourceTest) avmcBasicWithTags() string {
+
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+
+	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	res := fmt.Sprintf(`
+%s
+
+%s
+
+data "aws_odb_db_servers_list" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+    cloud_exadata_infrastructure_id         = aws_odb_cloud_exadata_infrastructure.test.id
+  	odb_network_id                          =aws_odb_network.test.id
+	display_name             				= %[3]q
+  	autonomous_data_storage_size_in_tbs     = 5
+  	memory_per_oracle_compute_unit_in_gbs   = 2
+  	total_container_databases               = 1
+  	cpu_core_count_per_node                 = 40
+    license_model                                = "LICENSE_INCLUDED"
+    db_servers								   = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+    scan_listener_port_tls = 8561
+    scan_listener_port_non_tls = 1024
+    maintenance_window = {
+		 preference = "NO_PREFERENCE"
+		 days_of_week =	[]
+         hours_of_day =	[]
+         months = []
+         weeks_of_month =[]
+         lead_time_in_weeks = 0
+    }
+  tags = {
+    	"env"= "dev"
+  }
+
+}
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
+
+	return res
+}
+
+func (autonomousVMClusterResourceTest) odbNet(odbNetName string) string {
+	networkRes := fmt.Sprintf(`
+
+
+resource "aws_odb_network" "test" {
+  display_name          = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access = "DISABLED"
+  zero_etl_access = "DISABLED"
+}
+
+`, odbNetName)
+	return networkRes
 }
 
 func (autonomousVMClusterResourceTest) avmcWithMandatoryParamsWithTag(exaInfra, odbNetwork, avmcDisplayName string) string {
