@@ -325,7 +325,7 @@ func TestAccDataSyncLocationObjectStorage_Identity_ExistingResource(t *testing.T
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_emptyAgentArns(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_emptyAgentARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
@@ -339,7 +339,7 @@ func TestAccDataSyncLocationObjectStorage_emptyAgentArns(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_emptyAgentArns(rName, domain),
+				Config: testAccLocationObjectStorageConfig_emptyAgentARNs(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
@@ -365,7 +365,7 @@ func TestAccDataSyncLocationObjectStorage_emptyAgentArns(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationObjectStorage_noAgentArns(t *testing.T) {
+func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
@@ -379,7 +379,7 @@ func TestAccDataSyncLocationObjectStorage_noAgentArns(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_noAgentArns(rName, domain),
+				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
@@ -564,7 +564,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName, domain, acctest.TLSPEMEscapeNewlines(certificate)))
 }
 
-func testAccLocationObjectStorageConfig_emptyAgentArns(rName, domain string) string {
+func testAccLocationObjectStorageConfig_emptyAgentARNs(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = []
@@ -576,7 +576,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName, domain)
 }
 
-func testAccLocationObjectStorageConfig_noAgentArns(rName, domain string) string {
+func testAccLocationObjectStorageConfig_noAgentARNs(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   server_hostname = %[2]q
