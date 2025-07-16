@@ -194,7 +194,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	nacl, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.NetworkAcl, error) {
 		return findNetworkACLByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -207,8 +207,6 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
 	}
-
-	nacl := outputRaw.(*awstypes.NetworkAcl)
 
 	ownerID := aws.ToString(nacl.OwnerId)
 	arn := arn.ARN{

@@ -94,7 +94,7 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	ig, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.InternetGateway, error) {
 		return findInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -107,8 +107,6 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
-
-	ig := outputRaw.(*awstypes.InternetGateway)
 
 	ownerID := aws.ToString(ig.OwnerId)
 	arn := arn.ARN{

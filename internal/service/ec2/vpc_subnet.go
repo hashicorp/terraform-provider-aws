@@ -231,7 +231,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	subnet, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Subnet, error) {
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -244,8 +244,6 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
-
-	subnet := outputRaw.(*awstypes.Subnet)
 
 	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)

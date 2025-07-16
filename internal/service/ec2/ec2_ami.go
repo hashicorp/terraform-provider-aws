@@ -403,7 +403,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	image, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Image, error) {
 		return findImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -416,8 +416,6 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMI (%s): %s", d.Id(), err)
 	}
-
-	image := outputRaw.(*awstypes.Image)
 
 	if image.State == awstypes.ImageStatePending {
 		// This could happen if a user manually adds an image we didn't create

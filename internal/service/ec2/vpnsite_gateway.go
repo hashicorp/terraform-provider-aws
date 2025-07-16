@@ -106,7 +106,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	vpnGateway, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.VpnGateway, error) {
 		return findVPNGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -119,8 +119,6 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Gateway (%s): %s", d.Id(), err)
 	}
-
-	vpnGateway := outputRaw.(*awstypes.VpnGateway)
 
 	d.Set("amazon_side_asn", flex.Int64ToStringValue(vpnGateway.AmazonSideAsn))
 	arn := arn.ARN{
