@@ -7,13 +7,26 @@ import (
 	"context"
 	"errors"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
+
+type awsClient interface {
+	AccountID(ctx context.Context) string
+	Region(ctx context.Context) string
+	DefaultTagsConfig(ctx context.Context) *tftags.DefaultConfig
+	IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig
+	Partition(context.Context) string
+	ServicePackage(_ context.Context, name string) conns.ServicePackage
+	ValidateInContextRegionInPartition(ctx context.Context) error
+	AwsConfig(context.Context) aws.Config
+}
 
 // schemaResourceData is an interface that implements a subset of schema.ResourceData's public methods.
 type schemaResourceData interface {
@@ -23,7 +36,7 @@ type schemaResourceData interface {
 }
 
 type interceptorOptions[D any] struct {
-	c    *conns.AWSClient
+	c    awsClient
 	d    D
 	when when
 	why  why
