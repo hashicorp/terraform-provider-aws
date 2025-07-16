@@ -359,12 +359,12 @@ func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn st
 }
 
 func listTrustStoreCertificates(ctx context.Context, conn *workspacesweb.Client, arn string) ([]certificateModel, error) {
-	input := &workspacesweb.ListTrustStoreCertificatesInput{
+	input := workspacesweb.ListTrustStoreCertificatesInput{
 		TrustStoreArn: aws.String(arn),
 	}
 
 	var certificates []certificateModel
-	paginator := workspacesweb.NewListTrustStoreCertificatesPaginator(conn, input)
+	paginator := workspacesweb.NewListTrustStoreCertificatesPaginator(conn, &input)
 
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
