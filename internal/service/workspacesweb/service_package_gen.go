@@ -64,9 +64,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTrustStoreResource,
 			TypeName: "aws_workspacesweb_trust_store",
 			Name:     "Trust Store",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "trust_store_arn",
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newUserAccessLoggingSettingsResource,
