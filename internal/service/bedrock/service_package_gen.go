@@ -121,6 +121,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory: newResourceEvaluationJob,
+			Name:    "Evaluation Job",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "evaluation_job_arn",
+			},
+		},
 	}
 }
 
