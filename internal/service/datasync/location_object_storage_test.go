@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
@@ -342,19 +343,15 @@ func TestAccDataSyncLocationObjectStorage_emptyAgentARNs(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_emptyAgentARNs(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
-					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
-					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
-					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -379,27 +376,51 @@ func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
+				Config: testAccLocationObjectStorageConfig_noAgentARNsCreate(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
-					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
-					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
-					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(1)),
+				},
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_noAgentARNsUpdate(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+				},
 			},
 		},
 	})
@@ -576,7 +597,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName, domain)
 }
 
-func testAccLocationObjectStorageConfig_noAgentARNs(rName, domain string) string {
+func testAccLocationObjectStorageConfig_noAgentARNsCreate(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   server_hostname = %[2]q
@@ -585,4 +606,15 @@ resource "aws_datasync_location_object_storage" "test" {
   server_port     = 8080
 }
 `, rName, domain)
+}
+
+func testAccLocationObjectStorageConfig_noAgentARNsUpdate(rName, domain string) string {
+	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain))
 }
