@@ -34,7 +34,7 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 	{{- end }}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	listTags := {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
@@ -42,12 +42,12 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 	listTags, err := {{ .ListTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, optFns...)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	{{- end }}
 
 	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
 	}
 
 	{{ if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}

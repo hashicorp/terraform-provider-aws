@@ -38,7 +38,9 @@ nav:
       - Debugging: debugging.md
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
+      - Enhanced Region Support: enhanced-region-support.md
       - Error Handling: error-handling.md
+      - Go-VCR: go-vcr.md
       - ID Attributes: id-attributes.md
       - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md

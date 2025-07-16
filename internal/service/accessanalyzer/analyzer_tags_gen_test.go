@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -50,9 +49,9 @@ func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -235,9 +234,9 @@ func testAccAccessAnalyzerAnalyzer_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -305,9 +304,9 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -371,9 +370,9 @@ func testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -455,9 +454,9 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -547,9 +546,9 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -687,9 +686,9 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -779,9 +778,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -963,9 +962,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1126,9 +1125,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1305,9 +1304,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToProviderOnly(t *test
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1398,9 +1397,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_updateToResourceOnly(t *test
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1490,9 +1489,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag(t *testing.
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1558,9 +1557,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyProviderOnlyTag(t *test
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1618,9 +1617,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag(t
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1683,9 +1682,9 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTa
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1748,9 +1747,9 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1806,9 +1805,9 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1906,9 +1905,9 @@ func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace(t *testing.
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1996,9 +1995,9 @@ func testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -2161,9 +2160,9 @@ func testAccAccessAnalyzerAnalyzer_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 	ctx := acctest.Context(t)
 	var v types.AnalyzerSummary
 	resourceName := "aws_accessanalyzer_analyzer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

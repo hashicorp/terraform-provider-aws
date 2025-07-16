@@ -3,8 +3,8 @@ package route53domains
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
@@ -27,7 +27,7 @@ func listTags(ctx context.Context, conn *route53domains.Client, identifier strin
 	output, err := conn.ListTagsForDomain(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.TagList), nil
@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).Route53DomainsClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 		_, err := conn.DeleteTagsForDomain(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -141,7 +141,7 @@ func updateTags(ctx context.Context, conn *route53domains.Client, identifier str
 		_, err := conn.UpdateTagsForDomain(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

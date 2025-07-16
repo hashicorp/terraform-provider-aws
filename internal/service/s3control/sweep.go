@@ -218,7 +218,7 @@ func sweepAccessPoints(region string) error {
 
 		for _, v := range page.AccessPointList {
 			arn := aws.ToString(v.AccessPointArn)
-			id, err := AccessPointCreateResourceID(arn)
+			id, err := accessPointCreateResourceID(arn)
 			if err != nil {
 				log.Printf("[WARN] S3 Access Point (%s): %s", arn, err)
 				continue

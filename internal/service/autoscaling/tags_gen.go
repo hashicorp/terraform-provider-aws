@@ -3,8 +3,8 @@ package autoscaling
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -41,13 +41,13 @@ func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resource
 	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	listTags := keyValueTags(ctx, output.Tags, identifier, resourceType)
 
 	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
 	}
 
 	return listTags.KeyTagData(key), nil
@@ -73,7 +73,7 @@ func listTags(ctx context.Context, conn *autoscaling.Client, identifier, resourc
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
 		output = append(output, page.Tags...)
@@ -88,7 +88,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).AutoScalingClient(ctx), identifier, resourceType)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -259,7 +259,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -273,7 +273,7 @@ func updateTags(ctx context.Context, conn *autoscaling.Client, identifier, resou
 		_, err := conn.CreateOrUpdateTags(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

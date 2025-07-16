@@ -3,8 +3,8 @@ package firehose
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/firehose/types"
@@ -49,7 +49,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).FirehoseClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -127,7 +127,7 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 		_, err := conn.UntagDeliveryStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -142,7 +142,7 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 		_, err := conn.TagDeliveryStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

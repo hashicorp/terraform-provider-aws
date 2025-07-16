@@ -210,7 +210,9 @@ resource "aws_redshift_cluster" "test" {
   cluster_type        = "single-node"
   skip_final_snapshot = true
 
-  availability_zone_relocation_enabled = false
+  availability_zone_relocation_enabled = true
+  publicly_accessible                  = false
+  encrypted                            = true
 }
 
 {{ template "acctest.ConfigVPCWithSubnets" 3 }}

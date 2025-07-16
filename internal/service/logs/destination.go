@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,6 +29,8 @@ import (
 // @SDKResource("aws_cloudwatch_log_destination", name="Destination")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.Destination")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -110,7 +113,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	destination, err := findDestinationByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

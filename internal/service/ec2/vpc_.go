@@ -470,7 +470,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findVPCByID(ctx, conn, d.Id())
 	})
 
@@ -492,7 +492,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		const (
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
 		})
 

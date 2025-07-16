@@ -1154,7 +1154,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 			}
 
 			if ipv4IPAMPoolID != "" {
-				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+				if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 					output, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn, aws.ToString(v.Association.AllocationId), ipv4IPAMPoolID)
 					if err != nil {
 						return nil, err
