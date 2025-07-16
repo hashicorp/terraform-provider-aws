@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -67,23 +66,23 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "Required field. The unique identifier of the ODB network that initiates the peering connection. " +
+					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
 			},
 			"peer_network_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "Required field. The unique identifier of the ODB peering connection. Changing this will force terraform to create new resource",
 			},
 
 			"display_name": schema.StringAttribute{
-				Description: "Display name of the odb network peering connection.",
+				Description: "Display name of the odb network peering connection. Changing this will force terraform to create new resource",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 
@@ -93,7 +92,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Computed:    true,
 			},
 			"status_reason": schema.StringAttribute{
-				Description: "Status of the odb network peering connection.",
+				Description: "The reason for the current status of the ODB peering connection..",
 				Computed:    true,
 			},
 

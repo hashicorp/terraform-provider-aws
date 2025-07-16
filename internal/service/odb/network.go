@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -71,26 +70,15 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"display_name": schema.StringAttribute{
-				Required:   true,
-				Validators: stringLengthBetween1And255Validator,
-			},
-			"availability_zone": schema.StringAttribute{
-				Optional:   true,
-				Computed:   true,
-				Validators: stringLengthBetween1And255Validator,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Required:    true,
+				Description: "Display name for the network resource.",
 			},
 			"availability_zone_id": schema.StringAttribute{
-				Optional:   true,
-				Computed:   true,
-				Validators: stringLengthBetween1And255Validator,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The AZ ID of the AZ where the ODB network is located. Changing this will force terraform to create new resource.",
 			},
 			"client_subnet_cidr": schema.StringAttribute{
 				Required:   true,
@@ -98,6 +86,16 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The CIDR notation for the network resource. Changing this will force terraform to create new resource.\n" +
+					" Constraints:\n  " +
+					"\t - Must not overlap with the CIDR range of the backup subnet.\n   " +
+					"\t- Must not overlap with the CIDR ranges of the VPCs that are connected to the\n  " +
+					" ODB network.\n  " +
+					"\t- Must not use the following CIDR ranges that are reserved by OCI:\n  " +
+					"\t - 100.106.0.0/16 and 100.107.0.0/16\n  " +
+					"\t - 169.254.0.0/16\n   " +
+					"\t- 224.0.0.0 - 239.255.255.255\n   " +
+					"\t- 240.0.0.0 - 255.255.255.255",
 			},
 			"backup_subnet_cidr": schema.StringAttribute{
 				Required:   true,
@@ -105,6 +103,16 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: " The CIDR range of the backup subnet for the ODB network. Changing this will force terraform to create new resource.\n" +
+					"\tConstraints:\n" +
+					"\t   - Must not overlap with the CIDR range of the client subnet.\n" +
+					"\t   - Must not overlap with the CIDR ranges of the VPCs that are connected to the\n" +
+					"\t   ODB network.\n" +
+					"\t   - Must not use the following CIDR ranges that are reserved by OCI:\n" +
+					"\t   - 100.106.0.0/16 and 100.107.0.0/16\n" +
+					"\t   - 169.254.0.0/16\n" +
+					"\t   - 224.0.0.0 - 239.255.255.255\n" +
+					"\t   - 240.0.0.0 - 255.255.255.255",
 			},
 
 			"custom_domain_name": schema.StringAttribute{
@@ -113,33 +121,36 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The name of the custom domain that the network is located. custom_domain_name and default_dns_prefix both can't be given.",
 			},
 			"default_dns_prefix": schema.StringAttribute{
 				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 15),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The default DNS prefix for the network resource. Changing this will force terraform to create new resource.",
 			},
 			"s3_access": schema.StringAttribute{
-				Required:   true,
-				CustomType: fwtypes.StringEnumType[odbtypes.Access](),
+				Required:    true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
+				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
 			},
 			"zero_etl_access": schema.StringAttribute{
-				Required:   true,
-				CustomType: fwtypes.StringEnumType[odbtypes.Access](),
+				Required:    true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
+				Description: "pecifies the configuration for Zero-ETL access from the ODB network.",
 			},
 			"s3_policy_document": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
 			},
 			"oci_dns_forwarding_configs": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigResourceModel](ctx),
-				Computed:   true,
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigResourceModel](ctx),
+				Computed:    true,
+				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"domain_name":         types.StringType,
@@ -148,41 +159,46 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"oci_network_anchor_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique identifier of the OCI network anchor for the ODB network.",
 			},
 			"oci_network_anchor_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The URL of the OCI network anchor for the ODB network.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor for the ODB network.",
 			},
 			"oci_vcn_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique identifier  Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.",
 			},
 			"oci_vcn_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The URL of the OCI VCN for the ODB network.",
 			},
-			/*"peered_cidrs": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
-			},*/
 			"percent_progress": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
 			},
 			"status": schema.StringAttribute{
-				CustomType: statusType,
-				Computed:   true,
+				CustomType:  statusType,
+				Computed:    true,
+				Description: "The status of the network resource.",
 			},
 			"status_reason": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Additional information about the current status of the ODB network.",
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The date and time when the ODB network was created.",
 			},
 			"managed_services": schema.ObjectAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewObjectTypeOf[odbNetworkManagedServicesResourceModel](ctx),
+				Computed:    true,
+				CustomType:  fwtypes.NewObjectTypeOf[odbNetworkManagedServicesResourceModel](ctx),
+				Description: "The managed services configuration for the ODB network.",
 				AttributeTypes: map[string]attr.Type{
 					"service_network_arn":  types.StringType,
 					"resource_gateway_arn": types.StringType,
@@ -337,7 +353,7 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	plan.CreatedAt = types.StringValue(createdOdbNetwork.CreatedAt.Format(time.RFC3339))
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdOdbNetwork, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
-		flex.WithIgnoredFieldNamesAppend("PeeredCidrs"), flex.WithIgnoredFieldNamesAppend("S3Access"),
+		flex.WithIgnoredFieldNamesAppend("S3Access"),
 		flex.WithIgnoredFieldNamesAppend("ZeroEtlAccess"),
 		flex.WithIgnoredFieldNamesAppend("S3PolicyDocument"))...)
 
@@ -402,7 +418,6 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 	state.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
-		//flex.WithIgnoredFieldNamesAppend("PeeredCidrs"),
 		flex.WithIgnoredFieldNamesAppend("S3Access"), flex.WithIgnoredFieldNamesAppend("ZeroEtlAccess"),
 		flex.WithIgnoredFieldNamesAppend("S3PolicyDocument"))...)
 	if resp.Diagnostics.HasError() {
@@ -774,31 +789,9 @@ func sweepNetworks(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 	return sweepResources, nil
 }
 
-func FindAddRemovedCidrsFromOdbNetWork(newCidrs, oldCiders []string) map[string]int {
-
-	addedRemovedCidrs := make(map[string]int)
-	//1 indicates newly added cidrs. Here we are assuming that all cidrs are new.
-	for _, nCidr := range newCidrs {
-		addedRemovedCidrs[nCidr] = 1
-	}
-	//Now lets remove those which are present
-	for _, oCidr := range oldCiders {
-		//if cidr is present in the map; that means no change is required for that cidr so remove it
-		_, ok := addedRemovedCidrs[oCidr]
-		if ok {
-			delete(addedRemovedCidrs, oCidr)
-		} else {
-			addedRemovedCidrs[oCidr] = -1
-		}
-	}
-	return addedRemovedCidrs
-
-}
-
 type odbNetworkResourceModel struct {
 	framework.WithRegionModel
 	DisplayName             types.String                                                               `tfsdk:"display_name"`
-	AvailabilityZone        types.String                                                               `tfsdk:"availability_zone"`
 	AvailabilityZoneId      types.String                                                               `tfsdk:"availability_zone_id"`
 	ClientSubnetCidr        types.String                                                               `tfsdk:"client_subnet_cidr"`
 	BackupSubnetCidr        types.String                                                               `tfsdk:"backup_subnet_cidr"`

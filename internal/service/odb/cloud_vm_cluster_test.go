@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -487,6 +486,17 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
   customer_contacts_to_send_to_oci = ["abc@example.com"]
+  maintenance_window = {
+  		custom_action_timeout_in_mins = 16
+		days_of_week =	[]
+        hours_of_day =	[]
+        is_custom_action_timeout_enabled = true
+        lead_time_in_weeks = 0
+        months = []
+        patching_mode = "ROLLING"
+        preference = "NO_PREFERENCE"
+		weeks_of_month =[]
+  }
   
 }
 `, rName)

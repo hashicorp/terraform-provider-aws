@@ -103,6 +103,5 @@ data "aws_odb_cloud_exadata_infrastructure" "test" {
     id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 `, displayNameSuffix)
-	//fmt.Println(testData)
 	return testData
 }

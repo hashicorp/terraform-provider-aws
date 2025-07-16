@@ -22,9 +22,21 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudAutonomousVmClustersList,
+			TypeName: "aws_odb_cloud_autonomous_vm_clusters_list",
+			Name:     "Cloud Autonomous Vm Clusters List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceCloudExadataInfrastructure,
 			TypeName: "aws_odb_cloud_exadata_infrastructure",
 			Name:     "Cloud Exadata Infrastructure",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceCloudExadataInfrastructuresList,
+			TypeName: "aws_odb_cloud_exadata_infrastructures_list",
+			Name:     "Cloud Exadata Infrastructures List",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -34,9 +46,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataSourceCloudVmClustersList,
+			TypeName: "aws_odb_cloud_vm_clusters_list",
+			Name:     "Cloud Vm Clusters List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataSourceDbServersList,
 			TypeName: "aws_odb_db_servers_list",
 			Name:     "Db Servers List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceDbSystemShapesList,
+			TypeName: "aws_odb_db_system_shapes_list",
+			Name:     "Db System Shapes List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceGiVersionsList,
+			TypeName: "aws_odb_gi_versions_list",
+			Name:     "Gi Versions List",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
@@ -49,6 +79,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceNetworkPeeringConnection,
 			TypeName: "aws_odb_network_peering_connection",
 			Name:     "Network Peering Connection",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworkPeeringConnectionsList,
+			TypeName: "aws_odb_network_peering_connections_list",
+			Name:     "Network Peering Connections List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworksList,
+			TypeName: "aws_odb_networks_list",
+			Name:     "Networks List",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

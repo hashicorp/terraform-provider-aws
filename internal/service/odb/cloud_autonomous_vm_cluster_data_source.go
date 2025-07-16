@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -46,10 +45,12 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 
 			names.AttrID: schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "Unique ID of the Autonomous VM cluster.",
 			},
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
 			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
 				Computed: true,
@@ -176,7 +177,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				CustomType: status,
 				Computed:   true,
 			},
-			"reason": schema.StringAttribute{
+			"status_reason": schema.StringAttribute{
 				Computed: true,
 			},
 			"time_database_ssl_certificate_expires": schema.StringAttribute{
@@ -188,13 +189,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			"time_zone": schema.StringAttribute{
 				Computed: true,
 			},
-			"total_autonomous_data_storage_in_tbs": schema.Float32Attribute{
-				Computed: true,
-			},
 			"total_container_databases": schema.Int32Attribute{
-				Computed: true,
-			},
-			"total_cpus": schema.Float32Attribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
@@ -266,13 +261,10 @@ func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datas
 	if tagsRead != nil {
 		data.Tags = tftags.FlattenStringValueMap(ctx, tagsRead.Map())
 	}
-	if out.CloudAutonomousVmCluster.MaintenanceWindow != nil {
-		data.MaintenanceWindow = mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx, out.CloudAutonomousVmCluster.MaintenanceWindow)
-	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.CloudAutonomousVmCluster, &data, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
-		flex.WithIgnoredFieldNamesAppend("TimeOrdsCertificateExpires"), flex.WithIgnoredFieldNamesAppend("Tags"),
-		flex.WithIgnoredFieldNamesAppend("TimeDatabaseSslCertificateExpires"), flex.WithIgnoredFieldNamesAppend("MaintenanceWindow"))...)
+	data.MaintenanceWindow = d.flattenMaintenanceWindow(ctx, out.CloudAutonomousVmCluster.MaintenanceWindow)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.CloudAutonomousVmCluster, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -280,10 +272,10 @@ func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datas
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx context.Context, avmcOdbTypeMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] {
+func (d *dataSourceCloudAutonomousVmCluster) flattenMaintenanceWindow(ctx context.Context, avmcMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] {
 	//days of week
-	daysOfWeek := make([]attr.Value, 0, len(avmcOdbTypeMW.DaysOfWeek))
-	for _, dayOfWeek := range avmcOdbTypeMW.DaysOfWeek {
+	daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
+	for _, dayOfWeek := range avmcMW.DaysOfWeek {
 		dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
 		daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
 	}
@@ -292,8 +284,8 @@ func mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx context.C
 		SetValue: setValueOfDaysOfWeek,
 	}
 	//hours of the day
-	hoursOfTheDay := make([]attr.Value, 0, len(avmcOdbTypeMW.HoursOfDay))
-	for _, hourOfTheDay := range avmcOdbTypeMW.HoursOfDay {
+	hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
+	for _, hourOfTheDay := range avmcMW.HoursOfDay {
 		daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
 		hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
 	}
@@ -302,8 +294,8 @@ func mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx context.C
 		SetValue: setValuesOfHoursOfTheDay,
 	}
 	//monts
-	months := make([]attr.Value, 0, len(avmcOdbTypeMW.Months))
-	for _, month := range avmcOdbTypeMW.Months {
+	months := make([]attr.Value, 0, len(avmcMW.Months))
+	for _, month := range avmcMW.Months {
 		monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
 		months = append(months, monthStringValue)
 	}
@@ -312,8 +304,8 @@ func mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx context.C
 		SetValue: setValuesOfMonth,
 	}
 	//weeks of month
-	weeksOfMonth := make([]attr.Value, 0, len(avmcOdbTypeMW.WeeksOfMonth))
-	for _, weekOfMonth := range avmcOdbTypeMW.WeeksOfMonth {
+	weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
+	for _, weekOfMonth := range avmcMW.WeeksOfMonth {
 		weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
 		weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
 	}
@@ -325,9 +317,9 @@ func mapToCloudAutonomousVmClusterMaintenanceWindowDataSourceModel(ctx context.C
 	computedMW := cloudAutonomousVmClusterMaintenanceWindowDataSourceModel{
 		DaysOfWeek:      daysOfWeekRead,
 		HoursOfDay:      hoursOfTheDayRead,
-		LeadTimeInWeeks: types.Int32PointerValue(avmcOdbTypeMW.LeadTimeInWeeks),
+		LeadTimeInWeeks: types.Int32PointerValue(avmcMW.LeadTimeInWeeks),
 		Months:          monthsRead,
-		Preference:      fwtypes.StringEnumValue(avmcOdbTypeMW.Preference),
+		Preference:      fwtypes.StringEnumValue(avmcMW.Preference),
 		WeeksOfMonth:    weeksOfMonthRead,
 	}
 	result, _ := fwtypes.NewObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel](ctx, &computedMW)
@@ -348,7 +340,7 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	CpuCoreCount                                 types.Int32                                                                     `tfsdk:"cpu_core_count"`
 	CpuCoreCountPerNode                          types.Int32                                                                     `tfsdk:"cpu_core_count_per_node"`
 	CpuPercentage                                types.Float32                                                                   `tfsdk:"cpu_percentage"`
-	CreatedAt                                    types.String                                                                    `tfsdk:"created_at"`
+	CreatedAt                                    types.String                                                                    `tfsdk:"created_at" autoflex:",noflatten"`
 	DataStorageSizeInGBs                         types.Float64                                                                   `tfsdk:"data_storage_size_in_gbs"`
 	DataStorageSizeInTBs                         types.Float64                                                                   `tfsdk:"data_storage_size_in_tbs"`
 	DbNodeStorageSizeInGBs                       types.Int32                                                                     `tfsdk:"odb_node_storage_size_in_gbs"`
@@ -379,14 +371,12 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	ScanListenerPortTls                          types.Int32                                                                     `tfsdk:"scan_listener_port_tls"`
 	Shape                                        types.String                                                                    `tfsdk:"shape"`
 	Status                                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                     `tfsdk:"status"`
-	StatusReason                                 types.String                                                                    `tfsdk:"reason"`
-	TimeDatabaseSslCertificateExpires            types.String                                                                    `tfsdk:"time_database_ssl_certificate_expires"`
-	TimeOrdsCertificateExpires                   types.String                                                                    `tfsdk:"time_ords_certificate_expires"`
+	StatusReason                                 types.String                                                                    `tfsdk:"status_reason"`
+	TimeDatabaseSslCertificateExpires            types.String                                                                    `tfsdk:"time_database_ssl_certificate_expires" autoflex:",noflatten"`
+	TimeOrdsCertificateExpires                   types.String                                                                    `tfsdk:"time_ords_certificate_expires" autoflex:",noflatten"`
 	TimeZone                                     types.String                                                                    `tfsdk:"time_zone"`
-	TotalAutonomousDataStorageInTBs              types.Float32                                                                   `tfsdk:"total_autonomous_data_storage_in_tbs"`
 	TotalContainerDatabases                      types.Int32                                                                     `tfsdk:"total_container_databases"`
-	TotalCpus                                    types.Float32                                                                   `tfsdk:"total_cpus"`
-	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window"`
+	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" autoflex:",noflatten"`
 	Tags                                         tftags.Map                                                                      `tfsdk:"tags"`
 }
 type cloudAutonomousVmClusterMaintenanceWindowDataSourceModel struct {

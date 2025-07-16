@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -143,14 +142,3 @@ func (odbNetworkDataSourceTestCase) testAccOdbNetworkDataSourcePreCheck(ctx cont
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
-/*func (odbNetworkDataSourceTestCase) basicOdbNetworkDataSourceHardCoded(id string) string {
-	networkRes := fmt.Sprintf(`
-data "aws_odb_network" "test" {
-  id = %[1]q
-}
-
-`, id)
-	fmt.Println(networkRes)
-	return networkRes
-}*/
