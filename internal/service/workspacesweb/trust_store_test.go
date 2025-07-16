@@ -282,7 +282,7 @@ resource "aws_acmpca_certificate" "test1" {
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA256WITHRSA"
 
-  template_arn = "arn:aws:acm-pca:::template/RootCACertificate/V1"
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
   validity {
     type  = "YEARS"
@@ -295,7 +295,7 @@ resource "aws_acmpca_certificate" "test2" {
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA256WITHRSA"
 
-  template_arn = "arn:aws:acm-pca:::template/RootCACertificate/V1"
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
   validity {
     type  = "YEARS"
