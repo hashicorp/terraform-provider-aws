@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -37,7 +36,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/github`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/github"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -46,7 +45,7 @@ func TestAccCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/github_enterprise`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/github_enterprise"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -77,7 +76,7 @@ func TestAccCodeBuildSourceCredential_basicAuth(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", regexache.MustCompile(`token/bitbucket`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", "token/bitbucket"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
