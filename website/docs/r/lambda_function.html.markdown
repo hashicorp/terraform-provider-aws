@@ -259,7 +259,7 @@ resource "aws_lambda_function" "example" {
 
 ### Function with logging to S3 or Data Firehose
 
-**Required Resources:**
+#### Required Resources
 
 * An S3 bucket or Data Firehose delivery stream to store the logs.
 * A CloudWatch Log Group with:
@@ -279,7 +279,7 @@ resource "aws_lambda_function" "example" {
 
 For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
 
-**Example: Exporting Lambda Logs to S3 Bucket**
+#### Example: Exporting Lambda Logs to S3 Bucket
 
 ```terraform
 locals {
