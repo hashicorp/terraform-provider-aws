@@ -359,7 +359,7 @@ func testAccDataLake_metaStoreUpdate(t *testing.T) {
 				Config: testAccDataLakeConfig_metaStore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
 				),
 			},
 			{
@@ -372,7 +372,7 @@ func testAccDataLake_metaStoreUpdate(t *testing.T) {
 				Config: testAccDataLakeConfig_metaStoreUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_updated", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_updated", names.AttrARN),
 				),
 			},
 			{
