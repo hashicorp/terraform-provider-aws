@@ -264,18 +264,18 @@ resource "aws_lambda_function" "example" {
 * An S3 bucket or Data Firehose delivery stream to store the logs.
 * A CloudWatch Log Group with:
 
-  * `log_group_class = "DELIVERY"`
-  * A subscription filter whose `destination_arn` points to the S3 bucket or the Data Firehose delivery stream.
+    * `log_group_class = "DELIVERY"`
+    * A subscription filter whose `destination_arn` points to the S3 bucket or the Data Firehose delivery stream.
 
 * IAM roles:
 
-  * Assumed by the `logs.amazonaws.com` service to deliver logs to the S3 bucket or Data Firehose delivery stream.
-  * Assumed by the `lambda.amazonaws.com` service to send logs to CloudWatch Logs
+    * Assumed by the `logs.amazonaws.com` service to deliver logs to the S3 bucket or Data Firehose delivery stream.
+    * Assumed by the `lambda.amazonaws.com` service to send logs to CloudWatch Logs
 
 * A Lambda function:
 
-  * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
-  * No special configuration is required to use S3 or Firehose as the log destination
+    * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
+    * No special configuration is required to use S3 or Firehose as the log destination
 
 For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
 
