@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -75,7 +76,7 @@ func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep
 
 	// Make one Describe call per policy type
 	var inputs []*cloudwatchlogs.DescribeAccountPoliciesInput
-	for _, pt := range awstypes.PolicyType("").Values() {
+	for _, pt := range enum.EnumValues[awstypes.PolicyType]() {
 		inputs = append(inputs, &cloudwatchlogs.DescribeAccountPoliciesInput{
 			PolicyType: pt,
 		})
