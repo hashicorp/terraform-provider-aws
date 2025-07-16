@@ -264,6 +264,9 @@ func testAccCheckTrustStoreExists(ctx context.Context, n string, v *awstypes.Tru
 }
 func testAccTrustStoreConfig_acmBase() string {
 	return (`
+
+data "aws_partition" "current" {}
+
 resource "aws_acmpca_certificate_authority" "test" {
   type = "ROOT"
 
