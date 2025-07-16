@@ -254,3 +254,91 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 		},
 	})
 }
+
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	common_name := acctest.RandomDomain()
+	certificate_domain := common_name.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TLSInspectionConfiguration/basic_v5.100.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: v6.0 Identity set on refresh
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TLSInspectionConfiguration/basic_v6.0.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+
+			// Step 3: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/TLSInspectionConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:      config.StringVariable(rName),
+					"certificate_domain": config.StringVariable(certificate_domain.String()),
+					"common_name":        config.StringVariable(common_name.String()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+			},
+		},
+	})
+}
