@@ -46,10 +46,12 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 
 			names.AttrID: schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "Unique ID of the Autonomous VM cluster.",
 			},
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
 			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
 				Computed: true,
@@ -176,7 +178,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				CustomType: status,
 				Computed:   true,
 			},
-			"reason": schema.StringAttribute{
+			"status_reason": schema.StringAttribute{
 				Computed: true,
 			},
 			"time_database_ssl_certificate_expires": schema.StringAttribute{
@@ -370,7 +372,7 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	ScanListenerPortTls                          types.Int32                                                                     `tfsdk:"scan_listener_port_tls"`
 	Shape                                        types.String                                                                    `tfsdk:"shape"`
 	Status                                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                     `tfsdk:"status"`
-	StatusReason                                 types.String                                                                    `tfsdk:"reason"`
+	StatusReason                                 types.String                                                                    `tfsdk:"status_reason"`
 	TimeDatabaseSslCertificateExpires            types.String                                                                    `tfsdk:"time_database_ssl_certificate_expires" autoflex:",noflatten"`
 	TimeOrdsCertificateExpires                   types.String                                                                    `tfsdk:"time_ords_certificate_expires" autoflex:",noflatten"`
 	TimeZone                                     types.String                                                                    `tfsdk:"time_zone"`

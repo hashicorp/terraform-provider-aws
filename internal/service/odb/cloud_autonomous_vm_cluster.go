@@ -84,52 +84,66 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
 			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The progress of the current operation on the Autonomous VM cluster, as a percentage.",
 			},
 			"autonomous_data_storage_size_in_tbs": schema.Float64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Float64{
 					float64planmodifier.RequiresReplace(),
 				},
+				Description: "The data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB. Changing this will force terraform to create new resource.",
 			},
 			"available_autonomous_data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.",
 			},
 			"available_container_databases": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of Autonomous CDBs that you can create with the currently available storage.",
 			},
 			"available_cpus": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of CPU cores available for allocation to Autonomous Databases",
 			},
 			"compute_model": schema.StringAttribute{
-				CustomType: computeModel,
-				Computed:   true,
+				CustomType:  computeModel,
+				Computed:    true,
+				Description: "The compute model of the Autonomous VM cluster: ECPU or OCPU.",
 			},
 			"cpu_core_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores in the Autonomous VM cluster.",
 			},
 			"cpu_core_count_per_node": schema.Int32Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+				Description: "The number of CPU cores enabled per node in the Autonomous VM cluster.",
 			},
 			"cpu_percentage": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The date and time when the Autonomous VM cluster was created.",
 			},
 			"data_storage_size_in_gbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total data storage allocated to the Autonomous VM cluster, in GB.",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total data storage allocated to the Autonomous VM cluster, in TB.",
 			},
 			"odb_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: " The local node storage allocated to the Autonomous VM cluster, in gigabytes (GB)",
 			},
 			"db_servers": schema.SetAttribute{
 				Required:    true,
@@ -138,6 +152,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
 				},
+				Description: "The database servers in the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -145,6 +160,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The description of the Autonomous VM cluster.",
 			},
 			"display_name": schema.StringAttribute{
 				Required:   true,
@@ -152,18 +168,22 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The display name of the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
 			"domain": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The domain name of the Autonomous VM cluster.",
 			},
 			"exadata_storage_in_tbs_lowest_scaled_value": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The minimum value to which you can scale down the Exadata storage, in TB.",
 			},
 			"hostname": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The hostname of the Autonomous VM cluster.",
 			},
 			"is_mtls_enabled_vm_cluster": schema.BoolAttribute{
 				Optional: true,
@@ -172,6 +192,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 					boolplanmodifier.RequiresReplace(),
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Description: "Indicates whether mutual TLS (mTLS) authentication is enabled for the Autonomous VM cluster. Changing this will force terraform to create new resource. ",
 			},
 			"license_model": schema.StringAttribute{
 				CustomType: licenseModel,
@@ -181,79 +202,100 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The license model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE . Changing this will force terraform to create new resource.",
 			},
 			"max_acds_lowest_scaled_value": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The minimum value to which you can scale down the maximum number of Autonomous CDBs.",
 			},
 			"memory_per_oracle_compute_unit_in_gbs": schema.Int32Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+				Description: "The amount of memory allocated per Oracle Compute Unit, in GB. Changing this will force terraform to create new resource.",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of memory allocated to the Autonomous VM cluster, in gigabytes(GB).",
 			},
 			"node_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of database server nodes in the Autonomous VM cluster.",
 			},
 			"non_provisionable_autonomous_container_databases": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of Autonomous CDBs that can't be provisioned because of resource constraints.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor associated with this Autonomous VM cluster.",
 			},
 			"oci_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The URL for accessing the OCI console page for this Autonomous VM cluster.",
 			},
 			"ocid": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.",
 			},
 			"odb_network_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "The unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force terraform to create new resource.",
 			},
 			"percent_progress": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: `The progress of the current operation on the Autonomous VM cluster, as a percentage.`,
 			},
 			"provisionable_autonomous_container_databases": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of Autonomous CDBs that can be provisioned in the Autonomous VM cluster.",
 			},
 			"provisioned_autonomous_container_databases": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of Autonomous CDBs currently provisioned in the Autonomous VM cluster.",
 			},
 			"provisioned_cpus": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of CPUs provisioned in the Autonomous VM cluster.",
 			},
 			"reclaimable_cpus": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of CPU cores that can be reclaimed from terminated or scaled-down Autonomous Databases.",
 			},
 			"reserved_cpus": schema.Float32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of CPU cores reserved for system operations and redundancy.",
 			},
 			"scan_listener_port_non_tls": schema.Int32Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+				Description: "The SCAN listener port for non-TLS (TCP) protocol. The default is 1521. Changing this will force terraform to create new resource.",
 			},
 			"scan_listener_port_tls": schema.Int32Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+				Description: "The SCAN listener port for TLS (TCP) protocol. The default is 2484. Changing this will force terraform to create new resource.",
 			},
 			"shape": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The shape of the Exadata infrastructure for the Autonomous VM cluster.",
 			},
 			"status": schema.StringAttribute{
-				CustomType: status,
-				Computed:   true,
+				CustomType:  status,
+				Computed:    true,
+				Description: "The status of the Autonomous VM cluster. Possible values include CREATING, AVAILABLE , UPDATING , DELETING , DELETED , FAILED ",
 			},
-			"reason": schema.StringAttribute{
-				Computed: true,
+			"status_reason": schema.StringAttribute{
+				Computed:    true,
+				Description: "Additional information about the current status of the Autonomous VM cluster.",
 			},
 			"time_zone": schema.StringAttribute{
 				Optional: true,
@@ -262,18 +304,21 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "The time zone of the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
 			"total_container_databases": schema.Int32Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
+				Description: "The total number of Autonomous Container Databases that can be created with the allocated local storage. Changing this will force terraform to create new resource.",
 			},
 			"time_ords_certificate_expires": schema.StringAttribute{
 				Computed: true,
 			},
 			"time_database_ssl_certificate_expires": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The expiration date and time of the database SSL certificate.",
 			},
 			"maintenance_window": schema.ObjectAttribute{
 				Required:   true,
@@ -281,6 +326,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplace(),
 				},
+				Description: "The maintenance window of the Autonomous VM cluster.",
 				AttributeTypes: map[string]attr.Type{
 					"days_of_week": types.SetType{
 						ElemType: fwtypes.StringEnumType[odbtypes.DayOfWeekName](),
@@ -800,7 +846,7 @@ type cloudAutonomousVmClusterResourceModel struct {
 	ScanListenerPortTls                          types.Int32                                                                   `tfsdk:"scan_listener_port_tls"`
 	Shape                                        types.String                                                                  `tfsdk:"shape"`
 	Status                                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                   `tfsdk:"status"`
-	StatusReason                                 types.String                                                                  `tfsdk:"reason"`
+	StatusReason                                 types.String                                                                  `tfsdk:"status_reason"`
 	TimeZone                                     types.String                                                                  `tfsdk:"time_zone"`
 	TotalContainerDatabases                      types.Int32                                                                   `tfsdk:"total_container_databases"`
 	Timeouts                                     timeouts.Value                                                                `tfsdk:"timeouts"`

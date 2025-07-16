@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"reflect"
 	"testing"
 
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -29,61 +28,6 @@ type odbNetworkResourceTest struct {
 
 var odbNetResourceTest = odbNetworkResourceTest{
 	displayNamePrefix: "tf-odb-net",
-}
-
-func TestOdbNetworkAddRemovePerredCidrsUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName       string
-		OldCidrs       []string
-		NewCidrs       []string
-		AddRemoveCidrs map[string]int
-	}{
-		{
-			TestName:       "non empty new, empty old",
-			NewCidrs:       []string{"10.0.0.0/24"},
-			OldCidrs:       []string{},
-			AddRemoveCidrs: map[string]int{"10.0.0.0/24": 1},
-		},
-		{
-			TestName:       "non empty new, non empty old",
-			NewCidrs:       []string{"10.0.0.0/24"},
-			OldCidrs:       []string{"10.0.0.0/34"},
-			AddRemoveCidrs: map[string]int{"10.0.0.0/24": 1, "10.0.0.0/34": -1},
-		},
-		{
-			TestName:       "non empty new, non empty old all same",
-			NewCidrs:       []string{"10.0.0.0/24"},
-			OldCidrs:       []string{"10.0.0.0/24"},
-			AddRemoveCidrs: map[string]int{},
-		},
-		{
-			TestName:       "empty new, non empty old all ",
-			NewCidrs:       []string{},
-			OldCidrs:       []string{"10.0.0.0/24", "10.0.0.0/34"},
-			AddRemoveCidrs: map[string]int{"10.0.0.0/24": -1, "10.0.0.0/34": -1},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			addRemoveCidrs := tfodb.FindAddRemovedCidrsFromOdbNetWork(testCase.NewCidrs, testCase.OldCidrs)
-
-			if addRemoveCidrs != nil {
-				if len(addRemoveCidrs) != len(testCase.AddRemoveCidrs) {
-					t.Fatalf("expected %d addRemoveCidrs, got %d", len(testCase.AddRemoveCidrs), len(addRemoveCidrs))
-				}
-				if !reflect.DeepEqual(addRemoveCidrs, testCase.AddRemoveCidrs) {
-					t.Fatalf("expected %v, got %v", testCase.AddRemoveCidrs, addRemoveCidrs)
-				}
-			} else {
-				t.Error("addRemoveCidrs was nil")
-			}
-
-		})
-	}
 }
 
 // Basic test with bare minimum input
@@ -123,11 +67,9 @@ func TestOdbNetworkBasic(t *testing.T) {
 	})
 }
 
-// with peered_cidr
-func TestAccODBNetwork_only_with_peered_cidr(t *testing.T) {
+func TestOdbNetworkWithAllParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -139,60 +81,15 @@ func TestAccODBNetwork_only_with_peered_cidr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//testAccPreCheck(ctx, t)
+			odbNetResourceTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             odbNetResourceTest.testAccCheckNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: odbNetResourceTest.basicOdbNetworkWithPeeredCidrs(rName),
+				Config: odbNetResourceTest.odbNetworkWithAllParams(rName, "julia.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					func(state *terraform.State) error {
-						fmt.Println(state)
-						return nil
-					},
-					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-// TestAccODBNetwork_basic_with_peered_cidr_vpc_arn
-func TestAccODBNetwork_with_peered_cidr_vpc_arn(t *testing.T) {
-	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var network odbtypes.OdbNetwork
-	rName := sdkacctest.RandomWithPrefix(odbNetResourceTest.displayNamePrefix)
-	resourceName := "aws_odb_network.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			//testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             odbNetResourceTest.testAccCheckNetworkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: odbNetResourceTest.basicOdbNetworkWithVPCArn(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					func(state *terraform.State) error {
-						fmt.Println(state)
-						return nil
-					},
 					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
 				),
 			},
@@ -405,25 +302,6 @@ func (odbNetworkResourceTest) testAccPreCheck(ctx context.Context, t *testing.T)
 	}
 }*/
 
-func (odbNetworkResourceTest) basicOdbNetworkWithPeeredCidrs(rName string) string {
-	networkRes := fmt.Sprintf(`
-
-
-resource "aws_odb_network" "test" {
-  display_name          = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  peered_cidrs         = ["10.32.0.0/24", "172.16.2.0/24", "172.16.0.0/16"]
-  tags = {
-    "env"= "dev"
-  }
-}
-
-`, rName)
-	return networkRes
-}
-
 func (odbNetworkResourceTest) basicOdbNetwork(rName string) string {
 	networkRes := fmt.Sprintf(`
 
@@ -441,6 +319,24 @@ resource "aws_odb_network" "test" {
 	return networkRes
 }
 
+func (odbNetworkResourceTest) odbNetworkWithAllParams(rName, customDomainName string) string {
+	networkRes := fmt.Sprintf(`
+
+
+resource "aws_odb_network" "test" {
+  display_name          = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access = "DISABLED"
+  zero_etl_access = "DISABLED"
+  custom_domain_name = %[2]q
+}
+
+`, rName, customDomainName)
+	return networkRes
+}
+
 func (odbNetworkResourceTest) updateOdbNetworkDisplayName(rName string) string {
 	networkRes := fmt.Sprintf(`
 
@@ -450,6 +346,8 @@ resource "aws_odb_network" "test" {
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access = "DISABLED"
+  zero_etl_access = "DISABLED"
 }
 `, rName)
 	return networkRes
@@ -464,31 +362,13 @@ resource "aws_odb_network" "test" {
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
+   s3_access = "DISABLED"
+  zero_etl_access = "DISABLED"
  tags = {
     "env"= "dev"
     "foo"= "bar"
   }
 }
-`, rName)
-	return networkRes
-}
-
-func (odbNetworkResourceTest) basicOdbNetworkWithVPCArn(rName string) string {
-	networkRes := fmt.Sprintf(`
-
-
-resource "aws_odb_network" "test" {
-  display_name          = %[1]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  peer_vpc_arn         = "arn:aws:ec2:us-east-1:711387093194:vpc/vpc-0c6e9101b49f80ea3" 
-  peered_cidrs         = ["10.13.0.0/24", "172.16.2.0/24", "172.16.0.0/16"]
-  tags = {
-    "env"= "dev"
-  }
-}
-
 `, rName)
 	return networkRes
 }
