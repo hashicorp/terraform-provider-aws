@@ -3844,7 +3844,7 @@ resource "aws_s3_bucket" "lambda_bucket" {
 }
 
 resource "aws_s3_object" "lambda_code" {
-  bucket = aws_s3_bucket.lambda_bucket.id
+  bucket = aws_s3_bucket.lambda_bucket.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
@@ -3870,8 +3870,8 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  s3_bucket     = aws_s3_bucket.lambda_bucket.id
-  s3_key        = aws_s3_object.lambda_code.id
+  s3_bucket     = aws_s3_object.lambda_code.bucket
+  s3_key        = aws_s3_object.lambda_code.key
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
