@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.17
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.70
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.83
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.84
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.33.0
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.232.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.46.3
@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.4
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.4
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.5
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.19.0

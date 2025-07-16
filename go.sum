@@ -31,8 +31,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.17.70 h1:ONnH5CM16RTXRkS8Z1qg7/s2eDO
 github.com/aws/aws-sdk-go-v2/credentials v1.17.70/go.mod h1:M+lWhhmomVGgtuPOhO85u4pEa3SmssPTdcYpP/5J/xc=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32 h1:KAXP9JSHO1vKGCr5f4O6WmlVKLFFXgWYAGoJosorxzU=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.32/go.mod h1:h4Sg6FQdexC1yYG9RDnOvLbW1a/P986++/Y/a+GyEM8=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.83 h1:08otkOELsIi0toRRGMytlJhOctcN8xfKfKFR2NXz3kE=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.83/go.mod h1:dGsGb2wI8JDWeMAhjVPP+z+dqvYjL6k6o+EujcRNk5c=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.84 h1:cTXRdLkpBanlDwISl+5chq5ui1d1YWg4PWMR9c3kXyw=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.84/go.mod h1:kwSy5X7tfIHN39uucmjQVs2LvDdXEjQucgQQEqCggEo=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.36 h1:SsytQyTMHMDPspp+spo7XwXTP44aJZZAC7fBV2C5+5s=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.36/go.mod h1:Q1lnJArKRXkenyog6+Y+zr7WDpk4e6XlR6gs20bbeNo=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.36 h1:i2vNHQiXUvKhs3quBR6aqlgJaiaexz/aNvdCktW/kAM=
@@ -219,8 +219,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1 h1:Bwzh202Aq7/MYnAjXA9VawCf6u+h
 github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1/go.mod h1:xZzWl9AXYa6zsLLH41HBFW8KRKJRIzlGmvSM0mVMIX4=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2 h1:XJ/AEFYj9VFPJdF+VFi4SUPEDfz1akHwxxm07JfZJcs=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2/go.mod h1:JUBHdhvKbbKmhaHjLsKJAWnQL80T6nURmhB/LEprV+4=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.59.0 h1:GR6qoJNb6kgezvmg6ctmdJMbZ0/0AU4e+yRixyWz1SI=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.59.0/go.mod h1:kq9VTFKJ68jqeYu1uVx6bR7VgWdQ0Kic/BstllTJJuU=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.60.0 h1:HnD2JEIdwwyJ4gxgOXl7MRCLZSGHJmGGlGrCRFbrcEc=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.60.0/go.mod h1:kq9VTFKJ68jqeYu1uVx6bR7VgWdQ0Kic/BstllTJJuU=
 github.com/aws/aws-sdk-go-v2/service/efs v1.36.2 h1:u559lskjn8+5WRnLU+Aq0VCZLjgw+JXYHiwSfOpweBw=
 github.com/aws/aws-sdk-go-v2/service/efs v1.36.2/go.mod h1:e6UrCp+V52p83QPNWC05I2N3vkg15XTfbQ0n4IvYDYQ=
 github.com/aws/aws-sdk-go-v2/service/eks v1.66.1 h1:sD1y3G4WXw1GjK95L5dBXPFXNWl/O8GMradUojUYqCg=
@@ -307,8 +307,8 @@ github.com/aws/aws-sdk-go-v2/service/ivs v1.43.4 h1:o8i4lXojYxWkf1JO/4ZI42A+BqLQ
 github.com/aws/aws-sdk-go-v2/service/ivs v1.43.4/go.mod h1:eqKP1qnqzTTjRcIO6DK9HRiIwvbL67xAUZ3IGbQ0WOI=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.4 h1:btA/5nMzQ5W9uYvXVfZoo+1MfIsnt8rHxfdeqqb/Hp4=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.17.4/go.mod h1:wVqsjIZzpNfhcxzSEQ5Ex3MZTK6pK41Bnube0cQbklw=
-github.com/aws/aws-sdk-go-v2/service/kafka v1.39.5 h1:N92rM/5cDDxhjRLQsiVuV+osgvjgxjlPWDfifwWZl+0=
-github.com/aws/aws-sdk-go-v2/service/kafka v1.39.5/go.mod h1:O0aQB4mb7phy2B60/oRkEN2EeUdbWDOHhrnar8ZP1Dk=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.39.6 h1:YBvDqr/kGIdV3biJU2mSFmNwhxSErw3C306z4NalCdU=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.39.6/go.mod h1:O0aQB4mb7phy2B60/oRkEN2EeUdbWDOHhrnar8ZP1Dk=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.23.5 h1:6aVQyYo8DwhQknoluvQn3myUthiSvX7h0nf7r2nrxQU=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.23.5/go.mod h1:DIDIP4kbwO2APBMn4aH89FjL3JNeeDoOG37W15Tkk2o=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.56.4 h1:GmvdHpYX8gUIIrhVoZ3CVyES0M06FAoMAmwWSroWwDk=
