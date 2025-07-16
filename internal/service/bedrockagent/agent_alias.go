@@ -171,6 +171,19 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
+	// Handle the case where routing_configuration was not provided in the plan but AWS returns it with a default agent_version
+	// This prevents the "Provider produced inconsistent result" error
+	var planData agentAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &planData)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if planData.RoutingConfiguration.IsNull() {
+		// If routing_configuration was not specified in the plan, keep it as null in the state
+		data.RoutingConfiguration = planData.RoutingConfiguration
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -206,9 +219,22 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
+	// Store the original state to check if routing_configuration should remain null
+	var originalData agentAliasResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &originalData)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle the case where routing_configuration was null in the original state
+	// This maintains consistency when AWS returns a default agent_version
+	if originalData.RoutingConfiguration.IsNull() {
+		data.RoutingConfiguration = originalData.RoutingConfiguration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -266,8 +292,18 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		}
 	}
 
-	// set unknowns if a tags only update
-	if new.RoutingConfiguration.IsUnknown() {
+	// Handle routing_configuration state consistency
+	var planData agentAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &planData)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if planData.RoutingConfiguration.IsNull() {
+		// If routing_configuration was not specified in the plan, keep it as null in the state
+		new.RoutingConfiguration = planData.RoutingConfiguration
+	} else if new.RoutingConfiguration.IsUnknown() {
+		// set unknowns if a tags only update
 		new.RoutingConfiguration = old.RoutingConfiguration
 	}
 
