@@ -126,8 +126,8 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testing.T, serverType types.ServerType) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
 
-	input := &codebuild.ListSourceCredentialsInput{}
-	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, input, func(v *types.SourceCredentialsInfo) bool {
+	input := codebuild.ListSourceCredentialsInput{}
+	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, &input, func(v *types.SourceCredentialsInfo) bool {
 		return v.ServerType == serverType
 	})
 
@@ -142,6 +142,10 @@ func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testi
 	if len(output) == 0 {
 		t.Skipf("skipping acceptance testing: Source Credentials (%s) not found", serverType)
 	}
+}
+
+func testAccPreCheckSourceCredentialsForServerTypeGithub(ctx context.Context, t *testing.T) {
+	testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 }
 
 func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
