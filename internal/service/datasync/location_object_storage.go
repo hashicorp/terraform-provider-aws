@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -106,6 +107,11 @@ func resourceLocationObjectStorage() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIfChange("agent_arns", func(_ context.Context, old, new, meta any) bool {
+			// "InvalidRequestException: Invalid parameter: Updating AgentArns is not permitted for agentless object storage locations".
+			return (old.(*schema.Set).Len() == 0 && new.(*schema.Set).Len() > 0) || (old.(*schema.Set).Len() > 0 && new.(*schema.Set).Len() == 0)
+		}),
 	}
 }
 
@@ -120,7 +126,7 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("agent_arns"); ok {
+	if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
 		input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -205,7 +211,7 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if d.HasChange("agent_arns") {
-			if v, ok := d.GetOk("agent_arns"); ok {
+			if v, ok := d.GetOk("agent_arns"); ok && v.(*schema.Set).Len() > 0 {
 				input.AgentArns = flex.ExpandStringValueSet(v.(*schema.Set))
 			}
 

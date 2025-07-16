@@ -350,7 +350,7 @@ func TestAccDataSyncLocationObjectStorage_emptyAgentARNs(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
 				},
 			},
 			{
@@ -376,7 +376,7 @@ func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_noAgentARNsCreate(rName, domain),
+				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 				),
@@ -386,7 +386,7 @@ func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
 				},
 			},
 			{
@@ -401,7 +401,7 @@ func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -409,17 +409,17 @@ func TestAccDataSyncLocationObjectStorage_noAgentARNs(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccLocationObjectStorageConfig_noAgentARNsUpdate(rName, domain),
+				Config: testAccLocationObjectStorageConfig_noAgentARNs(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("agent_arns"), knownvalue.Null()),
 				},
 			},
 		},
@@ -597,18 +597,7 @@ resource "aws_datasync_location_object_storage" "test" {
 `, rName, domain)
 }
 
-func testAccLocationObjectStorageConfig_noAgentARNsCreate(rName, domain string) string {
-	return fmt.Sprintf(`
-resource "aws_datasync_location_object_storage" "test" {
-  server_hostname = %[2]q
-  bucket_name     = %[1]q
-  server_protocol = "HTTP"
-  server_port     = 8080
-}
-`, rName, domain)
-}
-
-func testAccLocationObjectStorageConfig_noAgentARNsUpdate(rName, domain string) string {
+func testAccLocationObjectStorageConfig_noAgentARNs(rName, domain string) string {
 	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   server_hostname = %[2]q
