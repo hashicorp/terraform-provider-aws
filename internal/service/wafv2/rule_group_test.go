@@ -5740,29 +5740,29 @@ resource "aws_wafv2_rule_group" "test" {
   scope    = "REGIONAL"
 
   rule_json = jsonencode([{
-    Name     = "rule-1",
-    Priority = 1,
+    Name     = "rule-1"
+    Priority = 1
     Action = {
       Count = {}
-    },
+    }
     Statement = {
       ByteMatchStatement = {
-        SearchString         = "badbot",
+        SearchString         = "badbot"
         FieldToMatch = {
           UriPath = {}
-        },
+        }
         TextTransformations = [{
-          Priority = 1,
+          Priority = 1
           Type     = "NONE"
-        }],
+        }]
         PositionalConstraint = "CONTAINS"
       }
-    },
+    }
     VisibilityConfig = {
-      CloudwatchMetricsEnabled = false,
-      MetricName               = "friendly-rule-metric-name",
-      SampledRequestsEnabled   = false,
-    },
+      CloudwatchMetricsEnabled = false
+      MetricName               = "friendly-rule-metric-name"
+      SampledRequestsEnabled   = false
+    }
   }])
 
   visibility_config {

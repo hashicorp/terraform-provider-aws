@@ -328,7 +328,7 @@ resource "aws_wafv2_rule_group" "example" {
     }
     Statement = {
       ByteMatchStatement = {
-        SearchString         = "badbot"
+        SearchString = "badbot"
         FieldToMatch = {
           UriPath = {}
         }
