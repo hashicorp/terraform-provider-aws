@@ -2035,7 +2035,7 @@ func TestAccLambdaFunction_LocalUpdate_publish(t *testing.T) {
 				Config: testAccFunctionConfig_localPublish(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "M05mDR3HBtMTJxeshE8wxggQmg7QCpBNbedLT18kPCM="),
+					testAccCheckSourceCodeHash(&conf, "dLPb9UCUTa8WVNATdCYpZIcIxLWEoR4TLDWvr9rajBw="),
 				),
 			},
 			{
@@ -2054,7 +2054,7 @@ func TestAccLambdaFunction_LocalUpdate_publish(t *testing.T) {
 				Config: testAccFunctionConfig_localPublish(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "N1OzH9hfAhOPj7f9a5ERlNmWQckbYPSt5JVJzVv14zo="),
+					testAccCheckSourceCodeHash(&conf, "7x43uxhWHTejc6xUvJlAcRvdVmRpqwGIYHpok5qDiYs="),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
