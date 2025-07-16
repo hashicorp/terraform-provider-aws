@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_agent_alias: Fix inconsistent result error when `routing_configuration` is not specified but AWS returns default `agent_version`
+```
