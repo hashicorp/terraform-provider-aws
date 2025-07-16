@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -104,7 +103,8 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	vpnGateway, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.VpnGateway, error) {
 		return findVPNGatewayByID(ctx, conn, d.Id())
@@ -121,14 +121,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	d.Set("amazon_side_asn", flex.Int64ToStringValue(vpnGateway.AmazonSideAsn))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpnGatewayARN(ctx, c, d.Id()))
 	if aws.ToString(vpnGateway.AvailabilityZone) != "" {
 		d.Set(names.AttrAvailabilityZone, vpnGateway.AvailabilityZone)
 	}
@@ -244,4 +237,8 @@ func detachVPNGatewayFromVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID
 	}
 
 	return nil
+}
+
+func vpnGatewayARN(ctx context.Context, c *conns.AWSClient, vpnGatewayID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpn-gateway/"+vpnGatewayID)
 }
