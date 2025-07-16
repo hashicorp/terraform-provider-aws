@@ -81,7 +81,7 @@ resource "aws_ssm_association" "example" {
 
 ### Create an association with multiple instances with their instance ids
 
-```
+```terraform
 # Removed EC2 provisioning dependencies for brevity
 
 resource "aws_ssm_association" "system_update" {
@@ -164,7 +164,7 @@ resource "aws_instance" "web_server_2" {
 
 ### Create an association with multiple instances with their values matching their tags
 
-```
+```terraform
 # SSM Association for Webbased Servers
 resource "aws_ssm_association" "database_association" {
   name = aws_ssm_document.system_update.name # Use the name of the document as the association name
