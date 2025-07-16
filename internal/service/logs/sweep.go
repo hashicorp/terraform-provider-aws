@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -19,6 +20,8 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_cloudwatch_log_account_policy", sweepAccountPolicies)
+
 	awsv2.Register("aws_cloudwatch_log_anomaly_detector", sweepAnomalyDetectors)
 
 	awsv2.Register("aws_cloudwatch_log_delivery", sweepDeliveries)
@@ -64,6 +67,43 @@ func RegisterSweepers() {
 		Name: "aws_cloudwatch_log_resource_policy",
 		F:    sweepResourcePolicies,
 	})
+}
+
+func sweepAccountPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.LogsClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	// Make one Describe call per policy type
+	var inputs []*cloudwatchlogs.DescribeAccountPoliciesInput
+	for _, pt := range awstypes.PolicyType("").Values() {
+		inputs = append(inputs, &cloudwatchlogs.DescribeAccountPoliciesInput{
+			PolicyType: pt,
+		})
+	}
+
+	for _, input := range inputs {
+		err := describeAccountPoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeAccountPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.AccountPolicies {
+				r := resourceAccountPolicy()
+				d := r.Data(nil)
+				d.SetId(aws.ToString(v.PolicyName))
+				d.Set("policy_type", v.PolicyType)
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+
+			return !lastPage
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepAnomalyDetectors(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
