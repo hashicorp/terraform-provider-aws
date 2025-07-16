@@ -5,6 +5,7 @@ package securitylake_test
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -95,6 +97,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccDeleteGlueDatabases(ctx context.Context, t *testing.T, regions ...string) {
 	t.Helper()
+
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		return
+	}
 
 	// The Context returned by t.Context() is canceled when the test ends.
 	ctx = context.WithoutCancel(ctx)
