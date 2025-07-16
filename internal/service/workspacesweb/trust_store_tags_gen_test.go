@@ -21,7 +21,7 @@ func TestAccWorkSpacesWebTrustStore_tags(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -214,7 +214,7 @@ func TestAccWorkSpacesWebTrustStore_tags_null(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -276,7 +276,7 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyMap(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -326,7 +326,7 @@ func TestAccWorkSpacesWebTrustStore_tags_AddOnUpdate(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -407,7 +407,7 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -502,7 +502,7 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -645,7 +645,7 @@ func TestAccWorkSpacesWebTrustStore_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
@@ -736,7 +736,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_providerOnly(t *testing.T) 
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -928,7 +928,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nonOverlapping(t *testing.T
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1096,7 +1096,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_overlapping(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1280,7 +1280,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_updateToProviderOnly(t *tes
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1371,7 +1371,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_updateToResourceOnly(t *tes
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1461,7 +1461,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_emptyResourceTag(t *testing
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1529,7 +1529,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_emptyProviderOnlyTag(t *tes
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1589,7 +1589,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nullOverlappingResourceTag(
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1658,7 +1658,7 @@ func TestAccWorkSpacesWebTrustStore_tags_DefaultTags_nullNonOverlappingResourceT
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1729,7 +1729,7 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnCreate(t *testing.T) {
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1786,7 +1786,7 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1884,7 +1884,7 @@ func TestAccWorkSpacesWebTrustStore_tags_ComputedTag_OnUpdate_Replace(t *testing
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -1972,7 +1972,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -2002,7 +2002,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2050,7 +2050,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2098,7 +2098,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_DefaultTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2130,7 +2130,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 	var v types.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckTrustStoreDestroy(ctx),
@@ -2159,7 +2159,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2216,7 +2216,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2272,7 +2272,7 @@ func TestAccWorkSpacesWebTrustStore_tags_IgnoreTags_Overlap_ResourceTag(t *testi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

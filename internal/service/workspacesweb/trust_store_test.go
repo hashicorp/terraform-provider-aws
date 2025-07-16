@@ -41,7 +41,7 @@ func TestAccWorkSpacesWebTrustStore_basic(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
@@ -82,13 +82,13 @@ func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_before"),
@@ -157,7 +157,7 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
@@ -178,13 +178,13 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "2"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", "certificate"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test1", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.subject"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.thumbprint"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "certificate.*.body", "aws_acmpca_certificate.test2", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.1.not_valid_before"),
@@ -205,7 +205,7 @@ func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 					testAccCheckTrustStoreExists(ctx, resourceName, &trustStore),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "trust_store_arn", "workspaces-web", regexache.MustCompile(`trustStore/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test2", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate.0.body", "aws_acmpca_certificate.test2", names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.issuer"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_after"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate.0.not_valid_before"),
@@ -249,7 +249,6 @@ func testAccCheckTrustStoreExists(ctx context.Context, n string, v *awstypes.Tru
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindTrustStoreByARN(ctx, conn, rs.Primary.Attributes["trust_store_arn"])
@@ -267,11 +266,11 @@ func testAccTrustStoreConfig_acmBase() string {
 	return (`
 resource "aws_acmpca_certificate_authority" "test" {
   type = "ROOT"
-  
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_2048"
     signing_algorithm = "SHA256WITHRSA"
-    
+
     subject {
       common_name = "example.com"
     }
@@ -281,10 +280,10 @@ resource "aws_acmpca_certificate_authority" "test" {
 resource "aws_acmpca_certificate" "test1" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
-  signing_algorithm          = "SHA256WITHRSA"
-  
+  signing_algorithm           = "SHA256WITHRSA"
+
   template_arn = "arn:aws:acm-pca:::template/RootCACertificate/V1"
-  
+
   validity {
     type  = "YEARS"
     value = 1
@@ -294,10 +293,10 @@ resource "aws_acmpca_certificate" "test1" {
 resource "aws_acmpca_certificate" "test2" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
-  signing_algorithm          = "SHA256WITHRSA"
-  
+  signing_algorithm           = "SHA256WITHRSA"
+
   template_arn = "arn:aws:acm-pca:::template/RootCACertificate/V1"
-  
+
   validity {
     type  = "YEARS"
     value = 1
@@ -312,8 +311,8 @@ func testAccTrustStoreConfig_basic() string {
 		`
 resource "aws_workspacesweb_trust_store" "test" {
   certificate {
-  		body = aws_acmpca_certificate.test1.certificate
-	}
+    body = aws_acmpca_certificate.test1.certificate
+  }
 }
 `)
 }
@@ -324,11 +323,11 @@ func testAccTrustStoreConfig_multipleCerts() string {
 		`
 resource "aws_workspacesweb_trust_store" "test" {
   certificate {
-  		body = aws_acmpca_certificate.test1.certificate
-	}
+    body = aws_acmpca_certificate.test1.certificate
+  }
   certificate {
-  		body = aws_acmpca_certificate.test2.certificate
-	}
+    body = aws_acmpca_certificate.test2.certificate
+  }
 }
 `)
 }
@@ -339,11 +338,11 @@ func testAccTrustStoreConfig_updatedAdd() string {
 		`
 resource "aws_workspacesweb_trust_store" "test" {
   certificate {
-  		body = aws_acmpca_certificate.test1.certificate
-	}
+    body = aws_acmpca_certificate.test1.certificate
+  }
   certificate {
-  		body = aws_acmpca_certificate.test2.certificate
-	}
+    body = aws_acmpca_certificate.test2.certificate
+  }
 }
 `)
 }
@@ -354,8 +353,8 @@ func testAccTrustStoreConfig_updatedRemove() string {
 		`
 resource "aws_workspacesweb_trust_store" "test" {
   certificate {
-  		body = aws_acmpca_certificate.test2.certificate
-	}
+    body = aws_acmpca_certificate.test2.certificate
+  }
 }
 `)
 }

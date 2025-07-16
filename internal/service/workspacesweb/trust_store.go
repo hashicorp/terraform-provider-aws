@@ -49,7 +49,7 @@ func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type trustStoreResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[trustStoreResourceModel]
 }
 
 func (r *trustStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -73,7 +73,7 @@ func (r *trustStoreResource) Schema(ctx context.Context, request resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"certificate": schema.SetNestedBlock{
+			names.AttrCertificate: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[certificateModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(0),
@@ -86,7 +86,7 @@ func (r *trustStoreResource) Schema(ctx context.Context, request resource.Schema
 						"body": schema.StringAttribute{
 							Required: true,
 						},
-						"issuer": schema.StringAttribute{
+						names.AttrIssuer: schema.StringAttribute{
 							Computed: true,
 						},
 						"not_valid_after": schema.StringAttribute{
@@ -117,7 +117,7 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
-	input := &workspacesweb.CreateTrustStoreInput{
+	input := workspacesweb.CreateTrustStoreInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
 		Tags:        getTagsIn(ctx),
 	}
@@ -132,7 +132,7 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 		input.CertificateList = append(input.CertificateList, []byte(formatted_cert))
 	}
 
-	output, err := conn.CreateTrustStore(ctx, input)
+	output, err := conn.CreateTrustStore(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating WorkSpacesWeb Trust Store", err.Error())
@@ -229,8 +229,8 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	if !new.Certificates.Equal(old.Certificates) {
-		input := &workspacesweb.UpdateTrustStoreInput{
-			TrustStoreArn: aws.String(new.TrustStoreARN.ValueString()),
+		input := workspacesweb.UpdateTrustStoreInput{
+			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 			ClientToken:   aws.String(sdkid.UniqueId()),
 		}
 
@@ -274,7 +274,7 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 			}
 		}
 
-		_, err := conn.UpdateTrustStore(ctx, input)
+		_, err := conn.UpdateTrustStore(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Trust Store (%s)", new.TrustStoreARN.ValueString()), err.Error())
@@ -316,7 +316,7 @@ func (r *trustStoreResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.DeleteTrustStoreInput{
-		TrustStoreArn: aws.String(data.TrustStoreARN.ValueString()),
+		TrustStoreArn: data.TrustStoreARN.ValueStringPointer(),
 	}
 	_, err := conn.DeleteTrustStore(ctx, &input)
 
@@ -374,12 +374,12 @@ func listTrustStoreCertificates(ctx context.Context, conn *workspacesweb.Client,
 
 		for _, certSummary := range output.CertificateList {
 			// Get detailed certificate information
-			certInput := &workspacesweb.GetTrustStoreCertificateInput{
+			certInput := workspacesweb.GetTrustStoreCertificateInput{
 				TrustStoreArn: aws.String(arn),
 				Thumbprint:    certSummary.Thumbprint,
 			}
 
-			certOutput, err := conn.GetTrustStoreCertificate(ctx, certInput)
+			certOutput, err := conn.GetTrustStoreCertificate(ctx, &certInput)
 			if err != nil {
 				return nil, err
 			}
@@ -401,6 +401,7 @@ func listTrustStoreCertificates(ctx context.Context, conn *workspacesweb.Client,
 }
 
 type trustStoreResourceModel struct {
+	framework.WithRegionModel
 	AssociatedPortalARNs fwtypes.ListOfString                             `tfsdk:"associated_portal_arns"`
 	Certificates         fwtypes.SetNestedObjectValueOf[certificateModel] `tfsdk:"certificate"`
 	Tags                 tftags.Map                                       `tfsdk:"tags"`
