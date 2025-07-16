@@ -164,7 +164,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		policy        *awstypes.Policy
 		policyVersion *awstypes.PolicyVersion
 	}
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*policyWithVersion, error) {
 		iamPolicy := &policyWithVersion{}
 
 		if v, err := findPolicyByARN(ctx, conn, d.Id()); err == nil {
@@ -192,9 +192,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*policyWithVersion)
 	policy := output.policy
-
 	d.Set(names.AttrARN, policy.Arn)
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set(names.AttrDescription, policy.Description)
