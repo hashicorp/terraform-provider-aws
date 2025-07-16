@@ -36,11 +36,11 @@ resource "aws_workspacesweb_trust_store" "example" {
   certificate {
     body = file("certificate1.pem")
   }
-  
+
   certificate {
     body = file("certificate2.pem")
   }
-  
+
   tags = {
     Name = "example-trust-store"
   }
