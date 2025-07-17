@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
