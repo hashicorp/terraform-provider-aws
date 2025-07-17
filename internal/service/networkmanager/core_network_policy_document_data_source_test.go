@@ -370,7 +370,9 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
       "2001:4860::/32",
       "192.0.0.0/8",
       "10.1.0.0/16"
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -670,7 +672,9 @@ const testAccPolicyDocumentServiceInsertionExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -824,7 +828,9 @@ const testAccPolicyDocumentWildCardWhenSentToExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {
@@ -1059,7 +1065,9 @@ const testAccPolicyDocumentViaExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ]
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false
   },
   "segments": [
     {

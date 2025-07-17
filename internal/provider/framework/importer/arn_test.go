@@ -67,7 +67,7 @@ func (c mockClient) Region(_ context.Context) string {
 func TestGlobalARN(t *testing.T) {
 	t.Parallel()
 
-	f := importer.GlobalARN
+	f := importer.ARN
 
 	accountID := "123456789012"
 	validARN := arn.ARN{
@@ -153,15 +153,19 @@ func TestGlobalARN(t *testing.T) {
 				schema = globalARNWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
@@ -251,7 +255,7 @@ func regionalARNIdentitySpec(attrs ...string) inttypes.Identity {
 func TestRegionalARN(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalARN
+	f := importer.ARN
 
 	accountID := "123456789012"
 	region := "a-region-1"
@@ -356,17 +360,21 @@ func TestRegionalARN(t *testing.T) {
 				schema = regionalARNWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
-				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec)
+				response = importByID(ctx, f, &client, schema, tc.inputARN, identitySchema, identitySpec, &importSpec)
 			case "IDWithState":
-				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, tc.stateAttrs, identitySchema, identitySpec, &importSpec)
 			case "Identity":
 				identity := identityFromSchema(ctx, identitySchema, map[string]string{
 					"arn": tc.inputARN,
 				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
@@ -444,7 +452,7 @@ func regionalResourceWithGlobalARNFormatIdentitySpec(attrs ...string) inttypes.I
 func TestRegionalARNWithGlobalFormat(t *testing.T) {
 	t.Parallel()
 
-	f := importer.RegionalARNWithGlobalFormat
+	f := importer.ARN
 
 	accountID := "123456789012"
 	defaultRegion := "a-region-1"
@@ -460,10 +468,12 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 	testCases := map[string]struct {
 		importMethod        string // "ImportID" or "Identity"
 		inputARN            string
+		identityAttrs       map[string]string
 		duplicateAttrs      []string
 		useSchemaWithID     bool
 		inputRegion         string
 		noIdentity          bool
+		expectedARN         string
 		expectedRegion      string
 		expectError         bool
 		expectedErrorPrefix string
@@ -472,6 +482,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			importMethod:   "ImportID",
 			inputARN:       validARN,
 			inputRegion:    defaultRegion,
+			expectedARN:    validARN,
 			expectedRegion: defaultRegion,
 			expectError:    false,
 		},
@@ -479,6 +490,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			importMethod:   "ImportID",
 			inputARN:       validARN,
 			inputRegion:    anotherRegion,
+			expectedARN:    validARN,
 			expectedRegion: anotherRegion,
 			expectError:    false,
 		},
@@ -487,6 +499,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			inputARN:       validARN,
 			inputRegion:    defaultRegion,
 			noIdentity:     true,
+			expectedARN:    validARN,
 			expectedRegion: defaultRegion,
 			expectError:    false,
 		},
@@ -498,24 +511,40 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			expectedErrorPrefix: "The import ID could not be parsed as an ARN.",
 		},
 
+		"Identity_Valid_Required": {
+			importMethod: "Identity",
+			identityAttrs: map[string]string{
+				"arn": validARN,
+			},
+			expectedARN:    validARN,
+			expectedRegion: defaultRegion,
+			expectError:    false,
+		},
 		"Identity_Valid_DefaultRegion": {
-			importMethod:   "Identity",
-			inputARN:       validARN,
-			inputRegion:    defaultRegion,
+			importMethod: "Identity",
+			identityAttrs: map[string]string{
+				"region": defaultRegion,
+				"arn":    validARN,
+			},
+			expectedARN:    validARN,
 			expectedRegion: defaultRegion,
 			expectError:    false,
 		},
 		"Identity_Valid_RegionOverride": {
-			importMethod:   "Identity",
-			inputARN:       validARN,
-			inputRegion:    anotherRegion,
+			importMethod: "Identity",
+			identityAttrs: map[string]string{
+				"region": anotherRegion,
+				"arn":    validARN,
+			},
+			expectedARN:    validARN,
 			expectedRegion: anotherRegion,
 			expectError:    false,
 		},
 		"Identity_Invalid_NotAnARN": {
-			importMethod:        "Identity",
-			inputARN:            "not a valid ARN",
-			inputRegion:         defaultRegion,
+			importMethod: "Identity",
+			identityAttrs: map[string]string{
+				"arn": "not a valid ARN",
+			},
 			expectError:         true,
 			expectedErrorPrefix: "Identity attribute \"arn\" could not be parsed as an ARN.",
 		},
@@ -526,6 +555,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			useSchemaWithID: true,
 			inputARN:        validARN,
 			inputRegion:     defaultRegion,
+			expectedARN:     validARN,
 			expectedRegion:  defaultRegion,
 			expectError:     false,
 		},
@@ -534,10 +564,13 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			importMethod:    "Identity",
 			duplicateAttrs:  []string{"id", "attr"},
 			useSchemaWithID: true,
-			inputARN:        validARN,
-			inputRegion:     defaultRegion,
-			expectedRegion:  defaultRegion,
-			expectError:     false,
+			identityAttrs: map[string]string{
+				"arn": validARN,
+			},
+			inputRegion:    defaultRegion,
+			expectedARN:    validARN,
+			expectedRegion: defaultRegion,
+			expectError:    false,
 		},
 	}
 
@@ -548,6 +581,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 			client := mockClient{
 				accountID: accountID,
+				region:    defaultRegion,
 			}
 
 			identitySpec := regionalResourceWithGlobalARNFormatIdentitySpec(tc.duplicateAttrs...)
@@ -562,19 +596,20 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 				schema = regionalResourceWithGlobalARNFormatWithIDSchema
 			}
 
+			importSpec := inttypes.FrameworkImport{
+				WrappedImport: true,
+			}
+
 			var response resource.ImportStateResponse
 			switch tc.importMethod {
 			case "ImportID":
 				stateAttrs := map[string]string{
 					"region": tc.inputRegion,
 				}
-				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec)
+				response = importByIDWithState(ctx, f, &client, schema, tc.inputARN, stateAttrs, identitySchema, identitySpec, &importSpec)
 			case "Identity":
-				identity := identityFromSchema(ctx, identitySchema, map[string]string{
-					"region": tc.inputRegion,
-					"arn":    tc.inputARN,
-				})
-				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec)
+				identity := identityFromSchema(ctx, identitySchema, tc.identityAttrs)
+				response = importByIdentity(ctx, f, &client, schema, identity, identitySpec, &importSpec)
 			}
 
 			if tc.expectError {
@@ -592,14 +627,14 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 			}
 
 			// Check ARN value
-			if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
+			if e, a := tc.expectedARN, getAttributeValue(ctx, t, response.State, path.Root("arn")); e != a {
 				t.Errorf("expected `arn` to be %q, got %q", e, a)
 			}
 
 			// Check attr value
 			var expectedAttrValue string
 			if tc.useSchemaWithID && slices.Contains(tc.duplicateAttrs, "attr") {
-				expectedAttrValue = tc.inputARN
+				expectedAttrValue = tc.expectedARN
 			}
 			if e, a := expectedAttrValue, getAttributeValue(ctx, t, response.State, path.Root("attr")); e != a {
 				t.Errorf("expected `attr` to be %q, got %q", e, a)
@@ -612,7 +647,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 			// Check ID value if using schema with ID
 			if tc.useSchemaWithID {
-				if e, a := tc.inputARN, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
+				if e, a := tc.expectedARN, getAttributeValue(ctx, t, response.State, path.Root("id")); e != a {
 					t.Errorf("expected `id` to be %q, got %q", e, a)
 				}
 			}
@@ -632,7 +667,7 @@ func TestRegionalARNWithGlobalFormat(t *testing.T) {
 
 					var arnVal string
 					identity.GetAttribute(ctx, path.Root("arn"), &arnVal)
-					if e, a := tc.inputARN, arnVal; e != a {
+					if e, a := tc.expectedARN, arnVal; e != a {
 						t.Errorf("expected Identity `arn` to be %q, got %q", e, a)
 					}
 				}

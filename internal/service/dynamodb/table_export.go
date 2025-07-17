@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_dynamodb_table_export", name="Table Export")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
 // @Testing(checkDestroyNoop=true)
 func resourceTableExport() *schema.Resource {

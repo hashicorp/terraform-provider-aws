@@ -24,7 +24,7 @@ func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -224,7 +224,7 @@ func TestAccAPIGatewayDomainName_tags_null(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -278,8 +278,14 @@ func TestAccAPIGatewayDomainName_tags_null(t *testing.T) {
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -293,7 +299,7 @@ func TestAccAPIGatewayDomainName_tags_EmptyMap(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -343,8 +349,14 @@ func TestAccAPIGatewayDomainName_tags_EmptyMap(t *testing.T) {
 					acctest.CtCertificatePEM: config.StringVariable(certificatePEM),
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -358,7 +370,7 @@ func TestAccAPIGatewayDomainName_tags_AddOnUpdate(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -447,7 +459,7 @@ func TestAccAPIGatewayDomainName_tags_EmptyTag_OnCreate(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -546,7 +558,7 @@ func TestAccAPIGatewayDomainName_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -695,7 +707,7 @@ func TestAccAPIGatewayDomainName_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -792,7 +804,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_providerOnly(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -991,7 +1003,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1165,7 +1177,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_overlapping(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1355,7 +1367,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_updateToProviderOnly(t *testin
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1453,7 +1465,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_updateToResourceOnly(t *testin
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1550,7 +1562,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_emptyResourceTag(t *testing.T)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1621,7 +1633,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1684,7 +1696,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_nullOverlappingResourceTag(t *
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1752,7 +1764,7 @@ func TestAccAPIGatewayDomainName_tags_DefaultTags_nullNonOverlappingResourceTag(
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1820,7 +1832,7 @@ func TestAccAPIGatewayDomainName_tags_ComputedTag_OnCreate(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1881,7 +1893,7 @@ func TestAccAPIGatewayDomainName_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -1986,7 +1998,7 @@ func TestAccAPIGatewayDomainName_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -2081,7 +2093,7 @@ func TestAccAPIGatewayDomainName_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
@@ -2251,7 +2263,7 @@ func TestAccAPIGatewayDomainName_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckDomainNameDestroy(ctx),

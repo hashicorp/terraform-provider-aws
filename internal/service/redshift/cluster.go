@@ -430,10 +430,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
-		inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-		inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-	}
+	v := d.Get("availability_zone_relocation_enabled")
+	inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+	inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		inputR.ClusterParameterGroupName = aws.String(v.(string))
@@ -456,7 +455,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	isEncrypted := true
-	v := d.Get(names.AttrEncrypted)
+	v = d.Get(names.AttrEncrypted)
 	if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 		isEncrypted = v
 	}

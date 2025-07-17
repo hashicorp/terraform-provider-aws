@@ -136,7 +136,7 @@ func dataSourceOutpostRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("site_id", outpost.SiteId)
 	d.Set("supported_hardware_type", outpost.SupportedHardwareType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, outpost.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, outpost.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -51,6 +51,8 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.export", string(types.CertificateExportDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
@@ -1730,15 +1732,55 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 	})
 }
 
+func TestAccACMCertificate_optionExport(t *testing.T) {
+	// Issuing an exportable ACM Certificate is expensive.
+	// Skip the test by default and only run if the environment variable is set.
+	acctest.SkipIfEnvVarNotSet(t, "ACM_TEST_CERTIFICATE_EXPORT")
+	ctx := acctest.Context(t)
+	resourceName := "aws_acm_certificate.test"
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	var v types.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_optionExport(rootDomain, types.ValidationMethodDns, types.CertificateExportEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rootDomain),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						names.AttrDomainName:   rootDomain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.export", string(types.CertificateExportEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", rootDomain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCertificateExists(ctx context.Context, n string, v *types.CertificateDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ACM Certificate ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
@@ -2032,4 +2074,17 @@ resource "aws_acm_certificate" "test" {
   key_algorithm     = %[3]q
 }
 `, domainName, validationMethod, keyAlgorithm)
+}
+
+func testAccCertificateConfig_optionExport(domainName string, validationMethod types.ValidationMethod, export types.CertificateExport) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[1]q
+  validation_method = %[2]q
+
+  options {
+    export = %[3]q
+  }
+}
+`, domainName, validationMethod, export)
 }

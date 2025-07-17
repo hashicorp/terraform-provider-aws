@@ -1835,10 +1835,22 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsRBDOverlap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", "4"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // 4 defaultTags + 4 rbdTags with 2 in common
-				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, emptyMap, rbdTags, emptyMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1907,6 +1919,11 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 1 volumeTags (overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags2, emptyMap, emptyMap),
@@ -1917,6 +1934,11 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 5 volumeTags (overlap)
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
@@ -1931,10 +1953,22 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.iz", "paws"),        // non-overlap
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.gigi", "kitty"),     // non-overlap
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{ // 2 defaultTags + 5 volumeTags (overlap)
-				Config:   testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
-				PlanOnly: true,
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTags, volTags3, emptyMap, emptyMap),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -5248,6 +5282,11 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -5257,9 +5296,15 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 			},
 			// Switching should show no difference
 			{
-				Config:             testAccInstanceConfig_userDataUnspecified(rName),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccInstanceConfig_userDataUnspecified(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -5282,6 +5327,11 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -5293,7 +5343,14 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 			{
 				Config:             testAccInstanceConfig_userDataEmptyString(rName),
 				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -5651,6 +5708,11 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -5660,9 +5722,15 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 			},
 			// Adding 'open' preference should show no difference
 			{
-				Config:             testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
-				ExpectNonEmptyPlan: false,
-				PlanOnly:           true,
+				Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

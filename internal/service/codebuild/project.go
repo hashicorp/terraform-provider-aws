@@ -31,6 +31,7 @@ import (
 // @SDKResource("aws_codebuild_project", name="Project")
 // @Tags
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("project/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
 // @Testing(identityTest=false)

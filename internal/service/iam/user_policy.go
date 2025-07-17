@@ -98,7 +98,7 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", userName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 		})
 

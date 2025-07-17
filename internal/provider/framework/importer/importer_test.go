@@ -14,9 +14,9 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-type importerFunc func(ctx context.Context, client importer.AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, response *resource.ImportStateResponse)
+type importerFunc func(ctx context.Context, client importer.AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse)
 
-func importByID(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+func importByID(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity, importSpec *inttypes.FrameworkImport) resource.ImportStateResponse {
 	var identity *tfsdk.ResourceIdentity
 	if identitySchema != nil {
 		identity = emtpyIdentityFromSchema(ctx, identitySchema)
@@ -30,12 +30,12 @@ func importByID(ctx context.Context, f importerFunc, client importer.AWSClient, 
 		State:    emtpyStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
-	f(ctx, client, request, &identitySpec, &response)
+	f(ctx, client, request, &identitySpec, importSpec, &response)
 
 	return response
 }
 
-func importByIDWithState(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity) resource.ImportStateResponse {
+func importByIDWithState(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, id string, stateAttrs map[string]string, identitySchema *identityschema.Schema, identitySpec inttypes.Identity, importSpec *inttypes.FrameworkImport) resource.ImportStateResponse {
 	var identity *tfsdk.ResourceIdentity
 	if identitySchema != nil {
 		identity = emtpyIdentityFromSchema(ctx, identitySchema)
@@ -49,12 +49,12 @@ func importByIDWithState(ctx context.Context, f importerFunc, client importer.AW
 		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
 		Identity: identity,
 	}
-	f(ctx, client, request, &identitySpec, &response)
+	f(ctx, client, request, &identitySpec, importSpec, &response)
 
 	return response
 }
 
-func importByIdentity(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, identity *tfsdk.ResourceIdentity, identitySpec inttypes.Identity) resource.ImportStateResponse {
+func importByIdentity(ctx context.Context, f importerFunc, client importer.AWSClient, resourceSchema schema.Schema, identity *tfsdk.ResourceIdentity, identitySpec inttypes.Identity, importSpec *inttypes.FrameworkImport) resource.ImportStateResponse {
 	request := resource.ImportStateRequest{
 		Identity: identity,
 	}
@@ -62,7 +62,7 @@ func importByIdentity(ctx context.Context, f importerFunc, client importer.AWSCl
 		State:    emtpyStateFromSchema(ctx, resourceSchema),
 		Identity: identity,
 	}
-	f(ctx, client, request, &identitySpec, &response)
+	f(ctx, client, request, &identitySpec, importSpec, &response)
 
 	return response
 }

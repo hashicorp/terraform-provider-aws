@@ -114,7 +114,7 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
-	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*rekognition.DescribeCollectionOutput, error) {
 		return findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
 	})
 
@@ -125,8 +125,6 @@ func (r *collectionResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
-
-	output := out.(*rekognition.DescribeCollectionOutput)
 
 	state := plan
 	state.ID = plan.CollectionID

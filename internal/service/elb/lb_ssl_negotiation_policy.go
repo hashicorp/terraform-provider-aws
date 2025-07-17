@@ -38,10 +38,12 @@ func resourceSSLNegotiationPolicy() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},

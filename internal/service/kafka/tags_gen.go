@@ -3,8 +3,8 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,8 +22,8 @@ func svcTags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from kafka service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from kafka service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
@@ -42,7 +42,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 // setTagsOut sets kafka service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -66,7 +66,7 @@ func updateTags(ctx context.Context, conn *kafka.Client, identifier string, oldT
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -81,7 +81,7 @@ func updateTags(ctx context.Context, conn *kafka.Client, identifier string, oldT
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

@@ -1036,10 +1036,22 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
-				PlanOnly: true,
+				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -2567,7 +2579,7 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 
 			// S3 seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.BucketPropagationTimeout, func() (any, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfs3.BucketPropagationTimeout, func(ctx context.Context) (any, error) {
 				return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 			})
 

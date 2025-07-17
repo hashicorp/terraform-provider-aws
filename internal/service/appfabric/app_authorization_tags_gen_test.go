@@ -50,7 +50,7 @@ func testAccAppFabricAppAuthorization_tags(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -235,7 +235,7 @@ func testAccAppFabricAppAuthorization_tags_null(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -295,7 +295,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyMap(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -343,7 +343,7 @@ func testAccAppFabricAppAuthorization_tags_AddOnUpdate(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -422,7 +422,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -513,7 +513,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -652,7 +652,7 @@ func testAccAppFabricAppAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
@@ -741,7 +741,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_providerOnly(t *testing.T
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -925,7 +925,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nonOverlapping(t *testing
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1087,7 +1087,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_overlapping(t *testing.T)
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1265,7 +1265,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToProviderOnly(t *t
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1354,7 +1354,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_updateToResourceOnly(t *t
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1442,7 +1442,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyResourceTag(t *testi
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1508,7 +1508,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *t
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1566,7 +1566,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullOverlappingResourceTa
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1633,7 +1633,7 @@ func testAccAppFabricAppAuthorization_tags_DefaultTags_nullNonOverlappingResourc
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1702,7 +1702,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1757,7 +1757,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1853,7 +1853,7 @@ func testAccAppFabricAppAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testi
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -1939,7 +1939,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *test
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),
@@ -2097,7 +2097,7 @@ func testAccAppFabricAppAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 	var v types.AppAuthorization
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFabricServiceID),
 		CheckDestroy: testAccCheckAppAuthorizationDestroy(ctx),

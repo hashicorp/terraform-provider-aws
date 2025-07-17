@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,8 +52,11 @@ func resourceQueryDefinition() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validLogGroupName,
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validLogGroupName,
+						verify.ValidARN,
+					),
 				},
 			},
 			"query_definition_id": {
@@ -104,7 +108,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 
 	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

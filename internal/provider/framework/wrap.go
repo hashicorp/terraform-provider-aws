@@ -304,6 +304,10 @@ func newWrappedResource(inner resource.ResourceWithConfigure, opts wrappedResour
 func (w *wrappedResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	// This method does not call down to the inner resource.
 	response.TypeName = w.opts.typeName
+
+	if w.opts.identity.IsMutable {
+		response.ResourceBehavior.MutableIdentity = true
+	}
 }
 
 func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
