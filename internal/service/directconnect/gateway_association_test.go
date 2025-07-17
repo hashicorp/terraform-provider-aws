@@ -46,6 +46,32 @@ func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
 	})
 }
 
+// V1 state upgrade testing must be done via acceptance testing due to API call
+func TestAccDirectConnectGatewayAssociation_v1StateUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dx_gateway_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
+					testAccCheckGatewayAssociationStateUpgradeV1(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
@@ -150,6 +176,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
 				),
 			},
 			{
@@ -192,6 +219,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
 				),
 			},
 		},
@@ -451,6 +479,33 @@ func testAccCheckGatewayAssociationStateUpgradeV0(ctx context.Context, name stri
 
 		if got, want := updatedRawState["dx_gateway_association_id"], rs.Primary.Attributes["dx_gateway_association_id"]; got != want {
 			return fmt.Errorf("Invalid dx_gateway_association_id attribute in migrated state. Expected %s, got %s", want, got)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckGatewayAssociationStateUpgradeV1(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		rawState := map[string]any{
+			"dx_gateway_id":           rs.Primary.Attributes["dx_gateway_id"],
+			"associated_gateway_id":   rs.Primary.Attributes["associated_gateway_id"],
+			"associated_gateway_type": rs.Primary.Attributes["associated_gateway_type"],
+		}
+
+		updatedRawState, err := tfdirectconnect.GatewayAssociationStateUpgradeV1(ctx, rawState, acctest.Provider.Meta())
+
+		if err != nil {
+			return err
+		}
+
+		if got, want := updatedRawState["transit_gateway_attachment_id"], rs.Primary.Attributes["transit_gateway_attachment_id"]; got != want {
+			return fmt.Errorf("Invalid transit_gateway_attachment_id attribute in migrated state. Expected %s, got %s", want, got)
 		}
 
 		return nil

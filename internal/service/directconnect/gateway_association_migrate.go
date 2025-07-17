@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -78,6 +79,60 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 	}
 }
 
+func resourceGatewayAssociationResourceV1() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"allowed_prefixes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"associated_gateway_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+			},
+			"associated_gateway_owner_account_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.ValidAccountID,
+				ConflictsWith: []string{"associated_gateway_id"},
+				RequiredWith:  []string{"proposal_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+			},
+			"associated_gateway_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dx_gateway_association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dx_gateway_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"dx_gateway_owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"proposal_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"associated_gateway_id"},
+				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+			},
+		},
+	}
+}
+
 func gatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -92,6 +147,27 @@ func gatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]a
 		}
 
 		rawState["dx_gateway_association_id"] = aws.ToString(output.AssociationId)
+	}
+
+	return rawState, nil
+}
+
+func gatewayAssociationStateUpgradeV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	log.Println("[INFO] Found Direct Connect Gateway Association state v1; migrating to v2")
+
+	// transit_gateway_attachment_id was added, handle the case where it's not yet present.
+	if rawState["associated_gateway_type"].(string) == string(awstypes.GatewayTypeTransitGateway) {
+		if v, ok := rawState["transit_gateway_attachment_id"]; !ok || v == nil {
+			output, err := findTransitGatewayAttachmentForDxGateway(ctx, conn, rawState["dx_gateway_id"].(string), rawState["associated_gateway_id"].(string))
+
+			if err != nil {
+				return nil, err
+			}
+
+			rawState["transit_gateway_attachment_id"] = aws.ToString(output.TransitGatewayAttachmentId)
+		}
 	}
 
 	return rawState, nil

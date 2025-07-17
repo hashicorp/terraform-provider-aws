@@ -14,6 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypesec2 "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,12 +41,17 @@ func resourceGatewayAssociation() *schema.Resource {
 			StateContext: resourceGatewayAssociationImport,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: gatewayAssociationStateUpgradeV0,
 				Version: 0,
+			},
+			{
+				Type:    resourceGatewayAssociationResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: gatewayAssociationStateUpgradeV1,
+				Version: 1,
 			},
 		},
 
@@ -94,6 +102,10 @@ func resourceGatewayAssociation() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"associated_gateway_id"},
 				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+			},
+			"transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -191,6 +203,17 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("dx_gateway_association_id", output.AssociationId)
 	d.Set("dx_gateway_id", output.DirectConnectGatewayId)
 	d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
+
+	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
+		ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
+		transitGatewayAttachment, err := findTransitGatewayAttachmentForDxGateway(ctx, ec2Conn, *output.DirectConnectGatewayId, *output.AssociatedGateway.Id)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
+		}
+
+		d.Set("transit_gateway_attachment_id", transitGatewayAttachment.TransitGatewayAttachmentId)
+	}
 
 	return diags
 }
@@ -356,6 +379,64 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 
 	if err != nil {
 		return nil, err
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayAttachmentForDxGateway(ctx context.Context, conn *ec2.Client, dxGatewayId, transitGatewayId string) (*awstypesec2.TransitGatewayAttachment, error) {
+	filters := []awstypesec2.Filter{
+		{
+			Name:   aws.String("resource-type"),
+			Values: []string{string(awstypesec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway)},
+		},
+		{
+			Name:   aws.String("resource-id"),
+			Values: []string{dxGatewayId},
+		},
+		{
+			Name:   aws.String("transit-gateway-id"),
+			Values: []string{transitGatewayId},
+		},
+	}
+
+	input := &ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: filters,
+	}
+
+	return findTransitGatewayAttachment(ctx, conn, input)
+
+}
+
+func findTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypesec2.TransitGatewayAttachment, error) {
+	output, err := findTransitGatewayAttachments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypesec2.TransitGatewayAttachment, error) {
+	var output []awstypesec2.TransitGatewayAttachment
+
+	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayAttachments...)
 	}
 
 	return output, nil
