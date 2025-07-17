@@ -431,7 +431,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.Set("architecture", image.Architecture)
-	d.Set(names.AttrARN, amiARN(ctx, c, aws.ToString(image.OwnerId), d.Id()))
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	d.Set("boot_mode", image.BootMode)
 	d.Set(names.AttrDescription, image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
@@ -889,6 +889,6 @@ func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, ima
 		},
 	)
 }
-func amiARN(ctx context.Context, c *conns.AWSClient, ownerID, imageID string) string {
-	return c.RegionalARNWithAccount(ctx, names.EC2, ownerID, "image/"+imageID)
+func amiARN(ctx context.Context, c *conns.AWSClient, imageID string) string {
+	return c.RegionalARNNoAccount(ctx, names.EC2, "image/"+imageID)
 }

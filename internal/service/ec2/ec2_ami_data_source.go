@@ -305,7 +305,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(aws.ToString(image.ImageId))
 	d.Set("architecture", image.Architecture)
-	d.Set(names.AttrARN, amiARN(ctx, c, aws.ToString(image.OwnerId), d.Id()))
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
