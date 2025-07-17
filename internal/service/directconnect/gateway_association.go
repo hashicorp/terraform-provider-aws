@@ -405,7 +405,6 @@ func findTransitGatewayAttachmentForDxGateway(ctx context.Context, conn *ec2.Cli
 	}
 
 	return findTransitGatewayAttachment(ctx, conn, input)
-
 }
 
 func findTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypesec2.TransitGatewayAttachment, error) {
