@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -503,7 +502,8 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	eni, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.NetworkInterface, error) {
 		return findNetworkInterfaceByID(ctx, conn, d.Id())
@@ -520,14 +520,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	ownerID := aws.ToString(eni.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  "network-interface/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
 	if eni.Attachment != nil {
 		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachment(eni.Attachment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
@@ -1682,4 +1675,8 @@ func flattenGroupIdentifiers(dtos []awstypes.GroupIdentifier) []string {
 		ids = append(ids, group_id)
 	}
 	return ids
+}
+
+func networkInterfaceARN(ctx context.Context, c *conns.AWSClient, accountID, networkInterfaceID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "network-interface/"+networkInterfaceID)
 }
