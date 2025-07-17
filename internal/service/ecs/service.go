@@ -2234,7 +2234,7 @@ func getLatestDeployment(ctx context.Context, conn *ecs.Client, primaryTaskSet *
 	}
 	taskSetID := parts[1]
 
-	input := &ecs.ListServiceDeploymentsInput{
+	input := ecs.ListServiceDeploymentsInput{
 		Cluster: aws.String(clusterNameOrARN),
 		Service: aws.String(serviceNameFromARN(serviceArn)),
 		CreatedAt: &awstypes.CreatedAt{
@@ -2242,7 +2242,7 @@ func getLatestDeployment(ctx context.Context, conn *ecs.Client, primaryTaskSet *
 		},
 	}
 
-	output, err := conn.ListServiceDeployments(ctx, input)
+	output, err := conn.ListServiceDeployments(ctx, &input)
 	if err != nil {
 		return nil, err
 	}

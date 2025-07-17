@@ -2886,7 +2886,7 @@ resource "aws_lb_listener_rule" "production" {
 
 resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.http.arn
-  priority     = 2  # Make sure this is different from the production rule priority
+  priority     = 2 # Make sure this is different from the production rule priority
 
   action {
     type = "forward"
@@ -2967,25 +2967,25 @@ resource "aws_iam_role_policy_attachment" "ecs_service_role" {
 }
 
 resource "aws_iam_role" "lambda_role" {
-name = "%[1]s-hook-role"
+  name = "%[1]s-hook-role"
 
-assume_role_policy = jsonencode({
-  Version = "2012-10-17"
-  Statement = [
-    {
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "lambda.amazonaws.com"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       }
-    }
-  ]
-})
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.lambda_role.name
 }
 
 resource "aws_service_discovery_http_namespace" "test" {
@@ -3003,13 +3003,13 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_ecs_task_definition" "test" {
   family                   = %[1]q
   requires_compatibilities = ["FARGATE"]
-  network_mode            = "awsvpc"
-  cpu                     = 256
-  memory                  = 512
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
   lifecycle {
     create_before_destroy = true
   }
-  
+
   container_definitions = jsonencode([
     {
       name      = "test"
@@ -3029,7 +3029,7 @@ resource "aws_ecs_task_definition" "test" {
           hostPort      = 80
           protocol      = "tcp"
           name          = "http"
-          appProtocol = "http"
+          appProtocol   = "http"
         }
       ]
     }
@@ -3037,21 +3037,21 @@ resource "aws_ecs_task_definition" "test" {
 }
 
 resource "aws_lambda_function" "hook_success" {
-filename         = "test-fixtures/success_lambda_func.zip"
-function_name    = "%[1]s-hook-success"
-role             = aws_iam_role.lambda_role.arn
-handler          = "index.handler"
-runtime          = "nodejs20.x"
-source_code_hash = filebase64sha256("test-fixtures/success_lambda_func.zip")
+  filename         = "test-fixtures/success_lambda_func.zip"
+  function_name    = "%[1]s-hook-success"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  source_code_hash = filebase64sha256("test-fixtures/success_lambda_func.zip")
 }
 
 resource "aws_lambda_function" "hook_failure" {
-filename         = "test-fixtures/failure_lambda_func.zip"
-function_name    = "%[1]s-hook-failure"
-role             = aws_iam_role.lambda_role.arn
-handler          = "index.handler"
-runtime          = "nodejs20.x"
-source_code_hash = filebase64sha256("test-fixtures/failure_lambda_func.zip")
+  filename         = "test-fixtures/failure_lambda_func.zip"
+  function_name    = "%[1]s-hook-failure"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "index.handler"
+  runtime          = "nodejs20.x"
+  source_code_hash = filebase64sha256("test-fixtures/failure_lambda_func.zip")
 }
 `, rName))
 }
@@ -3066,19 +3066,19 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   deployment_configuration {
-    strategy = "BLUE_GREEN"
+    strategy             = "BLUE_GREEN"
     bake_time_in_minutes = 2
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
-      lifecycle_stages = ["POST_SCALE_UP","POST_TEST_TRAFFIC_SHIFT"]
+      lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
     }
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
-      lifecycle_stages = ["TEST_TRAFFIC_SHIFT","POST_PRODUCTION_TRAFFIC_SHIFT"]
+      lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
     }
   }
 
@@ -3119,13 +3119,13 @@ resource "aws_ecs_service" "test" {
     advanced_configuration {
       alternate_target_group_arn = aws_lb_target_group.alternate.arn
       production_listener_rule   = aws_lb_listener_rule.production.arn
-      test_listener_rule         = aws_lb_listener_rule.test.arn 
+      test_listener_rule         = aws_lb_listener_rule.test.arn
       role_arn                   = aws_iam_role.global.arn
     }
   }
 
   wait_for_steady_state = %[2]t
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.global_admin_attach,
     aws_iam_role_policy.ecs_elb_permissions,
@@ -3140,13 +3140,13 @@ func testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName string) s
 resource "aws_ecs_task_definition" "should_fail" {
   family                   = "%[1]s-should-fail"
   requires_compatibilities = ["FARGATE"]
-  network_mode            = "awsvpc"
-  cpu                     = 256
-  memory                  = 512
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
   lifecycle {
     create_before_destroy = true
   }
-  
+
   container_definitions = jsonencode([
     {
       name      = "should_fail"
@@ -3169,7 +3169,7 @@ resource "aws_ecs_task_definition" "should_fail" {
           hostPort      = 80
           protocol      = "tcp"
           name          = "http"
-          appProtocol = "http"
+          appProtocol   = "http"
         }
       ]
     }
@@ -3185,10 +3185,10 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   deployment_configuration {
-    strategy = "BLUE_GREEN"
+    strategy             = "BLUE_GREEN"
     bake_time_in_minutes = 1
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
@@ -3237,13 +3237,13 @@ resource "aws_ecs_service" "test" {
     advanced_configuration {
       alternate_target_group_arn = aws_lb_target_group.alternate.arn
       production_listener_rule   = aws_lb_listener_rule.production.arn
-      test_listener_rule         = aws_lb_listener_rule.test.arn 
+      test_listener_rule         = aws_lb_listener_rule.test.arn
       role_arn                   = aws_iam_role.global.arn
     }
   }
 
   wait_for_steady_state = true
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.global_admin_attach,
     aws_iam_role_policy.ecs_elb_permissions,
@@ -3270,10 +3270,10 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   deployment_configuration {
-    strategy = "BLUE_GREEN"
+    strategy             = "BLUE_GREEN"
     bake_time_in_minutes = 3
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = %[2]s
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
@@ -3317,13 +3317,13 @@ resource "aws_ecs_service" "test" {
     advanced_configuration {
       alternate_target_group_arn = aws_lb_target_group.alternate.arn
       production_listener_rule   = aws_lb_listener_rule.production.arn
-      test_listener_rule         = aws_lb_listener_rule.test.arn 
+      test_listener_rule         = aws_lb_listener_rule.test.arn
       role_arn                   = aws_iam_role.global.arn
     }
   }
 
   wait_for_steady_state = true
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.global_admin_attach,
     aws_iam_role_policy.ecs_elb_permissions,
@@ -3345,7 +3345,7 @@ resource "aws_ecs_service" "test" {
   deployment_configuration {
     strategy = "ROLLING"
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
@@ -3388,7 +3388,7 @@ resource "aws_ecs_service" "test" {
   }
 
   wait_for_steady_state = true
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.global_admin_attach,
     aws_iam_role_policy.ecs_elb_permissions,
@@ -3408,19 +3408,19 @@ resource "aws_ecs_service" "test" {
   launch_type     = "FARGATE"
 
   deployment_configuration {
-    strategy = "BLUE_GREEN"
+    strategy             = "BLUE_GREEN"
     bake_time_in_minutes = 0
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
-      lifecycle_stages = ["POST_SCALE_UP","POST_TEST_TRAFFIC_SHIFT"]
+      lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
     }
 
-    lifecycle_hook  {
+    lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
-      lifecycle_stages = ["TEST_TRAFFIC_SHIFT","POST_PRODUCTION_TRAFFIC_SHIFT"]
+      lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
     }
   }
 
@@ -3461,13 +3461,13 @@ resource "aws_ecs_service" "test" {
     advanced_configuration {
       alternate_target_group_arn = aws_lb_target_group.alternate.arn
       production_listener_rule   = aws_lb_listener_rule.production.arn
-      test_listener_rule         = aws_lb_listener_rule.test.arn 
+      test_listener_rule         = aws_lb_listener_rule.test.arn
       role_arn                   = aws_iam_role.global.arn
     }
   }
 
   wait_for_steady_state = %[2]t
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.global_admin_attach,
     aws_iam_role_policy.ecs_elb_permissions,
