@@ -43,6 +43,7 @@ import (
 // @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
 // @Testing(plannableImportAction="NoOp")
 // @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
