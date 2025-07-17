@@ -389,7 +389,7 @@ func findTransitGatewayAttachmentForDxGateway(ctx context.Context, conn *ec2.Cli
 	filters := []awstypesec2.Filter{
 		{
 			Name:   aws.String("resource-type"),
-			Values: []string{string(awstypesec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway)},
+			Values: enum.Slice(awstypesec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
 		},
 		{
 			Name:   aws.String("resource-id"),
