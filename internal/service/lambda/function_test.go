@@ -2372,6 +2372,58 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest.zip"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_code_hash", "terraform_data.lambdatest_zip_sha256", "input"),
+				),
+			},
+			{
+				// specify a non-existing S3 key to trigger an error
+				Config:      testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_non_exist.zip"),
+				ExpectError: regexache.MustCompile("Error occurred while GetObject. S3 Error Code: NoSuchKey. S3 Error Message: The specified key does not exist."),
+			},
+			{
+				// specify the same configuration when the error occurred
+				// Non-empty plan is expected because S3 key is reset to the previous value after the error
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest.zip", "lambdatest_non_exist.zip"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Error occurred while GetObject. S3 Error Code: NoSuchKey. S3 Error Message: The specified key does not exist."),
+			},
+			{
+				// specify a valid S3 key
+				// check if the function is updated with the new S3 key
+				Config: testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, "lambdatest_modified.zip", "lambdatest_modified.zip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_key", "lambdatest_modified.zip"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_code_hash", "terraform_data.lambdatest_modified_zip_sha256", "input"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
@@ -4174,6 +4226,38 @@ resource "aws_lambda_function" "test" {
   skip_destroy  = true
 }
 `, rName))
+}
+
+func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+resource "terraform_data" "lambdatest_zip_sha256" {
+  input = filebase64sha256("test-fixtures/lambdatest.zip")
+}
+resource "terraform_data" "lambdatest_modified_zip_sha256" {
+  input = filebase64sha256("test-fixtures/lambdatest_modified.zip")
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket             = aws_s3_bucket.test.bucket
+  key                = %[2]q
+  source             = "test-fixtures/%[2]s"
+  checksum_algorithm = "SHA256"
+}
+
+resource "aws_lambda_function" "test" {
+  function_name    = %[1]q
+  role             = aws_iam_role.iam_for_lambda.arn
+  handler          = "exports.example"
+  runtime          = "nodejs20.x"
+  s3_bucket        = aws_s3_bucket.test.bucket
+  s3_key           = %[3]q
+  source_code_hash = aws_s3_object.test.checksum_sha256
+}
+`, rName, zipFileS3, zipFileLambda))
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
