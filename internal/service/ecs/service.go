@@ -5,6 +5,7 @@ package ecs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -1632,7 +1633,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 							}
 						}
 					}
-
 				}
 				if hooks := config["lifecycle_hook"].(*schema.Set).List(); len(hooks) > 0 {
 					input.DeploymentConfiguration.LifecycleHooks = expandLifecycleHooks(hooks)
@@ -2151,21 +2151,21 @@ func checkServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, service
 }
 
 func getPrimaryDeployment(ctx context.Context, conn *ecs.Client, serviceArn, clusterNameOrARN string) (*awstypes.Deployment, error) {
-	serviceInput := &ecs.DescribeServicesInput{
+	input := ecs.DescribeServicesInput{
 		Services: []string{serviceArn},
 		Cluster:  aws.String(clusterNameOrARN),
 	}
 
-	serviceOutput, err := conn.DescribeServices(ctx, serviceInput)
+	output, err := conn.DescribeServices(ctx, &input)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(serviceOutput.Services) == 0 {
+	if len(output.Services) == 0 {
 		return nil, fmt.Errorf("service not found")
 	}
 
-	service := serviceOutput.Services[0]
+	service := output.Services[0]
 
 	for _, deployment := range service.Deployments {
 		if aws.ToString(deployment.Status) == "PRIMARY" {
@@ -2194,20 +2194,20 @@ func getDeploymentArn(ctx context.Context, conn *ecs.Client, primaryDeployment *
 }
 
 func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
-	deploymentInput := &ecs.DescribeServiceDeploymentsInput{
+	input := ecs.DescribeServiceDeploymentsInput{
 		ServiceDeploymentArns: []string{deploymentArn},
 	}
 
-	deploymentOutput, err := conn.DescribeServiceDeployments(ctx, deploymentInput)
+	output, err := conn.DescribeServiceDeployments(ctx, &input)
 	if err != nil {
 		return "", err
 	}
 
-	if len(deploymentOutput.ServiceDeployments) == 0 {
+	if len(output.ServiceDeployments) == 0 {
 		return serviceStatusPending, nil
 	}
 
-	deployment := deploymentOutput.ServiceDeployments[0]
+	deployment := output.ServiceDeployments[0]
 
 	switch deployment.Status {
 	case awstypes.ServiceDeploymentStatusSuccessful:
@@ -2221,7 +2221,7 @@ func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn st
 		if deployment.StatusReason != nil {
 			message = aws.ToString(deployment.StatusReason)
 		}
-		return "", fmt.Errorf(message)
+		return "", errors.New(message)
 	default:
 		return serviceStatusPending, nil
 	}
