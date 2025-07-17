@@ -31,6 +31,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TrustStore")
 // @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
 // @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,
