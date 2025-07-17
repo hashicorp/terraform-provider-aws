@@ -199,7 +199,6 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	serviceRegion := aws.ToString(sd.ServiceRegion)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(serviceName)))
-
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	d.Set(names.AttrARN, vpcEndpointServiceARNWithRegion(ctx, c, serviceRegion, serviceID))
 	d.Set(names.AttrAvailabilityZones, sd.AvailabilityZones)
