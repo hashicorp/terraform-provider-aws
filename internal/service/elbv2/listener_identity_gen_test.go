@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -233,6 +234,62 @@ func TestAccELBV2Listener_Identity_RegionOverride(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.3.0
+func TestAccELBV2Listener_Identity_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		CheckDestroy: testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Listener/basic_v6.3.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Listener/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrARN: knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
 			},
 		},
 	})
