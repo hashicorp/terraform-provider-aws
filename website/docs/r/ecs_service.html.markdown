@@ -215,8 +215,8 @@ The `advanced_configuration` configuration block supports the following:
 
 * `alternate_target_group_arn` - (Required) ARN of the alternate target group to use for Blue/Green deployments.
 * `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
-* `test_listener_rule` - (Required) ARN of the listener rule that routes test traffic.
 * `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
+* `test_listener_rule` - (Optional) ARN of the listener rule that routes test traffic.
 
 ### network_configuration
 
