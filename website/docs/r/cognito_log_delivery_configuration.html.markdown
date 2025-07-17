@@ -196,6 +196,10 @@ The `s3_configuration` block supports the following:
 
 * `bucket_arn` - (Optional) The ARN of the S3 bucket to which the logs should be delivered.
 
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito IDP (Identity Provider) Log Delivery Configuration using the `user_pool_id`. For example:
