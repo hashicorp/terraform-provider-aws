@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -192,7 +191,8 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	nacl, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.NetworkAcl, error) {
 		return findNetworkACLByID(ctx, conn, d.Id())
@@ -209,14 +209,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	ownerID := aws.ToString(nacl.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, networkACLARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 
 	var subnetIDs []string
@@ -829,3 +822,7 @@ var (
 	})
 	ianaProtocolIToA = ianaProtocolAToI.invert()
 )
+
+func networkACLARN(ctx context.Context, c *conns.AWSClient, accountID, networkACLID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "network-acl/"+networkACLID)
+}
