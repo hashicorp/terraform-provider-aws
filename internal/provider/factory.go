@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
@@ -18,6 +19,8 @@ import (
 // This factory function is suitable for use with the terraform-plugin-go Serve function.
 // The primary (Plugin SDK) provider server is also returned (useful for testing).
 func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.ProviderServer, *schema.Provider, error) {
+	internal.RegisterSmarterrFS()
+
 	primary, err := sdkv2.NewProvider(ctx)
 
 	if err != nil {
