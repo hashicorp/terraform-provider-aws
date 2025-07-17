@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"strings"
 	"testing"
 
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
@@ -101,21 +102,19 @@ func TestOdbNetworkWithAllParams(t *testing.T) {
 	})
 }
 
-// TestAccODBNetwork_Update
-func TestAccODBNetwork_Delete_Create(t *testing.T) {
+func TestAccODBNetworkUpdateManagedService(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var network odbtypes.OdbNetwork
+	var network1, network2 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(odbNetResourceTest.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
 			odbNetResourceTest.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -124,19 +123,76 @@ func TestAccODBNetwork_Delete_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: odbNetResourceTest.basicOdbNetwork(rName),
-
 				Check: resource.ComposeAggregateTestCheckFunc(
-					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: odbNetResourceTest.basicOdbNetworkWithActiveManagedService(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						fmt.Println(state)
+						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
+							return errors.New("should not  create a new cloud odb network")
+						}
 						return nil
 					}),
 				),
 			},
 			{
-				Config: odbNetResourceTest.updateOdbNetworkDisplayName(rName + "_foo"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkDisableManagedService(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var network1, network2 odbtypes.OdbNetwork
+	rName := sdkacctest.RandomWithPrefix(odbNetResourceTest.displayNamePrefix)
+	resourceName := "aws_odb_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			odbNetResourceTest.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             odbNetResourceTest.testAccCheckNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: odbNetResourceTest.basicOdbNetworkWithActiveManagedService(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: odbNetResourceTest.basicOdbNetwork(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
+							return errors.New("should not  create a new cloud odb network")
+						}
+						return nil
+					}),
 				),
 			},
 			{
@@ -154,7 +210,7 @@ func TestAccODBNetwork_Update_Tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var network odbtypes.OdbNetwork
+	var network1, network2 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(odbNetResourceTest.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
@@ -172,17 +228,21 @@ func TestAccODBNetwork_Update_Tags(t *testing.T) {
 				Config: odbNetResourceTest.basicOdbNetwork(rName),
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
-					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						fmt.Println(state)
-						return nil
-					}),
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network1),
 				),
 			},
 			{
 				Config: odbNetResourceTest.updateOdbNetworkTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network),
+					odbNetResourceTest.testAccCheckNetworkExists(ctx, resourceName, &network2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(network1.OdbNetworkId), *(network2.OdbNetworkId)) != 0 {
+							return errors.New("should not  create a new cloud odb network")
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
 			{
@@ -318,6 +378,23 @@ resource "aws_odb_network" "test" {
 	return networkRes
 }
 
+func (odbNetworkResourceTest) basicOdbNetworkWithActiveManagedService(rName string) string {
+	networkRes := fmt.Sprintf(`
+
+
+resource "aws_odb_network" "test" {
+  display_name          = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access = "ENABLED"
+  zero_etl_access = "ENABLED"
+}
+
+`, rName)
+	return networkRes
+}
+
 func (odbNetworkResourceTest) odbNetworkWithAllParams(rName, customDomainName string) string {
 	networkRes := fmt.Sprintf(`
 
@@ -365,7 +442,6 @@ resource "aws_odb_network" "test" {
   zero_etl_access = "DISABLED"
  tags = {
     "env"= "dev"
-    "foo"= "bar"
   }
 }
 `, rName)
