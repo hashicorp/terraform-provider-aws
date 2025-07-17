@@ -35,30 +35,17 @@ func TestIdentityInterceptor(t *testing.T) {
 		},
 		"region": attribute.Region(),
 	}
-	identityAttributes := []inttypes.IdentityAttribute{
-		{
-			Name:     "account_id",
-			Required: true,
-		},
-		{
-			Name:     "region",
-			Required: true,
-		},
-		{
-			Name:     "name",
-			Required: true,
-		},
-	}
-	invocation := newIdentityInterceptor(identityAttributes)
+
+	identitySpec := regionalSingleParameterizedIdentitySpec("name")
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	invocation := newIdentityInterceptor(identitySpec.Attributes)
 	interceptor := invocation.interceptor.(identityInterceptor)
 
 	client := mockClient{
 		accountID: accountID,
 		region:    region,
 	}
-
-	identitySpec := regionalSingleParameterizedIdentitySpec("name")
-	identitySchema := identity.NewIdentitySchema(identitySpec)
 
 	testCases := map[string]struct {
 		id             string
