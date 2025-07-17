@@ -176,7 +176,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 			{
@@ -219,7 +219,7 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_attachment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 		},
@@ -504,7 +504,7 @@ func testAccCheckGatewayAssociationStateUpgradeV1(ctx context.Context, name stri
 			return err
 		}
 
-		if got, want := updatedRawState["transit_gateway_attachment_id"], rs.Primary.Attributes["transit_gateway_attachment_id"]; got != want {
+		if got, want := updatedRawState[names.AttrTransitGatewayAttachmentID], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID]; got != want {
 			return fmt.Errorf("Invalid transit_gateway_attachment_id attribute in migrated state. Expected %s, got %s", want, got)
 		}
 

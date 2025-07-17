@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceGatewayAssociationResourceV0() *schema.Resource {
@@ -159,14 +160,14 @@ func gatewayAssociationStateUpgradeV1(ctx context.Context, rawState map[string]a
 
 	// transit_gateway_attachment_id was added, handle the case where it's not yet present.
 	if rawState["associated_gateway_type"].(string) == string(awstypes.GatewayTypeTransitGateway) {
-		if v, ok := rawState["transit_gateway_attachment_id"]; !ok || v == nil {
+		if v, ok := rawState[names.AttrTransitGatewayAttachmentID]; !ok || v == nil {
 			output, err := findTransitGatewayAttachmentForDxGateway(ctx, conn, rawState["dx_gateway_id"].(string), rawState["associated_gateway_id"].(string))
 
 			if err != nil {
 				return nil, err
 			}
 
-			rawState["transit_gateway_attachment_id"] = aws.ToString(output.TransitGatewayAttachmentId)
+			rawState[names.AttrTransitGatewayAttachmentID] = aws.ToString(output.TransitGatewayAttachmentId)
 		}
 	}
 

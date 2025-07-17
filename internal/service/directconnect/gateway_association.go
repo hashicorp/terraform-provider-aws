@@ -27,6 +27,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_gateway_association", name="Gateway Association")
@@ -103,7 +104,7 @@ func resourceGatewayAssociation() *schema.Resource {
 				ConflictsWith: []string{"associated_gateway_id"},
 				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -212,7 +213,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
 		}
 
-		d.Set("transit_gateway_attachment_id", transitGatewayAttachment.TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachment.TransitGatewayAttachmentId)
 	}
 
 	return diags
