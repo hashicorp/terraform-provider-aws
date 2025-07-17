@@ -3450,19 +3450,21 @@ func clusterNameFromARN(arn string) string {
 	return ""
 }
 
-func serviceNameFromARN(serviceArn string) string {
-	if serviceArn == "" {
+func serviceNameFromARN(s string) string {
+	a, err := arn.Parse(s)
+	if err != nil {
 		return ""
 	}
 
-	substrings := strings.Split(serviceArn, ":")
-	splitRelativeId := strings.Split(substrings[5], "/")
-
-	// long arn format arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name
-	if len(splitRelativeId) == 3 {
-		return splitRelativeId[2]
+	resParts := strings.Split(a.Resource, "/")
+	switch len(resParts) {
+	case 3:
+		// long arn format arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name
+		return resParts[2]
+	case 2:
+		// short arn format arn:aws:ecs:us-west-2:123456789:service/service_name
+		return resParts[1]
+	default:
+		return ""
 	}
-
-	// short arn format arn:aws:ecs:us-west-2:123456789:service/service_name
-	return splitRelativeId[1]
 }

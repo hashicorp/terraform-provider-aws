@@ -91,7 +91,9 @@ func TestClustereNameFromARN(t *testing.T) {
 }
 
 func TestServiceNameFromARN(t *testing.T) {
-	testCases := []struct {
+	t.Parallel()
+
+	tests := []struct {
 		name     string
 		arn      string
 		expected string
@@ -102,27 +104,33 @@ func TestServiceNameFromARN(t *testing.T) {
 			expected: "",
 		},
 		{
+			name:     "invalid ARN",
+			arn:      "invalid",
+			expected: "",
+		},
+		{
 			name:     "short ARN format",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/service_name",
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/service_name", //lintignore:AWSAT003,AWSAT005
 			expected: "service_name",
 		},
 		{
 			name:     "long ARN format",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name",
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name", //lintignore:AWSAT003,AWSAT005
 			expected: "service_name",
 		},
 		{
 			name:     "ARN with special characters",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster-name/service-name-123",
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster-name/service-name-123", //lintignore:AWSAT003,AWSAT005
 			expected: "service-name-123",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := tfecs.ServiceNameFromARN(tc.arn)
-			if actual != tc.expected {
-				t.Errorf("Expected: %s, Got: %s", tc.expected, actual)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			actual := tfecs.ServiceNameFromARN(tt.arn)
+			if actual != tt.expected {
+				t.Errorf("Expected: %s, Got: %s", tt.expected, actual)
 			}
 		})
 	}
