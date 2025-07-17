@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 )
 
-func describeConnectionAliasesPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeConnectionAliasesInput, fn func(*workspaces.DescribeConnectionAliasesOutput, bool) bool) error {
+func describeConnectionAliasesPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeConnectionAliasesInput, fn func(*workspaces.DescribeConnectionAliasesOutput, bool) bool, optFns ...func(*workspaces.Options)) error {
 	for {
-		output, err := conn.DescribeConnectionAliases(ctx, input)
+		output, err := conn.DescribeConnectionAliases(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -25,9 +25,9 @@ func describeConnectionAliasesPages(ctx context.Context, conn *workspaces.Client
 	}
 	return nil
 }
-func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
+func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool, optFns ...func(*workspaces.Options)) error {
 	for {
-		output, err := conn.DescribeIpGroups(ctx, input)
+		output, err := conn.DescribeIpGroups(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -41,9 +41,9 @@ func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *
 	}
 	return nil
 }
-func describeWorkspaceImagesPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceImagesInput, fn func(*workspaces.DescribeWorkspaceImagesOutput, bool) bool) error {
+func describeWorkspaceImagesPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceImagesInput, fn func(*workspaces.DescribeWorkspaceImagesOutput, bool) bool, optFns ...func(*workspaces.Options)) error {
 	for {
-		output, err := conn.DescribeWorkspaceImages(ctx, input)
+		output, err := conn.DescribeWorkspaceImages(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

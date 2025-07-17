@@ -47,7 +47,7 @@ func newKeyValueStoreResource(context.Context) (resource.ResourceWithConfigure, 
 type keyValueStoreResource struct {
 	framework.ResourceWithModel[keyValueStoreResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByParameterizedIdentity
+	framework.WithImportByIdentity
 }
 
 func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

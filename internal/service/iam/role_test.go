@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -207,120 +208,36 @@ func TestAccIAMRole_diffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffs(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -344,30 +261,22 @@ func TestAccIAMRole_diffsCondition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffsCondition(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccRoleConfig_diffsCondition(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffsCondition(rName),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -656,19 +565,41 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccRoleConfig_policyInlineActionOrder(rName),
-				PlanOnly: true,
+				Config: testAccRoleConfig_policyInlineActionOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:   testAccRoleConfig_policyInlineActionNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccRoleConfig_policyInlineActionNewOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
-				Config:             testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1253,7 +1184,9 @@ func testAccCheckRolePolicyRemoveInlinePolicy(ctx context.Context, role *awstype
 
 func testAccRoleConfig_maxSessionDuration(rName string, maxSessionDuration int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name                 = %[1]q
@@ -1265,7 +1198,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1277,7 +1210,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   assume_role_policy = jsonencode({
@@ -1285,7 +1220,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1301,7 +1236,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1312,7 +1249,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1421,7 +1358,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_description(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name        = %[1]q
@@ -1433,7 +1372,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1445,7 +1384,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_updatedDescription(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name        = %[1]q
@@ -1457,7 +1398,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1469,7 +1410,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_nameGenerated() string {
 	return `
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   path = "/"
@@ -1479,7 +1422,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1491,7 +1434,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name_prefix = %[1]q
@@ -1502,7 +1447,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1515,6 +1460,9 @@ resource "aws_iam_role" "test" {
 func testAccRoleConfig_pre(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1525,7 +1473,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1565,6 +1513,9 @@ resource "aws_iam_instance_profile" "role_update_test" {
 func testAccRoleConfig_post(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1575,7 +1526,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1614,7 +1565,9 @@ resource "aws_iam_instance_profile" "role_update_test" {
 
 func testAccRoleConfig_badJSON(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1626,7 +1579,7 @@ resource "aws_iam_role" "test" {
   {
     "Action": "sts:AssumeRole",
     "Principal": {
-    "Service": "ec2.${data.aws_partition.current.dns_suffix}",
+    "Service": data.aws_service_principal.ec2.name,
     },
     "Effect": "Allow",
     "Sid": ""
@@ -1640,7 +1593,9 @@ INTENTIONALLYBAD
 
 func testAccRoleConfig_forceDetachPolicies(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
@@ -1696,7 +1651,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1708,7 +1663,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyInline(roleName, policyName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1718,7 +1675,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1749,7 +1706,9 @@ EOF
 
 func testAccRoleConfig_policyInlineUpdate(roleName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1759,7 +1718,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1809,7 +1768,9 @@ EOF
 
 func testAccRoleConfig_policyInlineUpdateDown(roleName, policyName3 string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1819,7 +1780,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1850,7 +1811,9 @@ EOF
 
 func testAccRoleConfig_policyInlineActionOrder(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1860,7 +1823,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1890,7 +1853,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyInlineActionOrderActualDiff(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1900,7 +1865,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1929,7 +1894,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyInlineActionNewOrder(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1939,7 +1906,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -1969,7 +1936,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyInlineMalformed(roleName, policyName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1979,7 +1948,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2004,7 +1973,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -2035,7 +2006,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2047,7 +2018,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyManagedUpdate(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -2118,7 +2091,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2130,7 +2103,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyManagedUpdateDown(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -2201,7 +2176,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2213,7 +2188,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyExtraManaged(roleName, policyName1, policyName2 string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_policy" "test" {
   name = %[1]q
@@ -2264,7 +2241,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2291,7 +2268,9 @@ func testAccRolePolicyExtraInlineConfig() string {
 
 func testAccRoleConfig_policyNoInline(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2301,7 +2280,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2313,7 +2292,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyNoManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2323,7 +2304,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2355,7 +2336,9 @@ EOF
 
 func testAccRoleConfig_policyEmptyInline(roleName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2365,7 +2348,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""
@@ -2379,7 +2362,9 @@ resource "aws_iam_role" "test" {
 
 func testAccRoleConfig_policyEmptyManaged(roleName, policyName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -2389,7 +2374,7 @@ resource "aws_iam_role" "test" {
     Statement = [{
       Action = "sts:AssumeRole",
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+        Service = data.aws_service_principal.ec2.name,
       }
       Effect = "Allow"
       Sid    = ""

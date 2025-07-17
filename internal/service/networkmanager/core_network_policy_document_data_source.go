@@ -93,6 +93,16 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								},
 							},
 						},
+						"dns_support": {
+							Type:     schema.TypeBool,
+							Default:  true,
+							Optional: true,
+						},
+						"security_group_referencing_support": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -786,6 +796,14 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetwork
 		return nil, err
 	}
 	apiObject.EdgeLocations = el
+
+	if v, ok := tfMap["dns_support"].(bool); ok {
+		apiObject.DnsSupport = v
+	}
+
+	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
+		apiObject.SecurityGroupReferencingSupport = v
+	}
 
 	return apiObject, nil
 }

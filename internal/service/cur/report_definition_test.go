@@ -12,8 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcur "github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -373,6 +376,59 @@ func testAccReportDefinition_disappears(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/43153.
+func testAccReportDefinition_upgradeNoPrefixFromV5(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cur_report_definition.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CURServiceID),
+		CheckDestroy: testAccCheckReportDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccReportDefinitionConfig_noS3Prefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_prefix"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccReportDefinitionConfig_basic(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReportDefinitionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3_prefix"), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckReportDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CURClient(ctx)
@@ -666,6 +722,64 @@ resource "aws_cur_report_definition" "test" {
   }
 }
 `, rName, s3Prefix, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccReportDefinitionConfig_noS3Prefix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2008-10-17",
+  "Id": "s3policy",
+  "Statement": [
+    {
+      "Sid": "AllowCURBillingACLPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": [
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+    },
+    {
+      "Sid": "AllowCURPutObject",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_cur_report_definition" "test" {
+  depends_on = [aws_s3_bucket_policy.test] # needed to avoid "ValidationException: Failed to verify customer bucket permission."
+
+  report_name                = %[1]q
+  time_unit                  = "DAILY"
+  format                     = "textORcsv"
+  compression                = "GZIP"
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
+  s3_bucket                  = aws_s3_bucket.test.id
+  s3_region                  = aws_s3_bucket.test.region
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+}
+`, rName)
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {

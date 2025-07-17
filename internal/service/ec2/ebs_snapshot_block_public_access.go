@@ -18,6 +18,7 @@ import (
 
 // @SDKResource("aws_ebs_snapshot_block_public_access", name="EBS Snapshot Block Public Access")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {

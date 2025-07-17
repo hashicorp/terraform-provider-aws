@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `anycast_ip_list_id` argument
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_distribution: Add `anycast_ip_list_id` attribute
+```

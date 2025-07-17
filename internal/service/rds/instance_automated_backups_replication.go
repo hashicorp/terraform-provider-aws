@@ -287,7 +287,7 @@ func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client,
 func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBInstance, error) {
 	var output *types.DBInstance
 
-	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func() (bool, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func(ctx context.Context) (bool, error) {
 		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
 		if tfresource.NotFound(err) {

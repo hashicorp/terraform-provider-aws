@@ -32,6 +32,7 @@ import (
 // @SDKResource("aws_codestarnotifications_notification_rule", name="Notification Rule")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,

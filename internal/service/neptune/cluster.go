@@ -876,7 +876,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Client, c
 		return fmt.Errorf("removing Neptune Cluster (%s) from Neptune Global Cluster (%s): %w", clusterARN, globalClusterID, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
 	})
 

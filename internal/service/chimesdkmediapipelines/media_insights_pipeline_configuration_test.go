@@ -56,11 +56,6 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 				),
 			},
 			{
-				Config:             testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

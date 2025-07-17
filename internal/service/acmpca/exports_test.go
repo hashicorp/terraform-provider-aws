@@ -12,7 +12,6 @@ var (
 	ResourcePolicy                          = resourcePolicy
 
 	FindCertificateAuthorityCertificateByARN = findCertificateAuthorityCertificateByARN
-	FindCertificateByTwoPartKey              = findCertificateByTwoPartKey
 	FindPermissionByThreePartKey             = findPermissionByThreePartKey
 	FindPolicyByARN                          = findPolicyByARN
 	ValidTemplateARN                         = validTemplateARN

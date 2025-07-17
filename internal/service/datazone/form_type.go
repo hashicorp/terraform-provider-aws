@@ -187,7 +187,7 @@ func (r *formTypeResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetFormTypeOutput, error) {
 		return findFormTypeByID(ctx, conn, *out.DomainId, *out.Name, *out.Revision)
 	})
 	if err != nil {
@@ -198,7 +198,6 @@ func (r *formTypeResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	output := outputRaws.(*datazone.GetFormTypeOutput)
 	option := flex.WithIgnoredFieldNames([]string{"Model"})
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, option)...)
 	if resp.Diagnostics.HasError() {

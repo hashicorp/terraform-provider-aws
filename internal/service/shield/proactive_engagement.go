@@ -154,7 +154,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust[emergencyContactModel](ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
+	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
 		return emergencyContactModel{
 			ContactNotes: fwflex.StringToFramework(ctx, apiObject.ContactNotes),
 			EmailAddress: fwflex.StringToFramework(ctx, apiObject.EmailAddress),

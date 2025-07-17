@@ -579,7 +579,7 @@ data "aws_iam_policy_document" "test_agent_trust" {
 
     condition {
       test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.region}:${data.aws_caller_identity.current_agent.account_id}:agent/*"]
+      values   = ["arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.name}:${data.aws_caller_identity.current_agent.account_id}:agent/*"]
       variable = "AWS:SourceArn"
     }
   }
@@ -589,15 +589,15 @@ data "aws_iam_policy_document" "test_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.region}::foundation-model/%[2]s",
+      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.name}::foundation-model/%[2]s",
     ]
   }
 
   statement {
     actions = ["bedrock:GetAgentAlias", "bedrock:InvokeAgent"]
     resources = [
-      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.region}:${data.aws_caller_identity.current_agent.account_id}:agent/*",
-      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.region}:${data.aws_caller_identity.current_agent.account_id}:agent-alias/*"
+      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.name}:${data.aws_caller_identity.current_agent.account_id}:agent/*",
+      "arn:${data.aws_partition.current_agent.partition}:bedrock:${data.aws_region.current_agent.name}:${data.aws_caller_identity.current_agent.account_id}:agent-alias/*"
     ]
   }
 }

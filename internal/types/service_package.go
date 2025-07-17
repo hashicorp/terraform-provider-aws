@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +70,7 @@ type ServicePackageFrameworkResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   FrameworkImport
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -91,35 +92,36 @@ type ServicePackageSDKResource struct {
 	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
-	Import   Import
+	Import   SDKv2Import
 }
 
 type Identity struct {
 	IsGlobalResource       bool   // All
-	Singleton              bool   // Singleton
-	ARN                    bool   // ARN
+	IsSingleton            bool   // Singleton
+	IsARN                  bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN
+	IdentityAttribute      string // ARN, Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
 	IsSingleParameter      bool
+	IsMutable              bool
 }
 
 func (i Identity) HasInherentRegion() bool {
 	if i.IsGlobalResource {
 		return false
 	}
-	if i.Singleton {
+	if i.IsSingleton {
 		return true
 	}
-	if i.ARN && !i.IsGlobalARNFormat {
+	if i.IsARN && !i.IsGlobalARNFormat {
 		return true
 	}
 	return false
 }
 
-func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -137,6 +139,11 @@ func RegionalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
@@ -171,7 +178,7 @@ func RegionalARNIdentityNamed(name string, opts ...IdentityOptsFunc) Identity {
 func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource:  isGlobalResource,
-		ARN:               true,
+		IsARN:             true,
 		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -205,8 +212,8 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			{
@@ -224,10 +231,16 @@ func RegionalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalSingleParameterIdentity(name string) Identity {
-	return Identity{
+func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
@@ -242,9 +255,15 @@ func GlobalSingleParameterIdentity(name string) Identity {
 		},
 		IsSingleParameter: true,
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
 }
 
-func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
+func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		{
 			Name:     "account_id",
@@ -253,18 +272,24 @@ func GlobalParameterizedIdentity(attributes ...IdentityAttribute) Identity {
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
-		Attributes: append(baseAttributes, attributes...),
+		IsGlobalResource: true,
+		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
 		identity.IDAttrShadowsAttr = attributes[0].Name
 	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
 	return identity
 }
 
 func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
@@ -283,7 +308,7 @@ func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: false,
-		Singleton:        true,
+		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
 			{
 				Name:     "account_id",
@@ -311,6 +336,40 @@ func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
 	}
 }
 
-type Import struct {
+// WithV6_0SDKv2Fix is for use ONLY for resource types affected by the v6.0 SDKv2 existing resource issue
+func WithV6_0SDKv2Fix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+// WithIdentityFix is for use ONLY for resource types that must be able to modify Resource Identity due to an error
+func WithIdentityFix() IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.IsMutable = true
+	}
+}
+
+type ImportIDParser interface {
+	Parse(id string) (string, map[string]string, error)
+}
+
+type FrameworkImportIDCreator interface {
+	Create(ctx context.Context, state tfsdk.State) string
+}
+
+type FrameworkImport struct {
 	WrappedImport bool
+	ImportID      ImportIDParser // Multi-Parameter
+	SetIDAttr     bool
+}
+
+type SDKv2ImportID interface {
+	Create(d *schema.ResourceData) string
+	ImportIDParser
+}
+
+type SDKv2Import struct {
+	WrappedImport bool
+	ImportID      SDKv2ImportID // Multi-Parameter
 }

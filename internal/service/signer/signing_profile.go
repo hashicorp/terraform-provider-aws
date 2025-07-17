@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_signer_signing_profile", name="Signing Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceSigningProfile() *schema.Resource {
+func resourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
 		ReadWithoutTimeout:   resourceSigningProfileRead,

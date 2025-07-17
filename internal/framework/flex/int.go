@@ -41,6 +41,10 @@ func Int64ToFramework(ctx context.Context, v *int64) types.Int64 {
 	return types.Int64PointerValue(v)
 }
 
+func Int64ValueToFramework(ctx context.Context, v int64) types.Int64 {
+	return types.Int64Value(v)
+}
+
 // Int64ToFrameworkLegacy converts an int64 pointer to a Framework Int64 value.
 // A nil int64 pointer is converted to a zero Int64.
 func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {

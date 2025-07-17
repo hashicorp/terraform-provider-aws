@@ -343,6 +343,8 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusConnectAttachment(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 

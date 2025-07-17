@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_codegurureviewer_repository_association", name="Repository Association")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
 // @Testing(importIgnore="repository", plannableImportAction="Replace")
 func resourceRepositoryAssociation() *schema.Resource {

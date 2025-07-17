@@ -22,16 +22,35 @@ resource "aws_guardduty_detector" "example" {
 resource "aws_guardduty_member_detector_feature" "runtime_monitoring" {
   detector_id = aws_guardduty_detector.example.id
   account_id  = "123456789012"
-  name        = "RUNTIME_MONITORING"
+  name        = "S3_DATA_EVENTS"
+  status      = "ENABLED"
+}
+```
+
+## Extended Threat Detection for EKS
+
+To enable GuardDuty [Extended Threat Detection](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-extended-threat-detection.html) for EKS, you need at least one of these features enabled: [EKS Protection](https://docs.aws.amazon.com/guardduty/latest/ug/kubernetes-protection.html) or [Runtime Monitoring](https://docs.aws.amazon.com/guardduty/latest/ug/runtime-monitoring-configuration.html). For maximum detection coverage, enabling both is recommended to enhance detection capabilities.
+
+```terraform
+resource "aws_guardduty_detector" "example" {
+  enable = true
+}
+
+resource "aws_guardduty_detector_feature" "eks_protection" {
+  detector_id = aws_guardduty_detector.example.id
+  account_id  = "123456789012"
+  name        = "EKS_AUDIT_LOGS"
+  status      = "ENABLED"
+}
+
+resource "aws_guardduty_detector_feature" "eks_runtime_monitoring" {
+  detector_id = aws_guardduty_detector.example.id
+  account_id  = "123456789012"
+  name        = "EKS_RUNTIME_MONITORING"
   status      = "ENABLED"
 
   additional_configuration {
     name   = "EKS_ADDON_MANAGEMENT"
-    status = "ENABLED"
-  }
-
-  additional_configuration {
-    name   = "ECS_FARGATE_AGENT_MANAGEMENT"
     status = "ENABLED"
   }
 }
