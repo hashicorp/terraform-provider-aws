@@ -35,7 +35,7 @@ resource "aws_networkfirewall_firewall" "example" {
 }
 ```
 
-### Transit Gateway Attached Firewall
+### Transit Gateway Attached Firewall (Single Account)
 
 ```terraform
 data "aws_availability_zones" "example" {
@@ -55,8 +55,11 @@ resource "aws_networkfirewall_firewall" "example" {
     availability_zone_id = data.aws_availability_zones.example.zone_ids[1]
   }
 }
-
 ```
+
+### Transit Gateway Attached Firewall (Cross Account)
+
+A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create VPC in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and [`aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter`](/docs/providers/aws/r/networkfirewall_network_firewall_transit_gateway_attachment_accepter.html) resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
 
 ## Argument Reference
 
@@ -124,9 +127,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30m`)
-- `update` - (Default `30m`)
-- `delete` - (Default `30m`)
+- `create` - (Default `60m`)
+- `update` - (Default `60m`)
+- `delete` - (Default `60m`)
 
 ## Import
 
