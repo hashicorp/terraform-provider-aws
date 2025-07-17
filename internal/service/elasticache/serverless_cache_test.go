@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,6 +18,24 @@ import (
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestAccElastiCacheServerlessCache_requiresSecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServerlessCacheConfig_basic(rName),
+				ExpectError: regexache.MustCompile(`Missing required argument.*security_group_ids`),
+			},
+		},
+	})
+}
 
 func TestAccElastiCacheServerlessCache_basicRedis(t *testing.T) {
 	ctx := acctest.Context(t)
