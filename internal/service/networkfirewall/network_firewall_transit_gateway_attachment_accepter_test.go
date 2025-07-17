@@ -158,7 +158,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-	
+
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -201,7 +201,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 resource "aws_networkfirewall_firewall" "test" {
   provider = "awsalternate"
-  
+
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
