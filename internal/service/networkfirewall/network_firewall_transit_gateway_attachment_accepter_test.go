@@ -108,12 +108,15 @@ func testAccCheckNetworkFirewallTransitGatewayAttachmentAccepterDestroy(ctx cont
 			// TIP: ==== FINDERS ====
 			// The find function should be exported. Since it won't be used outside of the package, it can be exported
 			// in the `exports_test.go` file.
-			_, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
+			out, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
 				return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, rs.Primary.ID, err)
+			}
+			if out != nil && out.State != ec2awstypes.TransitGatewayAttachmentStateDeleting {
+				return nil
 			}
 
 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, rs.Primary.ID, errors.New("not destroyed"))

@@ -14,6 +14,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,7 +37,7 @@ func newResourceNetworkFirewallTransitGatewayAttachmentAccepter(_ context.Contex
 	r := &resourceNetworkFirewallTransitGatewayAttachmentAccepter{}
 
 	r.SetDefaultCreateTimeout(60 * time.Minute)
-	r.SetDefaultDeleteTimeout(60 * time.Minute)
+	r.SetDefaultDeleteTimeout(90 * time.Minute)
 
 	return r, nil
 }
@@ -55,7 +56,7 @@ type resourceNetworkFirewallTransitGatewayAttachmentAccepter struct {
 func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrTransitGatewayAttachmentID)),
 			names.AttrTransitGatewayAttachmentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -132,8 +133,8 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Read(ctx conte
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	out, err := findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId))
+	transitGatewayAttachmentId := fwflex.StringValueFromFramework(ctx, state.ID)
+	out, err := findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx, ec2Conn, transitGatewayAttachmentId)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -182,7 +183,6 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Delete(ctx con
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), deleteTimeout)
 	if err != nil {
@@ -241,6 +241,11 @@ func statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx context.Context, 
 }
 
 func findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx context.Context, conn *ec2.Client, id string) (*ec2awstypes.TransitGatewayAttachment, error) {
+	if id == "" {
+		return nil, &retry.NotFoundError{
+			Message: "Network Firewall Transit Gateway Attachment Accepter ID is empty",
+		}
+	}
 	out, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, id)
 	if err != nil {
 		return nil, err

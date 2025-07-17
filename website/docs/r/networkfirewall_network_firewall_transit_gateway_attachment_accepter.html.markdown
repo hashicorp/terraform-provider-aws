@@ -5,20 +5,15 @@ page_title: "AWS: aws_networkfirewall_network_firewall_transit_gateway_attachmen
 description: |-
   Manages an AWS Network Firewall Network Firewall Transit Gateway Attachment Accepter.
 ---
-<!---
-Documentation guidelines:
-- Begin resource descriptions with "Manages..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Resource: aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter
 
 Manages an AWS Network Firewall Network Firewall Transit Gateway Attachment Accepter.
+
+When a cross-account (requester's AWS account differs from the accepter's AWS account) requester creates a Network Firewall with Transit Gateway ID using `aws_networkfirewall_firewall`. Then an EC2 Transit Gateway VPC Attachment resource is automatically created in the accepter's account.
+The accepter can use the `aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter` resource to "adopt" its side of the connection into management.
+
+~> **NOTE:** If the `transit_gateway_id` argument in the `aws_networkfirewall_firewall` resource is used to attach a firewall to a transit gateway in a cross-account setup (where **Auto accept shared attachments** is disabled), the resource will be considered created when the transit gateway attachment is in the *Pending Acceptance* state and the firewall is in the *Provisioning* status. At this point, you can use the `aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter` resource to finalize the network firewall deployment. Once the transit gateway attachment reaches the *Available* state, the firewall status *Ready*.
 
 ## Example Usage
 
@@ -26,47 +21,42 @@ Manages an AWS Network Firewall Network Firewall Transit Gateway Attachment Acce
 
 ```terraform
 resource "aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter" "example" {
+  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_state[0].attachment_id
 }
 ```
+
+A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create Network Firewall in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and `aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter` resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `example_arg` - (Required) Brief description of the required argument.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Brief description of the optional argument.
+* `transit_gateway_attachment_id` - (Required) The unique identifier of the transit gateway attachment to accept. This ID is returned in the response when creating a transit gateway-attached firewall..
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Network Firewall Transit Gateway Attachment Accepter.
-* `example_attribute` - Brief description of the attribute.
+This resource exports no additional attributes.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Network Firewall Transit Gateway Attachment Accepter using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Network Firewall Transit Gateway Attachment Accepter using the `transit_gateway_attachment_id`. For example:
 
 ```terraform
 import {
   to = aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter.example
-  id = "network_firewall_transit_gateway_attachment_accepter-id-12345678"
+  id = "tgw-attach-0c3b7e9570eee089c"
 }
 ```
 
-Using `terraform import`, import Network Firewall Network Firewall Transit Gateway Attachment Accepter using the `example_id_arg`. For example:
+Using `terraform import`, import Network Firewall Network Firewall Transit Gateway Attachment Accepter using the `transit_gateway_attachment_id`. For example:
 
 ```console
-% terraform import aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter.example network_firewall_transit_gateway_attachment_accepter-id-12345678
+% terraform import aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter.example tgw-attach-0c3b7e9570eee089c
 ```

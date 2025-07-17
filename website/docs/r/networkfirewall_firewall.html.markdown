@@ -35,7 +35,7 @@ resource "aws_networkfirewall_firewall" "example" {
 }
 ```
 
-### Transit Gateway Attached Firewall (Single Account)
+### Transit Gateway Attached Firewall
 
 ```terraform
 data "aws_availability_zones" "example" {
