@@ -34,7 +34,7 @@ func resourceMaintenanceWindowTarget() *schema.Resource {
 		DeleteWithoutTimeout: resourceMaintenanceWindowTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%s), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
@@ -101,13 +101,13 @@ func resourceMaintenanceWindowTarget() *schema.Resource {
 	}
 }
 
-func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	input := &ssm.RegisterTargetWithMaintenanceWindowInput{
 		ResourceType: awstypes.MaintenanceWindowResourceType(d.Get(names.AttrResourceType).(string)),
-		Targets:      expandTargets(d.Get("targets").([]interface{})),
+		Targets:      expandTargets(d.Get("targets").([]any)),
 		WindowId:     aws.String(d.Get("window_id").(string)),
 	}
 
@@ -134,7 +134,7 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceMaintenanceWindowTargetRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -163,12 +163,12 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	input := &ssm.UpdateMaintenanceWindowTargetInput{
-		Targets:        expandTargets(d.Get("targets").([]interface{})),
+		Targets:        expandTargets(d.Get("targets").([]any)),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
 	}
@@ -194,7 +194,7 @@ func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

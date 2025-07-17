@@ -70,7 +70,7 @@ func dataSourcePolicy() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -79,8 +79,8 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-			func() (interface{}, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+			func(ctx context.Context) (*awstypes.Policy, error) {
 				return findPolicyByTwoPartKey(ctx, conn, name, pathPrefix)
 			},
 		)
@@ -89,7 +89,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IAM Policy", err))
 		}
 
-		arn = aws.ToString((outputRaw.(*awstypes.Policy)).Arn)
+		arn = aws.ToString(output.Arn)
 	}
 
 	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
@@ -111,8 +111,8 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	setTagsOut(ctx, policy.Tags)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
-		func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
+		func(ctx context.Context) (*awstypes.PolicyVersion, error) {
 			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
@@ -121,7 +121,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	policyDocument, err := url.QueryUnescape(aws.ToString(outputRaw.(*awstypes.PolicyVersion).Document))
+	policyDocument, err := url.QueryUnescape(aws.ToString(output.Document))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
 	}

@@ -120,12 +120,13 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_datazone_domain" {
 				continue
 			}
-			_, err := conn.DeleteDomain(ctx, &datazone.DeleteDomainInput{
+			input := datazone.DeleteDomainInput{
 				Identifier: aws.String(rs.Primary.Attributes["domain_identifier"]),
-			})
+			}
+			_, err := conn.DeleteDomain(ctx, &input)
 
 			if err != nil {
-				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, err)
+				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameProject, rs.Primary.ID, err)
 			}
 		}
 		return nil
@@ -147,10 +148,11 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 		}
 		t := rs.Primary.Attributes["domain_identifier"]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
-		resp, err := conn.GetProject(ctx, &datazone.GetProjectInput{
+		input := datazone.GetProjectInput{
 			DomainIdentifier: &t,
 			Identifier:       &rs.Primary.ID,
-		})
+		}
+		resp, err := conn.GetProject(ctx, &input)
 
 		if err != nil && !errs.IsA[*types.ResourceNotFoundException](err) {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, rs.Primary.ID, err)

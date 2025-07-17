@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -146,12 +145,10 @@ func resourceResourceSet() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -159,7 +156,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &route53recoveryreadiness.CreateResourceSetInput{
 		ResourceSetName: aws.String(name),
 		ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-		Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
+		Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]any)),
 	}
 
 	output, err := conn.CreateResourceSet(ctx, input)
@@ -177,7 +174,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceResourceSetRead(ctx, d, meta)...)
 }
 
-func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -203,7 +200,7 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -211,7 +208,7 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &route53recoveryreadiness.UpdateResourceSetInput{
 			ResourceSetName: aws.String(d.Id()),
 			ResourceSetType: aws.String(d.Get("resource_set_type").(string)),
-			Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]interface{})),
+			Resources:       expandResourceSetResources(d.Get(names.AttrResources).([]any)),
 		}
 
 		_, err := conn.UpdateResourceSet(ctx, input)
@@ -224,7 +221,7 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceResourceSetRead(ctx, d, meta)...)
 }
 
-func resourceResourceSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -284,33 +281,33 @@ func findResourceSetByName(ctx context.Context, conn *route53recoveryreadiness.C
 	return output, nil
 }
 
-func expandResourceSetResources(rs []interface{}) []awstypes.Resource {
+func expandResourceSetResources(rs []any) []awstypes.Resource {
 	var resources []awstypes.Resource
 
 	for _, r := range rs {
-		r := r.(map[string]interface{})
+		r := r.(map[string]any)
 		resource := awstypes.Resource{}
 		if v, ok := r[names.AttrResourceARN]; ok && v.(string) != "" {
 			resource.ResourceArn = aws.String(v.(string))
 		}
 		if v, ok := r["readiness_scopes"]; ok {
-			resource.ReadinessScopes = flex.ExpandStringValueList(v.([]interface{}))
+			resource.ReadinessScopes = flex.ExpandStringValueList(v.([]any))
 		}
 		if v, ok := r["component_id"]; ok {
 			resource.ComponentId = aws.String(v.(string))
 		}
 		if v, ok := r["dns_target_resource"]; ok {
-			resource.DnsTargetResource = expandResourceSetDNSTargetResource(v.([]interface{}))
+			resource.DnsTargetResource = expandResourceSetDNSTargetResource(v.([]any))
 		}
 		resources = append(resources, resource)
 	}
 	return resources
 }
 
-func flattenResourceSetResources(resources []awstypes.Resource) []map[string]interface{} {
-	rs := make([]map[string]interface{}, 0)
+func flattenResourceSetResources(resources []awstypes.Resource) []map[string]any {
+	rs := make([]map[string]any, 0)
 	for _, resource := range resources {
-		r := map[string]interface{}{}
+		r := map[string]any{}
 		if v := resource.ResourceArn; v != nil {
 			r[names.AttrResourceARN] = v
 		}
@@ -328,10 +325,10 @@ func flattenResourceSetResources(resources []awstypes.Resource) []map[string]int
 	return rs
 }
 
-func expandResourceSetDNSTargetResource(dtrs []interface{}) *awstypes.DNSTargetResource {
+func expandResourceSetDNSTargetResource(dtrs []any) *awstypes.DNSTargetResource {
 	dtresource := &awstypes.DNSTargetResource{}
 	for _, dtr := range dtrs {
-		dtr := dtr.(map[string]interface{})
+		dtr := dtr.(map[string]any)
 		if v, ok := dtr[names.AttrDomainName]; ok && v.(string) != "" {
 			dtresource.DomainName = aws.String(v.(string))
 		}
@@ -345,28 +342,28 @@ func expandResourceSetDNSTargetResource(dtrs []interface{}) *awstypes.DNSTargetR
 			dtresource.RecordType = aws.String(v.(string))
 		}
 		if v, ok := dtr["target_resource"]; ok {
-			dtresource.TargetResource = expandResourceSetTargetResource(v.([]interface{}))
+			dtresource.TargetResource = expandResourceSetTargetResource(v.([]any))
 		}
 	}
 	return dtresource
 }
 
-func flattenResourceSetDNSTargetResource(dtresource *awstypes.DNSTargetResource) []map[string]interface{} {
+func flattenResourceSetDNSTargetResource(dtresource *awstypes.DNSTargetResource) []map[string]any {
 	if dtresource == nil {
 		return nil
 	}
 
-	dtr := make(map[string]interface{})
+	dtr := make(map[string]any)
 	dtr[names.AttrDomainName] = dtresource.DomainName
 	dtr["hosted_zone_arn"] = dtresource.HostedZoneArn
 	dtr["record_set_id"] = dtresource.RecordSetId
 	dtr["record_type"] = dtresource.RecordType
 	dtr["target_resource"] = flattenResourceSetTargetResource(dtresource.TargetResource)
-	result := []map[string]interface{}{dtr}
+	result := []map[string]any{dtr}
 	return result
 }
 
-func expandResourceSetTargetResource(trs []interface{}) *awstypes.TargetResource {
+func expandResourceSetTargetResource(trs []any) *awstypes.TargetResource {
 	if len(trs) == 0 {
 		return nil
 	}
@@ -375,33 +372,33 @@ func expandResourceSetTargetResource(trs []interface{}) *awstypes.TargetResource
 		if tr == nil {
 			return nil
 		}
-		tr := tr.(map[string]interface{})
-		if v, ok := tr["nlb_resource"]; ok && len(v.([]interface{})) > 0 {
-			tresource.NLBResource = expandResourceSetNLBResource(v.([]interface{}))
+		tr := tr.(map[string]any)
+		if v, ok := tr["nlb_resource"]; ok && len(v.([]any)) > 0 {
+			tresource.NLBResource = expandResourceSetNLBResource(v.([]any))
 		}
-		if v, ok := tr["r53_resource"]; ok && len(v.([]interface{})) > 0 {
-			tresource.R53Resource = expandResourceSetR53ResourceRecord(v.([]interface{}))
+		if v, ok := tr["r53_resource"]; ok && len(v.([]any)) > 0 {
+			tresource.R53Resource = expandResourceSetR53ResourceRecord(v.([]any))
 		}
 	}
 	return tresource
 }
 
-func flattenResourceSetTargetResource(tresource *awstypes.TargetResource) []map[string]interface{} {
+func flattenResourceSetTargetResource(tresource *awstypes.TargetResource) []map[string]any {
 	if tresource == nil {
 		return nil
 	}
 
-	tr := make(map[string]interface{})
+	tr := make(map[string]any)
 	tr["nlb_resource"] = flattenResourceSetNLBResource(tresource.NLBResource)
 	tr["r53_resource"] = flattenResourceSetR53ResourceRecord(tresource.R53Resource)
-	result := []map[string]interface{}{tr}
+	result := []map[string]any{tr}
 	return result
 }
 
-func expandResourceSetNLBResource(nlbrs []interface{}) *awstypes.NLBResource {
+func expandResourceSetNLBResource(nlbrs []any) *awstypes.NLBResource {
 	nlbresource := &awstypes.NLBResource{}
 	for _, nlbr := range nlbrs {
-		nlbr := nlbr.(map[string]interface{})
+		nlbr := nlbr.(map[string]any)
 		if v, ok := nlbr[names.AttrARN]; ok && v.(string) != "" {
 			nlbresource.Arn = aws.String(v.(string))
 		}
@@ -409,21 +406,21 @@ func expandResourceSetNLBResource(nlbrs []interface{}) *awstypes.NLBResource {
 	return nlbresource
 }
 
-func flattenResourceSetNLBResource(nlbresource *awstypes.NLBResource) []map[string]interface{} {
+func flattenResourceSetNLBResource(nlbresource *awstypes.NLBResource) []map[string]any {
 	if nlbresource == nil {
 		return nil
 	}
 
-	nlbr := make(map[string]interface{})
+	nlbr := make(map[string]any)
 	nlbr[names.AttrARN] = nlbresource.Arn
-	result := []map[string]interface{}{nlbr}
+	result := []map[string]any{nlbr}
 	return result
 }
 
-func expandResourceSetR53ResourceRecord(r53rs []interface{}) *awstypes.R53ResourceRecord {
+func expandResourceSetR53ResourceRecord(r53rs []any) *awstypes.R53ResourceRecord {
 	r53resource := &awstypes.R53ResourceRecord{}
 	for _, r53r := range r53rs {
-		r53r := r53r.(map[string]interface{})
+		r53r := r53r.(map[string]any)
 		if v, ok := r53r[names.AttrDomainName]; ok && v.(string) != "" {
 			r53resource.DomainName = aws.String(v.(string))
 		}
@@ -434,14 +431,14 @@ func expandResourceSetR53ResourceRecord(r53rs []interface{}) *awstypes.R53Resour
 	return r53resource
 }
 
-func flattenResourceSetR53ResourceRecord(r53resource *awstypes.R53ResourceRecord) []map[string]interface{} {
+func flattenResourceSetR53ResourceRecord(r53resource *awstypes.R53ResourceRecord) []map[string]any {
 	if r53resource == nil {
 		return nil
 	}
 
-	r53r := make(map[string]interface{})
+	r53r := make(map[string]any)
 	r53r[names.AttrDomainName] = r53resource.DomainName
 	r53r["record_set_id"] = r53resource.RecordSetId
-	result := []map[string]interface{}{r53r}
+	result := []map[string]any{r53r}
 	return result
 }

@@ -41,6 +41,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
@@ -57,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Image Pipelines.
 * `names` - Set of names of the matched Image Builder Image Pipelines.
 
-<!-- cache-key: cdktf-0.20.8 input-9aa1a817b341dd2fe9ffacd11d32c26b3c20e350b371b04907e37c56aa311d03 -->
+<!-- cache-key: cdktf-0.20.8 input-7f14f22e0bfc6850a65dfe0895ccb6b3748efd7c5822319dc24bc39f3c22e7dc -->

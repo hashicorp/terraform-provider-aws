@@ -42,7 +42,9 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-1f59fb72cfbdb2e6f0ab733246fe01d5f9b99e7b551e1073e5c40c8c404bd9ef -->
+<!-- cache-key: cdktf-0.20.8 input-f701616123bc38387455a5227484378e3e64b7d7aa059a5b225d2ce46f3d0ec1 -->

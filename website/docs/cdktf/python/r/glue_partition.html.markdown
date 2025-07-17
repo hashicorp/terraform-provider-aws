@@ -24,13 +24,12 @@ from cdktf import TerraformStack
 #
 from imports.aws.glue_partition import GluePartition
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, partitionValues):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         GluePartition(self, "example",
             database_name="some-database",
-            table_name="some-table",
-            values=["some-value"],
-            partition_values=partition_values
+            partition_values=["some-value"],
+            table_name="some-table"
         )
 ```
 
@@ -46,6 +45,7 @@ This resource supports the following arguments:
 
 ##### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `columns` - (Optional) A list of the [Columns](#column) in the table.
 * `location` - (Optional) The physical location of the table. By default this takes the form of the warehouse location, followed by the database location in the warehouse, followed by the table name.
 * `input_format` - (Optional) The input format: SequenceFileInputFormat (binary), or TextInputFormat, or a custom format.
@@ -116,4 +116,4 @@ Using `terraform import`, import Glue Partitions using the catalog ID (usually A
 % terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-82eb5064cb5a885033f5995b599111156aaf6ca6d5bd48324fd36f1a445015f1 -->
+<!-- cache-key: cdktf-0.20.8 input-4f1cd549f374095304ccdeaac691997cd6969f91350fa6eb91221e08599f5fb9 -->

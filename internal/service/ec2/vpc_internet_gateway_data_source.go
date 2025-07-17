@@ -66,7 +66,7 @@ func dataSourceInternetGateway() *schema.Resource {
 	}
 }
 
-func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -84,7 +84,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+		svcTags(tftags.New(ctx, tags.(map[string]any))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		filter.(*schema.Set),
@@ -122,10 +122,10 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func flattenInternetGatewayAttachments(igwAttachments []awstypes.InternetGatewayAttachment) []map[string]interface{} {
-	attachments := make([]map[string]interface{}, 0, len(igwAttachments))
+func flattenInternetGatewayAttachments(igwAttachments []awstypes.InternetGatewayAttachment) []map[string]any {
+	attachments := make([]map[string]any, 0, len(igwAttachments))
 	for _, a := range igwAttachments {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m[names.AttrState] = string(a.State)
 		m[names.AttrVPCID] = aws.ToString(a.VpcId)
 		attachments = append(attachments, m)

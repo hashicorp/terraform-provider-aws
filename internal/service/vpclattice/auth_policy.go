@@ -5,7 +5,6 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -13,19 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpclattice_auth_policy", name="Auth Policy")
-func ResourceAuthPolicy() *schema.Resource {
+func resourceAuthPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthPolicyPut,
 		ReadWithoutTimeout:   resourceAuthPolicyRead,
@@ -43,128 +43,118 @@ func ResourceAuthPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"resource_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrState: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
-const (
-	ResNameAuthPolicy = "Auth Policy"
-)
-
-func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	resourceId := d.Get("resource_identifier").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	in := &vpclattice.PutAuthPolicyInput{
+	resourceID := d.Get("resource_identifier").(string)
+	input := vpclattice.PutAuthPolicyInput{
 		Policy:             aws.String(policy),
-		ResourceIdentifier: aws.String(resourceId),
+		ResourceIdentifier: aws.String(resourceID),
 	}
 
-	log.Printf("[DEBUG] Putting VPCLattice Auth Policy for resource: %s", resourceId)
+	_, err = conn.PutAuthPolicy(ctx, &input)
 
-	_, err = conn.PutAuthPolicy(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameAuthPolicy, d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating VPCLattice Auth Policy (%s): %s", resourceID, err)
 	}
 
-	d.SetId(resourceId)
+	d.SetId(resourceID)
 
 	return append(diags, resourceAuthPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	resourceId := d.Id()
 
-	log.Printf("[DEBUG] Reading VPCLattice Auth Policy for resource: %s", resourceId)
+	output, err := findAuthPolicyByID(ctx, conn, d.Id())
 
-	policy, err := findAuthPolicy(ctx, conn, resourceId)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] VPCLattice AuthPolicy (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VPCLattice Auth Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Auth Policy (%s): %s", d.Id(), err)
 	}
 
-	if policy == nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, d.Id(), err)
-	}
-
-	d.Set("resource_identifier", resourceId)
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
-
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
 	if err != nil {
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAuthPolicy, aws.ToString(policy.Policy), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("resource_identifier", d.Id())
 
 	return diags
 }
 
-func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
-	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{
+	log.Printf("[INFO] Deleting VPCLattice Auth Policy: %s", d.Id())
+	input := vpclattice.DeleteAuthPolicyInput{
 		ResourceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAuthPolicy(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
-		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameAuthPolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting VPCLattice Auth Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func findAuthPolicy(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetAuthPolicyOutput, error) {
-	in := &vpclattice.GetAuthPolicyInput{
+func findAuthPolicyByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetAuthPolicyOutput, error) {
+	input := vpclattice.GetAuthPolicyInput{
 		ResourceIdentifier: aws.String(id),
 	}
 
-	out, err := conn.GetAuthPolicy(ctx, in)
+	return findAuthPolicy(ctx, conn, &input)
+}
+
+func findAuthPolicy(ctx context.Context, conn *vpclattice.Client, input *vpclattice.GetAuthPolicyInput) (*vpclattice.GetAuthPolicyOutput, error) {
+	output, err := conn.GetAuthPolicy(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	if out == nil {
-		return nil, nil
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }

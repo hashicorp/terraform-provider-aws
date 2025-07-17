@@ -241,12 +241,10 @@ func resourceImageRecipe() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -259,8 +257,8 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
-		input.Components = expandComponentConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("component"); ok && len(v.([]any)) > 0 {
+		input.Components = expandComponentConfigurations(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -275,9 +273,9 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.ParentImage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.AdditionalInstanceConfiguration = &awstypes.AdditionalInstanceConfiguration{
-			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
+			SystemsManagerAgent: expandSystemsManagerAgent(v.([]any)[0].(map[string]any)),
 		}
 	}
 
@@ -306,7 +304,7 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
-func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -336,7 +334,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
-		if err := d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)}); err != nil {
+		if err := d.Set("systems_manager_agent", []any{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting systems_manager_agent: %s", err)
 		}
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
@@ -349,7 +347,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -357,7 +355,7 @@ func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
-func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -402,7 +400,7 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	return output.ImageRecipe, nil
 }
 
-func expandComponentConfiguration(tfMap map[string]interface{}) *awstypes.ComponentConfiguration {
+func expandComponentConfiguration(tfMap map[string]any) *awstypes.ComponentConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -420,7 +418,7 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *awstypes.Compon
 	return apiObject
 }
 
-func expandComponentParameters(tfList []interface{}) []awstypes.ComponentParameter {
+func expandComponentParameters(tfList []any) []awstypes.ComponentParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -428,7 +426,7 @@ func expandComponentParameters(tfList []interface{}) []awstypes.ComponentParamet
 	var apiObjects []awstypes.ComponentParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -446,7 +444,7 @@ func expandComponentParameters(tfList []interface{}) []awstypes.ComponentParamet
 	return apiObjects
 }
 
-func expandComponentParameter(tfMap map[string]interface{}) *awstypes.ComponentParameter {
+func expandComponentParameter(tfMap map[string]any) *awstypes.ComponentParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -466,7 +464,7 @@ func expandComponentParameter(tfMap map[string]interface{}) *awstypes.ComponentP
 	return apiObject
 }
 
-func expandComponentConfigurations(tfList []interface{}) []awstypes.ComponentConfiguration {
+func expandComponentConfigurations(tfList []any) []awstypes.ComponentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -474,7 +472,7 @@ func expandComponentConfigurations(tfList []interface{}) []awstypes.ComponentCon
 	var apiObjects []awstypes.ComponentConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -492,7 +490,7 @@ func expandComponentConfigurations(tfList []interface{}) []awstypes.ComponentCon
 	return apiObjects
 }
 
-func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *awstypes.EbsInstanceBlockDeviceSpecification {
+func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]any) *awstypes.EbsInstanceBlockDeviceSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -534,15 +532,15 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) awstypes.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMapping(tfMap map[string]any) awstypes.InstanceBlockDeviceMapping {
 	apiObject := awstypes.InstanceBlockDeviceMapping{}
 
 	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ebs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
@@ -556,7 +554,7 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) awstypes.Ins
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMappings(tfList []interface{}) []awstypes.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMappings(tfList []any) []awstypes.InstanceBlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -564,7 +562,7 @@ func expandInstanceBlockDeviceMappings(tfList []interface{}) []awstypes.Instance
 	var apiObjects []awstypes.InstanceBlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -576,7 +574,7 @@ func expandInstanceBlockDeviceMappings(tfList []interface{}) []awstypes.Instance
 	return apiObjects
 }
 
-func expandSystemsManagerAgent(tfMap map[string]interface{}) *awstypes.SystemsManagerAgent {
+func expandSystemsManagerAgent(tfMap map[string]any) *awstypes.SystemsManagerAgent {
 	if tfMap == nil {
 		return nil
 	}
@@ -590,8 +588,8 @@ func expandSystemsManagerAgent(tfMap map[string]interface{}) *awstypes.SystemsMa
 	return apiObject
 }
 
-func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ComponentArn; v != nil {
 		tfMap["component_arn"] = aws.ToString(v)
@@ -604,12 +602,12 @@ func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) ma
 	return tfMap
 }
 
-func flattenComponentParameters(apiObjects []awstypes.ComponentParameter) []interface{} {
+func flattenComponentParameters(apiObjects []awstypes.ComponentParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenComponentParameter(apiObject))
@@ -618,8 +616,8 @@ func flattenComponentParameters(apiObjects []awstypes.ComponentParameter) []inte
 	return tfList
 }
 
-func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -634,12 +632,12 @@ func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string
 	return tfMap
 }
 
-func flattenComponentConfigurations(apiObjects []awstypes.ComponentConfiguration) []interface{} {
+func flattenComponentConfigurations(apiObjects []awstypes.ComponentConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenComponentConfiguration(apiObject))
@@ -648,12 +646,12 @@ func flattenComponentConfigurations(apiObjects []awstypes.ComponentConfiguration
 	return tfList
 }
 
-func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
+func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceBlockDeviceSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
 		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
@@ -688,15 +686,15 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceB
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMapping) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMapping) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeviceName; v != nil {
 		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenEBSInstanceBlockDeviceSpecification(v)}
+		tfMap["ebs"] = []any{flattenEBSInstanceBlockDeviceSpecification(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {
@@ -710,12 +708,12 @@ func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMap
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMappings(apiObjects []awstypes.InstanceBlockDeviceMapping) []interface{} {
+func flattenInstanceBlockDeviceMappings(apiObjects []awstypes.InstanceBlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenInstanceBlockDeviceMapping(apiObject))
@@ -724,12 +722,12 @@ func flattenInstanceBlockDeviceMappings(apiObjects []awstypes.InstanceBlockDevic
 	return tfList
 }
 
-func flattenSystemsManagerAgent(apiObject *awstypes.SystemsManagerAgent) map[string]interface{} {
+func flattenSystemsManagerAgent(apiObject *awstypes.SystemsManagerAgent) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.UninstallAfterBuild; v != nil {
 		tfMap["uninstall_after_build"] = aws.ToBool(v)

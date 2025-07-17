@@ -167,7 +167,8 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
-	_, err := conn.DescribeSlackChannelConfigurations(ctx, &chatbot.DescribeSlackChannelConfigurationsInput{})
+	input := chatbot.DescribeSlackChannelConfigurationsInput{}
+	_, err := conn.DescribeSlackChannelConfigurations(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

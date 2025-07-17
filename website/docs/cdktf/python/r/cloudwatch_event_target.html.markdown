@@ -14,6 +14,12 @@ Provides an EventBridge Target resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+-> **Note:** In order to be able to have your AWS Lambda function or
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+
 ## Example Usage
 
 ### Kinesis Usage
@@ -620,12 +626,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
--> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
-   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
-
 The following arguments are required:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the target.
@@ -649,7 +649,7 @@ The following arguments are optional:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
-* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker Pipeline. Documented below. A maximum of 1 are allowed.
+* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker AI Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
 
@@ -747,12 +747,12 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ### sagemaker_pipeline_target
 
-* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution.
+* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution.
 
 #### pipeline_parameter_list
 
-* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
-* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+* `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
 
 ### appsync_target
 
@@ -787,4 +787,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-30fb0be9a03ffcd7847aa313031e1f36e97c90053a9105717968ef018d18720c -->
+<!-- cache-key: cdktf-0.20.8 input-fdc2f713a76965d636fc8d89157bf97c323ab9142eb0af278d9b82a78994c024 -->

@@ -58,7 +58,7 @@ func resourceMetricsDestination() *schema.Resource {
 	}
 }
 
-func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -89,7 +89,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceMetricsDestinationRead(ctx, d, meta)...)
 }
 
-func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 

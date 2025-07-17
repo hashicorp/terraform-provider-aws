@@ -60,7 +60,7 @@ func resourceTableItem() *schema.Resource {
 	}
 }
 
-func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
+func validateTableItem(v any, k string) (ws []string, errors []error) {
 	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
 		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
@@ -68,7 +68,7 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -135,7 +135,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -215,7 +215,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -227,10 +227,11 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	rangeKey := d.Get("range_key").(string)
 	queryKey := expandTableItemQueryKey(attributes, hashKey, rangeKey)
 
-	_, err = conn.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+	input := dynamodb.DeleteItemInput{
 		Key:       queryKey,
 		TableName: aws.String(d.Get(names.AttrTableName).(string)),
-	})
+	}
+	_, err = conn.DeleteItem(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DynamoDB Table Item (%s): %s", d.Id(), err)

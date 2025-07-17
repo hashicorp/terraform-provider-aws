@@ -38,8 +38,6 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -93,7 +91,7 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -110,7 +108,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	}
 
 	if v, ok := d.GetOk("options"); ok {
-		input.Options = expandCreateTransitGatewayPeeringAttachmentRequestOptions(v.([]interface{}))
+		input.Options = expandCreateTransitGatewayPeeringAttachmentRequestOptions(v.([]any))
 	}
 
 	output, err := conn.CreateTransitGatewayPeeringAttachment(ctx, input)
@@ -128,7 +126,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	return append(diags, resourceTransitGatewayPeeringAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -168,7 +166,7 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceTransitGatewayPeeringAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -176,14 +174,15 @@ func resourceTransitGatewayPeeringAttachmentUpdate(ctx context.Context, d *schem
 	return append(diags, resourceTransitGatewayPeeringAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Peering Attachment: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPeeringAttachment(ctx, &ec2.DeleteTransitGatewayPeeringAttachmentInput{
+	input := ec2.DeleteTransitGatewayPeeringAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayPeeringAttachment(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return diags
@@ -200,14 +199,14 @@ func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schem
 	return diags
 }
 
-func expandCreateTransitGatewayPeeringAttachmentRequestOptions(tfMap []interface{}) *awstypes.CreateTransitGatewayPeeringAttachmentRequestOptions {
+func expandCreateTransitGatewayPeeringAttachmentRequestOptions(tfMap []any) *awstypes.CreateTransitGatewayPeeringAttachmentRequestOptions {
 	if len(tfMap) == 0 || tfMap[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CreateTransitGatewayPeeringAttachmentRequestOptions{}
 
-	m := tfMap[0].(map[string]interface{})
+	m := tfMap[0].(map[string]any)
 
 	if v, ok := m["dynamic_routing"].(string); ok {
 		apiObject.DynamicRouting = awstypes.DynamicRoutingValue(v)
@@ -216,12 +215,12 @@ func expandCreateTransitGatewayPeeringAttachmentRequestOptions(tfMap []interface
 	return apiObject
 }
 
-func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []interface{} {
+func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"dynamic_routing": apiObject.DynamicRouting,
 	}}
 }

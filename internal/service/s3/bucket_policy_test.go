@@ -11,6 +11,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -234,18 +235,6 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDoc(t *testing.T) {
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
 			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -265,17 +254,6 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDocNotPrincipal(t *testing.T) {
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
 			},
-			{
-				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-				PlanOnly: true,
-			},
-			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -286,6 +264,7 @@ func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_policy.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -295,24 +274,60 @@ func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncodeOrder2(rName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName2),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncodeOrder3(rName3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 			{
-				Config:   testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName3),
-				PlanOnly: true,
+				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -944,7 +959,7 @@ resource "aws_s3_bucket_policy" "test" {
 }
 
 func testAccBucketPolicyConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
 

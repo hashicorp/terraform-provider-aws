@@ -53,7 +53,7 @@ func resourceListenerCertificate() *schema.Resource {
 	}
 }
 
-func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -67,7 +67,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 		ListenerArn: aws.String(listenerARN),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func() (any, error) {
 		return conn.AddListenerCertificates(ctx, input)
 	})
 
@@ -80,7 +80,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceListenerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -89,7 +89,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
 		return findListenerCertificateByTwoPartKey(ctx, conn, listenerARN, certificateARN)
 	}, d.IsNewResource())
 
@@ -109,7 +109,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 

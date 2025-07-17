@@ -60,7 +60,7 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
@@ -75,12 +75,12 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("access_string", user.AccessString)
 	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"password_count": aws.ToInt32(v.PasswordCount),
 			names.AttrType:   v.Type,
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
+		if err := d.Set("authentication_mode", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}

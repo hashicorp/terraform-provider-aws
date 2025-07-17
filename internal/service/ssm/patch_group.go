@@ -55,7 +55,7 @@ func resourcePatchGroup() *schema.Resource {
 	}
 }
 
-func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -79,7 +79,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePatchGroupRead(ctx, d, meta)...)
 }
 
-func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -111,7 +111,7 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

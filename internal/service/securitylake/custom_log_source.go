@@ -39,13 +39,9 @@ func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type customLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (r *customLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_custom_log_source"
 }
 
 func (r *customLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -320,6 +316,7 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 }
 
 type customLogSourceResourceModel struct {
+	framework.WithRegionModel
 	Attributes      fwtypes.ListNestedObjectValueOf[customLogSourceAttributesModel]    `tfsdk:"attributes"`
 	Configuration   fwtypes.ListNestedObjectValueOf[customLogSourceConfigurationModel] `tfsdk:"configuration"`
 	EventClasses    fwtypes.SetValueOf[types.String]                                   `tfsdk:"event_classes"`

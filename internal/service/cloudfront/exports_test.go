@@ -12,7 +12,6 @@ var (
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
-	ResourceKeyValueStore               = newKeyValueStoreResource
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity

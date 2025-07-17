@@ -82,7 +82,7 @@ const (
 	provisionedConcurrencyConfigResourceIDPartCount = 2
 )
 
-func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -111,7 +111,7 @@ func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -171,7 +171,7 @@ func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -235,7 +235,7 @@ func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lam
 }
 
 func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
 		if tfresource.NotFound(err) {

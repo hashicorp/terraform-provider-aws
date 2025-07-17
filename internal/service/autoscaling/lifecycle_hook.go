@@ -88,7 +88,7 @@ func resourceLifecycleHook() *schema.Resource {
 	}
 }
 
-func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.PutLifecycleHook(ctx, input)
 		},
 		errCodeValidationError, "Unable to publish test message to notification target")
@@ -137,7 +137,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceLifecycleHookRead(ctx, d, meta)...)
 }
 
-func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -164,15 +164,16 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
-	_, err := conn.DeleteLifecycleHook(ctx, &autoscaling.DeleteLifecycleHookInput{
+	input := autoscaling.DeleteLifecycleHookInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLifecycleHook(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No Lifecycle Hook found") {
 		return diags
@@ -185,7 +186,7 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())

@@ -54,7 +54,7 @@ func resourceNetworkInterfaceSGAttachment() *schema.Resource {
 	}
 }
 
-func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -99,13 +99,13 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceNetworkInterfaceSGAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (any, error) {
 		return findNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
@@ -135,7 +135,7 @@ func maxDuration(a, b time.Duration) time.Duration {
 	return b
 }
 
-func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -186,7 +186,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "_")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Please use '<NetworkInterfaceId>_<SecurityGroupID>", d.Id())

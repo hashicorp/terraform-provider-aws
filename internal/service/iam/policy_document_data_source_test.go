@@ -244,8 +244,7 @@ func TestAccIAMPolicyDocumentDataSource_invalidSidValid(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccPolicyDocumentDataSourceConfig_invalidSid,
-				PlanOnly: true,
+				Config: testAccPolicyDocumentDataSourceConfig_invalidSid,
 			},
 		},
 	})

@@ -121,10 +121,16 @@ func resourceKeySigningKey() *schema.Resource {
 				}, false),
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
-func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -155,7 +161,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -167,7 +173,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -207,7 +213,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -251,7 +257,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if changeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -264,7 +270,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -292,7 +298,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if output.ChangeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -313,7 +319,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -353,7 +359,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 }
 
 func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
 		if tfresource.NotFound(err) {

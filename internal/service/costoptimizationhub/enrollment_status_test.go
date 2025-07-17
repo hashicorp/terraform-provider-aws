@@ -136,7 +136,8 @@ func testAccCheckEnrollmentStatusDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			out, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
+			input := costoptimizationhub.ListEnrollmentStatusesInput{}
+			out, err := conn.ListEnrollmentStatuses(ctx, &input)
 			if err != nil {
 				return err
 			}
@@ -164,7 +165,8 @@ func testAccCheckEnrollmentStatusIsActive(ctx context.Context, name string) reso
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
-		out, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
+		input := costoptimizationhub.ListEnrollmentStatusesInput{}
+		out, err := conn.ListEnrollmentStatuses(ctx, &input)
 		if err != nil {
 			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, rs.Primary.ID, err)
 		}
@@ -188,9 +190,10 @@ func testAccCheckEnrollmentStatusExists(ctx context.Context, name string, enroll
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
-		resp, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{
+		input := costoptimizationhub.ListEnrollmentStatusesInput{
 			IncludeOrganizationInfo: false,
-		})
+		}
+		resp, err := conn.ListEnrollmentStatuses(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, rs.Primary.ID, err)

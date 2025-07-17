@@ -38,8 +38,6 @@ func resourceWorkflow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -683,7 +681,7 @@ func resourceWorkflow() *schema.Resource {
 	}
 }
 
-func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -695,12 +693,12 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("on_exception_steps"); ok && len(v.([]interface{})) > 0 {
-		input.OnExceptionSteps = expandWorkflowSteps(v.([]interface{}))
+	if v, ok := d.GetOk("on_exception_steps"); ok && len(v.([]any)) > 0 {
+		input.OnExceptionSteps = expandWorkflowSteps(v.([]any))
 	}
 
-	if v, ok := d.GetOk("steps"); ok && len(v.([]interface{})) > 0 {
-		input.Steps = expandWorkflowSteps(v.([]interface{}))
+	if v, ok := d.GetOk("steps"); ok && len(v.([]any)) > 0 {
+		input.Steps = expandWorkflowSteps(v.([]any))
 	}
 
 	output, err := conn.CreateWorkflow(ctx, input)
@@ -714,7 +712,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -744,7 +742,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -752,14 +750,15 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Transfer Workflow: %s", d.Id())
-	_, err := conn.DeleteWorkflow(ctx, &transfer.DeleteWorkflowInput{
+	input := transfer.DeleteWorkflowInput{
 		WorkflowId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteWorkflow(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -797,7 +796,7 @@ func findWorkflowByID(ctx context.Context, conn *transfer.Client, id string) (*a
 	return output.Workflow, nil
 }
 
-func expandWorkflowSteps(tfList []interface{}) []awstypes.WorkflowStep {
+func expandWorkflowSteps(tfList []any) []awstypes.WorkflowStep {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -805,7 +804,7 @@ func expandWorkflowSteps(tfList []interface{}) []awstypes.WorkflowStep {
 	var apiObjects []awstypes.WorkflowStep
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -814,23 +813,23 @@ func expandWorkflowSteps(tfList []interface{}) []awstypes.WorkflowStep {
 			Type: awstypes.WorkflowStepType(tfMap[names.AttrType].(string)),
 		}
 
-		if v, ok := tfMap["copy_step_details"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["copy_step_details"].([]any); ok && len(v) > 0 {
 			apiObject.CopyStepDetails = expandCopyStepDetails(v)
 		}
 
-		if v, ok := tfMap["custom_step_details"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["custom_step_details"].([]any); ok && len(v) > 0 {
 			apiObject.CustomStepDetails = expandCustomStepDetails(v)
 		}
 
-		if v, ok := tfMap["decrypt_step_details"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["decrypt_step_details"].([]any); ok && len(v) > 0 {
 			apiObject.DecryptStepDetails = expandDecryptStepDetails(v)
 		}
 
-		if v, ok := tfMap["delete_step_details"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["delete_step_details"].([]any); ok && len(v) > 0 {
 			apiObject.DeleteStepDetails = expandDeleteStepDetails(v)
 		}
 
-		if v, ok := tfMap["tag_step_details"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["tag_step_details"].([]any); ok && len(v) > 0 {
 			apiObject.TagStepDetails = expandTagStepDetails(v)
 		}
 
@@ -840,15 +839,15 @@ func expandWorkflowSteps(tfList []interface{}) []awstypes.WorkflowStep {
 	return apiObjects
 }
 
-func flattenWorkflowSteps(apiObjects []awstypes.WorkflowStep) []interface{} {
+func flattenWorkflowSteps(apiObjects []awstypes.WorkflowStep) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrType: apiObject.Type,
 		}
 
@@ -878,16 +877,16 @@ func flattenWorkflowSteps(apiObjects []awstypes.WorkflowStep) []interface{} {
 	return tfList
 }
 
-func expandCopyStepDetails(tfMap []interface{}) *awstypes.CopyStepDetails {
+func expandCopyStepDetails(tfMap []any) *awstypes.CopyStepDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.CopyStepDetails{}
 
-	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw["destination_file_location"].([]any); ok && len(v) > 0 {
 		apiObject.DestinationFileLocation = expandInputFileLocation(v)
 	}
 
@@ -906,12 +905,12 @@ func expandCopyStepDetails(tfMap []interface{}) *awstypes.CopyStepDetails {
 	return apiObject
 }
 
-func flattenCopyStepDetails(apiObject *awstypes.CopyStepDetails) []interface{} {
+func flattenCopyStepDetails(apiObject *awstypes.CopyStepDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"overwrite_existing": apiObject.OverwriteExisting,
 	}
 
@@ -927,15 +926,15 @@ func flattenCopyStepDetails(apiObject *awstypes.CopyStepDetails) []interface{} {
 		tfMap["source_file_location"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCustomStepDetails(tfMap []interface{}) *awstypes.CustomStepDetails {
+func expandCustomStepDetails(tfMap []any) *awstypes.CustomStepDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.CustomStepDetails{}
 
@@ -958,12 +957,12 @@ func expandCustomStepDetails(tfMap []interface{}) *awstypes.CustomStepDetails {
 	return apiObject
 }
 
-func flattenCustomStepDetails(apiObject *awstypes.CustomStepDetails) []interface{} {
+func flattenCustomStepDetails(apiObject *awstypes.CustomStepDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -981,19 +980,19 @@ func flattenCustomStepDetails(apiObject *awstypes.CustomStepDetails) []interface
 		tfMap["timeout_seconds"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandDecryptStepDetails(tfMap []interface{}) *awstypes.DecryptStepDetails {
+func expandDecryptStepDetails(tfMap []any) *awstypes.DecryptStepDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.DecryptStepDetails{}
 
-	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw["destination_file_location"].([]any); ok && len(v) > 0 {
 		apiObject.DestinationFileLocation = expandInputFileLocation(v)
 	}
 
@@ -1016,12 +1015,12 @@ func expandDecryptStepDetails(tfMap []interface{}) *awstypes.DecryptStepDetails 
 	return apiObject
 }
 
-func flattenDecryptStepDetails(apiObject *awstypes.DecryptStepDetails) []interface{} {
+func flattenDecryptStepDetails(apiObject *awstypes.DecryptStepDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"overwrite_existing": apiObject.OverwriteExisting,
 		names.AttrType:       apiObject.Type,
 	}
@@ -1038,15 +1037,15 @@ func flattenDecryptStepDetails(apiObject *awstypes.DecryptStepDetails) []interfa
 		tfMap["source_file_location"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandDeleteStepDetails(tfMap []interface{}) *awstypes.DeleteStepDetails {
+func expandDeleteStepDetails(tfMap []any) *awstypes.DeleteStepDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.DeleteStepDetails{}
 
@@ -1061,12 +1060,12 @@ func expandDeleteStepDetails(tfMap []interface{}) *awstypes.DeleteStepDetails {
 	return apiObject
 }
 
-func flattenDeleteStepDetails(apiObject *awstypes.DeleteStepDetails) []interface{} {
+func flattenDeleteStepDetails(apiObject *awstypes.DeleteStepDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1076,15 +1075,15 @@ func flattenDeleteStepDetails(apiObject *awstypes.DeleteStepDetails) []interface
 		tfMap["source_file_location"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandTagStepDetails(tfMap []interface{}) *awstypes.TagStepDetails {
+func expandTagStepDetails(tfMap []any) *awstypes.TagStepDetails {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.TagStepDetails{}
 
@@ -1096,19 +1095,19 @@ func expandTagStepDetails(tfMap []interface{}) *awstypes.TagStepDetails {
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrTags].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw[names.AttrTags].([]any); ok && len(v) > 0 {
 		apiObject.Tags = expandS3Tags(v)
 	}
 
 	return apiObject
 }
 
-func flattenTagStepDetails(apiObject *awstypes.TagStepDetails) []interface{} {
+func flattenTagStepDetails(apiObject *awstypes.TagStepDetails) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1122,35 +1121,35 @@ func flattenTagStepDetails(apiObject *awstypes.TagStepDetails) []interface{} {
 		tfMap[names.AttrTags] = flattenS3Tags(apiObject.Tags)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandInputFileLocation(tfMap []interface{}) *awstypes.InputFileLocation {
+func expandInputFileLocation(tfMap []any) *awstypes.InputFileLocation {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.InputFileLocation{}
 
-	if v, ok := tfMapRaw["efs_file_location"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw["efs_file_location"].([]any); ok && len(v) > 0 {
 		apiObject.EfsFileLocation = expandEFSFileLocation(v)
 	}
 
-	if v, ok := tfMapRaw["s3_file_location"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw["s3_file_location"].([]any); ok && len(v) > 0 {
 		apiObject.S3FileLocation = expandS3InputFileLocation(v)
 	}
 
 	return apiObject
 }
 
-func flattenInputFileLocation(apiObject *awstypes.InputFileLocation) []interface{} {
+func flattenInputFileLocation(apiObject *awstypes.InputFileLocation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EfsFileLocation; v != nil {
 		tfMap["efs_file_location"] = flattenEFSFileLocation(v)
@@ -1160,15 +1159,15 @@ func flattenInputFileLocation(apiObject *awstypes.InputFileLocation) []interface
 		tfMap["s3_file_location"] = flattenS3InputFileLocation(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandEFSFileLocation(tfMap []interface{}) *awstypes.EfsFileLocation {
+func expandEFSFileLocation(tfMap []any) *awstypes.EfsFileLocation {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.EfsFileLocation{}
 
@@ -1183,12 +1182,12 @@ func expandEFSFileLocation(tfMap []interface{}) *awstypes.EfsFileLocation {
 	return apiObject
 }
 
-func flattenEFSFileLocation(apiObject *awstypes.EfsFileLocation) []interface{} {
+func flattenEFSFileLocation(apiObject *awstypes.EfsFileLocation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FileSystemId; v != nil {
 		tfMap[names.AttrFileSystemID] = aws.ToString(v)
@@ -1198,15 +1197,15 @@ func flattenEFSFileLocation(apiObject *awstypes.EfsFileLocation) []interface{} {
 		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandS3InputFileLocation(tfMap []interface{}) *awstypes.S3InputFileLocation {
+func expandS3InputFileLocation(tfMap []any) *awstypes.S3InputFileLocation {
 	if tfMap == nil {
 		return nil
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMapRaw := tfMap[0].(map[string]any)
 
 	apiObject := &awstypes.S3InputFileLocation{}
 
@@ -1221,12 +1220,12 @@ func expandS3InputFileLocation(tfMap []interface{}) *awstypes.S3InputFileLocatio
 	return apiObject
 }
 
-func flattenS3InputFileLocation(apiObject *awstypes.S3InputFileLocation) []interface{} {
+func flattenS3InputFileLocation(apiObject *awstypes.S3InputFileLocation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Bucket; v != nil {
 		tfMap[names.AttrBucket] = aws.ToString(v)
@@ -1236,10 +1235,10 @@ func flattenS3InputFileLocation(apiObject *awstypes.S3InputFileLocation) []inter
 		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandS3Tags(tfList []interface{}) []awstypes.S3Tag {
+func expandS3Tags(tfList []any) []awstypes.S3Tag {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1247,7 +1246,7 @@ func expandS3Tags(tfList []interface{}) []awstypes.S3Tag {
 	var apiObjects []awstypes.S3Tag
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, _ := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.S3Tag{}
 
@@ -1265,15 +1264,15 @@ func expandS3Tags(tfList []interface{}) []awstypes.S3Tag {
 	return apiObjects
 }
 
-func flattenS3Tags(apiObjects []awstypes.S3Tag) []interface{} {
+func flattenS3Tags(apiObjects []awstypes.S3Tag) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		flattenedObject := map[string]interface{}{}
+		flattenedObject := map[string]any{}
 
 		if v := apiObject.Key; v != nil {
 			flattenedObject[names.AttrKey] = aws.ToString(v)

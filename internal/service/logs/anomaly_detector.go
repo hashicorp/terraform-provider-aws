@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,7 +35,9 @@ import (
 // @Testing(importStateIdFunc="testAccAnomalyDetectorImportStateIDFunc")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="enabled")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/logs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &anomalyDetectorResource{}
 
@@ -43,11 +45,7 @@ func newAnomalyDetectorResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type anomalyDetectorResource struct {
-	framework.ResourceWithConfigure
-}
-
-func (*anomalyDetectorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_anomaly_detector"
+	framework.ResourceWithModel[anomalyDetectorResourceModel]
 }
 
 func (r *anomalyDetectorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -147,7 +145,7 @@ func (r *anomalyDetectorResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findLogAnomalyDetectorByARN(ctx, conn, data.AnomalyDetectorARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -182,7 +180,7 @@ func (r *anomalyDetectorResource) Update(ctx context.Context, request resource.U
 
 	conn := r.Meta().LogsClient(ctx)
 
-	diff, d := fwflex.Calculate(ctx, new, old)
+	diff, d := fwflex.Diff(ctx, new, old)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
@@ -236,10 +234,6 @@ func (r *anomalyDetectorResource) ImportState(ctx context.Context, request resou
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
-func (r *anomalyDetectorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Client, arn string) (*cloudwatchlogs.GetLogAnomalyDetectorOutput, error) {
 	input := cloudwatchlogs.GetLogAnomalyDetectorInput{
 		AnomalyDetectorArn: aws.String(arn),
@@ -253,8 +247,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -270,6 +263,7 @@ func findLogAnomalyDetector(ctx context.Context, conn *cloudwatchlogs.Client, in
 }
 
 type anomalyDetectorResourceModel struct {
+	framework.WithRegionModel
 	AnomalyDetectorARN    types.String                                     `tfsdk:"arn"`
 	AnomalyVisibilityTime types.Int64                                      `tfsdk:"anomaly_visibility_time"`
 	DetectorName          types.String                                     `tfsdk:"detector_name"`

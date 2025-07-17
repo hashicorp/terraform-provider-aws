@@ -26,6 +26,7 @@ data "aws_rds_reserved_instance_offering" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_class` - (Required) DB instance class for the reserved DB instance.
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
 * `multi_az` - (Required) Whether the reservation applies to Multi-AZ deployments.

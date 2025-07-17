@@ -88,7 +88,7 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 * `container_overrides` - (Optional) One or more container overrides that are sent to a task. See below.
 * `cpu` - (Optional) The CPU override for the task.
 * `execution_role_arn` - (Optional) Amazon Resource Name (ARN) of the task execution role override for the task.
-* `inference_accelerator_overrides` - (Optional) Elastic Inference accelerator override for the task. See below.
+* `inference_accelerator_overrides` - (Optional) **DEPRECATED** Elastic Inference accelerator override for the task. See below.
 * `memory` - (Optional) The memory override for the task.
 * `task_role_arn` - (Optional) Amazon Resource Name (ARN) of the role that containers in this task can assume.
 
@@ -136,4 +136,4 @@ This data source exports the following attributes in addition to the arguments a
 * `task_arns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `task_definition` attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-e4a4f9cc9f61093c0b25b3b6303b804642909347d59647c613ab6248c6e8f762 -->
+<!-- cache-key: cdktf-0.20.8 input-04eaaebcee71de70c7c4b510fb4c21b0b4155ad960e6259f6625e1b29064a03c -->

@@ -130,7 +130,7 @@ func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	}
 }
 
-func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -142,7 +142,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	}
 
 	input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
-		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]interface{})),
+		AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
 		ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 		VerifiedAccessInstanceId: aws.String(vaiID),
 	}
@@ -158,7 +158,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationCreate(ctx context.Contex
 	return append(diags, resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -188,7 +188,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx context.Context,
 	return diags
 }
 
-func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -201,7 +201,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 		}
 
 		input := &ec2.ModifyVerifiedAccessInstanceLoggingConfigurationInput{
-			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]interface{})),
+			AccessLogs:               expandVerifiedAccessInstanceAccessLogs(d.Get("access_logs").([]any)),
 			ClientToken:              aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
 			VerifiedAccessInstanceId: aws.String(vaiID),
 		}
@@ -216,7 +216,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationUpdate(ctx context.Contex
 	return append(diags, resourceVerifiedAccessInstanceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -265,19 +265,19 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 	return diags
 }
 
-func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.VerifiedAccessLogOptions {
+func expandVerifiedAccessInstanceAccessLogs(accessLogs []any) *types.VerifiedAccessLogOptions {
 	if len(accessLogs) == 0 || accessLogs[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := accessLogs[0].(map[string]interface{})
+	tfMap, ok := accessLogs[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -285,7 +285,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 		result.IncludeTrustContext = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["kinesis_data_firehose"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_data_firehose"].([]any); ok && len(v) > 0 {
 		result.KinesisDataFirehose = expandVerifiedAccessLogKinesisDataFirehose(v)
 	}
 
@@ -293,19 +293,19 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 		result.LogVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
 		result.S3 = expandVerifiedAccessLogS3(v)
 	}
 
 	return result
 }
 
-func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []interface{}) *types.VerifiedAccessLogCloudWatchLogsDestinationOptions {
+func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []any) *types.VerifiedAccessLogCloudWatchLogsDestinationOptions {
 	if len(cloudWatchLogs) == 0 || cloudWatchLogs[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := cloudWatchLogs[0].(map[string]interface{})
+	tfMap, ok := cloudWatchLogs[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -321,12 +321,12 @@ func expandVerifiedAccessLogCloudWatchLogs(cloudWatchLogs []interface{}) *types.
 	return result
 }
 
-func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []interface{}) *types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions {
+func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []any) *types.VerifiedAccessLogKinesisDataFirehoseDestinationOptions {
 	if len(kinesisDataFirehose) == 0 || kinesisDataFirehose[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := kinesisDataFirehose[0].(map[string]interface{})
+	tfMap, ok := kinesisDataFirehose[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -342,12 +342,12 @@ func expandVerifiedAccessLogKinesisDataFirehose(kinesisDataFirehose []interface{
 	return result
 }
 
-func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3DestinationOptions {
+func expandVerifiedAccessLogS3(s3 []any) *types.VerifiedAccessLogS3DestinationOptions {
 	if len(s3) == 0 || s3[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := s3[0].(map[string]interface{})
+	tfMap, ok := s3[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -375,8 +375,8 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 	return result
 }
 
-func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs) []any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
 		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
@@ -398,11 +398,11 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 		tfMap["s3"] = flattenVerifiedAccessLogS3(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []interface{} {
-	tfMap := map[string]interface{}{
+func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCloudWatchLogsDestination) []any {
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -410,11 +410,11 @@ func flattenVerifiedAccessLogCloudWatchLogs(apiObject *types.VerifiedAccessLogCl
 		tfMap["log_group"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []interface{} {
-	tfMap := map[string]interface{}{
+func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccessLogKinesisDataFirehoseDestination) []any {
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -422,11 +422,11 @@ func flattenVerifiedAccessLogKinesisDataFirehose(apiObject *types.VerifiedAccess
 		tfMap["delivery_stream"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []interface{} {
-	tfMap := map[string]interface{}{
+func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination) []any {
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
@@ -442,5 +442,5 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

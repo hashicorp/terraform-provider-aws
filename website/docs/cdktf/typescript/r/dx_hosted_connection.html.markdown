@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection.
-* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps and 10Gbps. Case sensitive.
+* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, and 25Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Hosted Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/hosted_connection.html).
 * `connectionId` - (Required) The ID of the interconnect or LAG.
 * `ownerAccountId` - (Required) The ID of the AWS account of the customer for the connection.
 * `vlan` - (Required) The dedicated VLAN provisioned to the hosted connection.
@@ -64,4 +64,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `providerName` - The name of the service provider associated with the connection.
 * `region` - The AWS Region where the connection is located.
 
-<!-- cache-key: cdktf-0.20.8 input-97bc5655cc271850c8ea111d0eeb9833b2352964ab1dc9e68ab175109b7b9dee -->
+<!-- cache-key: cdktf-0.20.8 input-a3ea14d27c161d39eafbe4bd4d7e508f4b6b8b11902cf1e7650db60500c51747 -->

@@ -126,11 +126,11 @@ func TestNewCustomFilterList(t *testing.T) {
 		return ret
 	}
 
-	filters.Add(map[string]interface{}{
+	filters.Add(map[string]any{
 		names.AttrName:   "foo",
 		names.AttrValues: valuesSet("bar", "baz"),
 	})
-	filters.Add(map[string]interface{}{
+	filters.Add(map[string]any{
 		names.AttrName:   "pizza",
 		names.AttrValues: valuesSet("cheese"),
 	})

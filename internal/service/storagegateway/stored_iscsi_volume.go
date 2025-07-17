@@ -123,12 +123,10 @@ func resourceStorediSCSIVolume() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -168,7 +166,7 @@ func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceStorediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -217,7 +215,7 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -225,7 +223,7 @@ func resourceStorediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceStorediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -233,7 +231,7 @@ func resourceStorediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](ctx, timeout, func() (any, error) {
 		return conn.DeleteVolume(ctx, &storagegateway.DeleteVolumeInput{
 			VolumeARN: aws.String(d.Id()),
 		})
@@ -302,7 +300,7 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 }
 
 func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, volumeARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findStorediSCSIVolumeByARN(ctx, conn, volumeARN)
 
 		if tfresource.NotFound(err) {

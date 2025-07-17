@@ -62,7 +62,7 @@ func ResourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -86,13 +86,14 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	resp, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
+	describeGroupInput := dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []string{d.Id()},
-	})
+	}
+	resp, err := conn.DescribeParameterGroups(ctx, &describeGroupInput)
 
 	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
@@ -112,9 +113,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	pg := resp.ParameterGroups[0]
 
-	paramresp, err := conn.DescribeParameters(ctx, &dax.DescribeParametersInput{
+	describeParametersInput := dax.DescribeParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
-	})
+	}
+	paramresp, err := conn.DescribeParameters(ctx, &describeParametersInput)
 
 	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
 		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
@@ -137,7 +139,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
@@ -159,7 +161,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 

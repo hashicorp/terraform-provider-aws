@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +39,6 @@ func resourceDataCatalog() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -81,7 +78,7 @@ func resourceDataCatalog() *schema.Resource {
 	}
 }
 
-func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
@@ -94,8 +91,8 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		Type:        types.DataCatalogType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+		input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	_, err := conn.CreateDataCatalog(ctx, input)
@@ -109,7 +106,7 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDataCatalogRead(ctx, d, meta)...)
 }
 
-func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
@@ -140,10 +137,10 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
 	// Because the API sets default values, what's returned by the API is different than what's set by the user.
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
 		parameters := make(map[string]string, 0)
 
-		for key, val := range v.(map[string]interface{}) {
+		for key, val := range v.(map[string]any) {
 			if v, ok := dataCatalog.Parameters[key]; ok {
 				parameters[key] = v
 			} else {
@@ -159,7 +156,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
@@ -172,8 +169,8 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange(names.AttrParameters) {
-			if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-				input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+			if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+				input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 			}
 		}
 
@@ -187,15 +184,16 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceDataCatalogRead(ctx, d, meta)...)
 }
 
-func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog (%s)", d.Id())
-	_, err := conn.DeleteDataCatalog(ctx, &athena.DeleteDataCatalogInput{
+	input := athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataCatalog(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

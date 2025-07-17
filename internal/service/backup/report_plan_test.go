@@ -235,7 +235,8 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListReportPlans(ctx, &backup.ListReportPlansInput{})
+	input := backup.ListReportPlansInput{}
+	_, err := conn.ListReportPlans(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -376,7 +377,7 @@ resource "aws_backup_report_plan" "test" {
       data.aws_caller_identity.current.id
     ]
     regions = [
-      data.aws_region.current.name
+      data.aws_region.current.region
     ]
     report_template = "RESTORE_JOB_REPORT"
   }

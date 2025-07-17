@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -45,7 +45,7 @@ class MyConvertedCode extends TerraformStack {
     awsS3TablesNamespaceExample.overrideLogicalId("example");
     const awsS3TablesTableExample = new S3TablesTable(this, "example_2", {
       format: "ICEBERG",
-      name: "example-table",
+      name: "example_table",
       namespace: Token.asString(awsS3TablesNamespaceExample.namespace),
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
@@ -67,37 +67,47 @@ The following arguments are required:
 * `name` - (Required) Name of the table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
+  A full list of table naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#naming-rules-table).
 * `namespace` - (Required) Name of the namespace for this table.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `tableBucketArn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
-The following argument is optional:
+The following arguments are optional:
 
-* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration block.
-  [See `maintenanceConfiguration` below](#maintenance_configuration)
+* `encryptionConfiguration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryptionConfiguration` below](#encryption_configuration).
+* `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration object.
+  [See `maintenanceConfiguration` below](#maintenance_configuration).
 
-### maintenance_configuration
+### `encryptionConfiguration`
 
-The `maintenanceConfiguration` configuration block supports the following arguments:
+The `encryptionConfiguration` object supports the following arguments:
 
-* `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
-  [See `iceberg_compaction` below](#iceberg_compaction)
-* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
-  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management)
+* `kmsKeyArn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sseAlgorithm`
+* `sseAlgorithm` - (Required) One of `aws:kms` or `AES256`
+
+### `maintenanceConfiguration`
+
+The `maintenanceConfiguration` object supports the following arguments:
+
+* `iceberg_compaction` - (Required) A single Iceberg compaction settings object.
+  [See `iceberg_compaction` below](#iceberg_compaction).
+* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings object.
+  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management).
 
 ### `iceberg_compaction`
 
-The `iceberg_compaction` configuration block supports the following arguments:
+The `iceberg_compaction` object supports the following arguments:
 
-* `settings` - (Required) Settings for compaction.
-  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings)
+* `settings` - (Required) Settings object for compaction.
+  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_compaction.settings`
 
-The `iceberg_compaction.settings` configuration block supports the following argument:
+The `iceberg_compaction.settings` object supports the following argument:
 
 * `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
   Must be between `64` and `512`.
@@ -106,14 +116,14 @@ The `iceberg_compaction.settings` configuration block supports the following arg
 
 The `iceberg_snapshot_management` configuration block supports the following arguments:
 
-* `settings` - (Required) Settings for snapshot management.
-  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings)
+* `settings` - (Required) Settings object for snapshot management.
+  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings).
 * `status` - (Required) Whether the configuration is enabled.
   Valid values are `enabled` and `disabled`.
 
 ### `iceberg_snapshot_management.settings`
 
-The `iceberg_snapshot_management.settings` configuration block supports the following argument:
+The `iceberg_snapshot_management.settings` object supports the following argument:
 
 * `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletiion.
   Must be at least `1`.
@@ -168,4 +178,4 @@ Using `terraform import`, import S3 Tables Table using the `tableBucketArn`, the
 % terraform import aws_s3tables_table.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8f3e7f177b00e212e962fca8903f022245d26601468f14ba20d662a02b6a350c -->
+<!-- cache-key: cdktf-0.20.8 input-a23e8dc822ca9df49432f86028589e4f3640480f7074f385e59b6a968cc08cbf -->

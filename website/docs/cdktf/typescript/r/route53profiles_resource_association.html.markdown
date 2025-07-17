@@ -64,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Profile Resource Association.
 * `profileId` - (Required) ID of the profile associated with the VPC.
@@ -121,4 +121,4 @@ Using `terraform import`, import Route 53 Profiles Resource Association using th
 % terraform import aws_route53profiles_resource_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e19b5cf3e7989f3d050a32e6b470779a272fce0b5118d964b3eb31a970c708e6 -->
+<!-- cache-key: cdktf-0.20.8 input-143bca5df297b638b832aea9147586142dbea0d68b832584d8f560679bdbcb48 -->

@@ -62,7 +62,7 @@ func resourceNamedQuery() *schema.Resource {
 	}
 }
 
-func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -92,7 +92,7 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceNamedQueryRead(ctx, d, meta)...)
 }
 
-func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -117,14 +117,15 @@ func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[INFO] Deleting Athena Named Query: %s", d.Id())
-	_, err := conn.DeleteNamedQuery(ctx, &athena.DeleteNamedQueryInput{
+	input := athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNamedQuery(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Named Query (%s): %s", d.Id(), err)

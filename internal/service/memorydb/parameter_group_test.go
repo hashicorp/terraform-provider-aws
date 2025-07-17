@@ -42,8 +42,8 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove all",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
@@ -59,14 +59,14 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "No change",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
@@ -76,18 +76,18 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Remove partial",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "reserved-memory",
 					names.AttrValue: "0",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
@@ -102,18 +102,18 @@ func TestParameterChanges(t *testing.T) {
 		},
 		{
 			Name: "Add to existing",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
 			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
+			New: schema.NewSet(tfmemorydb.ParameterHash, []any{
+				map[string]any{
 					names.AttrName:  "appendonly",
 					names.AttrValue: "yes",
 				},
-				map[string]interface{}{
+				map[string]any{
 					names.AttrName:  "appendfsync",
 					names.AttrValue: "always",
 				},

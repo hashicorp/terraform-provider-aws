@@ -91,6 +91,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The Field Level Encryption Config ARN.
 * `callerReference` - Internal value used by CloudFront to allow future updates to the Field Level Encryption Config.
 * `etag` - The current version of the Field Level Encryption Config. For example: `E2QWRUHAPOMQZL`.
 * `id` - The identifier for the Field Level Encryption Config. For example: `K3D5EWEUDCCXON`.
@@ -127,4 +128,4 @@ Using `terraform import`, import Cloudfront Field Level Encryption Config using 
 % terraform import aws_cloudfront_field_level_encryption_config.config E74FTE3AEXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-757359a9350d143cc637cf70befbb7ac23a36d48718be8d5941639a0def4ff71 -->
+<!-- cache-key: cdktf-0.20.8 input-655d039ff4f138710e948a1c5cc5a26d79cc59a6a968be19983255203513a1a7 -->

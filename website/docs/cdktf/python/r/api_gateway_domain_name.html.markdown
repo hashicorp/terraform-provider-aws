@@ -221,6 +221,7 @@ When uploading a certificate, the following arguments are supported:
 
 ### endpoint_configuration
 
+* `ip_address_type` - (Optional) The IP address types that can invoke a DomainName. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke a DomainName, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke a DomainName. For the `PRIVATE` endpoint type, only `dualstack` is supported. Terraform performs drift detection for this argument only when the value is provided.
 * `types` - (Required) A list of endpoint types of an API or its custom domain name. For an edge-optimized API and its custom domain name, the endpoint type is `EDGE`. For a regional API and its custom domain name, the endpoint type is `REGIONAL`. For a private API, the endpoint type is `PRIVATE`.
 
 ### mutual_tls_authentication
@@ -290,4 +291,4 @@ For a private custom domain name:
 % terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com/abcde12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-25ec150889c5d422ac9e72f75a16bbcaecf570d192a7d605d5469b259ce6bff5 -->
+<!-- cache-key: cdktf-0.20.8 input-43732385caf699107a4c8860f00579988c41b96bae17592cc615388ce0525adb -->

@@ -63,7 +63,7 @@ func resourceTransitGatewayRouteTableAssociation() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.HasChange(names.AttrTransitGatewayAttachmentID) {
 					return nil
 				}
@@ -101,7 +101,7 @@ func resourceTransitGatewayRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -150,7 +150,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 	return append(diags, resourceTransitGatewayRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -179,7 +179,7 @@ func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *sch
 	return diags
 }
 
-func resourceTransitGatewayRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

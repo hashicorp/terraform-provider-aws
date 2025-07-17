@@ -45,6 +45,7 @@ func TestAccAPIGatewayV2DomainName_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.ip_address_type", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
@@ -348,6 +349,70 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 	})
 }
 
+func TestAccAPIGatewayV2DomainName_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v apigatewayv2.GetDomainNameOutput
+	resourceName := "aws_apigatewayv2_domain_name.test"
+	certResourceName := "aws_acm_certificate.test.0"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	domainName := fmt.Sprintf("%s.example.com", rName)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_ipAddressType(rName, "ipv4", certificate, key, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainNameConfig_ipAddressType(rName, "dualstack", certificate, key, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
@@ -627,4 +692,21 @@ resource "aws_apigatewayv2_domain_name" "test" {
   }
 }
 `, rName, certificate, key))
+}
+
+func testAccDomainNameConfig_ipAddressType(rName, ipAddressType, certificate, key string, count, index int) string {
+	return acctest.ConfigCompose(
+		testAccDomainNameImportedCertsConfig(rName, certificate, key, count),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_domain_name" "test" {
+  domain_name = "%[1]s.example.com"
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.test[%[2]d].arn
+    endpoint_type   = "REGIONAL"
+    ip_address_type = "%[3]s"
+    security_policy = "TLS_1_2"
+  }
+}
+`, rName, index, ipAddressType))
 }

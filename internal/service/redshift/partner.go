@@ -67,7 +67,7 @@ func resourcePartner() *schema.Resource {
 	}
 }
 
-func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -91,7 +91,7 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourcePartnerRead(ctx, d, meta)...)
 }
 
-func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -117,7 +117,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 

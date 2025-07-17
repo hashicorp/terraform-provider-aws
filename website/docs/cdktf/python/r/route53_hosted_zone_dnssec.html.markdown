@@ -103,6 +103,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Route 53 Hosted Zone identifier.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_route53_hosted_zone_dnssec` resources using the Route 53 Hosted Zone identifier. For example:
@@ -128,4 +136,4 @@ Using `terraform import`, import `aws_route53_hosted_zone_dnssec` resources usin
 % terraform import aws_route53_hosted_zone_dnssec.example Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c4b8c382f2fc6f33c01f94157d7d27795ecb00847b3a43f8ebf7840f68ff3214 -->
+<!-- cache-key: cdktf-0.20.8 input-4bd5c248521fe9e9e5382e10100d72866da7d845dd19e07c5e0b97fe1b0cb28d -->

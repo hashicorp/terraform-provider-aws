@@ -46,7 +46,9 @@ This data source exports the following attributes in addition to the arguments a
 
 - `id` - The repository name prefix.
 - `credentialArn` - ARN of the Secret which will be used to authenticate against the registry.
+- `customRoleArn` - The ARN of the IAM role associated with the pull through cache rule. Used if the upstream registry is a cross-account ECR private registry.
 - `registryId` - The registry ID where the repository was created.
-- `upstreamRegistryUrl` - The registry URL of the upstream public registry to use as the source.
+- `upstreamRegistryUrl` - The registry URL of the upstream registry to use as the source.
+- `upstreamRepositoryPrefix` - The upstream repository prefix associated with the pull through cache rule.
 
-<!-- cache-key: cdktf-0.20.8 input-51f9ce17c5f6437a6a7033bcc7164586c2d49132414e45c72255adc80ed3befc -->
+<!-- cache-key: cdktf-0.20.8 input-7f6f279424890663ab9ec00d76197d11db86bf1cfadb5049a895e13e4f974764 -->

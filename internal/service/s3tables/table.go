@@ -14,11 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -37,23 +41,19 @@ import (
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
-func newResourceTable(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceTable{}, nil
+func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &tableResource{}, nil
 }
 
 const (
 	ResNameTable = "Table"
 )
 
-type resourceTable struct {
-	framework.ResourceWithConfigure
+type tableResource struct {
+	framework.ResourceWithModel[tableResourceModel]
 }
 
-func (r *resourceTable) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_s3tables_table"
-}
-
-func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -68,6 +68,15 @@ func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+					objectplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrFormat: schema.StringAttribute{
@@ -142,13 +151,94 @@ func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"metadata": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[tableMetadataModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"iceberg": schema.ListNestedBlock{
+							Description: "Iceberg metadata configuration.",
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[icebergMetadataModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									names.AttrSchema: schema.ListNestedBlock{
+										Description: "Schema configuration for the Iceberg table.",
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												names.AttrField: schema.ListNestedBlock{
+													Description: "List of schema fields for the Iceberg table.",
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															names.AttrName: schema.StringAttribute{
+																Required:    true,
+																Description: "The name of the field.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+															"required": schema.BoolAttribute{
+																Optional:    true,
+																Computed:    true,
+																Default:     booldefault.StaticBool(false),
+																Description: "A Boolean value that specifies whether values are required for each row in this field. Default: false.",
+																PlanModifiers: []planmodifier.Bool{
+																	boolplanmodifier.RequiresReplace(),
+																},
+															},
+															names.AttrType: schema.StringAttribute{
+																Required:    true,
+																Description: "The field type. S3 Tables supports all Apache Iceberg primitive types.",
+																PlanModifiers: []planmodifier.String{
+																	stringplanmodifier.RequiresReplace(),
+																},
+															},
+														},
+													},
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+														listvalidator.SizeAtLeast(1),
+													},
+													PlanModifiers: []planmodifier.List{
+														listplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1, 1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeBetween(1, 1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+			},
+		},
 	}
 }
 
-func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceTableModel
+	var plan tableResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,6 +248,20 @@ func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle metadata separately since it's an interface type
+	if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
+		metadataModel, d := plan.Metadata.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Expand(ctx, metadataModel, &input.Metadata)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	_, err := conn.CreateTable(ctx, &input)
@@ -260,13 +364,38 @@ func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
+	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
+		Name:           plan.Name.ValueStringPointer(),
+		Namespace:      plan.Namespace.ValueStringPointer(),
+		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
+	})
+	switch {
+	case errs.IsA[*awstypes.NotFoundException](err):
+	case err != nil:
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
+			err.Error(),
+		)
+	default:
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceTable) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableModel
+	var state tableResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -309,13 +438,38 @@ func (r *resourceTable) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 	state.MaintenanceConfiguration = maintenanceConfiguration
 
+	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
+		Name:           state.Name.ValueStringPointer(),
+		Namespace:      state.Namespace.ValueStringPointer(),
+		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
+	})
+	if err != nil {
+		if !errs.IsA[*awstypes.NotFoundException](err) {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
+				err.Error(),
+			)
+		}
+	} else {
+		var encryptionConfiguration encryptionConfigurationModel
+		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceTable) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan, state resourceTableModel
+	var plan, state tableResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -446,10 +600,10 @@ func (r *resourceTable) Update(ctx context.Context, req resource.UpdateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceTable) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceTableModel
+	var state tableResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -475,7 +629,7 @@ func (r *resourceTable) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 }
 
-func (r *resourceTable) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseTableIdentifier(req.ID)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -515,12 +669,15 @@ func findTable(ctx context.Context, conn *s3tables.Client, bucketARN, namespace,
 	return out, nil
 }
 
-type resourceTableModel struct {
+type tableResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                              `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                         `tfsdk:"created_at"`
 	CreatedBy                types.String                                              `tfsdk:"created_by"`
+	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]       `tfsdk:"encryption_configuration"`
 	Format                   fwtypes.StringEnum[awstypes.OpenTableFormat]              `tfsdk:"format"`
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
+	Metadata                 fwtypes.ListNestedObjectValueOf[tableMetadataModel]       `tfsdk:"metadata"`
 	MetadataLocation         types.String                                              `tfsdk:"metadata_location"`
 	ModifiedAt               timetypes.RFC3339                                         `tfsdk:"modified_at"`
 	ModifiedBy               types.String                                              `tfsdk:"modified_by"`
@@ -777,4 +934,51 @@ var tableNameValidator = []validator.String{
 	stringMustContainLowerCaseLettersNumbersUnderscores,
 	stringMustStartWithLetterOrNumber,
 	stringMustEndWithLetterOrNumber,
+}
+
+type tableMetadataModel struct {
+	Iceberg fwtypes.ListNestedObjectValueOf[icebergMetadataModel] `tfsdk:"iceberg"`
+}
+
+type icebergMetadataModel struct {
+	Schema fwtypes.ListNestedObjectValueOf[icebergSchemaModel] `tfsdk:"schema"`
+}
+
+type icebergSchemaModel struct {
+	Fields fwtypes.ListNestedObjectValueOf[icebergSchemaFieldModel] `tfsdk:"field"`
+}
+
+type icebergSchemaFieldModel struct {
+	Name     types.String `tfsdk:"name"`
+	Required types.Bool   `tfsdk:"required"`
+	Type     types.String `tfsdk:"type"`
+}
+
+var (
+	_ flex.Expander = tableMetadataModel{}
+)
+
+func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Diagnostics) {
+	// If Iceberg metadata is set, expand it
+	if !m.Iceberg.IsNull() && !m.Iceberg.IsUnknown() {
+		icebergModel, d := m.Iceberg.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		// Create Iceberg schema
+		var schema awstypes.IcebergMetadata
+
+		diags.Append(flex.Expand(ctx, icebergModel, &schema)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		out = &awstypes.TableMetadataMemberIceberg{
+			Value: schema,
+		}
+	}
+
+	return out, diags
 }

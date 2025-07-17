@@ -88,12 +88,11 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoint services.
-The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
-* `service_name` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_name` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `service_regions` - (Optional) AWS regions in which to look for services.
 * `service_type` - (Optional) Service type, `Gateway` or `Interface`.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
@@ -131,4 +130,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-38d7121cfc7cba878f7c79020dee432097522a776d67ec066df32796d636d45a -->
+<!-- cache-key: cdktf-0.20.8 input-49d8520420046b50542135a761b6dfd6c876f31bced9c89641990ccb43b3e5e1 -->

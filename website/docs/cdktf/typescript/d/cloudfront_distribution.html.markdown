@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 ## Attribute Reference
@@ -68,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
      alias for the zone ID `Z2FDTNDATAQYW2`.
 * `webAclId` AWS WAF web ACL associated with this distribution.
 
-<!-- cache-key: cdktf-0.20.8 input-76fd4092d64caf3eb602d2f1b7554e0601ea2cb2c116df5092f91bc933e23c48 -->
+<!-- cache-key: cdktf-0.20.8 input-7b44ab0087c4af7f48dfdb8564eebc07afbeb6c72c98e64a25a0fc3fe8f29955 -->

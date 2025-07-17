@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -575,7 +576,7 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 		if recordsCount > 100 {
 			return fmt.Errorf("Route53 API only allows 100 record sets in a single batch")
 		}
-		for i := 0; i < recordsCount; i++ {
+		for range recordsCount {
 			changes = append(changes, awstypes.Change{
 				Action: awstypes.ChangeActionUpsert,
 				ResourceRecordSet: &awstypes.ResourceRecordSet{
@@ -602,8 +603,9 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 			return err
 		}
 
+		timeout := 30 * time.Minute
 		if output.ChangeInfo != nil {
-			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 				return err
 			}
 		}

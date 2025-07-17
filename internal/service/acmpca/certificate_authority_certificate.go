@@ -23,15 +23,16 @@ import (
 )
 
 // @SDKResource("aws_acmpca_certificate_authority_certificate", name="Certificate Authority Certificate")
+// @ArnIdentity("certificate_authority_arn")
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca;acmpca.GetCertificateAuthorityCertificateOutput")
+// @Testing(generator="acctest.RandomDomainName()")
+// @Testing(checkDestroyNoop=true)
 func resourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCertificate: {
@@ -56,7 +57,7 @@ func resourceCertificateAuthorityCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -81,7 +82,7 @@ func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schem
 	return append(diags, resourceCertificateAuthorityCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 

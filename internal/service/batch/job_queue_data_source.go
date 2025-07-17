@@ -97,7 +97,7 @@ func dataSourceJobQueue() *schema.Resource {
 	}
 }
 
-func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
@@ -117,9 +117,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrStatus, jobQueue.Status)
 	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 	for _, apiObject := range jobQueue.ComputeEnvironmentOrder {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap["compute_environment"] = aws.ToString(apiObject.ComputeEnvironment)
 		tfMap["order"] = aws.ToInt32(apiObject.Order)
 		tfList = append(tfList, tfMap)
@@ -128,9 +128,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	tfList = make([]interface{}, 0)
+	tfList = make([]any, 0)
 	for _, apiObject := range jobQueue.JobStateTimeLimitActions {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap[names.AttrAction] = apiObject.Action
 		tfMap["max_time_seconds"] = aws.ToInt32(apiObject.MaxTimeSeconds)
 		tfMap["reason"] = aws.ToString(apiObject.Reason)

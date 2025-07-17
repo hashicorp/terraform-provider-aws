@@ -496,7 +496,7 @@ var filterScopeConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-func expandFilters(tfList []interface{}) []awstypes.Filter {
+func expandFilters(tfList []any) []awstypes.Filter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -504,7 +504,7 @@ func expandFilters(tfList []interface{}) []awstypes.Filter {
 	var apiObjects []awstypes.Filter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -520,44 +520,44 @@ func expandFilters(tfList []interface{}) []awstypes.Filter {
 	return apiObjects
 }
 
-func expandFilter(tfMap map[string]interface{}) *awstypes.Filter {
+func expandFilter(tfMap map[string]any) *awstypes.Filter {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Filter{}
 
-	if v, ok := tfMap["category_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_filter"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryFilter = expandCategoryFilter(v)
 	}
-	if v, ok := tfMap["numeric_equality_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_equality_filter"].([]any); ok && len(v) > 0 {
 		apiObject.NumericEqualityFilter = expandNumericEqualityFilter(v)
 	}
-	if v, ok := tfMap["numeric_range_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_range_filter"].([]any); ok && len(v) > 0 {
 		apiObject.NumericRangeFilter = expandNumericRangeFilter(v)
 	}
-	if v, ok := tfMap["relative_dates_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["relative_dates_filter"].([]any); ok && len(v) > 0 {
 		apiObject.RelativeDatesFilter = expandRelativeDatesFilter(v)
 	}
-	if v, ok := tfMap["time_equality_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time_equality_filter"].([]any); ok && len(v) > 0 {
 		apiObject.TimeEqualityFilter = expandTimeEqualityFilter(v)
 	}
-	if v, ok := tfMap["time_range_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time_range_filter"].([]any); ok && len(v) > 0 {
 		apiObject.TimeRangeFilter = expandTimeRangeFilter(v)
 	}
-	if v, ok := tfMap["top_bottom_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["top_bottom_filter"].([]any); ok && len(v) > 0 {
 		apiObject.TopBottomFilter = expandTopBottomFilter(v)
 	}
 
 	return apiObject
 }
 
-func expandCategoryFilter(tfList []interface{}) *awstypes.CategoryFilter {
+func expandCategoryFilter(tfList []any) *awstypes.CategoryFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -567,47 +567,47 @@ func expandCategoryFilter(tfList []interface{}) *awstypes.CategoryFilter {
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]any); ok && len(v) > 0 {
 		apiObject.Configuration = expandCategoryFilterConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandCategoryFilterConfiguration(tfList []interface{}) *awstypes.CategoryFilterConfiguration {
+func expandCategoryFilterConfiguration(tfList []any) *awstypes.CategoryFilterConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CategoryFilterConfiguration{}
 
-	if v, ok := tfMap["custom_filter_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_filter_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CustomFilterConfiguration = expandCustomFilterConfiguration(v)
 	}
-	if v, ok := tfMap["custom_filter_list_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_filter_list_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CustomFilterListConfiguration = expandCustomFilterListConfiguration(v)
 	}
-	if v, ok := tfMap["filter_list_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_list_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FilterListConfiguration = expandFilterListConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandCustomFilterConfiguration(tfList []interface{}) *awstypes.CustomFilterConfiguration {
+func expandCustomFilterConfiguration(tfList []any) *awstypes.CustomFilterConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -633,19 +633,19 @@ func expandCustomFilterConfiguration(tfList []interface{}) *awstypes.CustomFilte
 	return apiObject
 }
 
-func expandCustomFilterListConfiguration(tfList []interface{}) *awstypes.CustomFilterListConfiguration {
+func expandCustomFilterListConfiguration(tfList []any) *awstypes.CustomFilterListConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CustomFilterListConfiguration{}
 
-	if v, ok := tfMap["category_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_values"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryValues = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
@@ -661,19 +661,19 @@ func expandCustomFilterListConfiguration(tfList []interface{}) *awstypes.CustomF
 	return apiObject
 }
 
-func expandFilterListConfiguration(tfList []interface{}) *awstypes.FilterListConfiguration {
+func expandFilterListConfiguration(tfList []any) *awstypes.FilterListConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FilterListConfiguration{}
 
-	if v, ok := tfMap["category_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_values"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryValues = flex.ExpandStringValueList(v)
 	}
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
@@ -686,12 +686,12 @@ func expandFilterListConfiguration(tfList []interface{}) *awstypes.FilterListCon
 	return apiObject
 }
 
-func expandNumericEqualityFilter(tfList []interface{}) *awstypes.NumericEqualityFilter {
+func expandNumericEqualityFilter(tfList []any) *awstypes.NumericEqualityFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -701,7 +701,7 @@ func expandNumericEqualityFilter(tfList []interface{}) *awstypes.NumericEquality
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["match_operator"].(string); ok && v != "" {
@@ -719,52 +719,52 @@ func expandNumericEqualityFilter(tfList []interface{}) *awstypes.NumericEquality
 	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		apiObject.Value = aws.Float64(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 
 	return apiObject
 }
 
-func expandFilterScopeConfiguration(tfList []interface{}) *awstypes.FilterScopeConfiguration {
+func expandFilterScopeConfiguration(tfList []any) *awstypes.FilterScopeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.FilterScopeConfiguration{}
 
-	if v, ok := tfMap["selected_sheets"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["selected_sheets"].([]any); ok && len(v) > 0 {
 		apiObject.SelectedSheets = expandSelectedSheetsFilterScopeConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandSelectedSheetsFilterScopeConfiguration(tfList []interface{}) *awstypes.SelectedSheetsFilterScopeConfiguration {
+func expandSelectedSheetsFilterScopeConfiguration(tfList []any) *awstypes.SelectedSheetsFilterScopeConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.SelectedSheetsFilterScopeConfiguration{}
 
-	if v, ok := tfMap["sheet_visual_scoping_configurations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheet_visual_scoping_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.SheetVisualScopingConfigurations = expandSheetVisualScopingConfigurations(v)
 	}
 
 	return apiObject
 }
 
-func expandSheetVisualScopingConfigurations(tfList []interface{}) []awstypes.SheetVisualScopingConfiguration {
+func expandSheetVisualScopingConfigurations(tfList []any) []awstypes.SheetVisualScopingConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -772,7 +772,7 @@ func expandSheetVisualScopingConfigurations(tfList []interface{}) []awstypes.She
 	var apiObjects []awstypes.SheetVisualScopingConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -788,7 +788,7 @@ func expandSheetVisualScopingConfigurations(tfList []interface{}) []awstypes.She
 	return apiObjects
 }
 
-func expandSheetVisualScopingConfiguration(tfMap map[string]interface{}) *awstypes.SheetVisualScopingConfiguration {
+func expandSheetVisualScopingConfiguration(tfMap map[string]any) *awstypes.SheetVisualScopingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -808,12 +808,12 @@ func expandSheetVisualScopingConfiguration(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter {
+func expandNumericRangeFilter(tfList []any) *awstypes.NumericRangeFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -823,7 +823,7 @@ func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["null_option"].(string); ok && v != "" {
@@ -832,7 +832,7 @@ func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter
 	if v, ok := tfMap["select_all_options"].(string); ok && v != "" {
 		apiObject.SelectAllOptions = awstypes.NumericFilterSelectAllOptions(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
 	if v, ok := tfMap["include_maximum"].(bool); ok {
@@ -841,22 +841,22 @@ func expandNumericRangeFilter(tfList []interface{}) *awstypes.NumericRangeFilter
 	if v, ok := tfMap["include_minimum"].(bool); ok {
 		apiObject.IncludeMinimum = aws.Bool(v)
 	}
-	if v, ok := tfMap["range_maximum"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range_maximum"].([]any); ok && len(v) > 0 {
 		apiObject.RangeMaximum = expandNumericRangeFilterValue(v)
 	}
-	if v, ok := tfMap["range_minimum"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range_minimum"].([]any); ok && len(v) > 0 {
 		apiObject.RangeMinimum = expandNumericRangeFilterValue(v)
 	}
 
 	return apiObject
 }
 
-func expandNumericRangeFilterValue(tfList []interface{}) *awstypes.NumericRangeFilterValue {
+func expandNumericRangeFilterValue(tfList []any) *awstypes.NumericRangeFilterValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -873,12 +873,12 @@ func expandNumericRangeFilterValue(tfList []interface{}) *awstypes.NumericRangeF
 	return apiObject
 }
 
-func expandRelativeDatesFilter(tfList []interface{}) *awstypes.RelativeDatesFilter {
+func expandRelativeDatesFilter(tfList []any) *awstypes.RelativeDatesFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -888,7 +888,7 @@ func expandRelativeDatesFilter(tfList []interface{}) *awstypes.RelativeDatesFilt
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["null_option"].(string); ok && v != "" {
@@ -909,22 +909,22 @@ func expandRelativeDatesFilter(tfList []interface{}) *awstypes.RelativeDatesFilt
 	if v, ok := tfMap["relative_date_value"].(int); ok {
 		apiObject.RelativeDateValue = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["anchor_date_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["anchor_date_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.AnchorDateConfiguration = expandAnchorDateConfiguration(v)
 	}
-	if v, ok := tfMap["exclude_period_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["exclude_period_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ExcludePeriodConfiguration = expandExcludePeriodConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandAnchorDateConfiguration(tfList []interface{}) *awstypes.AnchorDateConfiguration {
+func expandAnchorDateConfiguration(tfList []any) *awstypes.AnchorDateConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -941,12 +941,12 @@ func expandAnchorDateConfiguration(tfList []interface{}) *awstypes.AnchorDateCon
 	return apiObject
 }
 
-func expandExcludePeriodConfiguration(tfList []interface{}) *awstypes.ExcludePeriodConfiguration {
+func expandExcludePeriodConfiguration(tfList []any) *awstypes.ExcludePeriodConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -966,12 +966,12 @@ func expandExcludePeriodConfiguration(tfList []interface{}) *awstypes.ExcludePer
 	return apiObject
 }
 
-func expandTimeEqualityFilter(tfList []interface{}) *awstypes.TimeEqualityFilter {
+func expandTimeEqualityFilter(tfList []any) *awstypes.TimeEqualityFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -981,7 +981,7 @@ func expandTimeEqualityFilter(tfList []interface{}) *awstypes.TimeEqualityFilter
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
@@ -998,12 +998,12 @@ func expandTimeEqualityFilter(tfList []interface{}) *awstypes.TimeEqualityFilter
 	return apiObject
 }
 
-func expandTimeRangeFilter(tfList []interface{}) *awstypes.TimeRangeFilter {
+func expandTimeRangeFilter(tfList []any) *awstypes.TimeRangeFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1013,7 +1013,7 @@ func expandTimeRangeFilter(tfList []interface{}) *awstypes.TimeRangeFilter {
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["null_option"].(string); ok && v != "" {
@@ -1022,7 +1022,7 @@ func expandTimeRangeFilter(tfList []interface{}) *awstypes.TimeRangeFilter {
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["exclude_period_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["exclude_period_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ExcludePeriodConfiguration = expandExcludePeriodConfiguration(v)
 	}
 	if v, ok := tfMap["include_maximum"].(bool); ok {
@@ -1031,22 +1031,22 @@ func expandTimeRangeFilter(tfList []interface{}) *awstypes.TimeRangeFilter {
 	if v, ok := tfMap["include_minimum"].(bool); ok {
 		apiObject.IncludeMinimum = aws.Bool(v)
 	}
-	if v, ok := tfMap["range_maximum_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range_maximum_value"].([]any); ok && len(v) > 0 {
 		apiObject.RangeMaximumValue = expandTimeRangeFilterValue(v)
 	}
-	if v, ok := tfMap["range_minimum_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range_minimum_value"].([]any); ok && len(v) > 0 {
 		apiObject.RangeMinimumValue = expandTimeRangeFilterValue(v)
 	}
 
 	return apiObject
 }
 
-func expandTimeRangeFilterValue(tfList []interface{}) *awstypes.TimeRangeFilterValue {
+func expandTimeRangeFilterValue(tfList []any) *awstypes.TimeRangeFilterValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1060,19 +1060,19 @@ func expandTimeRangeFilterValue(tfList []interface{}) *awstypes.TimeRangeFilterV
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
 		apiObject.StaticValue = aws.Time(t)
 	}
-	if v, ok := tfMap["rolling_date"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["rolling_date"].([]any); ok && len(v) > 0 {
 		apiObject.RollingDate = expandRollingDateConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandTopBottomFilter(tfList []interface{}) *awstypes.TopBottomFilter {
+func expandTopBottomFilter(tfList []any) *awstypes.TopBottomFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1082,7 +1082,7 @@ func expandTopBottomFilter(tfList []interface{}) *awstypes.TopBottomFilter {
 	if v, ok := tfMap["filter_id"].(string); ok && v != "" {
 		apiObject.FilterId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap["limit"].(int); ok {
@@ -1094,14 +1094,14 @@ func expandTopBottomFilter(tfList []interface{}) *awstypes.TopBottomFilter {
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["aggregation_sort_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_sort_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationSortConfigurations = expandAggregationSortConfigurations(v)
 	}
 
 	return apiObject
 }
 
-func expandAggregationSortConfigurations(tfList []interface{}) []awstypes.AggregationSortConfiguration {
+func expandAggregationSortConfigurations(tfList []any) []awstypes.AggregationSortConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1109,7 +1109,7 @@ func expandAggregationSortConfigurations(tfList []interface{}) []awstypes.Aggreg
 	var apiObjects []awstypes.AggregationSortConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1125,7 +1125,7 @@ func expandAggregationSortConfigurations(tfList []interface{}) []awstypes.Aggreg
 	return apiObjects
 }
 
-func expandAggregationSortConfiguration(tfMap map[string]interface{}) *awstypes.AggregationSortConfiguration {
+func expandAggregationSortConfiguration(tfMap map[string]any) *awstypes.AggregationSortConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1135,17 +1135,17 @@ func expandAggregationSortConfiguration(tfMap map[string]interface{}) *awstypes.
 	if v, ok := tfMap["sort_direction"].(string); ok && v != "" {
 		apiObject.SortDirection = awstypes.SortDirection(v)
 	}
-	if v, ok := tfMap["aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.AggregationFunction = expandAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
 	return apiObject
 }
 
-func expandDrillDownFilters(tfList []interface{}) []awstypes.DrillDownFilter {
+func expandDrillDownFilters(tfList []any) []awstypes.DrillDownFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1153,7 +1153,7 @@ func expandDrillDownFilters(tfList []interface{}) []awstypes.DrillDownFilter {
 	var apiObjects []awstypes.DrillDownFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1169,61 +1169,61 @@ func expandDrillDownFilters(tfList []interface{}) []awstypes.DrillDownFilter {
 	return apiObjects
 }
 
-func expandDrillDownFilter(tfMap map[string]interface{}) *awstypes.DrillDownFilter {
+func expandDrillDownFilter(tfMap map[string]any) *awstypes.DrillDownFilter {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DrillDownFilter{}
 
-	if v, ok := tfMap["category_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_filter"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryFilter = expandCategoryDrillDownFilter(v)
 	}
-	if v, ok := tfMap["numeric_equality_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_equality_filter"].([]any); ok && len(v) > 0 {
 		apiObject.NumericEqualityFilter = expandNumericEqualityDrillDownFilter(v)
 	}
-	if v, ok := tfMap["time_range_filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time_range_filter"].([]any); ok && len(v) > 0 {
 		apiObject.TimeRangeFilter = expandTimeRangeDrillDownFilter(v)
 	}
 
 	return apiObject
 }
 
-func expandCategoryDrillDownFilter(tfList []interface{}) *awstypes.CategoryDrillDownFilter {
+func expandCategoryDrillDownFilter(tfList []any) *awstypes.CategoryDrillDownFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.CategoryDrillDownFilter{}
 
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["category_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_values"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryValues = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandNumericEqualityDrillDownFilter(tfList []interface{}) *awstypes.NumericEqualityDrillDownFilter {
+func expandNumericEqualityDrillDownFilter(tfList []any) *awstypes.NumericEqualityDrillDownFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.NumericEqualityDrillDownFilter{}
 
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 	if v, ok := tfMap[names.AttrValue].(float64); ok {
@@ -1233,12 +1233,12 @@ func expandNumericEqualityDrillDownFilter(tfList []interface{}) *awstypes.Numeri
 	return apiObject
 }
 
-func expandTimeRangeDrillDownFilter(tfList []interface{}) *awstypes.TimeRangeDrillDownFilter {
+func expandTimeRangeDrillDownFilter(tfList []any) *awstypes.TimeRangeDrillDownFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1256,22 +1256,22 @@ func expandTimeRangeDrillDownFilter(tfList []interface{}) *awstypes.TimeRangeDri
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
 		apiObject.TimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
 	return apiObject
 }
 
-func flattenFilters(apiObjects []awstypes.Filter) []interface{} {
+func flattenFilters(apiObjects []awstypes.Filter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.CategoryFilter != nil {
 			tfMap["category_filter"] = flattenCategoryFilter(apiObject.CategoryFilter)
@@ -1301,12 +1301,12 @@ func flattenFilters(apiObjects []awstypes.Filter) []interface{} {
 	return tfList
 }
 
-func flattenCategoryFilter(apiObject *awstypes.CategoryFilter) []interface{} {
+func flattenCategoryFilter(apiObject *awstypes.CategoryFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
@@ -1317,15 +1317,15 @@ func flattenCategoryFilter(apiObject *awstypes.CategoryFilter) []interface{} {
 		tfMap["filter_id"] = aws.ToString(apiObject.FilterId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCategoryFilterConfiguration(apiObject *awstypes.CategoryFilterConfiguration) []interface{} {
+func flattenCategoryFilterConfiguration(apiObject *awstypes.CategoryFilterConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CustomFilterConfiguration != nil {
 		tfMap["custom_filter_configuration"] = flattenCustomFilterConfiguration(apiObject.CustomFilterConfiguration)
@@ -1337,15 +1337,15 @@ func flattenCategoryFilterConfiguration(apiObject *awstypes.CategoryFilterConfig
 		tfMap["filter_list_configuration"] = flattenFilterListConfiguration(apiObject.FilterListConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomFilterConfiguration(apiObject *awstypes.CustomFilterConfiguration) []interface{} {
+func flattenCustomFilterConfiguration(apiObject *awstypes.CustomFilterConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryValue != nil {
 		tfMap["category_value"] = aws.ToString(apiObject.CategoryValue)
@@ -1357,15 +1357,15 @@ func flattenCustomFilterConfiguration(apiObject *awstypes.CustomFilterConfigurat
 	}
 	tfMap["select_all_options"] = apiObject.SelectAllOptions
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomFilterListConfiguration(apiObject *awstypes.CustomFilterListConfiguration) []interface{} {
+func flattenCustomFilterListConfiguration(apiObject *awstypes.CustomFilterListConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryValues != nil {
 		tfMap["category_values"] = apiObject.CategoryValues
@@ -1374,15 +1374,15 @@ func flattenCustomFilterListConfiguration(apiObject *awstypes.CustomFilterListCo
 	tfMap["null_option"] = apiObject.NullOption
 	tfMap["select_all_options"] = apiObject.SelectAllOptions
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFilterListConfiguration(apiObject *awstypes.FilterListConfiguration) []interface{} {
+func flattenFilterListConfiguration(apiObject *awstypes.FilterListConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryValues != nil {
 		tfMap["category_values"] = apiObject.CategoryValues
@@ -1390,15 +1390,15 @@ func flattenFilterListConfiguration(apiObject *awstypes.FilterListConfiguration)
 	tfMap["match_operator"] = apiObject.MatchOperator
 	tfMap["select_all_options"] = apiObject.SelectAllOptions
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericEqualityFilter(apiObject *awstypes.NumericEqualityFilter) []interface{} {
+func flattenNumericEqualityFilter(apiObject *awstypes.NumericEqualityFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AggregationFunction != nil {
 		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
@@ -1419,15 +1419,15 @@ func flattenNumericEqualityFilter(apiObject *awstypes.NumericEqualityFilter) []i
 		tfMap[names.AttrValue] = aws.ToFloat64(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []interface{} {
+func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AggregationFunction != nil {
 		tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
@@ -1453,15 +1453,15 @@ func flattenNumericRangeFilter(apiObject *awstypes.NumericRangeFilter) []interfa
 	}
 	tfMap["select_all_options"] = apiObject.SelectAllOptions
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericRangeFilterValue(apiObject *awstypes.NumericRangeFilterValue) []interface{} {
+func flattenNumericRangeFilterValue(apiObject *awstypes.NumericRangeFilterValue) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Parameter != nil {
 		tfMap[names.AttrParameter] = aws.ToString(apiObject.Parameter)
@@ -1470,15 +1470,15 @@ func flattenNumericRangeFilterValue(apiObject *awstypes.NumericRangeFilterValue)
 		tfMap["static_value"] = aws.ToFloat64(apiObject.StaticValue)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRelativeDatesFilter(apiObject *awstypes.RelativeDatesFilter) []interface{} {
+func flattenRelativeDatesFilter(apiObject *awstypes.RelativeDatesFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AnchorDateConfiguration != nil {
 		tfMap["anchor_date_configuration"] = flattenAnchorDateConfiguration(apiObject.AnchorDateConfiguration)
@@ -1503,30 +1503,30 @@ func flattenRelativeDatesFilter(apiObject *awstypes.RelativeDatesFilter) []inter
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAnchorDateConfiguration(apiObject *awstypes.AnchorDateConfiguration) []interface{} {
+func flattenAnchorDateConfiguration(apiObject *awstypes.AnchorDateConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["anchor_option"] = apiObject.AnchorOption
 	if apiObject.ParameterName != nil {
 		tfMap["parameter_name"] = aws.ToString(apiObject.ParameterName)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExcludePeriodConfiguration(apiObject *awstypes.ExcludePeriodConfiguration) []interface{} {
+func flattenExcludePeriodConfiguration(apiObject *awstypes.ExcludePeriodConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Amount != nil {
 		tfMap["amount"] = aws.ToInt32(apiObject.Amount)
@@ -1534,15 +1534,15 @@ func flattenExcludePeriodConfiguration(apiObject *awstypes.ExcludePeriodConfigur
 	tfMap["granularity"] = apiObject.Granularity
 	tfMap[names.AttrStatus] = apiObject.Status
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTimeEqualityFilter(apiObject *awstypes.TimeEqualityFilter) []interface{} {
+func flattenTimeEqualityFilter(apiObject *awstypes.TimeEqualityFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1558,15 +1558,15 @@ func flattenTimeEqualityFilter(apiObject *awstypes.TimeEqualityFilter) []interfa
 		tfMap[names.AttrValue] = apiObject.Value.Format(time.RFC3339)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []interface{} {
+func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1592,15 +1592,15 @@ func flattenTimeRangeFilter(apiObject *awstypes.TimeRangeFilter) []interface{} {
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTimeRangeFilterValue(apiObject *awstypes.TimeRangeFilterValue) []interface{} {
+func flattenTimeRangeFilterValue(apiObject *awstypes.TimeRangeFilterValue) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Parameter != nil {
 		tfMap[names.AttrParameter] = aws.ToString(apiObject.Parameter)
@@ -1612,15 +1612,15 @@ func flattenTimeRangeFilterValue(apiObject *awstypes.TimeRangeFilterValue) []int
 		tfMap["static_value"] = apiObject.StaticValue.Format(time.RFC3339)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTopBottomFilter(apiObject *awstypes.TopBottomFilter) []interface{} {
+func flattenTopBottomFilter(apiObject *awstypes.TopBottomFilter) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AggregationSortConfigurations != nil {
 		tfMap["aggregation_sort_configuration"] = flattenAggregationSortConfigurations(apiObject.AggregationSortConfigurations)
@@ -1639,18 +1639,18 @@ func flattenTopBottomFilter(apiObject *awstypes.TopBottomFilter) []interface{} {
 	}
 	tfMap["time_granularity"] = apiObject.TimeGranularity
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAggregationSortConfigurations(apiObjects []awstypes.AggregationSortConfiguration) []interface{} {
+func flattenAggregationSortConfigurations(apiObjects []awstypes.AggregationSortConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.AggregationFunction != nil {
 			tfMap["aggregation_function"] = flattenAggregationFunction(apiObject.AggregationFunction)
@@ -1666,43 +1666,43 @@ func flattenAggregationSortConfigurations(apiObjects []awstypes.AggregationSortC
 	return tfList
 }
 
-func flattenFilterScopeConfiguration(apiObject *awstypes.FilterScopeConfiguration) []interface{} {
+func flattenFilterScopeConfiguration(apiObject *awstypes.FilterScopeConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SelectedSheets != nil {
 		tfMap["selected_sheets"] = flattenSelectedSheetsFilterScopeConfiguration(apiObject.SelectedSheets)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSelectedSheetsFilterScopeConfiguration(apiObject *awstypes.SelectedSheetsFilterScopeConfiguration) []interface{} {
+func flattenSelectedSheetsFilterScopeConfiguration(apiObject *awstypes.SelectedSheetsFilterScopeConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SheetVisualScopingConfigurations != nil {
 		tfMap["sheet_visual_scoping_configurations"] = flattenSheetVisualScopingConfigurations(apiObject.SheetVisualScopingConfigurations)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSheetVisualScopingConfigurations(apiObjects []awstypes.SheetVisualScopingConfiguration) []interface{} {
+func flattenSheetVisualScopingConfigurations(apiObjects []awstypes.SheetVisualScopingConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		tfMap[names.AttrScope] = apiObject.Scope
 		if apiObject.SheetId != nil {

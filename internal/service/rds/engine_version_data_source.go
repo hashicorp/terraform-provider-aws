@@ -173,7 +173,7 @@ func dataSourceEngineVersion() *schema.Resource {
 	}
 }
 
-func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -241,7 +241,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	prefSearch := false
 
 	// preferred versions
-	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_versions").([]any); len(l) > 0 {
 		var preferredVersions []awstypes.DBEngineVersion
 
 		for _, elem := range l {
@@ -267,7 +267,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// preferred upgrade targets
-	if l := d.Get("preferred_upgrade_targets").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_upgrade_targets").([]any); len(l) > 0 {
 		var prefUTs []awstypes.DBEngineVersion
 
 	engineVersionsLoop:
@@ -296,7 +296,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// preferred major targets
-	if l := d.Get("preferred_major_targets").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_major_targets").([]any); len(l) > 0 {
 		var prefMTs []awstypes.DBEngineVersion
 
 	majorsLoop:

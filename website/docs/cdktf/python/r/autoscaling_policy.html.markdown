@@ -226,6 +226,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `name` - (Required) Name of the policy.
 * `autoscaling_group_name` - (Required) Name of the autoscaling group.
 * `adjustment_type` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
@@ -341,6 +343,7 @@ This configuration block supports the following arguments:
 * `metric_dimension` - (Optional) Dimensions of the metric.
 * `metric_name` - (Optional) Name of the metric.
 * `namespace` - (Optional) Namespace of the metric.
+* `period` - (Optional) The period of the metric in seconds.
 * `statistic` - (Optional) Statistic of the metric.
 * `unit` - (Optional) Unit of the metric.
 * `metrics` - (Optional) Metrics to include, as a metric data query.
@@ -514,4 +517,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-027b7d7ad2a66f740d9c397907005fa718426ea2d16eef1cfa7731da9baafd65 -->
+<!-- cache-key: cdktf-0.20.8 input-75bf9a308ada17338fbb588aa2e2d922bb0e91f744d7b4444053e0ef9b976b08 -->

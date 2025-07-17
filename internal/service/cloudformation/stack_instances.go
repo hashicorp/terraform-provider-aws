@@ -246,7 +246,7 @@ func resourceStackInstances() *schema.Resource {
 	}
 }
 
-func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -268,8 +268,8 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	deployedByOU := ""
-	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
+	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeploymentTargets = expandDeploymentTargets(v.([]any))
 		input.Accounts = nil
 
 		if v, ok := d.GetOk("deployment_targets.0.organizational_unit_ids"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -285,11 +285,11 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk("parameter_overrides"); ok {
-		input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
+		input.ParameterOverrides = expandParameters(v.(map[string]any))
 	}
 
-	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	id, err := flex.FlattenResourceId([]string{stackSetName, callAs, deployedByOU}, stackInstancesResourceIDPartCount, true)
@@ -298,7 +298,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
 			output, err := conn.CreateStackInstances(ctx, input)
@@ -315,43 +315,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 
 			return operation, nil
 		},
-		func(err error) (bool, error) {
-			if err == nil {
-				return false, nil
-			}
-
-			message := err.Error()
-
-			// IAM eventual consistency
-			if strings.Contains(message, "AccountGate check failed") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
-			if strings.Contains(message, "is not authorized") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// XXX role has insufficient YYY permissions
-			if strings.Contains(message, "role has insufficient") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			// Account XXX should have YYY role with trust relationship to Role ZZZ
-			if strings.Contains(message, "role with trust relationship") {
-				return true, err
-			}
-
-			// IAM eventual consistency
-			if strings.Contains(message, "The security token included in the request is invalid") {
-				return true, err
-			}
-
-			return false, err
-		},
+		isRetryableIAMPropagationErr,
 	)
 
 	if err != nil {
@@ -361,7 +325,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceStackInstancesRead(ctx, d, meta)...)
 }
 
-func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Dramatic simplification of the ID from stack_set_instance removing regions and accounts. The upside
@@ -390,7 +354,7 @@ func resourceStackInstancesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if len(stackInstances.OUs) > 0 {
-		d.Set("deployment_targets", replaceOrganizationalUnitIDs(d.Get("deployment_targets").([]interface{}), stackInstances.OUs))
+		d.Set("deployment_targets", replaceOrganizationalUnitIDs(d.Get("deployment_targets").([]any), stackInstances.OUs))
 	}
 
 	d.Set(AttrAccounts, flex.FlattenStringValueList(stackInstances.Accounts))
@@ -412,7 +376,7 @@ const (
 	AttrRegions    = "regions"
 )
 
-func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -512,8 +476,8 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Accounts = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
+		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DeploymentTargets = expandDeploymentTargets(v.([]any))
 			input.Accounts = nil
 		}
 
@@ -521,12 +485,12 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.CallAs = awstypes.CallAs(v.(string))
 		}
 
-		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.OperationPreferences = expandOperationPreferences(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("parameter_overrides"); ok {
-			input.ParameterOverrides = expandParameters(v.(map[string]interface{}))
+			input.ParameterOverrides = expandParameters(v.(map[string]any))
 		}
 
 		output, err := conn.UpdateStackInstances(ctx, input)
@@ -542,7 +506,7 @@ func resourceStackInstancesUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceStackInstancesRead(ctx, d, meta)...)
 }
 
-func resourceStackInstancesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackInstancesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	accounts := flex.ExpandStringValueSet(d.Get(AttrAccounts).(*schema.Set))
@@ -557,7 +521,7 @@ func resourceStackInstancesDelete(ctx context.Context, d *schema.ResourceData, m
 	return diag.Diagnostics{}
 }
 
-func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta interface{}, accounts, regions, dtAccounts, dtOUs []string) error {
+func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta any, accounts, regions, dtAccounts, dtOUs []string) error {
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DeleteStackInstancesInput{
@@ -569,8 +533,8 @@ func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// can only give either accounts or deployment_targets
-	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DeploymentTargets = expandDeploymentTargets(v.([]interface{}))
+	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeploymentTargets = expandDeploymentTargets(v.([]any))
 		input.DeploymentTargets.Accounts = dtAccounts
 		input.DeploymentTargets.OrganizationalUnitIds = dtOUs
 		input.Accounts = nil
@@ -580,12 +544,12 @@ func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta inte
 		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
-	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]any)[0].(map[string]any))
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation Stack Instances: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteStackInstances(ctx, input)
 	})
 
@@ -604,7 +568,7 @@ func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceStackInstancesImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStackInstancesImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	switch parts := strings.Split(d.Id(), flex.ResourceIdSeparator); len(parts) {
 	case 1:
 	case 2:
@@ -633,7 +597,7 @@ type StackInstances struct {
 // drift detection is limited because we're just using the accounts and regions from config--we have no
 // other choice. When there are no summaries, we use the first account and region to find a stack instance
 // to get the parameter_overrides and stack_set_id.
-func findStackInstancesByNameCallAs(ctx context.Context, meta interface{}, stackSetName, callAs string, deployedByOU bool, accounts, regions []string) (StackInstances, error) {
+func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName, callAs string, deployedByOU bool, accounts, regions []string) (StackInstances, error) {
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.ListStackInstancesInput{
@@ -728,12 +692,12 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta interface{}, stack
 	return output, nil
 }
 
-func replaceOrganizationalUnitIDs(tfList []interface{}, newOUIDs []string) []interface{} {
+func replaceOrganizationalUnitIDs(tfList []any, newOUIDs []string) []any {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -741,17 +705,17 @@ func replaceOrganizationalUnitIDs(tfList []interface{}, newOUIDs []string) []int
 	// Update the "organizational_unit_ids" with the new value
 	tfMap["organizational_unit_ids"] = flex.FlattenStringValueList(newOUIDs)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenStackInstancesSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {
+func flattenStackInstancesSummaries(apiObject []awstypes.StackInstanceSummary) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	tfList := []interface{}{}
+	tfList := []any{}
 	for _, obj := range apiObject {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrAccountID:      obj.Account,
 			"drift_status":           obj.DriftStatus,
 			"organizational_unit_id": obj.OrganizationalUnitId,

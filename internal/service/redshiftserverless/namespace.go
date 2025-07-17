@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -56,7 +57,19 @@ func resourceNamespace() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"manage_admin_password"},
+				ConflictsWith: []string{"manage_admin_password", "admin_user_password_wo"},
+			},
+			"admin_user_password_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				ConflictsWith: []string{"admin_user_password", "manage_admin_password"},
+				RequiredWith:  []string{"admin_user_password_wo_version"},
+			},
+			"admin_user_password_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"admin_user_password_wo"},
 			},
 			"admin_username": {
 				Type:      schema.TypeString,
@@ -105,7 +118,7 @@ func resourceNamespace() *schema.Resource {
 			"manage_admin_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"admin_user_password"},
+				ConflictsWith: []string{"admin_user_password", "admin_user_password_wo"},
 			},
 			"namespace_id": {
 				Type:     schema.TypeString,
@@ -119,12 +132,10 @@ func resourceNamespace() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -134,12 +145,22 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:          getTagsIn(ctx),
 	}
 
+	adminUserPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("admin_user_password_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	if v, ok := d.GetOk("admin_password_secret_kms_key_id"); ok {
 		input.AdminPasswordSecretKmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {
 		input.AdminUserPassword = aws.String(v.(string))
+	}
+
+	if adminUserPasswordWO != "" {
+		input.AdminUserPassword = aws.String(adminUserPasswordWO)
 	}
 
 	if v, ok := d.GetOk("admin_username"); ok {
@@ -181,7 +202,7 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -212,7 +233,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
@@ -225,9 +246,22 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.AdminPasswordSecretKmsKeyId = aws.String(d.Get("admin_password_secret_kms_key_id").(string))
 		}
 
-		if d.HasChanges("admin_username", "admin_user_password") {
+		if d.HasChanges("admin_username", "admin_user_password", "admin_user_password_wo_version") {
 			input.AdminUsername = aws.String(d.Get("admin_username").(string))
-			input.AdminUserPassword = aws.String(d.Get("admin_user_password").(string))
+
+			if v, ok := d.Get("admin_user_password").(string); ok {
+				input.AdminUserPassword = aws.String(v)
+			}
+
+			adminUserPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("admin_user_password_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if adminUserPasswordWO != "" {
+				input.AdminUserPassword = aws.String(adminUserPasswordWO)
+			}
 		}
 
 		if d.HasChange("default_iam_role_arn") {
@@ -264,13 +298,13 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})
@@ -324,7 +358,7 @@ func findNamespaceByName(ctx context.Context, conn *redshiftserverless.Client, n
 }
 
 func statusNamespace(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

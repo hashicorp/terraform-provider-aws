@@ -6,9 +6,9 @@ package organizations_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,12 +35,7 @@ func testAccAccountImportStep(n string) resource.TestStep {
 
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
@@ -57,7 +52,7 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/o-.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
@@ -74,12 +69,7 @@ func testAccAccount_basic(t *testing.T) {
 
 func testAccAccount_CloseOnDeletion(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
@@ -96,7 +86,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/o-.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttr(resourceName, "govcloud_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
@@ -114,12 +104,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 
 func testAccAccount_ParentID(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -153,14 +138,52 @@ func testAccAccount_ParentID(t *testing.T) {
 	})
 }
 
+func testAccAccount_AccountUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
+	var v awstypes.Account
+	rInt := sdkacctest.RandInt()
+
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
+	email := fmt.Sprintf("tf_acctest_+%d@%s", rInt, orgsEmailDomain)
+	resourceName := "aws_organizations_account.test"
+	newName := fmt.Sprintf("tf_acctest_renamed_%d", rInt)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_closeOnDeletion(name, email),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/o-.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
+					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			testAccAccountImportStep(resourceName),
+			{
+				Config: testAccAccountConfig_closeOnDeletion(newName, email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, newName),
+				),
+			},
+		},
+	})
+}
+
 func testAccAccount_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -205,12 +228,7 @@ func testAccAccount_Tags(t *testing.T) {
 
 func testAccAccount_govCloud(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
-	orgsEmailDomain := os.Getenv(key)
-	if orgsEmailDomain == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()

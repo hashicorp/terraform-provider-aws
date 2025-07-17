@@ -64,7 +64,7 @@ func resourceTransitGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -93,7 +93,7 @@ func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceTransitGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -102,7 +102,7 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
 		return findTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
@@ -131,7 +131,7 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -141,10 +141,11 @@ func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayRoute(ctx, &ec2.DeleteTransitGatewayRouteInput{
+	input := ec2.DeleteTransitGatewayRouteInput{
 		DestinationCidrBlock:       aws.String(destination),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DeleteTransitGatewayRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidRouteTableIDNotFound) {
 		return diags

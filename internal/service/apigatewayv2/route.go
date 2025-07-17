@@ -111,7 +111,7 @@ func resourceRoute() *schema.Resource {
 	}
 }
 
-func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -139,7 +139,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("request_models"); ok {
-		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
@@ -165,7 +165,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -198,7 +198,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -210,7 +210,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ns := n.(*schema.Set)
 
 		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -270,7 +270,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("request_models") {
-			input.RequestModels = flex.ExpandStringValueMap(d.Get("request_models").(map[string]interface{}))
+			input.RequestModels = flex.ExpandStringValueMap(d.Get("request_models").(map[string]any))
 		}
 
 		if d.HasChange("request_parameter") {
@@ -299,15 +299,16 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route: %s", d.Id())
-	_, err := conn.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
+	input := apigatewayv2.DeleteRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRoute(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -320,7 +321,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id'", d.Id())
@@ -404,7 +405,7 @@ func findRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewa
 	return output, nil
 }
 
-func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.ParameterConstraints {
+func expandRouteRequestParameters(tfList []any) map[string]awstypes.ParameterConstraints {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -412,7 +413,7 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.Para
 	apiObjects := map[string]awstypes.ParameterConstraints{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -432,15 +433,15 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.Para
 	return apiObjects
 }
 
-func flattenRouteRequestParameters(apiObjects map[string]awstypes.ParameterConstraints) []interface{} {
+func flattenRouteRequestParameters(apiObjects map[string]awstypes.ParameterConstraints) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for k, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"request_parameter_key": k,
 			"required":              aws.ToBool(apiObject.Required),
 		})

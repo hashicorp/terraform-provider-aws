@@ -16,6 +16,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_arn", name="ARN")
+// @Region(overrideEnabled=false)
 func newARNDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &arnDataSource{}
 
@@ -23,11 +24,7 @@ func newARNDataSource(context.Context) (datasource.DataSourceWithConfigure, erro
 }
 
 type arnDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*arnDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_arn"
+	framework.DataSourceWithModel[arnDataSourceModel]
 }
 
 func (d *arnDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

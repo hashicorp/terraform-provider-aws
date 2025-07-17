@@ -17,7 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_signer_signing_profile", name="Signing Profile")
-func DataSourceSigningProfile() *schema.Resource {
+func dataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
@@ -91,7 +91,7 @@ func DataSourceSigningProfile() *schema.Resource {
 	}
 }
 
-func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -109,8 +109,8 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
-	if err := d.Set("signature_validity_period", []interface{}{
-		map[string]interface{}{
+	if err := d.Set("signature_validity_period", []any{
+		map[string]any{
 			names.AttrValue: signingProfileOutput.SignatureValidityPeriod.Value,
 			names.AttrType:  signingProfileOutput.SignatureValidityPeriod.Type,
 		},
@@ -138,7 +138,7 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile tags: %s", err)
 	}
 

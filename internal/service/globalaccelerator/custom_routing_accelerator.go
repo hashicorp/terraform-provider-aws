@@ -131,12 +131,10 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -152,8 +150,8 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
-		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]any)) > 0 {
+		input.IpAddresses = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.CreateCustomRoutingAccelerator(ctx, input)
@@ -168,8 +166,8 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandUpdateAcceleratorAttributesInput(v.([]any)[0].(map[string]any))
 		input.AcceleratorArn = aws.String(d.Id())
 
 		if _, err := conn.UpdateAcceleratorAttributes(ctx, input); err != nil {
@@ -184,7 +182,7 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceCustomRoutingAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -216,14 +214,14 @@ func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrAttributes, []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []any{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
 	return diags
 }
 
-func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -251,11 +249,11 @@ func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.Resou
 
 	if d.HasChange(names.AttrAttributes) {
 		o, n := d.GetChange(names.AttrAttributes)
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-				oInput := expandUpdateCustomRoutingAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
+		if len(o.([]any)) > 0 && o.([]any)[0] != nil {
+			if len(n.([]any)) > 0 && n.([]any)[0] != nil {
+				oInput := expandUpdateCustomRoutingAcceleratorAttributesInput(o.([]any)[0].(map[string]any))
 				oInput.AcceleratorArn = aws.String(d.Id())
-				nInput := expandUpdateCustomRoutingAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
+				nInput := expandUpdateCustomRoutingAcceleratorAttributesInput(n.([]any)[0].(map[string]any))
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
@@ -289,7 +287,7 @@ func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceCustomRoutingAcceleratorRead(ctx, d, meta)...)
 }
 
-func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -379,7 +377,7 @@ func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *glob
 }
 
 func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		accelerator, err := findCustomRoutingAcceleratorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -411,10 +409,10 @@ func waitCustomRoutingAcceleratorDeployed(ctx context.Context, conn *globalaccel
 	return nil, err
 }
 
-func expandUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput {
+func expandUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]any) *globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput {
 	return (*globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput)(expandUpdateAcceleratorAttributesInput(tfMap))
 }
 
-func flattenCustomRoutingAcceleratorAttributes(apiObject *awstypes.CustomRoutingAcceleratorAttributes) map[string]interface{} {
+func flattenCustomRoutingAcceleratorAttributes(apiObject *awstypes.CustomRoutingAcceleratorAttributes) map[string]any {
 	return flattenAcceleratorAttributes((*awstypes.AcceleratorAttributes)(apiObject))
 }

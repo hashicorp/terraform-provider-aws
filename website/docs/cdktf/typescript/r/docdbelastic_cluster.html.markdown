@@ -43,9 +43,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
-
 The following arguments are required:
 
 * `adminUserName` - (Required) Name of the Elastic DocumentDB cluster administrator
@@ -64,6 +61,9 @@ The following arguments are optional:
 * `subnetIds` - (Optional) IDs of subnets in which the Elastic DocumentDB Cluster operates.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Elastic DocumentDB Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb-elastic/create-cluster.html).
 
 ## Attribute Reference
 
@@ -112,4 +112,4 @@ Using `terraform import`, import DocDB (DocumentDB) Elastic Cluster using the `a
 % terraform import aws_docdbelastic_cluster.example arn:aws:docdb-elastic:us-east-1:000011112222:cluster/12345678-7abc-def0-1234-56789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b3dbd8992ad01dcf2b6010f1bcbefdb7b194c31fa6e5ba87c699d29608e7b4a -->
+<!-- cache-key: cdktf-0.20.8 input-79176c01f96cfa5da049471d15d782a5deb82d65a58222d6ac72de742daac83d -->

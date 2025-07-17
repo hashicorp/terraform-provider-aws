@@ -705,7 +705,7 @@ resource "aws_s3_bucket_logging" "test" {
 }
 
 func testAccBucketLoggingConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {

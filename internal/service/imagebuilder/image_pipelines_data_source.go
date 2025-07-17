@@ -39,7 +39,7 @@ func dataSourceImagePipelines() *schema.Resource {
 	}
 }
 
-func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

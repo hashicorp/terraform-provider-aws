@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -38,6 +39,7 @@ func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/regexpatternset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "2"),
@@ -69,6 +71,64 @@ func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 						"regex_string": "three",
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRegexPatternSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RegexPatternSet_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RegexPatternSet
+	resourceName := "aws_wafv2_regex_pattern_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegexPatternSetConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRegexPatternSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RegexPatternSet_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RegexPatternSet
+	resourceName := "aws_wafv2_regex_pattern_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegexPatternSetConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -288,6 +348,41 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   }
 }
 `, name)
+}
+
+func testAccRegexPatternSetConfig_nameGenerated() string {
+	return `
+resource "aws_wafv2_regex_pattern_set" "test" {
+  description = "test"
+  scope       = "REGIONAL"
+
+  regular_expression {
+    regex_string = "one"
+  }
+
+  regular_expression {
+    regex_string = "two"
+  }
+}
+`
+}
+
+func testAccRegexPatternSetConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+  name_prefix = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  regular_expression {
+    regex_string = "one"
+  }
+
+  regular_expression {
+    regex_string = "two"
+  }
+}
+`, namePrefix)
 }
 
 func testAccRegexPatternSetConfig_update(name string) string {

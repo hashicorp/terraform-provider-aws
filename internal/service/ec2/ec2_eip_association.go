@@ -79,7 +79,7 @@ func resourceEIPAssociation() *schema.Resource {
 	}
 }
 
-func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -118,7 +118,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.AssociationId))
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
@@ -142,7 +142,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEIPAssociationRead(ctx, d, meta)...)
 }
 
-func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -171,7 +171,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

@@ -67,7 +67,7 @@ func resourceThing() *schema.Resource {
 	}
 }
 
-func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -76,9 +76,9 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThingName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]any)) > 0 {
 		input.AttributePayload = &awstypes.AttributePayload{
-			Attributes: flex.ExpandStringValueMap(v.(map[string]interface{})),
+			Attributes: flex.ExpandStringValueMap(v.(map[string]any)),
 		}
 	}
 
@@ -97,7 +97,7 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -134,8 +134,8 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange(names.AttrAttributes) {
 		attributes := map[string]string{}
 
-		if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
-			attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]any)) > 0 {
+			attributes = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
 		input.AttributePayload = &awstypes.AttributePayload{
@@ -160,7 +160,7 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 

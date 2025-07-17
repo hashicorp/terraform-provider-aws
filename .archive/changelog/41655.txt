@@ -1,0 +1,3 @@
+```release-note:note
+provider: In preparation for Go 1.24, we are re-enabling the experimental post-quantum key exchange mechanism, `X25519Kyber768Draft00`. Previously, in environments using AWS Network Firewall, the Provider would hang due to a handshake issue between Go 1.23 and Network Firewall, which supported Suricata 6.0.9. We had disabled the post-quantum key exchange to resolve the issue. Since November 2024, AWS Network Firewall has upgraded to Suricata 7.0, which no longer has this issue. However, if you use AWS Network Firewall, we’d appreciate your help in identifying any remaining issues related to this change.
+```

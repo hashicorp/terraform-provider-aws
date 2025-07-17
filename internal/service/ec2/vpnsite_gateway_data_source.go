@@ -69,11 +69,11 @@ func dataSourceVPNGateway() *schema.Resource {
 	}
 }
 
-func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeVpnGatewaysInput{}
+	input := ec2.DescribeVpnGatewaysInput{}
 
 	if id, ok := d.GetOk(names.AttrID); ok {
 		input.VpnGatewayIds = []string{id.(string)}
@@ -101,7 +101,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		)...)
 	}
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
@@ -111,7 +111,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filters = nil
 	}
 
-	vgw, err := findVPNGateway(ctx, conn, input)
+	vgw, err := findVPNGateway(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))

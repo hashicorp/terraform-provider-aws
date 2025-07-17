@@ -86,8 +86,6 @@ func resourceVirtualGateway() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -658,14 +656,14 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 	}
 }
 
-func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
+		Spec:               expandVirtualGatewaySpec(d.Get("spec").([]any)),
 		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(name),
 	}
@@ -685,11 +683,11 @@ func resourceVirtualGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVirtualGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -719,14 +717,14 @@ func resourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualGatewayInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
-			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]interface{})),
+			Spec:               expandVirtualGatewaySpec(d.Get("spec").([]any)),
 			VirtualGatewayName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -744,7 +742,7 @@ func resourceVirtualGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVirtualGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -771,7 +769,7 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualGatewayImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name'", d.Id())
@@ -841,39 +839,39 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	return output.VirtualGateway, nil
 }
 
-func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec {
+func expandVirtualGatewaySpec(vSpec []any) *awstypes.VirtualGatewaySpec {
 	if len(vSpec) == 0 || vSpec[0] == nil {
 		return nil
 	}
 
 	spec := &awstypes.VirtualGatewaySpec{}
 
-	mSpec := vSpec[0].(map[string]interface{})
+	mSpec := vSpec[0].(map[string]any)
 
-	if vBackendDefaults, ok := mSpec["backend_defaults"].([]interface{}); ok && len(vBackendDefaults) > 0 && vBackendDefaults[0] != nil {
+	if vBackendDefaults, ok := mSpec["backend_defaults"].([]any); ok && len(vBackendDefaults) > 0 && vBackendDefaults[0] != nil {
 		backendDefaults := &awstypes.VirtualGatewayBackendDefaults{}
 
-		mBackendDefaults := vBackendDefaults[0].(map[string]interface{})
+		mBackendDefaults := vBackendDefaults[0].(map[string]any)
 
-		if vClientPolicy, ok := mBackendDefaults["client_policy"].([]interface{}); ok {
+		if vClientPolicy, ok := mBackendDefaults["client_policy"].([]any); ok {
 			backendDefaults.ClientPolicy = expandVirtualGatewayClientPolicy(vClientPolicy)
 		}
 
 		spec.BackendDefaults = backendDefaults
 	}
 
-	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
+	if vListeners, ok := mSpec["listener"].([]any); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []awstypes.VirtualGatewayListener{}
 
 		for _, vListener := range vListeners {
 			listener := awstypes.VirtualGatewayListener{}
 
-			mListener := vListener.(map[string]interface{})
+			mListener := vListener.(map[string]any)
 
-			if vHealthCheck, ok := mListener[names.AttrHealthCheck].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+			if vHealthCheck, ok := mListener[names.AttrHealthCheck].([]any); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &awstypes.VirtualGatewayHealthCheckPolicy{}
 
-				mHealthCheck := vHealthCheck[0].(map[string]interface{})
+				mHealthCheck := vHealthCheck[0].(map[string]any)
 
 				if vHealthyThreshold, ok := mHealthCheck["healthy_threshold"].(int); ok && vHealthyThreshold > 0 {
 					healthCheck.HealthyThreshold = aws.Int32(int32(vHealthyThreshold))
@@ -900,12 +898,12 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 				listener.HealthCheck = healthCheck
 			}
 
-			if vConnectionPool, ok := mListener["connection_pool"].([]interface{}); ok && len(vConnectionPool) > 0 && vConnectionPool[0] != nil {
-				mConnectionPool := vConnectionPool[0].(map[string]interface{})
+			if vConnectionPool, ok := mListener["connection_pool"].([]any); ok && len(vConnectionPool) > 0 && vConnectionPool[0] != nil {
+				mConnectionPool := vConnectionPool[0].(map[string]any)
 
-				if vGrpcConnectionPool, ok := mConnectionPool["grpc"].([]interface{}); ok && len(vGrpcConnectionPool) > 0 && vGrpcConnectionPool[0] != nil {
+				if vGrpcConnectionPool, ok := mConnectionPool["grpc"].([]any); ok && len(vGrpcConnectionPool) > 0 && vGrpcConnectionPool[0] != nil {
 					connectionPool := &awstypes.VirtualGatewayConnectionPoolMemberGrpc{}
-					mGrpcConnectionPool := vGrpcConnectionPool[0].(map[string]interface{})
+					mGrpcConnectionPool := vGrpcConnectionPool[0].(map[string]any)
 
 					grpcConnectionPool := awstypes.VirtualGatewayGrpcConnectionPool{}
 
@@ -917,9 +915,9 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 					listener.ConnectionPool = connectionPool
 				}
 
-				if vHttpConnectionPool, ok := mConnectionPool["http"].([]interface{}); ok && len(vHttpConnectionPool) > 0 && vHttpConnectionPool[0] != nil {
+				if vHttpConnectionPool, ok := mConnectionPool["http"].([]any); ok && len(vHttpConnectionPool) > 0 && vHttpConnectionPool[0] != nil {
 					connectionPool := &awstypes.VirtualGatewayConnectionPoolMemberHttp{}
-					mHttpConnectionPool := vHttpConnectionPool[0].(map[string]interface{})
+					mHttpConnectionPool := vHttpConnectionPool[0].(map[string]any)
 
 					httpConnectionPool := awstypes.VirtualGatewayHttpConnectionPool{}
 
@@ -934,9 +932,9 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 					listener.ConnectionPool = connectionPool
 				}
 
-				if vHttp2ConnectionPool, ok := mConnectionPool["http2"].([]interface{}); ok && len(vHttp2ConnectionPool) > 0 && vHttp2ConnectionPool[0] != nil {
+				if vHttp2ConnectionPool, ok := mConnectionPool["http2"].([]any); ok && len(vHttp2ConnectionPool) > 0 && vHttp2ConnectionPool[0] != nil {
 					connectionPool := &awstypes.VirtualGatewayConnectionPoolMemberHttp2{}
-					mHttp2ConnectionPool := vHttp2ConnectionPool[0].(map[string]interface{})
+					mHttp2ConnectionPool := vHttp2ConnectionPool[0].(map[string]any)
 
 					http2ConnectionPool := awstypes.VirtualGatewayHttp2ConnectionPool{}
 
@@ -949,10 +947,10 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 				}
 			}
 
-			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
+			if vPortMapping, ok := mListener["port_mapping"].([]any); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				portMapping := &awstypes.VirtualGatewayPortMapping{}
 
-				mPortMapping := vPortMapping[0].(map[string]interface{})
+				mPortMapping := vPortMapping[0].(map[string]any)
 
 				if vPort, ok := mPortMapping[names.AttrPort].(int); ok && vPort > 0 {
 					portMapping.Port = aws.Int32(int32(vPort))
@@ -964,23 +962,23 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 				listener.PortMapping = portMapping
 			}
 
-			if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+			if vTls, ok := mListener["tls"].([]any); ok && len(vTls) > 0 && vTls[0] != nil {
 				tls := &awstypes.VirtualGatewayListenerTls{}
 
-				mTls := vTls[0].(map[string]interface{})
+				mTls := vTls[0].(map[string]any)
 
 				if vMode, ok := mTls[names.AttrMode].(string); ok && vMode != "" {
 					tls.Mode = awstypes.VirtualGatewayListenerTlsMode(vMode)
 				}
 
-				if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
-					mCertificate := vCertificate[0].(map[string]interface{})
+				if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+					mCertificate := vCertificate[0].(map[string]any)
 
-					if vAcm, ok := mCertificate["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+					if vAcm, ok := mCertificate["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberAcm{}
 						acm := awstypes.VirtualGatewayListenerTlsAcmCertificate{}
 
-						mAcm := vAcm[0].(map[string]interface{})
+						mAcm := vAcm[0].(map[string]any)
 
 						if vCertificateArn, ok := mAcm[names.AttrCertificateARN].(string); ok && vCertificateArn != "" {
 							acm.CertificateArn = aws.String(vCertificateArn)
@@ -990,11 +988,11 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 						tls.Certificate = certificate
 					}
 
-					if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+					if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberFile{}
 						file := awstypes.VirtualGatewayListenerTlsFileCertificate{}
 
-						mFile := vFile[0].(map[string]interface{})
+						mFile := vFile[0].(map[string]any)
 
 						if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
@@ -1007,11 +1005,11 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 						tls.Certificate = certificate
 					}
 
-					if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+					if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 						certificate := &awstypes.VirtualGatewayListenerTlsCertificateMemberSds{}
 						sds := awstypes.VirtualGatewayListenerTlsSdsCertificate{}
 
-						mSds := vSds[0].(map[string]interface{})
+						mSds := vSds[0].(map[string]any)
 
 						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
 							sds.SecretName = aws.String(vSecretName)
@@ -1022,20 +1020,20 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 					}
 				}
 
-				if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
+				if vValidation, ok := mTls["validation"].([]any); ok && len(vValidation) > 0 && vValidation[0] != nil {
 					validation := &awstypes.VirtualGatewayListenerTlsValidationContext{}
 
-					mValidation := vValidation[0].(map[string]interface{})
+					mValidation := vValidation[0].(map[string]any)
 
-					if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]interface{}); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
+					if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]any); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
 						subjectAlternativeNames := &awstypes.SubjectAlternativeNames{}
 
-						mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]interface{})
+						mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-						if vMatch, ok := mSubjectAlternativeNames["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 							match := &awstypes.SubjectAlternativeNameMatchers{}
 
-							mMatch := vMatch[0].(map[string]interface{})
+							mMatch := vMatch[0].(map[string]any)
 
 							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
 								match.Exact = flex.ExpandStringValueSet(vExact)
@@ -1047,14 +1045,14 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 						validation.SubjectAlternativeNames = subjectAlternativeNames
 					}
 
-					if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
-						mTrust := vTrust[0].(map[string]interface{})
+					if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
+						mTrust := vTrust[0].(map[string]any)
 
-						if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+						if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 							trust := &awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberFile{}
 							file := awstypes.VirtualGatewayTlsValidationContextFileTrust{}
 
-							mFile := vFile[0].(map[string]interface{})
+							mFile := vFile[0].(map[string]any)
 
 							if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 								file.CertificateChain = aws.String(vCertificateChain)
@@ -1064,11 +1062,11 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 							validation.Trust = trust
 						}
 
-						if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+						if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 							trust := &awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberSds{}
 							sds := awstypes.VirtualGatewayTlsValidationContextSdsTrust{}
 
-							mSds := vSds[0].(map[string]interface{})
+							mSds := vSds[0].(map[string]any)
 
 							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
 								sds.SecretName = aws.String(vSecretName)
@@ -1091,30 +1089,30 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 		spec.Listeners = listeners
 	}
 
-	if vLogging, ok := mSpec["logging"].([]interface{}); ok && len(vLogging) > 0 && vLogging[0] != nil {
+	if vLogging, ok := mSpec["logging"].([]any); ok && len(vLogging) > 0 && vLogging[0] != nil {
 		logging := &awstypes.VirtualGatewayLogging{}
 
-		mLogging := vLogging[0].(map[string]interface{})
+		mLogging := vLogging[0].(map[string]any)
 
-		if vAccessLog, ok := mLogging["access_log"].([]interface{}); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
-			mAccessLog := vAccessLog[0].(map[string]interface{})
+		if vAccessLog, ok := mLogging["access_log"].([]any); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
+			mAccessLog := vAccessLog[0].(map[string]any)
 
-			if vFile, ok := mAccessLog["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mAccessLog["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				accessLog := &awstypes.VirtualGatewayAccessLogMemberFile{}
 				file := awstypes.VirtualGatewayFileAccessLog{}
 
-				mFile := vFile[0].(map[string]interface{})
+				mFile := vFile[0].(map[string]any)
 
-				if vFormat, ok := mFile[names.AttrFormat].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
-					mFormat := vFormat[0].(map[string]interface{})
+				if vFormat, ok := mFile[names.AttrFormat].([]any); ok && len(vFormat) > 0 && vFormat[0] != nil {
+					mFormat := vFormat[0].(map[string]any)
 
-					if vJsonFormatRefs, ok := mFormat[names.AttrJSON].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+					if vJsonFormatRefs, ok := mFormat[names.AttrJSON].([]any); ok && len(vJsonFormatRefs) > 0 {
 						format := &awstypes.LoggingFormatMemberJson{}
 						jsonFormatRefs := []awstypes.JsonFormatRef{}
 						for _, vJsonFormatRef := range vJsonFormatRefs {
 							mJsonFormatRef := awstypes.JsonFormatRef{
-								Key:   aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrKey].(string)),
-								Value: aws.String(vJsonFormatRef.(map[string]interface{})[names.AttrValue].(string)),
+								Key:   aws.String(vJsonFormatRef.(map[string]any)[names.AttrKey].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]any)[names.AttrValue].(string)),
 							}
 							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
 						}
@@ -1144,28 +1142,28 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *awstypes.VirtualGatewaySpec 
 	return spec
 }
 
-func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.VirtualGatewayClientPolicy {
+func expandVirtualGatewayClientPolicy(vClientPolicy []any) *awstypes.VirtualGatewayClientPolicy {
 	if len(vClientPolicy) == 0 || vClientPolicy[0] == nil {
 		return nil
 	}
 
 	clientPolicy := &awstypes.VirtualGatewayClientPolicy{}
 
-	mClientPolicy := vClientPolicy[0].(map[string]interface{})
+	mClientPolicy := vClientPolicy[0].(map[string]any)
 
-	if vTls, ok := mClientPolicy["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+	if vTls, ok := mClientPolicy["tls"].([]any); ok && len(vTls) > 0 && vTls[0] != nil {
 		tls := &awstypes.VirtualGatewayClientPolicyTls{}
 
-		mTls := vTls[0].(map[string]interface{})
+		mTls := vTls[0].(map[string]any)
 
-		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
-			mCertificate := vCertificate[0].(map[string]interface{})
+		if vCertificate, ok := mTls[names.AttrCertificate].([]any); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+			mCertificate := vCertificate[0].(map[string]any)
 
-			if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+			if vFile, ok := mCertificate["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 				certificate := &awstypes.VirtualGatewayClientTlsCertificateMemberFile{}
 				file := awstypes.VirtualGatewayListenerTlsFileCertificate{}
 
-				mFile := vFile[0].(map[string]interface{})
+				mFile := vFile[0].(map[string]any)
 
 				if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
@@ -1178,11 +1176,11 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 				tls.Certificate = certificate
 			}
 
-			if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+			if vSds, ok := mCertificate["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 				certificate := &awstypes.VirtualGatewayClientTlsCertificateMemberSds{}
 				sds := awstypes.VirtualGatewayListenerTlsSdsCertificate{}
 
-				mSds := vSds[0].(map[string]interface{})
+				mSds := vSds[0].(map[string]any)
 
 				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
 					sds.SecretName = aws.String(vSecretName)
@@ -1201,20 +1199,20 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 			tls.Ports = flex.ExpandInt32ValueSet(vPorts)
 		}
 
-		if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
+		if vValidation, ok := mTls["validation"].([]any); ok && len(vValidation) > 0 && vValidation[0] != nil {
 			validation := &awstypes.VirtualGatewayTlsValidationContext{}
 
-			mValidation := vValidation[0].(map[string]interface{})
+			mValidation := vValidation[0].(map[string]any)
 
-			if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]interface{}); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
+			if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]any); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
 				subjectAlternativeNames := &awstypes.SubjectAlternativeNames{}
 
-				mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]interface{})
+				mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]any)
 
-				if vMatch, ok := mSubjectAlternativeNames["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+				if vMatch, ok := mSubjectAlternativeNames["match"].([]any); ok && len(vMatch) > 0 && vMatch[0] != nil {
 					match := &awstypes.SubjectAlternativeNameMatchers{}
 
-					mMatch := vMatch[0].(map[string]interface{})
+					mMatch := vMatch[0].(map[string]any)
 
 					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
 						match.Exact = flex.ExpandStringValueSet(vExact)
@@ -1226,14 +1224,14 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 				validation.SubjectAlternativeNames = subjectAlternativeNames
 			}
 
-			if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
-				mTrust := vTrust[0].(map[string]interface{})
+			if vTrust, ok := mValidation["trust"].([]any); ok && len(vTrust) > 0 && vTrust[0] != nil {
+				mTrust := vTrust[0].(map[string]any)
 
-				if vAcm, ok := mTrust["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+				if vAcm, ok := mTrust["acm"].([]any); ok && len(vAcm) > 0 && vAcm[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberAcm{}
 					acm := awstypes.VirtualGatewayTlsValidationContextAcmTrust{}
 
-					mAcm := vAcm[0].(map[string]interface{})
+					mAcm := vAcm[0].(map[string]any)
 
 					if vCertificateAuthorityArns, ok := mAcm["certificate_authority_arns"].(*schema.Set); ok && vCertificateAuthorityArns.Len() > 0 {
 						acm.CertificateAuthorityArns = flex.ExpandStringValueSet(vCertificateAuthorityArns)
@@ -1243,11 +1241,11 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 					validation.Trust = trust
 				}
 
-				if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+				if vFile, ok := mTrust["file"].([]any); ok && len(vFile) > 0 && vFile[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberFile{}
 					file := awstypes.VirtualGatewayTlsValidationContextFileTrust{}
 
-					mFile := vFile[0].(map[string]interface{})
+					mFile := vFile[0].(map[string]any)
 
 					if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 						file.CertificateChain = aws.String(vCertificateChain)
@@ -1257,11 +1255,11 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 					validation.Trust = trust
 				}
 
-				if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+				if vSds, ok := mTrust["sds"].([]any); ok && len(vSds) > 0 && vSds[0] != nil {
 					trust := &awstypes.VirtualGatewayTlsValidationContextTrustMemberSds{}
 					sds := awstypes.VirtualGatewayTlsValidationContextSdsTrust{}
 
-					mSds := vSds[0].(map[string]interface{})
+					mSds := vSds[0].(map[string]any)
 
 					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
 						sds.SecretName = aws.String(vSecretName)
@@ -1281,53 +1279,53 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *awstypes.Vir
 	return clientPolicy
 }
 
-func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} {
+func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []any {
 	if spec == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mSpec := map[string]interface{}{}
+	mSpec := map[string]any{}
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
-		mBackendDefaults := map[string]interface{}{
+		mBackendDefaults := map[string]any{
 			"client_policy": flattenVirtualGatewayClientPolicy(backendDefaults.ClientPolicy),
 		}
 
-		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
+		mSpec["backend_defaults"] = []any{mBackendDefaults}
 	}
 
 	if len(spec.Listeners) > 0 {
-		var mListeners []interface{}
+		var mListeners []any
 		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
+			mListener := map[string]any{}
 
 			if connectionPool := listener.ConnectionPool; connectionPool != nil {
-				mConnectionPool := map[string]interface{}{}
+				mConnectionPool := map[string]any{}
 
 				switch v := connectionPool.(type) {
 				case *awstypes.VirtualGatewayConnectionPoolMemberGrpc:
-					mGrpcConnectionPool := map[string]interface{}{
+					mGrpcConnectionPool := map[string]any{
 						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
-					mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
+					mConnectionPool["grpc"] = []any{mGrpcConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp:
-					mHttpConnectionPool := map[string]interface{}{
+					mHttpConnectionPool := map[string]any{
 						"max_connections":      aws.ToInt32(v.Value.MaxConnections),
 						"max_pending_requests": aws.ToInt32(v.Value.MaxPendingRequests),
 					}
-					mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
+					mConnectionPool["http"] = []any{mHttpConnectionPool}
 				case *awstypes.VirtualGatewayConnectionPoolMemberHttp2:
-					mHttp2ConnectionPool := map[string]interface{}{
+					mHttp2ConnectionPool := map[string]any{
 						"max_requests": aws.ToInt32(v.Value.MaxRequests),
 					}
-					mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
+					mConnectionPool["http2"] = []any{mHttp2ConnectionPool}
 				}
 
-				mListener["connection_pool"] = []interface{}{mConnectionPool}
+				mListener["connection_pool"] = []any{mConnectionPool}
 			}
 
 			if healthCheck := listener.HealthCheck; healthCheck != nil {
-				mHealthCheck := map[string]interface{}{
+				mHealthCheck := map[string]any{
 					"healthy_threshold":   aws.ToInt32(healthCheck.HealthyThreshold),
 					"interval_millis":     aws.ToInt64(healthCheck.IntervalMillis),
 					names.AttrPath:        aws.ToString(healthCheck.Path),
@@ -1336,92 +1334,92 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 					"timeout_millis":      aws.ToInt64(healthCheck.TimeoutMillis),
 					"unhealthy_threshold": aws.ToInt32(healthCheck.UnhealthyThreshold),
 				}
-				mListener[names.AttrHealthCheck] = []interface{}{mHealthCheck}
+				mListener[names.AttrHealthCheck] = []any{mHealthCheck}
 			}
 
 			if portMapping := listener.PortMapping; portMapping != nil {
-				mPortMapping := map[string]interface{}{
+				mPortMapping := map[string]any{
 					names.AttrPort:     aws.ToInt32(portMapping.Port),
 					names.AttrProtocol: portMapping.Protocol,
 				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
+				mListener["port_mapping"] = []any{mPortMapping}
 			}
 
 			if tls := listener.Tls; tls != nil {
-				mTls := map[string]interface{}{
+				mTls := map[string]any{
 					names.AttrMode: tls.Mode,
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
-					mCertificate := map[string]interface{}{}
+					mCertificate := map[string]any{}
 
 					switch v := certificate.(type) {
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberAcm:
-						mAcm := map[string]interface{}{
+						mAcm := map[string]any{
 							names.AttrCertificateARN: aws.ToString(v.Value.CertificateArn),
 						}
 
-						mCertificate["acm"] = []interface{}{mAcm}
+						mCertificate["acm"] = []any{mAcm}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberFile:
-						mFile := map[string]interface{}{
+						mFile := map[string]any{
 							names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 							names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 						}
 
-						mCertificate["file"] = []interface{}{mFile}
+						mCertificate["file"] = []any{mFile}
 					case *awstypes.VirtualGatewayListenerTlsCertificateMemberSds:
-						mSds := map[string]interface{}{
+						mSds := map[string]any{
 							"secret_name": aws.ToString(v.Value.SecretName),
 						}
 
-						mCertificate["sds"] = []interface{}{mSds}
+						mCertificate["sds"] = []any{mSds}
 					}
 
-					mTls[names.AttrCertificate] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []any{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
-					mValidation := map[string]interface{}{}
+					mValidation := map[string]any{}
 
 					if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
-						mSubjectAlternativeNames := map[string]interface{}{}
+						mSubjectAlternativeNames := map[string]any{}
 
 						if match := subjectAlternativeNames.Match; match != nil {
-							mMatch := map[string]interface{}{
+							mMatch := map[string]any{
 								"exact": match.Exact,
 							}
 
-							mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+							mSubjectAlternativeNames["match"] = []any{mMatch}
 						}
 
-						mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+						mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
 					}
 
 					if trust := validation.Trust; trust != nil {
-						mTrust := map[string]interface{}{}
+						mTrust := map[string]any{}
 
 						switch v := trust.(type) {
 						case *awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberFile:
-							mFile := map[string]interface{}{
+							mFile := map[string]any{
 								names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 							}
 
-							mTrust["file"] = []interface{}{mFile}
+							mTrust["file"] = []any{mFile}
 						case *awstypes.VirtualGatewayListenerTlsValidationContextTrustMemberSds:
-							mSds := map[string]interface{}{
+							mSds := map[string]any{
 								"secret_name": aws.ToString(v.Value.SecretName),
 							}
 
-							mTrust["sds"] = []interface{}{mSds}
+							mTrust["sds"] = []any{mSds}
 						}
 
-						mValidation["trust"] = []interface{}{mTrust}
+						mValidation["trust"] = []any{mTrust}
 					}
 
-					mTls["validation"] = []interface{}{mValidation}
+					mTls["validation"] = []any{mValidation}
 				}
 
-				mListener["tls"] = []interface{}{mTls}
+				mListener["tls"] = []any{mTls}
 			}
 			mListeners = append(mListeners, mListener)
 		}
@@ -1429,24 +1427,24 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 	}
 
 	if logging := spec.Logging; logging != nil {
-		mLogging := map[string]interface{}{}
+		mLogging := map[string]any{}
 
 		if accessLog := logging.AccessLog; accessLog != nil {
-			mAccessLog := map[string]interface{}{}
+			mAccessLog := map[string]any{}
 
 			switch v := accessLog.(type) {
 			case *awstypes.VirtualGatewayAccessLogMemberFile:
-				mFile := map[string]interface{}{}
+				mFile := map[string]any{}
 
 				if format := v.Value.Format; format != nil {
-					mFormat := map[string]interface{}{}
+					mFormat := map[string]any{}
 
 					switch v := format.(type) {
 					case *awstypes.LoggingFormatMemberJson:
-						vJsons := []interface{}{}
+						vJsons := []any{}
 
 						for _, j := range v.Value {
-							mJson := map[string]interface{}{
+							mJson := map[string]any{
 								names.AttrKey:   aws.ToString(j.Key),
 								names.AttrValue: aws.ToString(j.Value),
 							}
@@ -1459,107 +1457,107 @@ func flattenVirtualGatewaySpec(spec *awstypes.VirtualGatewaySpec) []interface{} 
 						mFormat["text"] = v.Value
 					}
 
-					mFile[names.AttrFormat] = []interface{}{mFormat}
+					mFile[names.AttrFormat] = []any{mFormat}
 				}
 
 				mFile[names.AttrPath] = aws.ToString(v.Value.Path)
 
-				mAccessLog["file"] = []interface{}{mFile}
+				mAccessLog["file"] = []any{mFile}
 			}
 
-			mLogging["access_log"] = []interface{}{mAccessLog}
+			mLogging["access_log"] = []any{mAccessLog}
 		}
 
-		mSpec["logging"] = []interface{}{mLogging}
+		mSpec["logging"] = []any{mLogging}
 	}
 
-	return []interface{}{mSpec}
+	return []any{mSpec}
 }
 
-func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClientPolicy) []interface{} {
+func flattenVirtualGatewayClientPolicy(clientPolicy *awstypes.VirtualGatewayClientPolicy) []any {
 	if clientPolicy == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	mClientPolicy := map[string]interface{}{}
+	mClientPolicy := map[string]any{}
 
 	if tls := clientPolicy.Tls; tls != nil {
-		mTls := map[string]interface{}{
+		mTls := map[string]any{
 			"enforce": aws.ToBool(tls.Enforce),
 			"ports":   flex.FlattenInt32ValueSet(tls.Ports),
 		}
 
 		if certificate := tls.Certificate; certificate != nil {
-			mCertificate := map[string]interface{}{}
+			mCertificate := map[string]any{}
 
 			switch v := certificate.(type) {
 			case *awstypes.VirtualGatewayClientTlsCertificateMemberFile:
-				mFile := map[string]interface{}{
+				mFile := map[string]any{
 					names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 					names.AttrPrivateKey:       aws.ToString(v.Value.PrivateKey),
 				}
 
-				mCertificate["file"] = []interface{}{mFile}
+				mCertificate["file"] = []any{mFile}
 			case *awstypes.VirtualGatewayClientTlsCertificateMemberSds:
-				mSds := map[string]interface{}{
+				mSds := map[string]any{
 					"secret_name": aws.ToString(v.Value.SecretName),
 				}
 
-				mCertificate["sds"] = []interface{}{mSds}
+				mCertificate["sds"] = []any{mSds}
 			}
 
-			mTls[names.AttrCertificate] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []any{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {
-			mValidation := map[string]interface{}{}
+			mValidation := map[string]any{}
 
 			if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
-				mSubjectAlternativeNames := map[string]interface{}{}
+				mSubjectAlternativeNames := map[string]any{}
 
 				if match := subjectAlternativeNames.Match; match != nil {
-					mMatch := map[string]interface{}{
+					mMatch := map[string]any{
 						"exact": match.Exact,
 					}
 
-					mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+					mSubjectAlternativeNames["match"] = []any{mMatch}
 				}
 
-				mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+				mValidation["subject_alternative_names"] = []any{mSubjectAlternativeNames}
 			}
 
 			if trust := validation.Trust; trust != nil {
-				mTrust := map[string]interface{}{}
+				mTrust := map[string]any{}
 
 				switch v := trust.(type) {
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberAcm:
-					mAcm := map[string]interface{}{
+					mAcm := map[string]any{
 						"certificate_authority_arns": v.Value.CertificateAuthorityArns,
 					}
 
-					mTrust["acm"] = []interface{}{mAcm}
+					mTrust["acm"] = []any{mAcm}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberFile:
-					mFile := map[string]interface{}{
+					mFile := map[string]any{
 						names.AttrCertificateChain: aws.ToString(v.Value.CertificateChain),
 					}
 
-					mTrust["file"] = []interface{}{mFile}
+					mTrust["file"] = []any{mFile}
 				case *awstypes.VirtualGatewayTlsValidationContextTrustMemberSds:
-					mSds := map[string]interface{}{
+					mSds := map[string]any{
 						"secret_name": aws.ToString(v.Value.SecretName),
 					}
 
-					mTrust["sds"] = []interface{}{mSds}
+					mTrust["sds"] = []any{mSds}
 				}
 
-				mValidation["trust"] = []interface{}{mTrust}
+				mValidation["trust"] = []any{mTrust}
 			}
 
-			mTls["validation"] = []interface{}{mValidation}
+			mTls["validation"] = []any{mValidation}
 		}
 
-		mClientPolicy["tls"] = []interface{}{mTls}
+		mClientPolicy["tls"] = []any{mTls}
 	}
 
-	return []interface{}{mClientPolicy}
+	return []any{mClientPolicy}
 }

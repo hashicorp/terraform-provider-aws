@@ -51,13 +51,9 @@ const (
 )
 
 type vpcEndpointResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*vpcEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_vpc_endpoint"
 }
 
 func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -65,7 +61,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the interface endpoint.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -74,6 +71,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				Description: "One or more security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint. Up to 5 security groups can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
@@ -83,6 +81,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				Description: "One or more subnet IDs from which you'll access OpenSearch Serverless. Up to 6 subnets can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
@@ -91,7 +90,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
+				Description: "ID of the VPC from which you'll access OpenSearch Serverless.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
 				},
@@ -347,12 +347,13 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 type vpcEndpointResourceModel struct {
-	ID               types.String                     `tfsdk:"id"`
-	Name             types.String                     `tfsdk:"name"`
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-	Timeouts         timeouts.Value                   `tfsdk:"timeouts"`
-	VPCID            types.String                     `tfsdk:"vpc_id"`
+	framework.WithRegionModel
+	ID               types.String        `tfsdk:"id"`
+	Name             types.String        `tfsdk:"name"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+	Timeouts         timeouts.Value      `tfsdk:"timeouts"`
+	VPCID            types.String        `tfsdk:"vpc_id"`
 }
 
 func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*awstypes.VpcEndpointDetail, error) {
@@ -395,7 +396,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 }
 
 func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -478,8 +478,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -487,7 +485,7 @@ const (
 	ResNameLifecyclePolicy = "Lifecycle Policy"
 )
 
-func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const createRetryTimeout = 2 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
@@ -495,12 +493,12 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
-		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
+		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]any)),
 		State:            awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (interface{}, error) {
+	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (any, error) {
 		return conn.CreateLifecyclePolicy(ctx, &input)
 	})
 
@@ -513,7 +511,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
-func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
@@ -543,7 +541,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
@@ -562,7 +560,7 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.State = awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string))
 		}
 		if d.HasChange("policy_details") {
-			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]interface{}))
+			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]any))
 		}
 
 		log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
@@ -575,14 +573,15 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
-func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
-	_, err := conn.DeleteLifecyclePolicy(ctx, &dlm.DeleteLifecyclePolicyInput{
+	input := dlm.DeleteLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLifecyclePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -620,43 +619,43 @@ func findLifecyclePolicyByID(ctx context.Context, conn *dlm.Client, id string) (
 	return output, nil
 }
 
-func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
+func expandPolicyDetails(cfg []any) *awstypes.PolicyDetails {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	policyType := m["policy_type"].(string)
 
 	policyDetails := &awstypes.PolicyDetails{
 		PolicyType: awstypes.PolicyTypeValues(policyType),
 	}
-	if v, ok := m["resource_types"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["resource_types"].([]any); ok && len(v) > 0 {
 		policyDetails.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
 	}
-	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["resource_locations"].([]any); ok && len(v) > 0 {
 		policyDetails.ResourceLocations = flex.ExpandStringyValueList[awstypes.ResourceLocationValues](v)
 	}
-	if v, ok := m[names.AttrSchedule].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrSchedule].([]any); ok && len(v) > 0 {
 		policyDetails.Schedules = expandSchedules(v)
 	}
-	if v, ok := m[names.AttrAction].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrAction].([]any); ok && len(v) > 0 {
 		policyDetails.Actions = expandActions(v)
 	}
-	if v, ok := m["event_source"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["event_source"].([]any); ok && len(v) > 0 {
 		policyDetails.EventSource = expandEventSource(v)
 	}
-	if v, ok := m["target_tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m["target_tags"].(map[string]any); ok && len(v) > 0 {
 		policyDetails.TargetTags = expandTags(v)
 	}
-	if v, ok := m[names.AttrParameters].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrParameters].([]any); ok && len(v) > 0 {
 		policyDetails.Parameters = expandParameters(v, policyType)
 	}
 
 	return policyDetails
 }
 
-func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]any {
+	result := make(map[string]any)
 	result["resource_types"] = flex.FlattenStringyValueList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
 	result[names.AttrAction] = flattenActions(policyDetails.Actions)
@@ -669,19 +668,19 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]in
 		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func expandSchedules(cfg []interface{}) []awstypes.Schedule {
+func expandSchedules(cfg []any) []awstypes.Schedule {
 	schedules := make([]awstypes.Schedule, len(cfg))
 	for i, c := range cfg {
 		schedule := awstypes.Schedule{}
-		m := c.(map[string]interface{})
+		m := c.(map[string]any)
 		if v, ok := m["copy_tags"]; ok {
 			schedule.CopyTags = aws.Bool(v.(bool))
 		}
 		if v, ok := m["create_rule"]; ok {
-			schedule.CreateRule = expandCreateRule(v.([]interface{}))
+			schedule.CreateRule = expandCreateRule(v.([]any))
 		}
 		if v, ok := m["cross_region_copy_rule"].(*schema.Set); ok && v.Len() > 0 {
 			schedule.CrossRegionCopyRules = expandCrossRegionCopyRules(v.List())
@@ -690,22 +689,22 @@ func expandSchedules(cfg []interface{}) []awstypes.Schedule {
 			schedule.Name = aws.String(v.(string))
 		}
 		if v, ok := m["deprecate_rule"]; ok {
-			schedule.DeprecateRule = expandDeprecateRule(v.([]interface{}))
+			schedule.DeprecateRule = expandDeprecateRule(v.([]any))
 		}
 		if v, ok := m["fast_restore_rule"]; ok {
-			schedule.FastRestoreRule = expandFastRestoreRule(v.([]interface{}))
+			schedule.FastRestoreRule = expandFastRestoreRule(v.([]any))
 		}
 		if v, ok := m["share_rule"]; ok {
-			schedule.ShareRules = expandShareRule(v.([]interface{}))
+			schedule.ShareRules = expandShareRule(v.([]any))
 		}
 		if v, ok := m["retain_rule"]; ok {
-			schedule.RetainRule = expandRetainRule(v.([]interface{}))
+			schedule.RetainRule = expandRetainRule(v.([]any))
 		}
 		if v, ok := m["tags_to_add"]; ok {
-			schedule.TagsToAdd = expandTags(v.(map[string]interface{}))
+			schedule.TagsToAdd = expandTags(v.(map[string]any))
 		}
 		if v, ok := m["variable_tags"]; ok {
-			schedule.VariableTags = expandTags(v.(map[string]interface{}))
+			schedule.VariableTags = expandTags(v.(map[string]any))
 		}
 
 		schedules[i] = schedule
@@ -714,10 +713,10 @@ func expandSchedules(cfg []interface{}) []awstypes.Schedule {
 	return schedules
 }
 
-func flattenSchedules(schedules []awstypes.Schedule) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(schedules))
+func flattenSchedules(schedules []awstypes.Schedule) []map[string]any {
+	result := make([]map[string]any, len(schedules))
 	for i, s := range schedules {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["copy_tags"] = aws.ToBool(s.CopyTags)
 		m["create_rule"] = flattenCreateRule(s.CreateRule)
 		m["cross_region_copy_rule"] = flattenCrossRegionCopyRules(s.CrossRegionCopyRules)
@@ -744,11 +743,11 @@ func flattenSchedules(schedules []awstypes.Schedule) []map[string]interface{} {
 	return result
 }
 
-func expandActions(cfg []interface{}) []awstypes.Action {
+func expandActions(cfg []any) []awstypes.Action {
 	actions := make([]awstypes.Action, len(cfg))
 	for i, c := range cfg {
 		action := awstypes.Action{}
-		m := c.(map[string]interface{})
+		m := c.(map[string]any)
 		if v, ok := m["cross_region_copy"].(*schema.Set); ok {
 			action.CrossRegionCopy = expandActionCrossRegionCopyRules(v.List())
 		}
@@ -762,10 +761,10 @@ func expandActions(cfg []interface{}) []awstypes.Action {
 	return actions
 }
 
-func flattenActions(actions []awstypes.Action) []map[string]interface{} {
-	result := make([]map[string]interface{}, len(actions))
+func flattenActions(actions []awstypes.Action) []map[string]any {
+	result := make([]map[string]any, len(actions))
 	for i, s := range actions {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		m[names.AttrName] = aws.ToString(s.Name)
 
@@ -779,7 +778,7 @@ func flattenActions(actions []awstypes.Action) []map[string]interface{} {
 	return result
 }
 
-func expandActionCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyAction {
+func expandActionCrossRegionCopyRules(l []any) []awstypes.CrossRegionCopyAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -787,17 +786,17 @@ func expandActionCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCop
 	var rules []awstypes.CrossRegionCopyAction
 
 	for _, tfMapRaw := range l {
-		m, ok := tfMapRaw.(map[string]interface{})
+		m, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		rule := awstypes.CrossRegionCopyAction{}
-		if v, ok := m[names.AttrEncryptionConfiguration].([]interface{}); ok {
+		if v, ok := m[names.AttrEncryptionConfiguration].([]any); ok {
 			rule.EncryptionConfiguration = expandActionCrossRegionCopyRuleEncryptionConfiguration(v)
 		}
-		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := m["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
 		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
@@ -810,15 +809,15 @@ func expandActionCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCop
 	return rules
 }
 
-func flattenActionCrossRegionCopyRules(rules []awstypes.CrossRegionCopyAction) []interface{} {
+func flattenActionCrossRegionCopyRules(rules []awstypes.CrossRegionCopyAction) []any {
 	if len(rules) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var result []interface{}
+	var result []any
 
 	for _, rule := range rules {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrEncryptionConfiguration: flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
 			"retain_rule":                     flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
 			names.AttrTarget:                  aws.ToString(rule.Target),
@@ -830,12 +829,12 @@ func flattenActionCrossRegionCopyRules(rules []awstypes.CrossRegionCopyAction) [
 	return result
 }
 
-func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *awstypes.EncryptionConfiguration {
+func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []any) *awstypes.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	config := &awstypes.EncryptionConfiguration{
 		Encrypted: aws.Bool(m[names.AttrEncrypted].(bool)),
 	}
@@ -846,55 +845,55 @@ func expandActionCrossRegionCopyRuleEncryptionConfiguration(l []interface{}) *aw
 	return config
 }
 
-func flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule *awstypes.EncryptionConfiguration) []interface{} {
+func flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule *awstypes.EncryptionConfiguration) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrEncrypted: aws.ToBool(rule.Encrypted),
 		"cmk_arn":           aws.ToString(rule.CmkArn),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandEventSource(l []interface{}) *awstypes.EventSource {
+func expandEventSource(l []any) *awstypes.EventSource {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	config := &awstypes.EventSource{
 		Type: awstypes.EventSourceValues(m[names.AttrType].(string)),
 	}
 
-	if v, ok := m[names.AttrParameters].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrParameters].([]any); ok && len(v) > 0 {
 		config.Parameters = expandEventSourceParameters(v)
 	}
 
 	return config
 }
 
-func flattenEventSource(rule *awstypes.EventSource) []interface{} {
+func flattenEventSource(rule *awstypes.EventSource) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrParameters: flattenEventSourceParameters(rule.Parameters),
 		names.AttrType:       string(rule.Type),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandEventSourceParameters(l []interface{}) *awstypes.EventParameters {
+func expandEventSourceParameters(l []any) *awstypes.EventParameters {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	config := &awstypes.EventParameters{
 		DescriptionRegex: aws.String(m["description_regex"].(string)),
 		EventType:        awstypes.EventTypeValues(m["event_type"].(string)),
@@ -904,21 +903,21 @@ func expandEventSourceParameters(l []interface{}) *awstypes.EventParameters {
 	return config
 }
 
-func flattenEventSourceParameters(rule *awstypes.EventParameters) []interface{} {
+func flattenEventSourceParameters(rule *awstypes.EventParameters) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"description_regex": aws.ToString(rule.DescriptionRegex),
 		"event_type":        string(rule.EventType),
 		"snapshot_owner":    flex.FlattenStringValueSet(rule.SnapshotOwner),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyRule {
+func expandCrossRegionCopyRules(l []any) []awstypes.CrossRegionCopyRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -926,7 +925,7 @@ func expandCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyRule 
 	var rules []awstypes.CrossRegionCopyRule
 
 	for _, tfMapRaw := range l {
-		m, ok := tfMapRaw.(map[string]interface{})
+		m, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -940,13 +939,13 @@ func expandCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyRule 
 		if v, ok := m["copy_tags"].(bool); ok {
 			rule.CopyTags = aws.Bool(v)
 		}
-		if v, ok := m["deprecate_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := m["deprecate_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.DeprecateRule = expandCrossRegionCopyRuleDeprecateRule(v)
 		}
 		if v, ok := m[names.AttrEncrypted].(bool); ok {
 			rule.Encrypted = aws.Bool(v)
 		}
-		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := m["retain_rule"].([]any); ok && len(v) > 0 && v[0] != nil {
 			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
 		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
@@ -959,15 +958,15 @@ func expandCrossRegionCopyRules(l []interface{}) []awstypes.CrossRegionCopyRule 
 	return rules
 }
 
-func flattenCrossRegionCopyRules(rules []awstypes.CrossRegionCopyRule) []interface{} {
+func flattenCrossRegionCopyRules(rules []awstypes.CrossRegionCopyRule) []any {
 	if len(rules) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	var result []interface{}
+	var result []any
 
 	for _, rule := range rules {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"cmk_arn":           aws.ToString(rule.CmkArn),
 			"copy_tags":         aws.ToBool(rule.CopyTags),
 			"deprecate_rule":    flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
@@ -982,12 +981,12 @@ func flattenCrossRegionCopyRules(rules []awstypes.CrossRegionCopyRule) []interfa
 	return result
 }
 
-func expandCrossRegionCopyRuleDeprecateRule(l []interface{}) *awstypes.CrossRegionCopyDeprecateRule {
+func expandCrossRegionCopyRuleDeprecateRule(l []any) *awstypes.CrossRegionCopyDeprecateRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &awstypes.CrossRegionCopyDeprecateRule{
 		Interval:     aws.Int32(int32(m[names.AttrInterval].(int))),
@@ -995,12 +994,12 @@ func expandCrossRegionCopyRuleDeprecateRule(l []interface{}) *awstypes.CrossRegi
 	}
 }
 
-func expandCrossRegionCopyRuleRetainRule(l []interface{}) *awstypes.CrossRegionCopyRetainRule {
+func expandCrossRegionCopyRuleRetainRule(l []any) *awstypes.CrossRegionCopyRetainRule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &awstypes.CrossRegionCopyRetainRule{
 		Interval:     aws.Int32(int32(m[names.AttrInterval].(int))),
@@ -1008,40 +1007,40 @@ func expandCrossRegionCopyRuleRetainRule(l []interface{}) *awstypes.CrossRegionC
 	}
 }
 
-func flattenCrossRegionCopyRuleDeprecateRule(rule *awstypes.CrossRegionCopyDeprecateRule) []interface{} {
+func flattenCrossRegionCopyRuleDeprecateRule(rule *awstypes.CrossRegionCopyDeprecateRule) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrInterval: int(aws.ToInt32(rule.Interval)),
 		"interval_unit":    string(rule.IntervalUnit),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCrossRegionCopyRuleRetainRule(rule *awstypes.CrossRegionCopyRetainRule) []interface{} {
+func flattenCrossRegionCopyRuleRetainRule(rule *awstypes.CrossRegionCopyRetainRule) []any {
 	if rule == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrInterval: int(aws.ToInt32(rule.Interval)),
 		"interval_unit":    string(rule.IntervalUnit),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandCreateRule(cfg []interface{}) *awstypes.CreateRule {
+func expandCreateRule(cfg []any) *awstypes.CreateRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	c := cfg[0].(map[string]interface{})
+	c := cfg[0].(map[string]any)
 	createRule := &awstypes.CreateRule{}
 
-	if v, ok := c["times"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := c["times"].([]any); ok && len(v) > 0 {
 		createRule.Times = flex.ExpandStringValueList(v)
 	}
 
@@ -1067,12 +1066,12 @@ func expandCreateRule(cfg []interface{}) *awstypes.CreateRule {
 	return createRule
 }
 
-func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]interface{} {
+func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]any {
 	if createRule == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	result["times"] = flex.FlattenStringValueList(createRule.Times)
 
 	if createRule.Interval != nil {
@@ -1087,14 +1086,14 @@ func flattenCreateRule(createRule *awstypes.CreateRule) []map[string]interface{}
 		result["cron_expression"] = aws.ToString(createRule.CronExpression)
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func expandRetainRule(cfg []interface{}) *awstypes.RetainRule {
+func expandRetainRule(cfg []any) *awstypes.RetainRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	rule := &awstypes.RetainRule{}
 
 	if v, ok := m["count"].(int); ok && v > 0 {
@@ -1112,20 +1111,20 @@ func expandRetainRule(cfg []interface{}) *awstypes.RetainRule {
 	return rule
 }
 
-func flattenRetainRule(retainRule *awstypes.RetainRule) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenRetainRule(retainRule *awstypes.RetainRule) []map[string]any {
+	result := make(map[string]any)
 	result["count"] = aws.ToInt32(retainRule.Count)
 	result["interval_unit"] = string(retainRule.IntervalUnit)
 	result[names.AttrInterval] = aws.ToInt32(retainRule.Interval)
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func expandDeprecateRule(cfg []interface{}) *awstypes.DeprecateRule {
+func expandDeprecateRule(cfg []any) *awstypes.DeprecateRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	rule := &awstypes.DeprecateRule{}
 
 	if v, ok := m["count"].(int); ok && v > 0 {
@@ -1143,20 +1142,20 @@ func expandDeprecateRule(cfg []interface{}) *awstypes.DeprecateRule {
 	return rule
 }
 
-func flattenDeprecateRule(rule *awstypes.DeprecateRule) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenDeprecateRule(rule *awstypes.DeprecateRule) []map[string]any {
+	result := make(map[string]any)
 	result["count"] = aws.ToInt32(rule.Count)
 	result["interval_unit"] = string(rule.IntervalUnit)
 	result[names.AttrInterval] = aws.ToInt32(rule.Interval)
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func expandFastRestoreRule(cfg []interface{}) *awstypes.FastRestoreRule {
+func expandFastRestoreRule(cfg []any) *awstypes.FastRestoreRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	rule := &awstypes.FastRestoreRule{
 		AvailabilityZones: flex.ExpandStringValueSet(m[names.AttrAvailabilityZones].(*schema.Set)),
 	}
@@ -1176,17 +1175,17 @@ func expandFastRestoreRule(cfg []interface{}) *awstypes.FastRestoreRule {
 	return rule
 }
 
-func flattenFastRestoreRule(rule *awstypes.FastRestoreRule) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenFastRestoreRule(rule *awstypes.FastRestoreRule) []map[string]any {
+	result := make(map[string]any)
 	result["count"] = aws.ToInt32(rule.Count)
 	result["interval_unit"] = string(rule.IntervalUnit)
 	result[names.AttrInterval] = aws.ToInt32(rule.Interval)
 	result[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(rule.AvailabilityZones)
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }
 
-func expandShareRule(cfg []interface{}) []awstypes.ShareRule {
+func expandShareRule(cfg []any) []awstypes.ShareRule {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -1194,7 +1193,7 @@ func expandShareRule(cfg []interface{}) []awstypes.ShareRule {
 	rules := make([]awstypes.ShareRule, 0)
 
 	for _, shareRule := range cfg {
-		m := shareRule.(map[string]interface{})
+		m := shareRule.(map[string]any)
 
 		rule := awstypes.ShareRule{
 			TargetAccounts: flex.ExpandStringValueSet(m["target_accounts"].(*schema.Set)),
@@ -1214,11 +1213,11 @@ func expandShareRule(cfg []interface{}) []awstypes.ShareRule {
 	return rules
 }
 
-func flattenShareRule(rules []awstypes.ShareRule) []map[string]interface{} {
-	values := make([]map[string]interface{}, 0)
+func flattenShareRule(rules []awstypes.ShareRule) []map[string]any {
+	values := make([]map[string]any, 0)
 
 	for _, v := range rules {
-		rule := make(map[string]interface{})
+		rule := make(map[string]any)
 
 		if v.TargetAccounts != nil {
 			rule["target_accounts"] = flex.FlattenStringValueSet(v.TargetAccounts)
@@ -1236,7 +1235,7 @@ func flattenShareRule(rules []awstypes.ShareRule) []map[string]interface{} {
 	return values
 }
 
-func expandTags(m map[string]interface{}) []awstypes.Tag {
+func expandTags(m map[string]any) []awstypes.Tag {
 	var result []awstypes.Tag
 	for k, v := range m {
 		result = append(result, awstypes.Tag{
@@ -1257,11 +1256,11 @@ func flattenTags(tags []awstypes.Tag) map[string]string {
 	return result
 }
 
-func expandParameters(cfg []interface{}, policyType string) *awstypes.Parameters {
+func expandParameters(cfg []any, policyType string) *awstypes.Parameters {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
-	m := cfg[0].(map[string]interface{})
+	m := cfg[0].(map[string]any)
 	parameters := &awstypes.Parameters{}
 
 	if v, ok := m["exclude_boot_volume"].(bool); ok && policyType == string(awstypes.PolicyTypeValuesEbsSnapshotManagement) {
@@ -1275,8 +1274,8 @@ func expandParameters(cfg []interface{}, policyType string) *awstypes.Parameters
 	return parameters
 }
 
-func flattenParameters(parameters *awstypes.Parameters) []map[string]interface{} {
-	result := make(map[string]interface{})
+func flattenParameters(parameters *awstypes.Parameters) []map[string]any {
+	result := make(map[string]any)
 	if parameters.ExcludeBootVolume != nil {
 		result["exclude_boot_volume"] = aws.ToBool(parameters.ExcludeBootVolume)
 	}
@@ -1285,5 +1284,5 @@ func flattenParameters(parameters *awstypes.Parameters) []map[string]interface{}
 		result["no_reboot"] = aws.ToBool(parameters.NoReboot)
 	}
 
-	return []map[string]interface{}{result}
+	return []map[string]any{result}
 }

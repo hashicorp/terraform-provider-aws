@@ -124,9 +124,9 @@ This resource supports the following arguments:
 * `disableApiTermination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebsOptimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elasticGpuSpecifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
+* `elasticGpuSpecifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
-* `elasticInferenceAccelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
+* `elasticInferenceAccelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclaveOptions` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -189,6 +189,7 @@ The `ebs` block supports the following:
 * `snapshotId` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volumeSize` - (Optional) The size of the volume in gigabytes.
+* `volumeInitializationRate` - (Optional) The volume initialization rate in MiB/s (specified as an integer, e.g. 100), with a minimum of 100 MiB/s and maximum of 300 MiB/s.
 * `volumeType` - (Optional) The volume type.
   Can be one of `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1`.
 
@@ -237,7 +238,7 @@ The `elasticGpuSpecifications` block supports the following:
 
 ### Elastic Inference Accelerator
 
-Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
+**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
 
 The `elasticInferenceAccelerator` configuration block supports the following:
 
@@ -459,7 +460,19 @@ Each `networkInterfaces` block supports the following:
 * `ipv4Addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4AddressCount`
 * `securityGroups` - (Optional) A list of security group IDs to associate.
 * `subnetId` - (Optional) The VPC Subnet ID to associate.
+* `enaSrdSpecification` - (Optional) Configuration for Elastic Network Adapter (ENA) Express settings. Applies to network interfaces that use the [ena Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html) feature. See details below.
 * `connectionTrackingSpecification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `enaSrdSpecification` block supports the following:
+
+* `enaSrdEnabled` - (Optional) Whether to enable ENA Express. ENA Express uses AWS Scalable Reliable Datagram (SRD) technology to improve the performance of TCP traffic.
+* `enaSrdUdpSpecification` - (Optional) Configuration for ENA Express UDP optimization. See details below.
+
+The `enaSrdUdpSpecification` block supports the following:
+
+* `enaSrdUdpEnabled` - (Optional) Whether to enable UDP traffic optimization through ENA Express. Requires `enaSrdEnabled` to be `true`.
+
+NOTE: ENA Express requires [specific instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html#ena-express-requirements) and minimum bandwidth of 25 Gbps.
 
 The `connectionTrackingSpecification` block supports the following:
 
@@ -536,4 +549,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bc323ed55a9b13afc2231f18df8836ed01c688248ea06a5796ddeb3aa9d6813f -->
+<!-- cache-key: cdktf-0.20.8 input-f96a6df42d4adf0fb13f42a075e9a959af313470da2120128823b0ed62073b56 -->

@@ -42,13 +42,17 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the rule group namespace
-* `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
+* `name` - (Required) The name of the rule group namespace.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The ARN of the rule group namespace.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
@@ -75,4 +79,4 @@ Using `terraform import`, import the prometheus rule group namespace using the a
 % terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4744fbde8b8a0aa11fdd4a09abcef647630425256c23ba232641a4e6fbd803ac -->
+<!-- cache-key: cdktf-0.20.8 input-631c413fb65428e21b6b2840d778a867666fc7f12fd76d940de1896adf416bd8 -->

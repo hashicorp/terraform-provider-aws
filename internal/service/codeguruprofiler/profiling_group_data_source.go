@@ -21,23 +21,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
-func newDataSourceProfilingGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceProfilingGroup{}, nil
+func newProfilingGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &profilingGroupDataSource{}, nil
 }
 
 const (
 	DSNameProfilingGroup = "Profiling Group Data Source"
 )
 
-type dataSourceProfilingGroup struct {
-	framework.DataSourceWithConfigure
+type profilingGroupDataSource struct {
+	framework.DataSourceWithModel[profilingGroupDataSourceModel]
 }
 
-func (d *dataSourceProfilingGroup) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
-func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *profilingGroupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
 	resp.Schema = schema.Schema{
@@ -71,10 +67,10 @@ func (d *dataSourceProfilingGroup) Schema(ctx context.Context, req datasource.Sc
 		},
 	}
 }
-func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *profilingGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().CodeGuruProfilerClient(ctx)
 
-	var data dataSourceProfilingGroupData
+	var data profilingGroupDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,7 +103,8 @@ func (d *dataSourceProfilingGroup) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceProfilingGroupData struct {
+type profilingGroupDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                                `tfsdk:"arn"`
 	AgentOrchestrationConfig fwtypes.ListNestedObjectValueOf[dsAgentOrchestrationConfig] `tfsdk:"agent_orchestration_config"`
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]                `tfsdk:"compute_platform"`

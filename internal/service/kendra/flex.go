@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandSourceS3Path(tfList []interface{}) *types.S3Path {
+func expandSourceS3Path(tfList []any) *types.S3Path {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -32,12 +32,12 @@ func expandSourceS3Path(tfList []interface{}) *types.S3Path {
 	return result
 }
 
-func flattenSourceS3Path(apiObject *types.S3Path) []interface{} {
+func flattenSourceS3Path(apiObject *types.S3Path) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Bucket; v != nil {
 		m[names.AttrBucket] = aws.ToString(v)
@@ -47,5 +47,5 @@ func flattenSourceS3Path(apiObject *types.S3Path) []interface{} {
 		m[names.AttrKey] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

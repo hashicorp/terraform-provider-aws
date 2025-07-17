@@ -447,9 +447,10 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		result, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		input := cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
-		})
+		}
+		result, err := conn.DescribeIdentityPool(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -473,9 +474,10 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+			input := cognitoidentity.DescribeIdentityPoolInput{
 				IdentityPoolId: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.DescribeIdentityPool(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
@@ -655,13 +657,13 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Ab129faBb"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Ab129faBb"
     server_side_token_check = false
   }
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 }
@@ -680,7 +682,7 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "6lhlkkfbfb4q5kpp90urffae"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 }
@@ -699,13 +701,13 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Ab129faBb"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Ab129faBb"
     server_side_token_check = false
   }
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 

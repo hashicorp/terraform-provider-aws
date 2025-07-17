@@ -266,7 +266,7 @@ func dataSourceTrafficPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	trafficDoc := &route53TrafficPolicyDoc{}
 
@@ -302,7 +302,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *trafficPolicyEndpoint {
+func expandDataTrafficPolicyEndpointDoc(tfMap map[string]any) *trafficPolicyEndpoint {
 	if tfMap == nil {
 		return nil
 	}
@@ -322,7 +322,7 @@ func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *trafficPo
 	return apiObject
 }
 
-func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*trafficPolicyEndpoint {
+func expandDataTrafficPolicyEndpointsDoc(tfList []any) map[string]*trafficPolicyEndpoint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -330,7 +330,7 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*traff
 	apiObjects := make(map[string]*trafficPolicyEndpoint)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -346,7 +346,7 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*traff
 	return apiObjects
 }
 
-func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *trafficPolicyRule {
+func expandDataTrafficPolicyRuleDoc(tfMap map[string]any) *trafficPolicyRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -356,11 +356,11 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *trafficPolicy
 	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.RuleType = v.(string)
 	}
-	if v, ok := tfMap["primary"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Primary = expandDataTrafficPolicyFailOverDoc(v.([]interface{}))
+	if v, ok := tfMap["primary"]; ok && len(v.([]any)) > 0 {
+		apiObject.Primary = expandDataTrafficPolicyFailOverDoc(v.([]any))
 	}
-	if v, ok := tfMap["secondary"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Secondary = expandDataTrafficPolicyFailOverDoc(v.([]interface{}))
+	if v, ok := tfMap["secondary"]; ok && len(v.([]any)) > 0 {
+		apiObject.Secondary = expandDataTrafficPolicyFailOverDoc(v.([]any))
 	}
 	if v, ok := tfMap[names.AttrLocation]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Locations = expandDataTrafficPolicyLocationsDoc(v.(*schema.Set).List())
@@ -378,7 +378,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *trafficPolicy
 	return apiObject
 }
 
-func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*trafficPolicyRule {
+func expandDataTrafficPolicyRulesDoc(tfList []any) map[string]*trafficPolicyRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -386,7 +386,7 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*trafficPo
 	apiObjects := make(map[string]*trafficPolicyRule)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -402,12 +402,12 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*trafficPo
 	return apiObjects
 }
 
-func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *trafficPolicyFailoverRule {
+func expandDataTrafficPolicyFailOverDoc(tfList []any) *trafficPolicyFailoverRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap, _ := tfList[0].(map[string]interface{})
+	tfMap, _ := tfList[0].(map[string]any)
 
 	apiObject := &trafficPolicyFailoverRule{}
 
@@ -427,7 +427,7 @@ func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *trafficPolicyFail
 	return apiObject
 }
 
-func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *trafficPolicyGeolocationRule {
+func expandDataTrafficPolicyLocationDoc(tfMap map[string]any) *trafficPolicyGeolocationRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -462,7 +462,7 @@ func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *trafficPo
 	return apiObject
 }
 
-func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*trafficPolicyGeolocationRule {
+func expandDataTrafficPolicyLocationsDoc(tfList []any) []*trafficPolicyGeolocationRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -470,7 +470,7 @@ func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*trafficPolicyG
 	var apiObjects []*trafficPolicyGeolocationRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -484,7 +484,7 @@ func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*trafficPolicyG
 	return apiObjects
 }
 
-func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *trafficPolicyGeoproximityRule {
+func expandDataTrafficPolicyProximityDoc(tfMap map[string]any) *trafficPolicyGeoproximityRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -519,7 +519,7 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *trafficP
 	return apiObject
 }
 
-func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*trafficPolicyGeoproximityRule {
+func expandDataTrafficPolicyProximitiesDoc(tfList []any) []*trafficPolicyGeoproximityRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -527,7 +527,7 @@ func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*trafficPolic
 	var apiObjects []*trafficPolicyGeoproximityRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -541,7 +541,7 @@ func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*trafficPolic
 	return apiObjects
 }
 
-func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *trafficPolicyLatencyRule {
+func expandDataTrafficPolicyRegionDoc(tfMap map[string]any) *trafficPolicyLatencyRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -567,7 +567,7 @@ func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *trafficPoli
 	return apiObject
 }
 
-func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*trafficPolicyLatencyRule {
+func expandDataTrafficPolicyRegionsDoc(tfList []any) []*trafficPolicyLatencyRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -575,7 +575,7 @@ func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*trafficPolicyLat
 	var apiObjects []*trafficPolicyLatencyRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -589,7 +589,7 @@ func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*trafficPolicyLat
 	return apiObjects
 }
 
-func expandDataTrafficPolicyItemDoc(tfMap map[string]interface{}) *trafficPolicyMultiValueAnswerRule {
+func expandDataTrafficPolicyItemDoc(tfMap map[string]any) *trafficPolicyMultiValueAnswerRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -606,7 +606,7 @@ func expandDataTrafficPolicyItemDoc(tfMap map[string]interface{}) *trafficPolicy
 	return apiObject
 }
 
-func expandDataTrafficPolicyItemsDoc(tfList []interface{}) []*trafficPolicyMultiValueAnswerRule {
+func expandDataTrafficPolicyItemsDoc(tfList []any) []*trafficPolicyMultiValueAnswerRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -614,7 +614,7 @@ func expandDataTrafficPolicyItemsDoc(tfList []interface{}) []*trafficPolicyMulti
 	var apiObjects []*trafficPolicyMultiValueAnswerRule
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue

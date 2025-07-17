@@ -20,4 +20,11 @@ var (
 	ParsePlatformApplicationResourceID = parsePlatformApplicationResourceID
 	TopicAttributeNameDeliveryPolicy   = topicAttributeNameDeliveryPolicy
 	TopicAttributeNamePolicy           = topicAttributeNamePolicy
+
+	SubscriptionProtocolApplication = subscriptionProtocolApplication
+	SubscriptionProtocolHTTP        = subscriptionProtocolHTTP
+	SubscriptionProtocolHTTPS       = subscriptionProtocolHTTPS
+	SubscriptionProtocolEmail       = subscriptionProtocolEmail
+	SubscriptionProtocolEmailJSON   = subscriptionProtocolEmailJSON
+	WaitForConfirmation             = waitForConfirmation
 )

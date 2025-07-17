@@ -64,7 +64,7 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 	}
 }
 
-func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceKinesisStreamingDestinationRead(ctx, d, meta)...)
 }
 
-func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -149,10 +149,11 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())
-	_, err = conn.DisableKinesisStreamingDestination(ctx, &dynamodb.DisableKinesisStreamingDestinationInput{
+	input := dynamodb.DisableKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 		StreamArn: aws.String(streamARN),
-	})
+	}
+	_, err = conn.DisableKinesisStreamingDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -224,7 +225,7 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 }
 
 func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Client, streamARN, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &dynamodb.DescribeKinesisStreamingDestinationInput{
 			TableName: aws.String(tableName),
 		}

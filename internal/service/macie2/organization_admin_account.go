@@ -43,7 +43,7 @@ func resourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -81,7 +81,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -114,7 +114,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)

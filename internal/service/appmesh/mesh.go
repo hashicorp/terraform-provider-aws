@@ -73,8 +73,6 @@ func resourceMesh() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -123,14 +121,14 @@ func resourceMeshSpecSchema() *schema.Schema {
 	}
 }
 
-func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
-		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
+		Spec:     expandMeshSpec(d.Get("spec").([]any)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -145,11 +143,11 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
 
-func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
 	}, d.IsNewResource())
 
@@ -178,14 +176,14 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateMeshInput{
 			MeshName: aws.String(d.Id()),
-			Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
+			Spec:     expandMeshSpec(d.Get("spec").([]any)),
 		}
 
 		_, err := conn.UpdateMesh(ctx, input)
@@ -198,14 +196,15 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
 
-func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
-	_, err := conn.DeleteMesh(ctx, &appmesh.DeleteMeshInput{
+	input := appmesh.DeleteMeshInput{
 		MeshName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMesh(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

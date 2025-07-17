@@ -181,7 +181,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	return templateData, nil
 }
 
-func (m *migrator) infof(format string, a ...interface{}) {
+func (m *migrator) infof(format string, a ...any) {
 	m.Generator.Infof(format, a...)
 }
 
@@ -855,12 +855,12 @@ func (e *emitter) emitComputedOnlyBlockProperty(path []string, property *schema.
 }
 
 // warnf emits a formatted warning message to the UI.
-func (e *emitter) warnf(format string, a ...interface{}) {
+func (e *emitter) warnf(format string, a ...any) {
 	e.Generator.Warnf(format, a...)
 }
 
 // fprintf writes a formatted string to a Writer.
-func fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
+func fprintf(w io.Writer, format string, a ...any) (int, error) {
 	return io.WriteString(w, fmt.Sprintf(format, a...))
 }
 

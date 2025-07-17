@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listFieldLevelEncryptionConfigsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
+func listFieldLevelEncryptionConfigsPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListFieldLevelEncryptionConfigs(ctx, input)
+		output, err := conn.ListFieldLevelEncryptionConfigs(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

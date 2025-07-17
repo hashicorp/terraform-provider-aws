@@ -9,10 +9,15 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,7 +40,7 @@ func TestAccECSCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ecs", "cluster/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -50,7 +55,70 @@ func TestAccECSCluster_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSCluster_Identity_Basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "ecs", "cluster/{name}"),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSCluster_Identity_RegionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_regionOverride(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectRegionalARNAlternateRegionFormat(resourceName, tfjsonpath.New(names.AttrARN), "ecs", "cluster/{name}"),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -104,7 +172,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -154,7 +222,7 @@ func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -244,7 +312,7 @@ func TestAccECSCluster_configuration(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -289,7 +357,7 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -305,7 +373,7 @@ func TestAccECSCluster_managedStorageConfiguration(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -366,6 +434,16 @@ resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccClusterConfig_regionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  region = %[2]q
+
+  name = %[1]q
+}
+`, rName, acctest.AlternateRegion())
 }
 
 func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
@@ -429,6 +507,7 @@ func testAccClusterConfig_configuration(rName string, enable bool) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -460,6 +539,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key_policy" "test" {

@@ -27,10 +27,6 @@ type securityGroupEgressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_egress_rule"
-}
-
 func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
 	return []resource.StateMover{}
 }
@@ -56,10 +52,11 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+	input := ec2.RevokeSecurityGroupEgressInput{
 		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID)},
-	)
+		SecurityGroupRuleIds: fwflex.StringSliceValueFromFramework(ctx, data.ID),
+	}
+	_, err := conn.RevokeSecurityGroupEgress(ctx, &input)
 
 	return err
 }

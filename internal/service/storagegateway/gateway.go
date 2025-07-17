@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -266,15 +267,14 @@ func resourceGateway() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta any) bool {
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -317,12 +317,10 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
-			for _, retryableStatusCode := range []int{504} {
-				if response.StatusCode == retryableStatusCode {
-					errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
-					log.Printf("[DEBUG] retryable %s", errMessage)
-					return retry.RetryableError(errMessage)
-				}
+			if slices.Contains([]int{504}, response.StatusCode) {
+				errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
+				log.Printf("[DEBUG] retryable %s", errMessage)
+				return retry.RetryableError(errMessage)
 			}
 
 			return nil
@@ -395,8 +393,8 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("maintenance_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandUpdateMaintenanceStartTimeInput(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("maintenance_start_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := expandUpdateMaintenanceStartTimeInput(v.([]any)[0].(map[string]any))
 		input.GatewayARN = aws.String(d.Id())
 
 		_, err := conn.UpdateMaintenanceStartTime(ctx, input)
@@ -406,8 +404,8 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
-		input := expandJoinDomainInput(v.([]interface{}), d.Id())
+	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]any)) > 0 {
+		input := expandJoinDomainInput(v.([]any), d.Id())
 
 		_, err := conn.JoinDomain(ctx, input)
 
@@ -485,7 +483,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -526,17 +524,17 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("host_environment", outputDGI.HostEnvironment)
 	d.Set("medium_changer_type", d.Get("medium_changer_type").(string))
 	if outputDSS == nil || aws.ToString(outputDSS.DomainName) == "" {
-		if err := d.Set("smb_active_directory_settings", []interface{}{}); err != nil {
+		if err := d.Set("smb_active_directory_settings", []any{}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting smb_active_directory_settings: %s", err)
 		}
 	} else {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"active_directory_status": outputDSS.ActiveDirectoryStatus,
 			names.AttrDomainName:      aws.ToString(outputDSS.DomainName),
 		}
 
-		if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
-			configM := v.([]interface{})[0].(map[string]interface{})
+		if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]any)) > 0 {
+			configM := v.([]any)[0].(map[string]any)
 			tfMap[names.AttrPassword] = configM[names.AttrPassword]
 			tfMap["timeout_in_seconds"] = configM["timeout_in_seconds"]
 			tfMap[names.AttrUsername] = configM[names.AttrUsername]
@@ -550,7 +548,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		if err := d.Set("smb_active_directory_settings", []map[string]interface{}{tfMap}); err != nil {
+		if err := d.Set("smb_active_directory_settings", []map[string]any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting smb_active_directory_settings: %s", err)
 		}
 	}
@@ -603,7 +601,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Gateway (%s) maintenance start time: %s", d.Id(), err)
 	default:
-		if err := d.Set("maintenance_start_time", []map[string]interface{}{flattenDescribeMaintenanceStartTimeOutput(outputDMST)}); err != nil {
+		if err := d.Set("maintenance_start_time", []map[string]any{flattenDescribeMaintenanceStartTimeOutput(outputDMST)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting maintenance_start_time: %s", err)
 		}
 	}
@@ -611,7 +609,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -631,8 +629,8 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("maintenance_start_time") {
-		if v, ok := d.GetOk("maintenance_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input := expandUpdateMaintenanceStartTimeInput(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("maintenance_start_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := expandUpdateMaintenanceStartTimeInput(v.([]any)[0].(map[string]any))
 			input.GatewayARN = aws.String(d.Id())
 
 			_, err := conn.UpdateMaintenanceStartTime(ctx, input)
@@ -644,7 +642,7 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("smb_active_directory_settings") {
-		input := expandJoinDomainInput(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
+		input := expandJoinDomainInput(d.Get("smb_active_directory_settings").([]any), d.Id())
 
 		_, err := conn.JoinDomain(ctx, input)
 
@@ -746,7 +744,7 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceGatewayRead(ctx, d, meta)...)
 }
 
-func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -830,7 +828,7 @@ const (
 )
 
 func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
 		if tfresource.NotFound(err) {
@@ -850,7 +848,7 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 }
 
 func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
 		if tfresource.NotFound(err) {
@@ -904,12 +902,12 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Clien
 	return nil, err
 }
 
-func expandJoinDomainInput(tfList []interface{}, gatewayARN string) *storagegateway.JoinDomainInput {
+func expandJoinDomainInput(tfList []any, gatewayARN string) *storagegateway.JoinDomainInput {
 	if tfList == nil || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -933,15 +931,15 @@ func expandJoinDomainInput(tfList []interface{}, gatewayARN string) *storagegate
 	return apiObject
 }
 
-func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"ipv4_address": aws.ToString(apiObject.Ipv4Address),
 		}
 
@@ -951,7 +949,7 @@ func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interfac
 	return tfList
 }
 
-func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storagegateway.UpdateMaintenanceStartTimeInput {
+func expandUpdateMaintenanceStartTimeInput(tfMap map[string]any) *storagegateway.UpdateMaintenanceStartTimeInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -977,12 +975,12 @@ func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storag
 	return apiObject
 }
 
-func flattenDescribeMaintenanceStartTimeOutput(apiObject *storagegateway.DescribeMaintenanceStartTimeOutput) map[string]interface{} {
+func flattenDescribeMaintenanceStartTimeOutput(apiObject *storagegateway.DescribeMaintenanceStartTimeOutput) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DayOfMonth; v != nil {
 		tfMap["day_of_month"] = flex.Int32ToStringValue(v)

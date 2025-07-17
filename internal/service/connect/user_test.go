@@ -117,9 +117,11 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	emailOriginal := acctest.RandomEmailAddress(domain)
 	firstNameOriginal := "example-first-name-original"
 	lastNameOriginal := "example-last-name-original"
+	secondaryEmailOriginal := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 	firstNameUpdated := "example-first-name-updated"
 	lastNameUpdated := "example-last-name-updated"
+	secondaryEmailUpdated := acctest.RandomEmailAddress(domain)
 
 	resourceName := "aws_connect_user.test"
 
@@ -130,13 +132,14 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal, secondaryEmailOriginal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailOriginal),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameOriginal),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameOriginal),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.secondary_email", secondaryEmailOriginal),
 				),
 			},
 			{
@@ -146,13 +149,14 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
-				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated, secondaryEmailUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailUpdated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.secondary_email", secondaryEmailUpdated),
 				),
 			},
 		},
@@ -607,7 +611,7 @@ resource "aws_connect_user" "test" {
 `, rName5, selectHierarchyGroupId))
 }
 
-func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
+func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name, secondary_email string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
@@ -622,9 +626,10 @@ resource "aws_connect_user" "test" {
   ]
 
   identity_info {
-    email      = %[2]q
-    first_name = %[3]q
-    last_name  = %[4]q
+    email           = %[2]q
+    first_name      = %[3]q
+    last_name       = %[4]q
+    secondary_email = %[5]q
   }
 
   phone_config {
@@ -632,7 +637,7 @@ resource "aws_connect_user" "test" {
     phone_type                    = "SOFT_PHONE"
   }
 }
-`, rName5, email, first_name, last_name))
+`, rName5, email, first_name, last_name, secondary_email))
 }
 
 func testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {

@@ -32,12 +32,8 @@ func newOrganizationsFeaturesResource(context.Context) (resource.ResourceWithCon
 }
 
 type organizationsFeaturesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationsFeaturesResourceModel]
 	framework.WithImportByID
-}
-
-func (*organizationsFeaturesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_iam_organizations_features"
 }
 
 func (r *organizationsFeaturesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

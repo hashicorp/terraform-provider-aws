@@ -100,7 +100,8 @@ class MyConvertedCode(TerraformStack):
             identity_info=ConnectUserIdentityInfo(
                 email="example@example.com",
                 first_name="example",
-                last_name="example2"
+                last_name="example2",
+                secondary_email="secondary@example.com"
             ),
             instance_id=Token.as_string(aws_connect_instance_example.id),
             name="example",
@@ -197,6 +198,7 @@ A `identity_info` block supports the following arguments:
 * `email` - (Optional) The email address. If you are using SAML for identity management and include this parameter, an error is returned. Note that updates to the `email` is supported. From the [UpdateUserIdentityInfo API documentation](https://docs.aws.amazon.com/connect/latest/APIReference/API_UpdateUserIdentityInfo.html) it is strongly recommended to limit who has the ability to invoke `UpdateUserIdentityInfo`. Someone with that ability can change the login credentials of other users by changing their email address. This poses a security risk to your organization. They can change the email address of a user to the attacker's email address, and then reset the password through email. For more information, see [Best Practices for Security Profiles](https://docs.aws.amazon.com/connect/latest/adminguide/security-profile-best-practices.html) in the Amazon Connect Administrator Guide.
 * `first_name` - (Optional) The first name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
 * `last_name` - (Optional) The last name. This is required if you are using Amazon Connect or SAML for identity management. Minimum length of 1. Maximum length of 100.
+* `secondary_email` - (Optional) The secondary email address. If present, email notifications will be sent to this email address instead of the primary one.
 
 A `phone_config` block supports the following arguments:
 
@@ -240,4 +242,4 @@ Using `terraform import`, import Amazon Connect Users using the `instance_id` an
 % terraform import aws_connect_user.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-637041caefd4e9ef7b93ae5320925ba1005510f5cbf4f83cc643caaa13039440 -->
+<!-- cache-key: cdktf-0.20.8 input-3df3965af47c791eb1b2b837e680dcd6b101a026f283ff975c4ab1c09a17b9c5 -->

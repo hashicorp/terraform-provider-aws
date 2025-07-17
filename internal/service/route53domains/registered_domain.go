@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -257,12 +256,10 @@ func resourceRegisteredDomain() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
@@ -277,26 +274,26 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
 
-	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
+	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.AdminContact) {
 			adminContact = v
 		}
 	}
 
-	if v, ok := d.GetOk("billing_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.BillingContact) {
+	if v, ok := d.GetOk("billing_contact"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.BillingContact) {
 			billingContact = v
 		}
 	}
 
-	if v, ok := d.GetOk("registrant_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.RegistrantContact) {
+	if v, ok := d.GetOk("registrant_contact"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.RegistrantContact) {
 			registrantContact = v
 		}
 	}
 
-	if v, ok := d.GetOk("tech_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.TechContact) {
+	if v, ok := d.GetOk("tech_contact"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if v := expandContactDetail(v.([]any)[0].(map[string]any)); !reflect.DeepEqual(v, domainDetail.TechContact) {
 			techContact = v
 		}
 	}
@@ -319,8 +316,8 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
-		nameservers := expandNameservers(v.([]interface{}))
+	if v, ok := d.GetOk("name_server"); ok && len(v.([]any)) > 0 {
+		nameservers := expandNameservers(v.([]any))
 
 		if !reflect.DeepEqual(nameservers, domainDetail.Nameservers) {
 			if err := modifyDomainNameservers(ctx, conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -342,7 +339,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
+	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
@@ -354,7 +351,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceRegisteredDomainRead(ctx, d, meta)...)
 }
 
-func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
@@ -373,7 +370,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	if domainDetail.AdminContact != nil {
-		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
+		if err := d.Set("admin_contact", []any{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting admin_contact: %s", err)
 		}
 	} else {
@@ -387,7 +384,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set(names.AttrCreationDate, nil)
 	}
 	if domainDetail.BillingContact != nil {
-		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
+		if err := d.Set("billing_contact", []any{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting billing_contact: %s", err)
 		}
 	} else {
@@ -404,7 +401,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
 	}
 	if domainDetail.RegistrantContact != nil {
-		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
+		if err := d.Set("registrant_contact", []any{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting registrant_contact: %s", err)
 		}
 	} else {
@@ -417,7 +414,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	statusList := domainDetail.StatusList
 	d.Set("status_list", statusList)
 	if domainDetail.TechContact != nil {
-		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
+		if err := d.Set("tech_contact", []any{flattenContactDetail(domainDetail.TechContact)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tech_contact: %s", err)
 		}
 	} else {
@@ -435,7 +432,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
@@ -443,26 +440,26 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 		var adminContact, billingContact, registrantContact, techContact *awstypes.ContactDetail
 
 		if key := "admin_contact"; d.HasChange(key) {
-			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				adminContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				adminContact = expandContactDetail(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if key := "billing_contact"; d.HasChange(key) {
-			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				billingContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				billingContact = expandContactDetail(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if key := "registrant_contact"; d.HasChange(key) {
-			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				registrantContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				registrantContact = expandContactDetail(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if key := "tech_contact"; d.HasChange(key) {
-			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				techContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				techContact = expandContactDetail(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -484,8 +481,8 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("name_server") {
-		if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
-			if err := modifyDomainNameservers(ctx, conn, d.Id(), expandNameservers(v.([]interface{})), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if v, ok := d.GetOk("name_server"); ok && len(v.([]any)) > 0 {
+			if err := modifyDomainNameservers(ctx, conn, d.Id(), expandNameservers(v.([]any)), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -655,12 +652,12 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 	return nil
 }
 
-func flattenContactDetail(apiObject *awstypes.ContactDetail) map[string]interface{} {
+func flattenContactDetail(apiObject *awstypes.ContactDetail) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AddressLine1; v != nil {
 		tfMap["address_line_1"] = aws.ToString(v)
@@ -716,12 +713,12 @@ func flattenContactDetail(apiObject *awstypes.ContactDetail) map[string]interfac
 	return tfMap
 }
 
-func flattenExtraParams(apiObjects []awstypes.ExtraParam) map[string]interface{} {
+func flattenExtraParams(apiObjects []awstypes.ExtraParam) map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{}, len(apiObjects))
+	tfMap := make(map[string]any, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
 		tfMap[string(apiObject.Name)] = aws.ToString(apiObject.Value)
@@ -730,7 +727,7 @@ func flattenExtraParams(apiObjects []awstypes.ExtraParam) map[string]interface{}
 	return tfMap
 }
 
-func expandContactDetail(tfMap map[string]interface{}) *awstypes.ContactDetail {
+func expandContactDetail(tfMap map[string]any) *awstypes.ContactDetail {
 	if tfMap == nil {
 		return nil
 	}
@@ -761,7 +758,7 @@ func expandContactDetail(tfMap map[string]interface{}) *awstypes.ContactDetail {
 		apiObject.Email = aws.String(v)
 	}
 
-	if v, ok := tfMap["extra_params"].(map[string]interface{}); ok {
+	if v, ok := tfMap["extra_params"].(map[string]any); ok {
 		apiObject.ExtraParams = expandExtraParams(v)
 	}
 
@@ -796,7 +793,7 @@ func expandContactDetail(tfMap map[string]interface{}) *awstypes.ContactDetail {
 	return apiObject
 }
 
-func expandExtraParams(tfMap map[string]interface{}) []awstypes.ExtraParam {
+func expandExtraParams(tfMap map[string]any) []awstypes.ExtraParam {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -819,12 +816,12 @@ func expandExtraParams(tfMap map[string]interface{}) []awstypes.ExtraParam {
 	return apiObjects
 }
 
-func flattenNameserver(apiObject *awstypes.Nameserver) map[string]interface{} {
+func flattenNameserver(apiObject *awstypes.Nameserver) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.GlueIps; v != nil {
 		tfMap["glue_ips"] = v
@@ -837,7 +834,7 @@ func flattenNameserver(apiObject *awstypes.Nameserver) map[string]interface{} {
 	return tfMap
 }
 
-func expandNameserver(tfMap map[string]interface{}) *awstypes.Nameserver {
+func expandNameserver(tfMap map[string]any) *awstypes.Nameserver {
 	if tfMap == nil {
 		return nil
 	}
@@ -855,7 +852,7 @@ func expandNameserver(tfMap map[string]interface{}) *awstypes.Nameserver {
 	return apiObject
 }
 
-func expandNameservers(tfList []interface{}) []awstypes.Nameserver {
+func expandNameservers(tfList []any) []awstypes.Nameserver {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -863,7 +860,7 @@ func expandNameservers(tfList []interface{}) []awstypes.Nameserver {
 	var apiObjects []awstypes.Nameserver
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -881,12 +878,12 @@ func expandNameservers(tfList []interface{}) []awstypes.Nameserver {
 	return apiObjects
 }
 
-func flattenNameservers(apiObjects []awstypes.Nameserver) []interface{} {
+func flattenNameservers(apiObjects []awstypes.Nameserver) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNameserver(&apiObject))

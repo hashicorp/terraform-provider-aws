@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the connection to retrieve.
 
 ## Attribute Reference
@@ -50,7 +52,8 @@ This data source exports the following attributes in addition to the arguments a
 * `ownerAccountId` - ID of the AWS account that owns the connection.
 * `partnerName` - The name of the AWS Direct Connect service provider associated with the connection.
 * `providerName` - Name of the service provider associated with the connection.
+* `state` - State of the connection.
 * `tags` - Map of tags for the resource.
 * `vlanId` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.20.8 input-192e94cc169312d4fa902eb3bcc5d1de027e5be4fe92fdaf9fdbeefc124a32a8 -->
+<!-- cache-key: cdktf-0.20.8 input-897446d8ce963c4d9a3d8b81cd0b162465a0530059f32e0c2f1c1c8b86077975 -->

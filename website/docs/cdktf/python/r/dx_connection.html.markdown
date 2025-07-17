@@ -86,7 +86,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
+* `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps, and 25Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html) and [Hosted Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/hosted_connection.html).
 * `encryption_mode` - (Optional) The connection MAC Security (MACsec) encryption mode. MAC Security (MACsec) is only available on dedicated connections. Valid values are `no_encrypt`, `should_encrypt`, and `must_encrypt`.
 * `location` - (Required) The AWS Direct Connect location where the connection is located. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `name` - (Required) The name of the connection.
@@ -139,4 +139,4 @@ Using `terraform import`, import Direct Connect connections using the connection
 % terraform import aws_dx_connection.test_connection dxcon-ffre0ec3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d13e1be5ac537438097f3cb1617cb8cb47731fc5c21629b7b4afb1e95a242b92 -->
+<!-- cache-key: cdktf-0.20.8 input-5f3516873455f85dfc57211bf9bfe6419d670385919efdbbd48ac5267830534f -->

@@ -62,7 +62,7 @@ func resourceDomainName() *schema.Resource {
 	}
 }
 
-func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -84,7 +84,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
 		return conn.DeleteDomainName(ctx, &appsync.DeleteDomainNameInput{
 			DomainName: aws.String(d.Id()),
 		})

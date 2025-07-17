@@ -148,7 +148,7 @@ func dataSourceImagePipeline() *schema.Resource {
 	}
 }
 
-func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -171,14 +171,14 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
 	if imagePipeline.ImageScanningConfiguration != nil {
-		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)}); err != nil {
+		if err := d.Set("image_scanning_configuration", []any{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
 	if imagePipeline.ImageTestsConfiguration != nil {
-		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)}); err != nil {
+		if err := d.Set("image_tests_configuration", []any{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
 		}
 	} else {
@@ -188,7 +188,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		if err := d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)}); err != nil {
+		if err := d.Set(names.AttrSchedule, []any{flattenSchedule(imagePipeline.Schedule)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 		}
 	} else {

@@ -69,7 +69,7 @@ func resourceServiceSpecificCredential() *schema.Resource {
 	}
 }
 
-func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -104,7 +104,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
 		return FindServiceSpecificCredential(ctx, conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 
@@ -138,7 +138,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -155,7 +155,7 @@ func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

@@ -112,7 +112,7 @@ func resourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 			t, _ := time.Parse(time.RFC3339, v.(string))
 			input.EndTime = aws.Time(t)
 		}
-		input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
+		input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]any))
 		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		if v, ok := d.GetOk(names.AttrStartTime); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
@@ -143,7 +143,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 			input.EndTime = aws.Time(t)
 		}
 		if d.HasChange("scalable_target_action") {
-			input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
+			input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]any))
 		}
 		if d.HasChange(names.AttrSchedule) {
 			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
@@ -160,7 +160,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ObjectNotFoundException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ObjectNotFoundException](ctx, timeout, func() (any, error) {
 		return conn.PutScheduledAction(ctx, &input)
 	})
 
@@ -175,7 +175,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceScheduledActionRead(ctx, d, meta)...)
 }
 
-func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
@@ -207,7 +207,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
@@ -276,12 +276,12 @@ func findScheduledActions(ctx context.Context, conn *applicationautoscaling.Clie
 	return output, nil
 }
 
-func expandScalableTargetAction(l []interface{}) *awstypes.ScalableTargetAction {
+func expandScalableTargetAction(l []any) *awstypes.ScalableTargetAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	result := &awstypes.ScalableTargetAction{}
 
@@ -299,12 +299,12 @@ func expandScalableTargetAction(l []interface{}) *awstypes.ScalableTargetAction 
 	return result
 }
 
-func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []interface{} {
+func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []any {
 	if cfg == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	if cfg.MaxCapacity != nil {
 		m[names.AttrMaxCapacity] = strconv.FormatInt(int64(aws.ToInt32(cfg.MaxCapacity)), 10)
 	}
@@ -312,5 +312,5 @@ func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []interface
 		m["min_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MinCapacity)), 10)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

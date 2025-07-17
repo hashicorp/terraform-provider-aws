@@ -184,7 +184,7 @@ func resourceEnvironment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(2, 5),
+				ValidateFunc: validation.IntBetween(1, 5),
 			},
 			"max_workers": {
 				Type:         schema.TypeInt,
@@ -196,7 +196,7 @@ func resourceEnvironment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(2, 5),
+				ValidateFunc: validation.IntBetween(1, 5),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
@@ -300,7 +300,7 @@ func resourceEnvironment() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("airflow_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("airflow_version", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 				o, n := d.GetChange("airflow_version")
 
 				if oldVersion, err := gversion.NewVersion(o.(string)); err == nil {
@@ -316,12 +316,11 @@ func resourceEnvironment() *schema.Resource {
 
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
@@ -331,13 +330,13 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
 		ExecutionRoleArn:     aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		Name:                 aws.String(name),
-		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get(names.AttrNetworkConfiguration).([]interface{})),
+		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get(names.AttrNetworkConfiguration).([]any)),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
-		input.AirflowConfigurationOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.AirflowConfigurationOptions = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("airflow_version"); ok {
@@ -357,7 +356,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok {
-		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
+		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]any))
 	}
 
 	// input.MaxWorkers = aws.Int32(int32(90))
@@ -419,7 +418,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	*/
 
 	var validationException, internalServerException = &awstypes.ValidationException{}, &awstypes.InternalServerException{}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateEnvironment(ctx, input)
 	}, validationException.ErrorCode(), internalServerException.ErrorCode())
 
@@ -436,7 +435,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
@@ -497,7 +496,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
@@ -510,10 +509,10 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("airflow_configuration_options") {
 			options, ok := d.GetOk("airflow_configuration_options")
 			if !ok {
-				options = map[string]interface{}{}
+				options = map[string]any{}
 			}
 
-			input.AirflowConfigurationOptions = flex.ExpandStringValueMap(options.(map[string]interface{}))
+			input.AirflowConfigurationOptions = flex.ExpandStringValueMap(options.(map[string]any))
 		}
 
 		if d.HasChange("airflow_version") {
@@ -533,7 +532,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange(names.AttrLoggingConfiguration) {
-			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
+			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]any))
 		}
 
 		if d.HasChange("max_workers") {
@@ -553,7 +552,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange(names.AttrNetworkConfiguration) {
-			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get(names.AttrNetworkConfiguration).([]interface{}))
+			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get(names.AttrNetworkConfiguration).([]any))
 		}
 
 		if d.HasChange("plugins_s3_object_version") {
@@ -610,7 +609,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
@@ -687,7 +686,7 @@ func findEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) 
 }
 
 func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		environment, err := findEnvironmentByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -765,45 +764,45 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.Client, name string,
 	return nil, err
 }
 
-func expandEnvironmentLoggingConfiguration(l []interface{}) *awstypes.LoggingConfigurationInput {
+func expandEnvironmentLoggingConfiguration(l []any) *awstypes.LoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	input := &awstypes.LoggingConfigurationInput{}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	if v, ok := m["dag_processing_logs"]; ok {
-		input.DagProcessingLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.DagProcessingLogs = expandEnvironmentModuleLoggingConfiguration(v.([]any))
 	}
 
 	if v, ok := m["scheduler_logs"]; ok {
-		input.SchedulerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.SchedulerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]any))
 	}
 
 	if v, ok := m["task_logs"]; ok {
-		input.TaskLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.TaskLogs = expandEnvironmentModuleLoggingConfiguration(v.([]any))
 	}
 
 	if v, ok := m["webserver_logs"]; ok {
-		input.WebserverLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.WebserverLogs = expandEnvironmentModuleLoggingConfiguration(v.([]any))
 	}
 
 	if v, ok := m["worker_logs"]; ok {
-		input.WorkerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]interface{}))
+		input.WorkerLogs = expandEnvironmentModuleLoggingConfiguration(v.([]any))
 	}
 
 	return input
 }
 
-func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *awstypes.ModuleLoggingConfigurationInput {
+func expandEnvironmentModuleLoggingConfiguration(l []any) *awstypes.ModuleLoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	input := &awstypes.ModuleLoggingConfigurationInput{}
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	input.Enabled = aws.Bool(m[names.AttrEnabled].(bool))
 	input.LogLevel = awstypes.LoggingLevel(m["log_level"].(string))
@@ -811,8 +810,8 @@ func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *awstypes.Modu
 	return input
 }
 
-func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.NetworkConfiguration {
-	m := l[0].(map[string]interface{})
+func expandEnvironmentNetworkConfigurationCreate(l []any) *awstypes.NetworkConfiguration {
+	m := l[0].(map[string]any)
 
 	return &awstypes.NetworkConfiguration{
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -820,20 +819,20 @@ func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.Netw
 	}
 }
 
-func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *awstypes.UpdateNetworkConfigurationInput {
-	m := l[0].(map[string]interface{})
+func expandEnvironmentNetworkConfigurationUpdate(l []any) *awstypes.UpdateNetworkConfigurationInput {
+	m := l[0].(map[string]any)
 
 	return &awstypes.UpdateNetworkConfigurationInput{
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 }
 
-func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
+func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []any {
 	if lastUpdate == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if lastUpdate.CreatedAt != nil {
 		m[names.AttrCreatedAt] = aws.ToTime(lastUpdate.CreatedAt).String()
@@ -847,15 +846,15 @@ func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 		m[names.AttrStatus] = lastUpdate.Status
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLastUpdateError(apiObject *awstypes.UpdateError) []interface{} {
+func flattenLastUpdateError(apiObject *awstypes.UpdateError) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if apiObject.ErrorCode != nil {
 		m["error_code"] = apiObject.ErrorCode
@@ -865,15 +864,15 @@ func flattenLastUpdateError(apiObject *awstypes.UpdateError) []interface{} {
 		m["error_message"] = apiObject.ErrorMessage
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenLoggingConfiguration(loggingConfiguration *awstypes.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *awstypes.LoggingConfiguration) []any {
 	if loggingConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if loggingConfiguration.DagProcessingLogs != nil {
 		m["dag_processing_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.DagProcessingLogs)
@@ -895,32 +894,32 @@ func flattenLoggingConfiguration(loggingConfiguration *awstypes.LoggingConfigura
 		m["worker_logs"] = flattenModuleLoggingConfiguration(loggingConfiguration.WorkerLogs)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *awstypes.ModuleLoggingConfiguration) []interface{} {
+func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *awstypes.ModuleLoggingConfiguration) []any {
 	if moduleLoggingConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cloud_watch_log_group_arn": aws.ToString(moduleLoggingConfiguration.CloudWatchLogGroupArn),
 		names.AttrEnabled:           aws.ToBool(moduleLoggingConfiguration.Enabled),
 		"log_level":                 string(moduleLoggingConfiguration.LogLevel),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfiguration) []any {
 	if networkConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
 		names.AttrSubnetIDs:        flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +38,6 @@ func resourceHost() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -102,11 +99,11 @@ func resourceHost() *schema.Resource {
 	}
 }
 
-func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AllocateHostsInput{
+	input := ec2.AllocateHostsInput{
 		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
@@ -131,7 +128,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	output, err := conn.AllocateHosts(ctx, input)
+	output, err := conn.AllocateHosts(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "allocating EC2 Host: %s", err)
@@ -146,7 +143,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -184,12 +181,12 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyHostsInput{
+		input := ec2.ModifyHostsInput{
 			HostIds: []string{d.Id()},
 		}
 
@@ -209,7 +206,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.InstanceType = aws.String(v)
 		}
 
-		output, err := conn.ModifyHosts(ctx, input)
+		output, err := conn.ModifyHosts(ctx, &input)
 
 		if err == nil && output != nil {
 			err = unsuccessfulItemsError(output.Unsuccessful)
@@ -227,14 +224,15 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
-	output, err := conn.ReleaseHosts(ctx, &ec2.ReleaseHostsInput{
+	input := ec2.ReleaseHostsInput{
 		HostIds: []string{d.Id()},
-	})
+	}
+	output, err := conn.ReleaseHosts(ctx, &input)
 
 	if err == nil && output != nil {
 		err = unsuccessfulItemsError(output.Unsuccessful)

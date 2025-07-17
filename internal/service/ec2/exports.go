@@ -10,6 +10,7 @@ var (
 	DetachNetworkInterface                                         = detachNetworkInterface
 	FindImageByID                                                  = findImageByID
 	FindInstanceByID                                               = findInstanceByID
+	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID               = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
 	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
@@ -29,4 +30,8 @@ var (
 	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
+)
+
+type (
+	CustomFilters = customFilters
 )

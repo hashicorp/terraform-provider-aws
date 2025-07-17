@@ -333,7 +333,9 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `stream_processor_arn` - ARN of the Stream Processor.
+* `arn` - ARN of the Stream Processor.
+* `stream_processor_arn` - (**Deprecated**) ARN of the Stream Processor.
+  Use `arn` instead.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -369,4 +371,4 @@ Using `terraform import`, import Rekognition Stream Processor using the `name`. 
 % terraform import aws_rekognition_stream_processor.example my-stream 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-01b4576ff8dd725ded900ab4e8ec80d8be87c4f4ba6e909a09c45d59b613bfae -->
+<!-- cache-key: cdktf-0.20.8 input-9086dcb85a09a1a4c26b3ac427d64f76310c9439e49a56bd1cf4796965ca00fb -->

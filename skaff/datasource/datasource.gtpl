@@ -148,7 +148,7 @@ const (
 	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
-func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====

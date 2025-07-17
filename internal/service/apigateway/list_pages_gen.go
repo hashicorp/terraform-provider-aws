@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 )
 
-func getAuthorizersPages(ctx context.Context, conn *apigateway.Client, input *apigateway.GetAuthorizersInput, fn func(*apigateway.GetAuthorizersOutput, bool) bool) error {
+func getAuthorizersPages(ctx context.Context, conn *apigateway.Client, input *apigateway.GetAuthorizersInput, fn func(*apigateway.GetAuthorizersOutput, bool) bool, optFns ...func(*apigateway.Options)) error {
 	for {
-		output, err := conn.GetAuthorizers(ctx, input)
+		output, err := conn.GetAuthorizers(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -25,9 +25,9 @@ func getAuthorizersPages(ctx context.Context, conn *apigateway.Client, input *ap
 	}
 	return nil
 }
-func getDomainNameAccessAssociationsPages(ctx context.Context, conn *apigateway.Client, input *apigateway.GetDomainNameAccessAssociationsInput, fn func(*apigateway.GetDomainNameAccessAssociationsOutput, bool) bool) error {
+func getDomainNameAccessAssociationsPages(ctx context.Context, conn *apigateway.Client, input *apigateway.GetDomainNameAccessAssociationsInput, fn func(*apigateway.GetDomainNameAccessAssociationsOutput, bool) bool, optFns ...func(*apigateway.Options)) error {
 	for {
-		output, err := conn.GetDomainNameAccessAssociations(ctx, input)
+		output, err := conn.GetDomainNameAccessAssociations(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

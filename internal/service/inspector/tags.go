@@ -29,7 +29,7 @@ func updateTags(ctx context.Context, conn *inspector.Client, identifier string, 
 	if len(newTags) > 0 {
 		input := &inspector.SetTagsForResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(newTags),
+			Tags:        svcTags(newTags),
 		}
 
 		_, err := conn.SetTagsForResource(ctx, input)
@@ -57,7 +57,7 @@ func createTags(ctx context.Context, conn *inspector.Client, identifier string, 
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
 // UpdateTags updates Inspector Classic service tags.

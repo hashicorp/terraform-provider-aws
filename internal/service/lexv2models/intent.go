@@ -37,8 +37,8 @@ import (
 )
 
 // @FrameworkResource("aws_lexv2models_intent", name="Intent")
-func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIntent{}
+func newIntentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &intentResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -51,17 +51,13 @@ const (
 	ResNameIntent = "Intent"
 )
 
-type resourceIntent struct {
-	framework.ResourceWithConfigure
+type intentResource struct {
+	framework.ResourceWithModel[IntentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_intent"
-}
-
-func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	slotPriorityLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -685,7 +681,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx, fwtypes.WithSemanticEqualityFunc(confirmationSettingsEqualityFunc)),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{
@@ -901,10 +897,10 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 
 var intentFlexOpt = flex.WithFieldNamePrefix(ResNameIntent)
 
-func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *intentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var data ResourceIntentData
+	var data IntentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -945,7 +941,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// get some data from the intent
-	var dataAfter ResourceIntentData
+	var dataAfter IntentResourceModel
 	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -958,10 +954,10 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *intentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var data ResourceIntentData
+	var data IntentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -995,10 +991,10 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *intentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var old, new ResourceIntentData
+	var old, new IntentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1081,10 +1077,10 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *intentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state ResourceIntentData
+	var state IntentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1126,7 +1122,7 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (model *ResourceIntentData) InitFromID() error {
+func (model *IntentResourceModel) InitFromID() error {
 	parts := strings.Split(model.ID.ValueString(), ":")
 	if len(parts) != 4 {
 		return fmt.Errorf("Unexpected format for import key (%s), use: IntentID:BotID:BotVersion:LocaleID", model.ID)
@@ -1139,7 +1135,7 @@ func (model *ResourceIntentData) InitFromID() error {
 	return nil
 }
 
-func (model *ResourceIntentData) setID() {
+func (model *IntentResourceModel) setID() {
 	model.ID = types.StringValue(strings.Join([]string{
 		model.IntentID.ValueString(),
 		model.BotID.ValueString(),
@@ -1189,7 +1185,7 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 }
 
 func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1497,7 +1493,8 @@ type DialogCodeHookSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-type ResourceIntentData struct {
+type IntentResourceModel struct {
+	framework.WithRegionModel
 	BotID                  types.String                                                 `tfsdk:"bot_id"`
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
 	ClosingSetting         fwtypes.ListNestedObjectValueOf[IntentClosingSetting]        `tfsdk:"closing_setting"`

@@ -60,7 +60,7 @@ func resourceRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRoleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -123,7 +123,7 @@ func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -196,7 +196,7 @@ func findRoleAssociationsByTwoPartKey(ctx context.Context, conn *grafana.Client,
 
 func populateUpdateInstructions(role awstypes.Role, list []*string, action awstypes.UpdateAction, typeSSOUser awstypes.UserType, updateInstructions []awstypes.UpdateInstruction) []awstypes.UpdateInstruction {
 	users := make([]awstypes.User, len(list))
-	for i := 0; i < len(users); i++ {
+	for i := range users {
 		users[i] = awstypes.User{
 			Id:   list[i],
 			Type: typeSSOUser,

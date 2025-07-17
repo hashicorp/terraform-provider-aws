@@ -397,7 +397,8 @@ func testAccFramework_disappears(t *testing.T) {
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListFrameworks(ctx, &backup.ListFrameworksInput{})
+	input := backup.ListFrameworksInput{}
+	_, err := conn.ListFrameworks(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

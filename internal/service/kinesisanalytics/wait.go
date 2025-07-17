@@ -95,8 +95,8 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, 
 	return nil, err
 }
 
-func waitIAMPropagation(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	var output interface{}
+func waitIAMPropagation(ctx context.Context, f func() (any, error)) (any, error) {
+	var output any
 
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error

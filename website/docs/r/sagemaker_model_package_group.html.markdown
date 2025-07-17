@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model_package_group"
 description: |-
-  Provides a SageMaker Model Package Group resource.
+  Provides a SageMaker AI Model Package Group resource.
 ---
 
 # Resource: aws_sagemaker_model_package_group
 
-Provides a SageMaker Model Package Group resource.
+Provides a SageMaker AI Model Package Group resource.
 
 ## Example Usage
 
@@ -24,6 +24,7 @@ resource "aws_sagemaker_model_package_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `model_package_group_name` - (Required) The name of the model group.
 * `model_package_group_description` - (Optional) A description for the model group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -38,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Model Package Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Model Package Groups using the `name`. For example:
 
 ```terraform
 import {
@@ -47,7 +48,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Model Package Groups using the `name`. For example:
+Using `terraform import`, import SageMaker AI Model Package Groups using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_model_package_group.test_model_package_group my-code-repo

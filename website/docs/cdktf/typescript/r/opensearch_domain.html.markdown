@@ -503,11 +503,25 @@ The following arguments are optional:
 * `instanceCount` - (Optional) Number of instances in the cluster.
 * `instanceType` - (Optional) Instance type of data nodes in the cluster.
 * `multiAzWithStandbyEnabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
+* `nodeOptions` - (Optional) List of node options for the domain.
 * `warmCount` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warmCount` can be only and must be set when `warmEnabled` is set to `true`.
 * `warmEnabled` - (Optional) Whether to enable warm storage.
 * `warmType` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warmType` can be only and must be set when `warmEnabled` is set to `true`.
 * `zoneAwarenessConfig` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zoneAwarenessEnabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availabilityZoneCount` within the `zoneAwarenessConfig` must be set to `3`.
+
+#### node_options
+
+Container object to specify configuration for a node type.
+
+* `nodeConfig` - (Optional) Container to specify sizing of a node type.
+* `nodeType` - (Optional) Type of node this configuration describes. Valid values: `coordinator`.
+
+#### node_config
+
+* `count` - (Optional) Number of nodes of a particular node type in the cluster.
+* `enabled` - (Optional) Whether a particular node type is enabled.
+* `type` - (Optional) The instance type of a particular node type in the cluster.
 
 #### cold_storage_options
 
@@ -643,4 +657,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e6b148c9a7c92900cd9d50b4727945d4f9e3161b5067e03493d017c7dae1d336 -->
+<!-- cache-key: cdktf-0.20.8 input-37fa224452decb6addbeabd5d6c6b27b31741f8e1ca9af31765de08dd0c7541b -->

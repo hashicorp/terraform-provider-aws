@@ -80,26 +80,24 @@ func resourceCodeRepository() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("code_repository_name").(string)
 	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
-		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
+		GitConfig:          expandCodeRepositoryGitConfig(d.Get("git_config").([]any)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)
 	_, err := conn.CreateCodeRepository(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker code repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI code repository: %s", err)
 	}
 
 	d.SetId(name)
@@ -107,7 +105,7 @@ func resourceCodeRepositoryCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceCodeRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -115,10 +113,10 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find CodeRepository") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker code repository (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker AI code repository (%s); removing from state", d.Id())
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker code repository (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI code repository (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(codeRepository.CodeRepositoryArn)
@@ -132,27 +130,27 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceCodeRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChange("git_config") {
 		input := &sagemaker.UpdateCodeRepositoryInput{
 			CodeRepositoryName: aws.String(d.Id()),
-			GitConfig:          expandCodeRepositoryUpdateGitConfig(d.Get("git_config").([]interface{})),
+			GitConfig:          expandCodeRepositoryUpdateGitConfig(d.Get("git_config").([]any)),
 		}
 
 		log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
 		_, err := conn.UpdateCodeRepository(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker code repository: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI code repository: %s", err)
 		}
 	}
 
 	return append(diags, resourceCodeRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceCodeRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCodeRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -164,7 +162,7 @@ func resourceCodeRepositoryDelete(ctx context.Context, d *schema.ResourceData, m
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find CodeRepository") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker code repository (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI code repository (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -195,12 +193,12 @@ func findCodeRepositoryByName(ctx context.Context, conn *sagemaker.Client, name 
 	return output, nil
 }
 
-func expandCodeRepositoryGitConfig(l []interface{}) *awstypes.GitConfig {
+func expandCodeRepositoryGitConfig(l []any) *awstypes.GitConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.GitConfig{
 		RepositoryUrl: aws.String(m["repository_url"].(string)),
@@ -217,12 +215,12 @@ func expandCodeRepositoryGitConfig(l []interface{}) *awstypes.GitConfig {
 	return config
 }
 
-func flattenCodeRepositoryGitConfig(config *awstypes.GitConfig) []map[string]interface{} {
+func flattenCodeRepositoryGitConfig(config *awstypes.GitConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"repository_url": aws.ToString(config.RepositoryUrl),
 	}
 
@@ -234,15 +232,15 @@ func flattenCodeRepositoryGitConfig(config *awstypes.GitConfig) []map[string]int
 		m["secret_arn"] = aws.ToString(config.SecretArn)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCodeRepositoryUpdateGitConfig(l []interface{}) *awstypes.GitConfigForUpdate {
+func expandCodeRepositoryUpdateGitConfig(l []any) *awstypes.GitConfigForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.GitConfigForUpdate{
 		SecretArn: aws.String(m["secret_arn"].(string)),

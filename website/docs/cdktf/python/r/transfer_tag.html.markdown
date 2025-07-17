@@ -35,12 +35,12 @@ class MyConvertedCode(TerraformStack):
             identity_provider_type="SERVICE_MANAGED"
         )
         TransferTag(self, "hostname",
-            key="aws:transfer:customHostname",
+            key="transfer:customHostname",
             resource_arn=example.arn,
             value="example.com"
         )
         TransferTag(self, "zone_id",
-            key="aws:transfer:route53HostedZoneId",
+            key="transfer:route53HostedZoneId",
             resource_arn=example.arn,
             value="/hostedzone/MyHostedZoneId"
         )
@@ -85,4 +85,4 @@ Using `terraform import`, import `aws_transfer_tag` using the Transfer Family re
 % terraform import aws_transfer_tag.example arn:aws:transfer:us-east-1:123456789012:server/s-1234567890abcdef0,Name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e2764988d2c43be249db77ec49fff55b3d8ec29f4531f3fe791ef9e27ae5b2a6 -->
+<!-- cache-key: cdktf-0.20.8 input-2ce2558240fea05fb606b80f383d02da5add0dd5db8ac42f4f0f30fe58f8f377 -->

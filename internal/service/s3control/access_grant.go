@@ -41,12 +41,8 @@ func newAccessGrantResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type accessGrantResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accessGrantResourceModel]
 	framework.WithImportByID
-}
-
-func (r *accessGrantResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_s3control_access_grant"
 }
 
 func (r *accessGrantResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -178,7 +174,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	// "InvalidRequest: Invalid Grantee in the request".
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, s3PropagationTimeout, func() (any, error) {
 		return conn.CreateAccessGrant(ctx, input)
 	}, errCodeInvalidRequest, "Invalid Grantee in the request")
 
@@ -253,7 +249,7 @@ func (r *accessGrantResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, svcTags(tags))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -313,10 +309,6 @@ func (r *accessGrantResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
-func (r *accessGrantResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, grantID string) (*s3control.GetAccessGrantOutput, error) {
 	input := &s3control.GetAccessGrantInput{
 		AccessGrantId: aws.String(grantID),
@@ -344,6 +336,7 @@ func findAccessGrantByTwoPartKey(ctx context.Context, conn *s3control.Client, ac
 }
 
 type accessGrantResourceModel struct {
+	framework.WithRegionModel
 	AccessGrantARN                    types.String                                                            `tfsdk:"access_grant_arn"`
 	AccessGrantID                     types.String                                                            `tfsdk:"access_grant_id"`
 	AccessGrantsLocationConfiguration fwtypes.ListNestedObjectValueOf[accessGrantsLocationConfigurationModel] `tfsdk:"access_grants_location_configuration"`

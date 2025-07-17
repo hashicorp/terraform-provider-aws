@@ -36,8 +36,8 @@ import (
 )
 
 // @FrameworkResource("aws_lexv2models_slot", name="Slot")
-func newResourceSlot(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSlot{}
+func newSlotResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &slotResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,17 +52,13 @@ const (
 	slotIDPartCount = 5
 )
 
-type resourceSlot struct {
-	framework.ResourceWithConfigure
+type slotResource struct {
+	framework.ResourceWithModel[slotResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceSlot) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_slot"
-}
-
-func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *slotResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	multValueSettingsLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MultipleValuesSettingData](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -482,7 +478,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 
 	subSlotSettingLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx, fwtypes.WithSemanticEqualityFunc(subSlotSettingEqualityFunc)),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrExpression: schema.StringAttribute{
@@ -493,10 +489,13 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				"slot_specification": slotSpecificationsLNB,
 			},
 		},
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
 	}
 
 	valueElicitationSettingLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx, fwtypes.WithSemanticEqualityFunc(valueElicitationSettingEqualityFunc)),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtMost(1),
@@ -581,10 +580,10 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 var slotFlexOpt = flex.WithFieldNamePrefix(ResNameSlot)
 
-func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *slotResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceSlotData
+	var plan slotResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -641,10 +640,10 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceSlot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *slotResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceSlotData
+	var state slotResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -671,10 +670,10 @@ func (r *resourceSlot) Read(ctx context.Context, req resource.ReadRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *slotResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state resourceSlotData
+	var plan, state slotResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -714,10 +713,10 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *slotResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceSlotData
+	var state slotResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -784,7 +783,8 @@ func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*le
 	return out, nil
 }
 
-type resourceSlotData struct {
+type slotResourceModel struct {
+	framework.WithRegionModel
 	BotID                   types.String                                                 `tfsdk:"bot_id"`
 	BotVersion              types.String                                                 `tfsdk:"bot_version"`
 	Description             types.String                                                 `tfsdk:"description"`
@@ -862,7 +862,7 @@ type ValueElicitationSettingData struct {
 	WaitAndContinueSpecification fwtypes.ListNestedObjectValueOf[WaitAndContinueSpecificationData] `tfsdk:"wait_and_continue_specification"`
 }
 
-func slotHasChanges(_ context.Context, plan, state resourceSlotData) bool {
+func slotHasChanges(_ context.Context, plan, state slotResourceModel) bool {
 	return !plan.Description.Equal(state.Description) ||
 		!plan.MultipleValuesSetting.Equal(state.MultipleValuesSetting) ||
 		!plan.SlotTypeID.Equal(state.SlotTypeID)

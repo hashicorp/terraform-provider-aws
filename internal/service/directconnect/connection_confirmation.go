@@ -38,7 +38,7 @@ func resourceConnectionConfirmation() *schema.Resource {
 	}
 }
 
-func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -62,7 +62,7 @@ func resourceConnectionConfirmationCreate(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionConfirmationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 

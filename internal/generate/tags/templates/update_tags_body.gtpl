@@ -61,11 +61,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
-
+	{{ if .RetryTagOps }}
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func() (any, error) {
+			return conn.{{ .TagOp }}(ctx, &input, optFns...)
+		},
+		"{{ .RetryErrorMessage }}",
+	)
+	{{ else }}
 	_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+	{{- end }}
 
 	if err != nil {
-		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		return smarterr.NewError(err)
 	}
 
 	{{- else }}
@@ -78,7 +86,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, removedTags := range removedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .UntagOp }}Input{
+		input := {{ .AWSService }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
@@ -103,11 +111,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
-
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
 		_, err := conn.{{ .UntagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -122,7 +138,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if .TagOpBatchSize }}
 		for _, updatedTags := range updatedTags.Chunks({{ .TagOpBatchSize }}) {
 		{{- end }}
-		input := {{ .TagPackage }}.{{ .TagOp }}Input{
+		input := {{ .AWSService }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
@@ -144,10 +160,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 		}
 
+		{{ if .RetryTagOps }}
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func() (any, error) {
+				return conn.{{ .TagOp }}(ctx, &input, optFns...)
+			},
+			"{{ .RetryErrorMessage }}",
+		)
+		{{ else }}
 		_, err := conn.{{ .TagOp }}(ctx, &input, optFns...)
+		{{- end }}
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 		{{- if .TagOpBatchSize }}
 		}
@@ -159,7 +184,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
 		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, optFns...); err != nil {
-			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 	{{- end }}

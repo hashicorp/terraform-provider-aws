@@ -198,6 +198,7 @@ class MyConvertedCode extends TerraformStack {
 |DocumentDB Elastic|`docdbelastic`|`AWS_ENDPOINT_URL_DOCDB_ELASTIC`|`docdb_elastic`|
 |DRS (Elastic Disaster Recovery)|`drs`|`AWS_ENDPOINT_URL_DRS`|`drs`|
 |Directory Service|`ds`(or `directoryservice`)|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE`|`directory_service`|
+|DSQL|`dsql`|`AWS_ENDPOINT_URL_DSQL`|`dsql`|
 |DynamoDB|`dynamodb`|`AWS_ENDPOINT_URL_DYNAMODB`|`dynamodb`|
 |EC2 (Elastic Compute Cloud)|`ec2`|`AWS_ENDPOINT_URL_EC2`|`ec2`|
 |ECR (Elastic Container Registry)|`ecr`|`AWS_ENDPOINT_URL_ECR`|`ecr`|
@@ -216,6 +217,7 @@ class MyConvertedCode extends TerraformStack {
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
@@ -268,6 +270,7 @@ class MyConvertedCode extends TerraformStack {
 |Elemental MediaLive|`medialive`|`AWS_ENDPOINT_URL_MEDIALIVE`|`medialive`|
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
+|Elemental MediaPackage VOD|`mediapackagevod`|`AWS_ENDPOINT_URL_MEDIAPACKAGE_VOD`|`mediapackage_vod`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
 |MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |Application Migration (Mgn)|`mgn`|`AWS_ENDPOINT_URL_MGN`|`mgn`|
@@ -278,6 +281,8 @@ class MyConvertedCode extends TerraformStack {
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
+|User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
@@ -319,7 +324,7 @@ class MyConvertedCode extends TerraformStack {
 |S3 Control|`s3Control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3Outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3Outposts`|
 |S3 Tables|`s3Tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3Tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
@@ -472,4 +477,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-332252b925b4809e50075382e34b81b4fa4349e9017cef2084c56bfa342b8aac -->
+<!-- cache-key: cdktf-0.20.8 input-f361870528f60529529920123e1747d70429cdb27f38f923ba48ccd638895684 -->

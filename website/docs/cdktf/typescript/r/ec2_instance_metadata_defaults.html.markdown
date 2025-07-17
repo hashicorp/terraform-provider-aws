@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments.
+This resource supports the following arguments:
 
 * `httpEndpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"`, `"disabled"`, or `"no-preference"`. Default: `"no-preference"`.
 * `httpTokens` - (Optional) Whether the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"`, `"required"`, or `"no-preference"`. Default: `"no-preference"`.
@@ -53,4 +53,4 @@ This data source exports no additional attributes.
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-5d0cf6398963495f13f899bdc53496621dd69d6ddab83cfd583ae4f5df7dba35 -->
+<!-- cache-key: cdktf-0.20.8 input-bb0f7a1f22492a60edbf5f7e91288ebdb8aab2c900c97d5a4dfe1b408b2f649d -->

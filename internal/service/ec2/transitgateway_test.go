@@ -148,8 +148,9 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"notRecreatedDXGateway":      testAccTransitGatewayRouteTableAssociation_notRecreatedDXGateway,
 		},
 		"RouteTablePropagation": {
-			acctest.CtBasic:      testAccTransitGatewayRouteTablePropagation_basic,
-			acctest.CtDisappears: testAccTransitGatewayRouteTablePropagation_disappears,
+			acctest.CtBasic:         testAccTransitGatewayRouteTablePropagation_basic,
+			acctest.CtDisappears:    testAccTransitGatewayRouteTablePropagation_disappears,
+			"notRecreatedDXGateway": testAccTransitGatewayRouteTablePropagtion_notRecreatedDXGateway,
 		},
 		"VPCAttachment": {
 			acctest.CtBasic:                   testAccTransitGatewayVPCAttachment_basic,
@@ -852,7 +853,7 @@ func testAccCheckTransitGatewayRecreated(i, j *awstypes.TransitGateway) resource
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -880,7 +881,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 	}
 }
 
-func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId)
 
@@ -912,7 +913,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 
@@ -940,7 +941,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 	}
 }
 
-func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment interface{}) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx context.Context, transitGateway *awstypes.TransitGateway, transitGatewayAttachment any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId)
 

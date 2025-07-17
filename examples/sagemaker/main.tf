@@ -3,6 +3,12 @@
 
 terraform {
   required_version = ">= 0.12"
+
+  required_providers {
+    random = {
+      version = "~> 3.6"
+    }
+  }
 }
 
 provider "aws" {
@@ -104,7 +110,7 @@ resource "aws_sagemaker_model" "foo" {
   execution_role_arn = aws_iam_role.foo.arn
 
   primary_container {
-    image          = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/foo:latest"
+    image          = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/foo:latest"
     model_data_url = "https://s3-us-west-2.amazonaws.com/${aws_s3_bucket.foo.bucket}/model.tar.gz"
   }
 

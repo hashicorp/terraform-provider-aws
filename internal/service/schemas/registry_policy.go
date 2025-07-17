@@ -42,7 +42,7 @@ func resourceRegistryPolicy() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -56,7 +56,7 @@ func resourceRegistryPolicy() *schema.Resource {
 	}
 }
 
-func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -138,7 +138,7 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 

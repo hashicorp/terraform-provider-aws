@@ -40,7 +40,7 @@ func resourceAccessKey() *schema.Resource {
 			// ListAccessKeys requires UserName field in certain scenarios:
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 				input := &iam.GetAccessKeyLastUsedInput{
@@ -110,7 +110,7 @@ func resourceAccessKey() *schema.Resource {
 	}
 }
 
-func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -188,7 +188,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -231,7 +231,7 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *awstypes.AccessKey
 	d.Set("user", key.UserName)
 }
 
-func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -244,7 +244,7 @@ func resourceAccessKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceAccessKeyRead(ctx, d, meta)...)
 }
 
-func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

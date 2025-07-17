@@ -61,6 +61,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 * `profile_name` - (Required) Name of the signing profile to add the cross-account permissions.
 * `action` - (Required) An AWS Signer action permitted as part of cross-account permissions. Valid values: `signer:StartSigningJob`, `signer:GetSigningProfile`, `signer:RevokeSignature`, or `signer:SignPayload`.
 * `principal` - (Required) The AWS principal to be granted a cross-account permission.
@@ -97,4 +99,4 @@ Using `terraform import`, import Signer signing profile permission statements us
 % terraform import aws_signer_signing_profile_permission.test_signer_signing_profile_permission prod_profile_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK/ProdAccountStartSigningJobStatementId
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7edfee662c248d246aee9cd63641e317eed424d97a2a7b8b34328c55504385f6 -->
+<!-- cache-key: cdktf-0.20.8 input-33a345a7b518e9e993086506c63962fc37680ad522163f5146d9b14190b24f99 -->
