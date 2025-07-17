@@ -2073,7 +2073,7 @@ service "cognitoidp" {
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
+  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log", "cognitoidp"]
   brand                    = "AWS"
 }
 

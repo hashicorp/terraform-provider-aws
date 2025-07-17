@@ -561,6 +561,7 @@ service/cognitoidp:
               - 'website/**/cognito_user*'
               - 'website/**/cognito_risk*'
               - 'website/**/cognito_log*'
+              - 'website/**/cognitoidp*'
 service/cognitosync:
   - any:
       - changed-files:
