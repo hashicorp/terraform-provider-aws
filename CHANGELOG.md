@@ -1,4 +1,5 @@
-## 6.4.0 (Unreleased)
+## 6.5.0 (Unreleased)
+## 6.4.0 (July 17, 2025)
 
 FEATURES:
 
