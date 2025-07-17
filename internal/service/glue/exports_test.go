@@ -37,6 +37,7 @@ var (
 	FindPartitionByValues        = findPartitionByValues
 	FindPartitionIndexByName     = findPartitionIndexByName
 	FindRegistryByID             = findRegistryByID
+	FindResourcePolicy           = findResourcePolicy
 	FindSchemaByID               = findSchemaByID
 	FindTableByName              = findTableByName
 	FindTriggerByName            = findTriggerByName

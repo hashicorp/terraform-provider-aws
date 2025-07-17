@@ -20,10 +20,12 @@ type coreNetworkPolicyDocument struct {
 }
 
 type coreNetworkPolicyCoreNetworkConfiguration struct {
-	AsnRanges        any                                         `json:"asn-ranges"`
-	InsideCidrBlocks any                                         `json:"inside-cidr-blocks,omitempty"`
-	VpnEcmpSupport   bool                                        `json:"vpn-ecmp-support"`
-	EdgeLocations    []*coreNetworkPolicyCoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
+	AsnRanges                       any                                         `json:"asn-ranges"`
+	InsideCidrBlocks                any                                         `json:"inside-cidr-blocks,omitempty"`
+	VpnEcmpSupport                  bool                                        `json:"vpn-ecmp-support"`
+	EdgeLocations                   []*coreNetworkPolicyCoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
+	DnsSupport                      bool                                        `json:"dns-support"`
+	SecurityGroupReferencingSupport bool                                        `json:"security-group-referencing-support"`
 }
 
 type coreNetworkPolicyCoreNetworkEdgeLocation struct {

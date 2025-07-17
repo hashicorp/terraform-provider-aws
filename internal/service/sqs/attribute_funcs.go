@@ -70,7 +70,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func(ctx context.Context) (*string, error) {
 		return findQueueAttributeByTwoPartKey(ctx, conn, d.Id(), h.AttributeName)
 	})
 
@@ -84,7 +84,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading SQS Queue (%s) attribute (%s): %s", d.Id(), h.AttributeName, err)
 	}
 
-	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), aws.ToString(outputRaw.(*string)))
+	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), aws.ToString(output))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

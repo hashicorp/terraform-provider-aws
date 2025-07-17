@@ -6,13 +6,13 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,10 +24,18 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_vpc_security_group_vpc_association", name="Security Group VPC Association")
+// @IdentityAttribute("vpc_id")
+// @IdentityAttribute("security_group_id")
+// @ImportIDHandler("securityGroupVPCAssociationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupVpcAssociation")
+// @Testing(importStateIdFunc=testAccSecurityGroupVPCAssociationImportStateIDFunc)
+// @Testing(importStateIdAttribute="vpc_id")
+// @Testing(preIdentityVersion="6.0.0")
 func newSecurityGroupVPCAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupVPCAssociationResource{}
 
@@ -46,6 +54,7 @@ type securityGroupVPCAssociationResource struct {
 	framework.ResourceWithModel[securityGroupVPCAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupVPCAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -177,24 +186,28 @@ func (r *securityGroupVPCAssociationResource) Delete(ctx context.Context, reques
 	}
 }
 
-func (r *securityGroupVPCAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(request.ID, securityGroupVPCAssociationIDParts, false)
-	if err != nil {
-		response.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("unexpected format for ID (%[1]s), expected SECURITY-GROUP-ID%[2]sVPC-ID", request.ID, intflex.ResourceIdSeparator),
-		)
-		return
-	}
-
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("security_group_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrVPCID), parts[1])...)
-}
-
 type securityGroupVPCAssociationResourceModel struct {
 	framework.WithRegionModel
 	GroupID  types.String                                                  `tfsdk:"security_group_id"`
 	State    fwtypes.StringEnum[awstypes.SecurityGroupVpcAssociationState] `tfsdk:"state"`
 	Timeouts timeouts.Value                                                `tfsdk:"timeouts"`
 	VPCID    types.String                                                  `tfsdk:"vpc_id"`
+}
+
+var _ inttypes.ImportIDParser = securityGroupVPCAssociationImportID{}
+
+type securityGroupVPCAssociationImportID struct{}
+
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+	sgID, vpcID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <security-group-id>"+intflex.ResourceIdSeparator+"<vpc-id>", id)
+	}
+
+	result := map[string]string{
+		"security_group_id": sgID,
+		names.AttrVPCID:     vpcID,
+	}
+
+	return id, result, nil
 }

@@ -508,11 +508,11 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_s3ToRDS(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -703,7 +703,7 @@ resource "aws_dms_endpoint" "source" {
   endpoint_id   = "%[1]s-source"
   endpoint_type = "source"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.region}.rds.${data.aws_partition.current.dns_suffix}"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -714,7 +714,7 @@ resource "aws_dms_endpoint" "target" {
   endpoint_id   = "%[1]s-target"
   endpoint_type = "target"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.region}.rds.${data.aws_partition.current.dns_suffix}"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"

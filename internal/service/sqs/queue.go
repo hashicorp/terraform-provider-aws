@@ -282,7 +282,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func(ctx context.Context) (map[types.QueueAttributeName]string, error) {
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
@@ -301,7 +301,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

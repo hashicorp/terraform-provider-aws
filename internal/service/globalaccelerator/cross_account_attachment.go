@@ -42,7 +42,7 @@ func newCrossAccountAttachmentResource(_ context.Context) (resource.ResourceWith
 
 type crossAccountAttachmentResource struct {
 	framework.ResourceWithModel[crossAccountAttachmentResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

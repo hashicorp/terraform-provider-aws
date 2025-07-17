@@ -5,6 +5,7 @@ package datasync
 
 // Exports for use in tests only.
 var (
+	ResourceAgent                        = resourceAgent
 	ResourceLocationAzureBlob            = resourceLocationAzureBlob
 	ResourceLocationEFS                  = resourceLocationEFS
 	ResourceLocationFSxLustreFileSystem  = resourceLocationFSxLustreFileSystem
@@ -18,6 +19,7 @@ var (
 	ResourceLocationSMB                  = resourceLocationSMB
 	ResourceTask                         = resourceTask
 
+	FindAgentByARN                 = findAgentByARN
 	FindLocationAzureBlobByARN     = findLocationAzureBlobByARN
 	FindLocationEFSByARN           = findLocationEFSByARN
 	FindLocationFSxLustreByARN     = findLocationFSxLustreByARN

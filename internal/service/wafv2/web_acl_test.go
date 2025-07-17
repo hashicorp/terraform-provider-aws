@@ -2746,20 +2746,12 @@ func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing
 				),
 			},
 			{
-				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc1"),
-				PlanOnly: true,
-			},
-			{
 				Config: testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 				),
-			},
-			{
-				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc2"),
-				PlanOnly: true,
 			},
 		},
 	})

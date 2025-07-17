@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listContinuousDeploymentPoliciesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListContinuousDeploymentPoliciesInput, fn func(*cloudfront.ListContinuousDeploymentPoliciesOutput, bool) bool) error {
+func listContinuousDeploymentPoliciesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListContinuousDeploymentPoliciesInput, fn func(*cloudfront.ListContinuousDeploymentPoliciesOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListContinuousDeploymentPolicies(ctx, input)
+		output, err := conn.ListContinuousDeploymentPolicies(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

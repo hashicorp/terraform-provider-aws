@@ -60,21 +60,18 @@ resource "aws_iam_role" "test_role" {
 
 This resource supports the following arguments:
 
-* `name` - (Optional) The name of the role policy. If omitted, Terraform will
-assign a random, unique name.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified
-  prefix. Conflicts with `name`.
-* `policy` - (Required) The inline policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
+* `name` - (Optional) The name of the role policy.
+  If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix.
+  Conflicts with `name`.
+* `policy` - (Required) The inline policy document.
+  This is a JSON formatted string.
+  For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 * `role` - (Required) The name of the IAM role to attach to the policy.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The role policy ID, in the form of `role_name:role_policy_name`.
-* `name` - The name of the policy.
-* `policy` - The policy document attached to the role.
-* `role` - The name of the role associated with the policy.
+This resource exports no additional attributes.
 
 ## Import
 

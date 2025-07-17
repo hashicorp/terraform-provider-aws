@@ -443,6 +443,8 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusConnectPeerState(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 

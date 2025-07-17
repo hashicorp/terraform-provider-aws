@@ -7,7 +7,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -50,9 +49,9 @@ func testAccDRSReplicationConfigurationTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -232,9 +231,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -294,9 +293,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -344,9 +343,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -424,9 +423,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnCreate(t *testin
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -514,9 +513,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Add(t *te
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -653,9 +652,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_EmptyTag_OnUpdate_Replace(t
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -743,9 +742,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_providerOnly(t 
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -924,9 +923,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nonOverlapping(
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1084,9 +1083,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_overlapping(t *
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1260,9 +1259,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToProvide
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1350,9 +1349,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_updateToResourc
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1439,9 +1438,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyResourceTa
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1505,9 +1504,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_emptyProviderOn
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1563,9 +1562,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullOverlapping
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1632,9 +1631,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_DefaultTags_nullNonOverlapp
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1703,9 +1702,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnCreate(t *tes
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1758,9 +1757,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Add(t 
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1855,9 +1854,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_ComputedTag_OnUpdate_Replac
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -1942,9 +1941,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_DefaultT
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
@@ -2104,9 +2103,9 @@ func testAccDRSReplicationConfigurationTemplate_tags_IgnoreTags_Overlap_Resource
 	ctx := acctest.Context(t)
 	var v awstypes.ReplicationConfigurationTemplate
 	resourceName := "aws_drs_replication_configuration_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.DRSServiceID),
 		CheckDestroy: testAccCheckReplicationConfigurationTemplateDestroy(ctx),
