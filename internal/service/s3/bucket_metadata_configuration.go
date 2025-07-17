@@ -30,10 +30,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_s3_bucket_metadata_table_configuration", name="Bucket Metadata Table Configuration")
-func newResourceBucketMetadataTableConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceBucketMetadataTableConfiguration{}
+// @FrameworkResource("aws_s3_bucket_metadata_configuration", name="Bucket Metadata Configuration")
+func newBucketMetadataConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &bucketMetadataConfigurationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -352,7 +351,7 @@ func findBucketMetadataTableConfigurationByBucket(ctx context.Context, conn *s3.
 	return out.GetBucketMetadataTableConfigurationResult, nil
 }
 
-type resourceBucketMetadataTableConfigurationModel struct {
+type bucketMetadataConfigurationResourceModel struct {
 	Bucket                     types.String                                                `tfsdk:"bucket"`
 	MetadataTableConfiguration fwtypes.ListNestedObjectValueOf[metadataTableConfiguration] `tfsdk:"metadata_table_configuration"`
 	ChecksumAlgorithm          fwtypes.StringEnum[awstypes.ChecksumAlgorithm]              `tfsdk:"checksum_algorithm"`
