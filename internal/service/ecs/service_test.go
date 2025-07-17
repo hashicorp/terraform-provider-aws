@@ -2716,6 +2716,8 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_blueGreenDeploymentBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -2925,11 +2927,7 @@ resource "aws_iam_role" "global" {
             "lambda.amazonaws.com",
             "ecs-tasks.amazonaws.com",
             "elasticloadbalancing.amazonaws.com",
-            "ecs-service-principal.ecs.aws.internal",
             "ecs.amazonaws.com",
-            "ecs-slr.aws.internal",
-            "us-west-2.ecs-als.gamma.aws.internal",
-            "ecs-tasks-gamma.amazonaws.com"
           ]
         }
       }
@@ -2939,7 +2937,7 @@ resource "aws_iam_role" "global" {
 
 resource "aws_iam_role_policy_attachment" "global_admin_attach" {
   role       = aws_iam_role.global.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
 }
 
 resource "aws_iam_role_policy" "ecs_elb_permissions" {
@@ -2963,7 +2961,7 @@ resource "aws_iam_role_policy" "ecs_elb_permissions" {
 
 resource "aws_iam_role_policy_attachment" "ecs_service_role" {
   role       = aws_iam_role.global.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole"
 }
 
 resource "aws_iam_role" "lambda_role" {
@@ -2984,7 +2982,7 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
   role       = aws_iam_role.lambda_role.name
 }
 
