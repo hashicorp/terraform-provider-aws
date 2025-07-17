@@ -82,6 +82,12 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 			"percent_progress": schema.Float64Attribute{
 				Computed: true,
 			},
+			"peered_cidrs": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
+				Description: "The list of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.",
+			},
 			"status": schema.StringAttribute{
 				CustomType: statusType,
 				Computed:   true,
@@ -195,6 +201,7 @@ type odbNetworkDataSourceModel struct {
 	OciVcnUrl               types.String                                                                 `tfsdk:"oci_vcn_url"`
 	OdbNetworkArn           types.String                                                                 `tfsdk:"arn"`
 	OdbNetworkId            types.String                                                                 `tfsdk:"id"`
+	PeeredCidrs             fwtypes.SetValueOf[types.String]                                             `tfsdk:"peered_cidrs"`
 	PercentProgress         types.Float64                                                                `tfsdk:"percent_progress"`
 	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                  `tfsdk:"status"`
 	StatusReason            types.String                                                                 `tfsdk:"status_reason"`

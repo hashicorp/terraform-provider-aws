@@ -53,7 +53,6 @@ func TestAccODBCloudAutonomousVmClusterCreationBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
 			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -62,6 +61,41 @@ func TestAccODBCloudAutonomousVmClusterCreationBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudAutonomousVmClusterCreationWithAllParams(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudAVMC odbtypes.CloudAutonomousVmCluster
+
+	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			//acctest.PreCheckPartitionHasService(t, names.ODBServiceID)
+			autonomousVMClusterResourceTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: autonomousVMClusterResourceTestEntity.avmcAllParamsConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudAVMC),
 				),
@@ -84,7 +118,7 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 
 	var avmc1, avmc2 odbtypes.CloudAutonomousVmCluster
 	resourceName := "aws_odb_cloud_autonomous_vm_cluster.test"
-
+	withoutTag, withTag := autonomousVMClusterResourceTestEntity.avmcNoTagWithTag()
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -93,9 +127,11 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
+
 		Steps: []resource.TestStep{
 			{
-				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
+				Config: withoutTag,
+
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -107,7 +143,7 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: autonomousVMClusterResourceTestEntity.avmcBasicWithTags(),
+				Config: withTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -237,16 +273,6 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 	return out.CloudAutonomousVmCluster, nil
 }
 
-/*func testAccCheckCloudAutonomousVmClusterNotRecreated(before, after *odb.DescribeCloudAutonomousVmClusterResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.CloudAutonomousVmClusterId), aws.ToString(after.CloudAutonomousVmClusterId); before != after {
-			return create.Error(names.ODB, create.ErrActionCheckingNotRecreated, tfodb.ResNameCloudAutonomousVmCluster, aws.ToString(before.CloudAutonomousVmClusterId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}*/
-
 func (autonomousVMClusterResourceTest) avmcBasic() string {
 
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
@@ -292,15 +318,14 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
 	return res
 }
 
-func (autonomousVMClusterResourceTest) avmcBasicWithTags() string {
-
+func (autonomousVMClusterResourceTest) avmcNoTagWithTag() (string, string) {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 
 	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
 	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
-	res := fmt.Sprintf(`
+	noTag := fmt.Sprintf(`
 %s
 
 %s
@@ -328,6 +353,89 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
          months = []
          weeks_of_month =[]
          lead_time_in_weeks = 0
+    }
+ 
+}
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
+	withTag := fmt.Sprintf(`
+%s
+
+%s
+
+data "aws_odb_db_servers_list" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+    cloud_exadata_infrastructure_id         = aws_odb_cloud_exadata_infrastructure.test.id
+  	odb_network_id                          =aws_odb_network.test.id
+	display_name             				= %[3]q
+  	autonomous_data_storage_size_in_tbs     = 5
+  	memory_per_oracle_compute_unit_in_gbs   = 2
+  	total_container_databases               = 1
+  	cpu_core_count_per_node                 = 40
+    license_model                                = "LICENSE_INCLUDED"
+    db_servers								   = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+    scan_listener_port_tls = 8561
+    scan_listener_port_non_tls = 1024
+    maintenance_window = {
+		 preference = "NO_PREFERENCE"
+		 days_of_week =	[]
+         hours_of_day =	[]
+         months = []
+         weeks_of_month =[]
+         lead_time_in_weeks = 0
+    }
+  tags = {
+    	"env"= "dev"
+  }
+
+}
+
+`, exaInfraRes, odbNetRes, avmcDisplayName)
+
+	return noTag, withTag
+}
+
+func (autonomousVMClusterResourceTest) avmcAllParamsConfig() string {
+
+	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
+	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
+	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
+
+	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	res := fmt.Sprintf(`
+%s
+
+%s
+
+data "aws_odb_db_servers_list" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
+resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
+    description = "my first avmc"
+    time_zone = "UTC"
+    cloud_exadata_infrastructure_id         = aws_odb_cloud_exadata_infrastructure.test.id
+  	odb_network_id                          =aws_odb_network.test.id
+	display_name             				= %[3]q
+  	autonomous_data_storage_size_in_tbs     = 5
+  	memory_per_oracle_compute_unit_in_gbs   = 2
+  	total_container_databases               = 1
+  	cpu_core_count_per_node                 = 40
+    license_model                                = "LICENSE_INCLUDED"
+    db_servers								   = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+    scan_listener_port_tls = 8561
+    scan_listener_port_non_tls = 1024
+    maintenance_window = {
+		 preference = "CUSTOM_PREFERENCE"
+		 days_of_week =	["MONDAY", "TUESDAY"]
+         hours_of_day =	[4,16]
+         months = ["FEBRUARY","MAY","AUGUST","NOVEMBER"]
+         weeks_of_month =[2,4]
+         lead_time_in_weeks = 3
     }
   tags = {
     	"env"= "dev"
