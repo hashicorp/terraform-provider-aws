@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -213,7 +212,8 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	routeTable, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.RouteTable, error) {
 		return findRouteTableByID(ctx, conn, d.Id())
@@ -230,14 +230,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	ownerID := aws.ToString(routeTable.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, routeTableARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 	propagatingVGWs := make([]string, 0, len(routeTable.PropagatingVgws))
 	for _, v := range routeTable.PropagatingVgws {
@@ -937,4 +930,8 @@ func routeTableRouteTargetAttribute(m map[string]any) (string, string) { //nolin
 	}
 
 	return "", ""
+}
+
+func routeTableARN(ctx context.Context, c *conns.AWSClient, accountID, routeTableID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "route-table/"+routeTableID)
 }
