@@ -1,6 +1,6 @@
 resource "aws_ssoadmin_application_assignment_configuration" "test" {
 {{- template "region" }}
-  application_arn     = aws_ssoadmin_application.test.application_arn
+  application_arn     = aws_ssoadmin_application.test.arn
   assignment_required = true
 }
 

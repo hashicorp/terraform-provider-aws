@@ -9,7 +9,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -26,9 +25,9 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -224,9 +223,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -277,8 +276,14 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -288,9 +293,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -337,8 +342,14 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -348,9 +359,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -434,9 +445,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -531,9 +542,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -676,9 +687,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
@@ -768,9 +779,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -965,9 +976,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1136,9 +1147,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1321,9 +1332,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1414,9 +1425,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1508,9 +1519,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1578,9 +1589,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyProviderOnlyT
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1638,9 +1649,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1703,9 +1714,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1768,9 +1779,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testin
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1826,9 +1837,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -1926,9 +1937,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -2016,9 +2027,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
@@ -2178,9 +2189,9 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_ResourceTag
 	ctx := acctest.Context(t)
 	var v awstypes.ProvisionedProductDetail
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),

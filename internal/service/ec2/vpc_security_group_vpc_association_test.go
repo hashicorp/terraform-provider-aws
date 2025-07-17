@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	sgResourceName := "aws_security_group.test"
@@ -39,7 +39,7 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.SecurityGroupVpcAssociationStateAssociated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.SecurityGroupVpcAssociationStateAssociated)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.target", names.AttrID),
 				),
 			},
@@ -56,7 +56,7 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 
@@ -82,7 +82,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	sgResourceName := "aws_security_group.test"
@@ -110,7 +110,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var assoc types.SecurityGroupVpcAssociation
+	var assoc awstypes.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	vpcResourceName := "aws_vpc.target"
@@ -162,7 +162,7 @@ func testAccCheckSecurityGroupVPCAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckSecurityGroupVPCAssociationExists(ctx context.Context, n string, v *types.SecurityGroupVpcAssociation) resource.TestCheckFunc {
+func testAccCheckSecurityGroupVPCAssociationExists(ctx context.Context, n string, v *awstypes.SecurityGroupVpcAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -19,6 +19,7 @@ import (
 
 // @SDKResource("aws_sagemaker_servicecatalog_portfolio_status", name="Servicecatalog Portfolio Status")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)

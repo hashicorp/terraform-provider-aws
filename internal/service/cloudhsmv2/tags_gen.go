@@ -3,8 +3,8 @@ package cloudhsmv2
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
@@ -23,6 +23,7 @@ func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, o
 	input := cloudhsmv2.ListTagsInput{
 		ResourceId: aws.String(identifier),
 	}
+
 	var output []awstypes.Tag
 
 	pages := cloudhsmv2.NewListTagsPaginator(conn, &input)
@@ -30,12 +31,10 @@ func listTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string, o
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.TagList {
-			output = append(output, v)
-		}
+		output = append(output, page.TagList...)
 	}
 
 	return keyValueTags(ctx, output), nil
@@ -47,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).CloudHSMV2Client(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -125,7 +124,7 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -140,7 +139,7 @@ func updateTags(ctx context.Context, conn *cloudhsmv2.Client, identifier string,
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

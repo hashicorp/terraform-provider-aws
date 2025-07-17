@@ -8,34 +8,32 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsDeliveryDestinationPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_destination_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryDestinationPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryDestinationPolicyExists(ctx, resourceName),
+					testAccCheckDeliveryDestinationPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -57,21 +55,21 @@ func TestAccLogsDeliveryDestinationPolicy_basic(t *testing.T) {
 
 func TestAccLogsDeliveryDestinationPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_delivery_destination_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDeliveryDestinationPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryDestinationPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryDestinationPolicyExists(ctx, resourceName),
+					testAccCheckDeliveryDestinationPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliveryDestinationPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,9 +78,9 @@ func TestAccLogsDeliveryDestinationPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDeliveryDestinationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeliveryDestinationPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_delivery_destination_policy" {
@@ -91,7 +89,7 @@ func testAccCheckDeliveryDestinationPolicyDestroy(ctx context.Context) resource.
 
 			_, err := tflogs.FindDeliveryDestinationPolicyByDeliveryDestinationName(ctx, conn, rs.Primary.Attributes["delivery_destination_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -106,14 +104,14 @@ func testAccCheckDeliveryDestinationPolicyDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckDeliveryDestinationPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDeliveryDestinationPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		_, err := tflogs.FindDeliveryDestinationPolicyByDeliveryDestinationName(ctx, conn, rs.Primary.Attributes["delivery_destination_name"])
 

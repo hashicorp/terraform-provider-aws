@@ -81,7 +81,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
+			if !keyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}

@@ -193,10 +193,6 @@ func testAccCheckTestGridProjectExists(ctx context.Context, n string, v *awstype
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindTestGridProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {

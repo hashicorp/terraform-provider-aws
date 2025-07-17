@@ -39,7 +39,7 @@ const (
 
 type serviceIntegrationResource struct {
 	framework.ResourceWithModel[serviceIntegrationResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *serviceIntegrationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

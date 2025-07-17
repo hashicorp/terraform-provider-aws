@@ -5,6 +5,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | Variable | Description |
 |----------|-------------|
 | `ACM_CERTIFICATE_ROOT_DOMAIN` | Root domain name to use with ACM Certificate testing. |
+| `ACM_TEST_CERTIFICATE_EXPORT` | Flag to execute tests that enable exportable certificates. |
 | `ADM_CLIENT_ID` | Identifier for Amazon Device Manager Client in Pinpoint testing. |
 | `AMPLIFY_DOMAIN_NAME` | Domain name to use for Amplify domain association testing. |
 | `AMPLIFY_GITHUB_ACCESS_TOKEN` | GitHub access token used for AWS Amplify testing. |

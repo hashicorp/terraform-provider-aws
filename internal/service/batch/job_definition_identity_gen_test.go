@@ -164,3 +164,5 @@ func TestAccBatchJobDefinition_Identity_RegionOverride(t *testing.T) {
 		},
 	})
 }
+
+// Resource Identity not supported for Mutable Identity

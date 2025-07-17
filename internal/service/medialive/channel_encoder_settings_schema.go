@@ -3225,7 +3225,7 @@ func expandChannelEncoderSettingsOutputGroups(tfList []any) []types.OutputGroup 
 }
 
 func expandAudioDescriptionsAudioNormalizationSettings(tfList []any) *types.AudioNormalizationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3568,7 +3568,7 @@ func expandInputChannelLevels(tfList []any) []types.InputChannelLevel {
 }
 
 func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []any) *types.OutputGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3620,7 +3620,7 @@ func expandDestination(in []any) *types.OutputLocationRef {
 }
 
 func expandMediaPackageGroupSettings(tfList []any) *types.MediaPackageGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3636,7 +3636,7 @@ func expandMediaPackageGroupSettings(tfList []any) *types.MediaPackageGroupSetti
 }
 
 func expandArchiveGroupSettings(tfList []any) *types.ArchiveGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3658,7 +3658,7 @@ func expandArchiveGroupSettings(tfList []any) *types.ArchiveGroupSettings {
 }
 
 func expandFrameCaptureGroupSettings(tfList []any) *types.FrameCaptureGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3675,7 +3675,7 @@ func expandFrameCaptureGroupSettings(tfList []any) *types.FrameCaptureGroupSetti
 }
 
 func expandFrameCaptureCDNSettings(tfList []any) *types.FrameCaptureCdnSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3690,7 +3690,7 @@ func expandFrameCaptureCDNSettings(tfList []any) *types.FrameCaptureCdnSettings 
 }
 
 func expandFrameCaptureS3Settings(tfList []any) *types.FrameCaptureS3Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3705,7 +3705,7 @@ func expandFrameCaptureS3Settings(tfList []any) *types.FrameCaptureS3Settings {
 }
 
 func expandHLSGroupSettings(tfList []any) *types.HlsGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3843,7 +3843,7 @@ func expandHLSGroupSettings(tfList []any) *types.HlsGroupSettings {
 }
 
 func expandMsSmoothGroupSettings(tfList []any) *types.MsSmoothGroupSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3912,7 +3912,7 @@ func expandMsSmoothGroupSettings(tfList []any) *types.MsSmoothGroupSettings {
 }
 
 func expandHLSCDNSettings(tfList []any) *types.HlsCdnSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3938,7 +3938,7 @@ func expandHLSCDNSettings(tfList []any) *types.HlsCdnSettings {
 }
 
 func expandHSLAkamaiSettings(tfList []any) *types.HlsAkamaiSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3971,7 +3971,7 @@ func expandHSLAkamaiSettings(tfList []any) *types.HlsAkamaiSettings {
 }
 
 func expandHSLBasicPutSettings(tfList []any) *types.HlsBasicPutSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -3995,7 +3995,7 @@ func expandHSLBasicPutSettings(tfList []any) *types.HlsBasicPutSettings {
 }
 
 func expandHLSMediaStoreSettings(tfList []any) *types.HlsMediaStoreSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4022,7 +4022,7 @@ func expandHLSMediaStoreSettings(tfList []any) *types.HlsMediaStoreSettings {
 }
 
 func expandHSLS3Settings(tfList []any) *types.HlsS3Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4037,7 +4037,7 @@ func expandHSLS3Settings(tfList []any) *types.HlsS3Settings {
 }
 
 func expandHLSWebdavSettings(tfList []any) *types.HlsWebdavSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4092,7 +4092,7 @@ func expandHSLGroupSettingsCaptionLanguageMappings(tfList []any) []types.Caption
 }
 
 func expandHLSGroupSettingsKeyProviderSettings(tfList []any) *types.KeyProviderSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4107,7 +4107,7 @@ func expandHLSGroupSettingsKeyProviderSettings(tfList []any) *types.KeyProviderS
 }
 
 func expandKeyProviderSettingsStaticKeySettings(tfList []any) *types.StaticKeySettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4125,7 +4125,7 @@ func expandKeyProviderSettingsStaticKeySettings(tfList []any) *types.StaticKeySe
 }
 
 func expandInputLocation(tfList []any) *types.InputLocation {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4322,7 +4322,7 @@ func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []any) []types.Outpu
 }
 
 func expandOutputsOutputSettings(tfList []any) *types.OutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4370,7 +4370,7 @@ func expandOutputsOutputSettings(tfList []any) *types.OutputSettings {
 }
 
 func expandOutputsOutputSettingsArchiveOutputSettings(tfList []any) *types.ArchiveOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4390,7 +4390,7 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []any) *types.Archi
 }
 
 func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []any) *types.FrameCaptureOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4405,7 +4405,7 @@ func expandOutputsOutSettingsFrameCaptureOutputSettings(tfList []any) *types.Fra
 }
 
 func expandOutputsOutSettingsHLSOutputSettings(tfList []any) *types.HlsOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4429,7 +4429,7 @@ func expandOutputsOutSettingsHLSOutputSettings(tfList []any) *types.HlsOutputSet
 }
 
 func expandOutputsOutSettingsMsSmoothOutputSettings(tfList []any) *types.MsSmoothOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4471,7 +4471,7 @@ func expandHLSOutputSettingsHLSSettings(tfList []any) *types.HlsSettings {
 }
 
 func expandHLSSettingsAudioOnlyHLSSettings(tfList []any) *types.AudioOnlyHlsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4495,7 +4495,7 @@ func expandHLSSettingsAudioOnlyHLSSettings(tfList []any) *types.AudioOnlyHlsSett
 }
 
 func expandHLSSettingsFmp4HLSSettings(tfList []any) *types.Fmp4HlsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4516,7 +4516,7 @@ func expandHLSSettingsFmp4HLSSettings(tfList []any) *types.Fmp4HlsSettings {
 }
 
 func expandHLSSettingsStandardHLSSettings(tfList []any) *types.StandardHlsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4534,7 +4534,7 @@ func expandHLSSettingsStandardHLSSettings(tfList []any) *types.StandardHlsSettin
 }
 
 func expandStandardHLSSettingsH3u8Settings(tfList []any) *types.M3u8Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4597,7 +4597,7 @@ func expandStandardHLSSettingsH3u8Settings(tfList []any) *types.M3u8Settings {
 }
 
 func expandOutputsOutputSettingsRtmpOutputSettings(tfList []any) *types.RtmpOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4621,7 +4621,7 @@ func expandOutputsOutputSettingsRtmpOutputSettings(tfList []any) *types.RtmpOutp
 }
 
 func expandOutputsOutputSettingsUdpOutputSettings(tfList []any) *types.UdpOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4645,7 +4645,7 @@ func expandOutputsOutputSettingsUdpOutputSettings(tfList []any) *types.UdpOutput
 }
 
 func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []any) *types.ArchiveContainerSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4663,7 +4663,7 @@ func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []any) *
 }
 
 func expandOutputsOutputSettingsUdpSettingsContainerSettings(tfList []any) *types.UdpContainerSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4678,7 +4678,7 @@ func expandOutputsOutputSettingsUdpSettingsContainerSettings(tfList []any) *type
 }
 
 func expandFecOutputSettings(tfList []any) *types.FecOutputSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4699,7 +4699,7 @@ func expandFecOutputSettings(tfList []any) *types.FecOutputSettings {
 }
 
 func expandM2tsSettings(tfList []any) *types.M2tsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4864,7 +4864,7 @@ func expandM2tsSettings(tfList []any) *types.M2tsSettings {
 }
 
 func expandM2tsDvbNitSettings(tfList []any) *types.DvbNitSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4884,7 +4884,7 @@ func expandM2tsDvbNitSettings(tfList []any) *types.DvbNitSettings {
 }
 
 func expandM2tsDvbSdtSettings(tfList []any) *types.DvbSdtSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -4966,7 +4966,7 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []any) []types.VideoDe
 }
 
 func expandChannelEncoderSettingsAvailBlanking(tfList []any) *types.AvailBlanking {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5022,7 +5022,7 @@ func expandChannelEncoderSettingsCaptionDescriptions(tfList []any) []types.Capti
 }
 
 func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList []any) *types.CaptionDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5073,7 +5073,7 @@ func expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(tfList [
 }
 
 func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfList []any) *types.BurnInDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5136,7 +5136,7 @@ func expandsCaptionDescriptionsDestinationSettingsBurnInDestinationSettings(tfLi
 }
 
 func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfList []any) *types.DvbSubDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5199,7 +5199,7 @@ func expandsCaptionDescriptionsDestinationSettingsDvbSubDestinationSettings(tfLi
 }
 
 func expandsCaptionDescriptionsDestinationSettingsEbuTtDDestinationSettings(tfList []any) *types.EbuTtDDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5236,7 +5236,7 @@ func expandsCaptionDescriptionsDestinationSettingsTeletextDestinationSettings(tf
 }
 
 func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList []any) *types.TtmlDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5251,7 +5251,7 @@ func expandsCaptionDescriptionsDestinationSettingsTtmlDestinationSettings(tfList
 }
 
 func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfList []any) *types.WebvttDestinationSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5265,7 +5265,7 @@ func expandsCaptionDescriptionsDestinationSettingsWebvttDestinationSettings(tfLi
 }
 
 func expandChannelEncoderSettingsGlobalConfiguration(tfList []any) *types.GlobalConfiguration {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5301,7 +5301,7 @@ func expandChannelEncoderSettingsGlobalConfiguration(tfList []any) *types.Global
 }
 
 func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []any) *types.InputLossBehavior {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5333,7 +5333,7 @@ func expandChannelEncoderSettingsGlobalConfigurationInputLossBehavior(tfList []a
 }
 
 func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []any) *types.MotionGraphicsConfiguration {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5353,7 +5353,7 @@ func expandChannelEncoderSettingsMotionGraphicsConfiguration(tfList []any) *type
 }
 
 func expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettings(tfList []any) *types.MotionGraphicsSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5368,7 +5368,7 @@ func expandChannelEncoderSettingsMotionGraphicsConfigurationMotionGraphicsSettin
 }
 
 func expandChannelEncoderSettingsNielsenConfiguration(tfList []any) *types.NielsenConfiguration {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5387,7 +5387,7 @@ func expandChannelEncoderSettingsNielsenConfiguration(tfList []any) *types.Niels
 }
 
 func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []any) *types.VideoCodecSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5408,7 +5408,7 @@ func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []any) *t
 }
 
 func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []any) *types.FrameCaptureSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5426,7 +5426,7 @@ func expandsVideoDescriptionsCodecSettingsFrameCaptureSettings(tfList []any) *ty
 }
 
 func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []any) *types.H264Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5558,7 +5558,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []any) *types.H264
 }
 
 func expandH264SettingsFilterSettings(tfList []any) *types.H264FilterSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5573,7 +5573,7 @@ func expandH264SettingsFilterSettings(tfList []any) *types.H264FilterSettings {
 }
 
 func expandH264FilterSettingsTemporalFilterSettings(tfList []any) *types.TemporalFilterSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5591,7 +5591,7 @@ func expandH264FilterSettingsTemporalFilterSettings(tfList []any) *types.Tempora
 }
 
 func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []any) *types.H265Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5714,7 +5714,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []any) *types.H265
 }
 
 func expandH265ColorSpaceSettings(tfList []any) *types.H265ColorSpaceSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5741,7 +5741,7 @@ func expandH265ColorSpaceSettings(tfList []any) *types.H265ColorSpaceSettings {
 }
 
 func expandH265Hdr10Settings(tfList []any) *types.Hdr10Settings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5759,7 +5759,7 @@ func expandH265Hdr10Settings(tfList []any) *types.Hdr10Settings {
 }
 
 func expandH265FilterSettings(tfList []any) *types.H265FilterSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5774,7 +5774,7 @@ func expandH265FilterSettings(tfList []any) *types.H265FilterSettings {
 }
 
 func expandH265FilterSettingsTemporalFilterSettings(tfList []any) *types.TemporalFilterSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -5792,7 +5792,7 @@ func expandH265FilterSettingsTemporalFilterSettings(tfList []any) *types.Tempora
 }
 
 func expandH265TimecodeBurninSettings(tfList []any) *types.TimecodeBurninSettings {
-	if tfList == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 

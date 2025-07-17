@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(checkDestroyNoop=true)
 // @Testing(generator=false)

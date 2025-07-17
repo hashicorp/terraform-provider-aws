@@ -29,6 +29,7 @@ import (
 // @SDKResource("aws_ecs_capacity_provider", name="Capacity Provider")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("capacity-provider/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
 func resourceCapacityProvider() *schema.Resource {

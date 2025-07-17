@@ -52,6 +52,7 @@ const (
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
 // @WrappedImport(false)
+// @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
@@ -775,7 +776,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 
@@ -1589,7 +1590,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 
@@ -2135,7 +2136,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 
 		var filter *types.LifecycleRuleFilter
 		prefix := tfMap[names.AttrPrefix].(string)
-		if tags := Tags(tftags.New(ctx, tfMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+		if tags := svcTags(tftags.New(ctx, tfMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
 			filter = &types.LifecycleRuleFilter{
 				And: &types.LifecycleRuleAndOperator{
 					Prefix: aws.String(prefix),
@@ -2495,7 +2496,7 @@ func expandBucketReplicationRules(ctx context.Context, tfList []any) []types.Rep
 			tfFilterMap := v[0].(map[string]any)
 			var filter *types.ReplicationRuleFilter
 
-			if tags := Tags(tftags.New(ctx, tfFilterMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
+			if tags := svcTags(tftags.New(ctx, tfFilterMap[names.AttrTags]).IgnoreAWS()); len(tags) > 0 {
 				filter = &types.ReplicationRuleFilter{
 					And: &types.ReplicationRuleAndOperator{
 						Prefix: aws.String(tfFilterMap[names.AttrPrefix].(string)),
