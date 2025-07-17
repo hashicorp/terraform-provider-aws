@@ -20,12 +20,9 @@ import (
 func TestIdentityInterceptor(t *testing.T) {
 	t.Parallel()
 
-	ctx := t.Context()
-
 	accountID := "123456789012"
 	region := "us-west-2"
 	name := "a_name"
-	id := "some_id"
 
 	resourceSchema := map[string]*schema.Schema{
 		"name": {
@@ -53,7 +50,7 @@ func TestIdentityInterceptor(t *testing.T) {
 		},
 	}
 	invocation := newIdentityInterceptor(identityAttributes)
-	interceptor := invocation.interceptor.(crudInterceptor)
+	interceptor := invocation.interceptor.(identityInterceptor)
 
 	client := mockClient{
 		accountID: accountID,
@@ -63,34 +60,67 @@ func TestIdentityInterceptor(t *testing.T) {
 	identitySpec := regionalSingleParameterizedIdentitySpec("name")
 	identitySchema := identity.NewIdentitySchema(identitySpec)
 
-	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
-	d.SetId(id)
-	d.Set("name", name)
-	d.Set("region", region)
-	d.Set("type", "some_type")
-
-	opts := crudInterceptorOptions{
-		c:    client,
-		d:    d,
-		when: After,
-		why:  Create,
+	testCases := map[string]struct {
+		id             string
+		expectIdentity bool
+	}{
+		"with id": {
+			id:             "some_id",
+			expectIdentity: true,
+		},
+		"without id": {
+			id:             "",
+			expectIdentity: false,
+		},
 	}
 
-	interceptor.run(ctx, opts)
+	for tname, tc := range testCases {
+		t.Run(tname, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
 
-	identity, err := d.Identity()
-	if err != nil {
-		t.Fatalf("unexpected error getting identity: %v", err)
-	}
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+			d.SetId(tc.id)
+			d.Set("name", name)
+			d.Set("region", region)
+			d.Set("type", "some_type")
 
-	if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-		t.Errorf("expected account ID %q, got %q", e, a)
-	}
-	if e, a := region, identity.Get(names.AttrRegion); e != a {
-		t.Errorf("expected region %q, got %q", e, a)
-	}
-	if e, a := name, identity.Get("name"); e != a {
-		t.Errorf("expected name %q, got %q", e, a)
+			opts := crudInterceptorOptions{
+				c:    client,
+				d:    d,
+				when: After,
+				why:  Create,
+			}
+
+			interceptor.run(ctx, opts)
+
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+
+			if tc.expectIdentity {
+				if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
+					t.Errorf("expected account ID %q, got %q", e, a)
+				}
+				if e, a := region, identity.Get(names.AttrRegion); e != a {
+					t.Errorf("expected region %q, got %q", e, a)
+				}
+				if e, a := name, identity.Get("name"); e != a {
+					t.Errorf("expected name %q, got %q", e, a)
+				}
+			} else {
+				if identity.Get(names.AttrAccountID) != "" {
+					t.Errorf("expected no account ID, got %q", identity.Get(names.AttrAccountID))
+				}
+				if identity.Get(names.AttrRegion) != "" {
+					t.Errorf("expected no region, got %q", identity.Get(names.AttrRegion))
+				}
+				if identity.Get("name") != "" {
+					t.Errorf("expected no name, got %q", identity.Get("name"))
+				}
+			}
+		})
 	}
 }
 
