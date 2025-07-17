@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -401,7 +400,8 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	image, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Image, error) {
 		return findImageByID(ctx, conn, d.Id())
@@ -431,13 +431,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.Set("architecture", image.Architecture)
-	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   names.EC2,
-	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set(names.AttrARN, amiARN(ctx, c, aws.ToString(image.OwnerId), d.Id()))
 	d.Set("boot_mode", image.BootMode)
 	d.Set(names.AttrDescription, image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
@@ -894,4 +888,7 @@ func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, ima
 			MinTimeout: amiRetryMinTimeout,
 		},
 	)
+}
+func amiARN(ctx context.Context, c *conns.AWSClient, ownerID, imageID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, ownerID, "image/"+imageID)
 }
