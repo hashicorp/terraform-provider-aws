@@ -48,26 +48,17 @@ func TestIdentityInterceptor(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		id             string
-		expectIdentity bool
 	}{
-		"with id": {
-			id:             "some_id",
-			expectIdentity: true,
-		},
-		"without id": {
-			id:             "",
-			expectIdentity: false,
-		},
+		"with id": {},
 	}
 
-	for tname, tc := range testCases {
+	for tname, _ := range testCases {
 		t.Run(tname, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
 
 			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
-			d.SetId(tc.id)
+			d.SetId("some_id")
 			d.Set("name", name)
 			d.Set("region", region)
 			d.Set("type", "some_type")
@@ -86,28 +77,79 @@ func TestIdentityInterceptor(t *testing.T) {
 				t.Fatalf("unexpected error getting identity: %v", err)
 			}
 
-			if tc.expectIdentity {
-				if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
-					t.Errorf("expected account ID %q, got %q", e, a)
-				}
-				if e, a := region, identity.Get(names.AttrRegion); e != a {
-					t.Errorf("expected region %q, got %q", e, a)
-				}
-				if e, a := name, identity.Get("name"); e != a {
-					t.Errorf("expected name %q, got %q", e, a)
-				}
-			} else {
-				if identity.Get(names.AttrAccountID) != "" {
-					t.Errorf("expected no account ID, got %q", identity.Get(names.AttrAccountID))
-				}
-				if identity.Get(names.AttrRegion) != "" {
-					t.Errorf("expected no region, got %q", identity.Get(names.AttrRegion))
-				}
-				if identity.Get("name") != "" {
-					t.Errorf("expected no name, got %q", identity.Get("name"))
-				}
+			if e, a := accountID, identity.Get(names.AttrAccountID); e != a {
+				t.Errorf("expected account ID %q, got %q", e, a)
+			}
+			if e, a := region, identity.Get(names.AttrRegion); e != a {
+				t.Errorf("expected region %q, got %q", e, a)
+			}
+			if e, a := name, identity.Get("name"); e != a {
+				t.Errorf("expected name %q, got %q", e, a)
 			}
 		})
+	}
+}
+
+func TestIdentityInterceptor_Read_Removed(t *testing.T) {
+	t.Parallel()
+
+	accountID := "123456789012"
+	region := "us-west-2"
+	name := "a_name"
+
+	resourceSchema := map[string]*schema.Schema{
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"region": attribute.Region(),
+	}
+
+	identitySpec := regionalSingleParameterizedIdentitySpec("name")
+	identitySchema := identity.NewIdentitySchema(identitySpec)
+
+	invocation := newIdentityInterceptor(identitySpec.Attributes)
+	interceptor := invocation.interceptor.(identityInterceptor)
+
+	client := mockClient{
+		accountID: accountID,
+		region:    region,
+	}
+
+	ctx := t.Context()
+
+	d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+	d.SetId("")
+	d.Set("name", name)
+	d.Set("region", region)
+	d.Set("type", "some_type")
+
+	opts := crudInterceptorOptions{
+		c:    client,
+		d:    d,
+		when: After,
+		why:  Read,
+	}
+
+	interceptor.run(ctx, opts)
+
+	identity, err := d.Identity()
+	if err != nil {
+		t.Fatalf("unexpected error getting identity: %v", err)
+	}
+
+	if identity.Get(names.AttrAccountID) != "" {
+		t.Errorf("expected no account ID, got %q", identity.Get(names.AttrAccountID))
+	}
+	if identity.Get(names.AttrRegion) != "" {
+		t.Errorf("expected no region, got %q", identity.Get(names.AttrRegion))
+	}
+	if identity.Get("name") != "" {
+		t.Errorf("expected no name, got %q", identity.Get("name"))
 	}
 }
 
