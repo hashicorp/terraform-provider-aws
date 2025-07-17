@@ -206,7 +206,7 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 
 	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
 		ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
-		transitGatewayAttachment, err := findTransitGatewayAttachmentForDxGateway(ctx, ec2Conn, *output.DirectConnectGatewayId, *output.AssociatedGateway.Id)
+		transitGatewayAttachment, err := findTransitGatewayAttachmentForDxGateway(ctx, ec2Conn, aws.ToString(output.DirectConnectGatewayId), aws.ToString(output.AssociatedGateway.Id))
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
