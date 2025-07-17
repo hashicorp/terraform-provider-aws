@@ -2139,7 +2139,7 @@ func checkServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, service
 		return serviceStatusPending, nil
 	}
 
-	deploymentArn, err := getDeploymentArn(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN, cachedDeploymentArn)
+	deploymentArn, err := getDeploymentARN(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN, cachedDeploymentArn)
 	if err != nil {
 		return "", err
 	}
@@ -2176,7 +2176,7 @@ func getPrimaryDeployment(ctx context.Context, conn *ecs.Client, serviceArn, clu
 	return nil, nil
 }
 
-func getDeploymentArn(ctx context.Context, conn *ecs.Client, primaryDeployment *awstypes.Deployment, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (*string, error) {
+func getDeploymentARN(ctx context.Context, conn *ecs.Client, primaryDeployment *awstypes.Deployment, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (*string, error) {
 	if aws.ToString(cachedDeploymentArn) != "" {
 		return cachedDeploymentArn, nil
 	}
@@ -2877,7 +2877,7 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
 					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
 					"test_listener_rule":         aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule),
-					names.AttrRoleARN:                   aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
+					names.AttrRoleARN:            aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
 				},
 			}
 		}

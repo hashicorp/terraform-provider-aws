@@ -1056,14 +1056,7 @@ func TestAccECSService_BlueGreenDeployment_circuitBreakerRollback(t *testing.T) 
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", acctest.CtTrue),
-				),
+				Config:      testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName),
 				ExpectError: regexache.MustCompile(`No rollback candidate was found to run the rollback`),
 			},
 			{
@@ -1074,12 +1067,7 @@ func TestAccECSService_BlueGreenDeployment_circuitBreakerRollback(t *testing.T) 
 				),
 			},
 			{
-				Config: testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
-				),
+				Config:      testAccServiceConfig_blueGreenDeployment_withCircuitBreaker(rName),
 				ExpectError: regexache.MustCompile(`Service deployment rolled back because the circuit breaker threshold was exceeded.`),
 			},
 		},
