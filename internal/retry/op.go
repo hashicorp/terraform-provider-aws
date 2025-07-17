@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type opFunc[T any] func(context.Context) (T, error)
@@ -101,13 +100,7 @@ func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 		}
 
 		if err == nil {
-			if l.Remaining() == 0 {
-				err = inttypes.ErrDeadlineExceeded
-			} else {
-				err = context.Cause(ctx)
-			}
-
-			if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+			if l.Remaining() == 0 || errors.Is(err, context.Cause(ctx)) {
 				err = &TimeoutError{
 					// LastError must be nil for `TimedOut` to return true.
 					// LastError:     err,
