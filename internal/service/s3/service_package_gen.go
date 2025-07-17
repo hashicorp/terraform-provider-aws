@@ -38,9 +38,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceBucketMetadataTableConfiguration,
-			TypeName: "aws_s3_bucket_metadata_table_configuration",
-			Name:     "Bucket Metadata Table Configuration",
+			Factory:  newBucketMetadataConfigurationResource,
+			TypeName: "aws_s3_bucket_metadata_configuration",
+			Name:     "Bucket Metadata Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newDirectoryBucketResource,
