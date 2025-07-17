@@ -1323,8 +1323,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config := v.([]any)[0].(map[string]any)
 
 		if strategy, ok := config["strategy"].(string); ok && strategy != "" {
 			input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
@@ -1615,8 +1615,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 			}
 
-			if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				config := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				config := v.([]any)[0].(map[string]any)
 
 				if strategy, ok := config["strategy"].(string); ok && strategy != "" {
 					input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
@@ -2461,7 +2461,7 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	return tfMap
 }
 
-func expandLifecycleHooks(tfList []interface{}) []awstypes.DeploymentLifecycleHook {
+func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
 	apiObject := make([]awstypes.DeploymentLifecycleHook, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
@@ -2469,7 +2469,7 @@ func expandLifecycleHooks(tfList []interface{}) []awstypes.DeploymentLifecycleHo
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		hook := awstypes.DeploymentLifecycleHook{}
 
@@ -2481,7 +2481,7 @@ func expandLifecycleHooks(tfList []interface{}) []awstypes.DeploymentLifecycleHo
 			hook.RoleArn = aws.String(v)
 		}
 
-		if v, ok := tfMap["lifecycle_stages"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["lifecycle_stages"].([]any); ok && len(v) > 0 {
 			stages := make([]awstypes.DeploymentLifecycleHookStage, 0, len(v))
 			for _, stage := range v {
 				if stageStr, ok := stage.(string); ok && stageStr != "" {
@@ -2819,11 +2819,11 @@ func flattenSecrets(apiObjects []awstypes.Secret) []any {
 	return tfList
 }
 
-func expandServiceLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
+func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 	apiObjects := make([]awstypes.LoadBalancer, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.LoadBalancer{
 			ContainerName: aws.String(tfMap["container_name"].(string)),
@@ -2838,8 +2838,8 @@ func expandServiceLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
 			apiObject.TargetGroupArn = aws.String(v.(string))
 		}
 
-		if advConfig, ok := tfMap["advanced_configuration"].([]interface{}); ok && len(advConfig) > 0 && advConfig[0] != nil {
-			config := advConfig[0].(map[string]interface{})
+		if advConfig, ok := tfMap["advanced_configuration"].([]any); ok && len(advConfig) > 0 && advConfig[0] != nil {
+			config := advConfig[0].(map[string]any)
 			apiObject.AdvancedConfiguration = &awstypes.AdvancedConfiguration{
 				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
 				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
