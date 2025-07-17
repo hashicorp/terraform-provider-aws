@@ -1,10 +1,17 @@
+// Copyright (c) 2025 Altos Labs, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
+	"errors"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -13,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,10 +32,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,11 +62,12 @@ const (
 )
 
 type resourceCluster struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceClusterModel]
 	framework.WithTimeouts
 }
 
 func (r *resourceCluster) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+
 	var vpcConfigModelAttributeSchema = map[string]schema.Attribute{
 		"security_group_ids": schema.SetAttribute{
 			CustomType: fwtypes.SetOfStringType,
@@ -132,6 +147,9 @@ func (r *resourceCluster) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
 					setvalidator.SizeBetween(1, 100),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplaceIf(instanceGroupReplaceIf, "Replace instance group diff", "Replace instance group diff"),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -383,42 +401,487 @@ func (r *resourceCluster) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
+func instanceGroupReplaceIf(ctx context.Context, req planmodifier.SetRequest, resp *setplanmodifier.RequiresReplaceIfFuncResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan, state resourceClusterModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.InstanceGroups.Equal(state.InstanceGroups) {
+		return
+	}
+
+	groupsPlanMap := createInstanceGroupsMap(ctx, resp.Diagnostics, plan.InstanceGroups)
+	groupsStateMap := createInstanceGroupsMap(ctx, resp.Diagnostics, state.InstanceGroups)
+
+	for name, planGroup := range groupsPlanMap {
+		stateGroup, exists := groupsStateMap[name]
+		if !exists {
+			continue
+		}
+
+		if planGroup == stateGroup {
+			continue
+		}
+
+		if !planGroup.ExecutionRole.Equal(stateGroup.ExecutionRole) ||
+			!planGroup.InstanceStorageConfigs.Equal(stateGroup.InstanceStorageConfigs) ||
+			!planGroup.InstanceType.Equal(stateGroup.InstanceType) ||
+			!planGroup.OverrideVpcConfig.Equal(stateGroup.OverrideVpcConfig) ||
+			!planGroup.ScheduledUpdateConfig.Equal(stateGroup.ScheduledUpdateConfig) ||
+			(!planGroup.ThreadsPerCore.IsUnknown() && !planGroup.ThreadsPerCore.Equal(stateGroup.ThreadsPerCore)) ||
+			!planGroup.TrainingPlanArn.Equal(stateGroup.TrainingPlanArn) {
+			resp.RequiresReplace = true
+			return
+		}
+	}
+}
+
 func (r *resourceCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var plan resourceClusterModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input sagemaker.CreateClusterInput
+	input.Tags = getTagsIn(ctx)
+
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Cluster"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := conn.CreateCluster(ctx, &input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionCreating, ResNameCluster, plan.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.ClusterArn == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionCreating, ResNameCluster, plan.ClusterName.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Cluster"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	clusterCreateOutput, err := waitClusterCreated(ctx, conn, plan.ClusterName.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionWaitingForCreation, ResNameCluster, plan.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, clusterCreateOutput, &plan, fwflex.WithFieldNamePrefix("Cluster"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if clusterCreateOutput.ClusterStatus == awstypes.ClusterStatusFailed {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionConfiguring, ResNameCluster, plan.ClusterName.String(), err),
+			*clusterCreateOutput.FailureMessage,
+		)
+	}
+
+	clusterNodes, err := findClusterNodesByName(ctx, conn, plan.ClusterName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionReading, ResNameCluster, plan.ClusterName.String(), err),
+			err.Error(),
+		)
+	}
+
+	// Set values for unknowns.
+	plan.InstanceGroups = mapNodesToInstanceGroup(ctx, resp.Diagnostics, plan.InstanceGroups, clusterNodes)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceCluster) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var state resourceClusterModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	clusterOutput, err := findClusterByName(ctx, conn, state.ClusterName.ValueString())
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionReading, ResNameCluster, state.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Set attributes for import.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, clusterOutput, &state, fwflex.WithFieldNamePrefix("Cluster"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	clusterNodes, err := findClusterNodesByName(ctx, conn, state.ClusterName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionReading, ResNameCluster, state.ClusterName.String(), err),
+			err.Error(),
+		)
+	}
+
+	state.InstanceGroups = mapNodesToInstanceGroup(ctx, resp.Diagnostics, state.InstanceGroups, clusterNodes)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var plan, state resourceClusterModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input sagemaker.UpdateClusterInput
+
+		if !plan.InstanceGroups.Equal(state.InstanceGroups) {
+			groupsPlanMap := createInstanceGroupsMap(ctx, resp.Diagnostics, plan.InstanceGroups)
+			groupsStateMap := createInstanceGroupsMap(ctx, resp.Diagnostics, state.InstanceGroups)
+
+			input.InstanceGroupsToDelete = difference(slices.Collect(maps.Keys(groupsStateMap)), slices.Collect(maps.Keys(groupsPlanMap)))
+
+			if resp.Diagnostics.HasError() {
+				return
+			}
+		}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Cluster"))...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		out, err := conn.UpdateCluster(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SageMaker, create.ErrActionUpdating, ResNameCluster, plan.ClusterName.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil || out.ClusterArn == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SageMaker, create.ErrActionUpdating, ResNameCluster, plan.ClusterName.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("Cluster"))...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	clusterUpdateOutput, err := waitClusterUpdated(ctx, conn, plan.ClusterName.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, clusterUpdateOutput, &plan, fwflex.WithFieldNamePrefix("Cluster"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if clusterUpdateOutput.ClusterStatus == awstypes.ClusterStatusFailed {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionConfiguring, ResNameCluster, plan.ClusterName.String(), err),
+			*clusterUpdateOutput.FailureMessage,
+		)
+	}
+
+	clusterNodes, err := findClusterNodesByName(ctx, conn, plan.ClusterName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionReading, ResNameCluster, state.ClusterName.String(), err),
+			err.Error(),
+		)
+	}
+
+	// Set values for unknowns.
+	plan.InstanceGroups = mapNodesToInstanceGroup(ctx, resp.Diagnostics, plan.InstanceGroups, clusterNodes)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().SageMakerClient(ctx)
+
+	var state resourceClusterModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := sagemaker.DeleteClusterInput{
+		ClusterName: state.ClusterName.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteCluster(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFound](err) {
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionDeleting, ResNameCluster, state.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitClusterDeleted(ctx, conn, state.ClusterName.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SageMaker, create.ErrActionWaitingForDeletion, ResNameCluster, state.ClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
 func (r *resourceCluster) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("cluster_name"), req, resp)
 }
 
-func waitClusterCreated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
-	return nil, nil
+func waitClusterCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{string(awstypes.ClusterStatusCreating), string(awstypes.ClusterStatusRollingback)},
+		Target:                    []string{string(awstypes.ClusterStatusInservice), string(awstypes.ClusterStatusFailed)},
+		Refresh:                   statusCluster(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeClusterOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
 
-func waitClusterUpdated(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
-	return nil, nil
+func waitClusterUpdated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{string(awstypes.ClusterStatusRollingback), string(awstypes.ClusterStatusUpdating), string(awstypes.ClusterStatusSystemupdating)},
+		Target:                    []string{string(awstypes.ClusterStatusInservice), string(awstypes.ClusterStatusFailed)},
+		Refresh:                   statusCluster(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeClusterOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
 
-func waitClusterDeleted(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
-	return nil, nil
+func waitClusterDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeClusterOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{string(awstypes.ClusterStatusDeleting)},
+		Target:  []string{},
+		Refresh: statusCluster(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*sagemaker.DescribeClusterOutput); ok {
+		return out, err
+	}
+
+	return nil, err
 }
 
-func statusCluster(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return nil
+func statusCluster(ctx context.Context, conn *sagemaker.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findClusterByName(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, aws.ToString((*string)(&out.ClusterStatus)), nil
+	}
 }
 
 func findClusterByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeClusterOutput, error) {
-	return nil, nil
+	input := sagemaker.DescribeClusterInput{
+		ClusterName: aws.String(name),
+	}
+
+	out, err := conn.DescribeCluster(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil || out.ClusterArn == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+
+	return out, nil
+}
+
+func findClusterNodesByName(ctx context.Context, conn *sagemaker.Client, name string) ([]*awstypes.ClusterNodeDetails, error) {
+	input := sagemaker.ListClusterNodesInput{
+		ClusterName: aws.String(name),
+	}
+	pages := sagemaker.NewListClusterNodesPaginator(conn, &input)
+	var clusterNodes []*awstypes.ClusterNodeDetails
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ClusterNodeSummaries {
+			if v.InstanceId == nil {
+				continue
+			}
+
+			clusterNode, err := conn.DescribeClusterNode(ctx, &sagemaker.DescribeClusterNodeInput{
+				ClusterName: aws.String(name),
+				NodeId:      v.InstanceId,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			if clusterNode != nil && clusterNode.NodeDetails != nil {
+				clusterNodes = append(clusterNodes, clusterNode.NodeDetails)
+			}
+		}
+	}
+
+	return clusterNodes, nil
+}
+
+func mapNodesToInstanceGroup(ctx context.Context, diagnostics diag.Diagnostics, groups fwtypes.SetNestedObjectValueOf[clusterInstanceGroupSpecificationModel], nodes []*awstypes.ClusterNodeDetails) fwtypes.SetNestedObjectValueOf[clusterInstanceGroupSpecificationModel] {
+	groupsSlice, diags := groups.ToSlice(ctx)
+	diagnostics.Append(diags...)
+
+	nodesMap := createAggregatedClusterNodesMap(nodes)
+
+	for i := range groupsSlice {
+
+		group := groupsSlice[i]
+		nodes := nodesMap[group.InstanceGroupName.ValueString()]
+		var nodesFramework fwtypes.ListNestedObjectValueOf[clusterNodeDetailsModel]
+		diagnostics.Append(fwflex.Flatten(ctx, nodes, &nodesFramework)...)
+
+		group.Nodes = nodesFramework
+	}
+
+	return fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, groupsSlice)
+
+}
+
+func createAggregatedClusterNodesMap(nodes []*awstypes.ClusterNodeDetails) map[string][]*awstypes.ClusterNodeDetails {
+	nodesMap := make(map[string][]*awstypes.ClusterNodeDetails)
+	for i := range nodes {
+		node := nodes[i]
+		if node.InstanceGroupName == nil || *node.InstanceGroupName == "" {
+			continue
+		}
+		nodesMap[*node.InstanceGroupName] = append(nodesMap[*node.InstanceGroupName], node)
+	}
+
+	return nodesMap
+}
+
+func createInstanceGroupsMap(ctx context.Context, diagnostics diag.Diagnostics, groups fwtypes.SetNestedObjectValueOf[clusterInstanceGroupSpecificationModel]) map[string]*clusterInstanceGroupSpecificationModel {
+	groupsSlice, diags := groups.ToSlice(ctx)
+	diagnostics.Append(diags...)
+
+	groupsMap := make(map[string]*clusterInstanceGroupSpecificationModel)
+	for i := range groupsSlice {
+		ig := groupsSlice[i]
+		groupsMap[ig.InstanceGroupName.ValueString()] = ig
+	}
+
+	return groupsMap
+}
+
+// Function to calculate set difference (a - b)
+func difference(a, b []string) []string {
+	mb := make(map[string]struct{}, len(b))
+	for _, x := range b {
+		mb[x] = struct{}{}
+	}
+	var diff []string
+	for _, x := range a {
+		if _, found := mb[x]; !found {
+			diff = append(diff, x)
+		}
+	}
+	return diff
 }
 
 type resourceClusterModel struct {
+	framework.WithRegionModel
 	Arn            types.String                                                           `tfsdk:"arn"`
 	ClusterName    types.String                                                           `tfsdk:"cluster_name"`
 	ClusterStatus  fwtypes.StringEnum[awstypes.ClusterStatus]                             `tfsdk:"cluster_status"`
@@ -446,6 +909,27 @@ type clusterInstanceGroupSpecificationModel struct {
 	TrainingPlanArn         fwtypes.ARN                                                        `tfsdk:"training_plan_arn"`
 }
 
+var (
+	_ fwflex.Flattener = &clusterInstanceGroupSpecificationModel{}
+)
+
+func (m *clusterInstanceGroupSpecificationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	if v, ok := v.(awstypes.ClusterInstanceGroupDetails); ok {
+		diags.Append(fwflex.Flatten(ctx, v.CurrentCount, &m.InstanceCount)...)
+		diags.Append(fwflex.Flatten(ctx, v.ExecutionRole, &m.ExecutionRole)...)
+		diags.Append(fwflex.Flatten(ctx, v.InstanceGroupName, &m.InstanceGroupName)...)
+		diags.Append(fwflex.Flatten(ctx, v.InstanceStorageConfigs, &m.InstanceStorageConfigs)...)
+		diags.Append(fwflex.Flatten(ctx, v.InstanceType, &m.InstanceType)...)
+		diags.Append(fwflex.Flatten(ctx, v.LifeCycleConfig, &m.LifeCycleConfig)...)
+		diags.Append(fwflex.Flatten(ctx, v.OnStartDeepHealthChecks, &m.OnStartDeepHealthChecks)...)
+		diags.Append(fwflex.Flatten(ctx, v.OverrideVpcConfig, &m.OverrideVpcConfig)...)
+		diags.Append(fwflex.Flatten(ctx, v.ScheduledUpdateConfig, &m.ScheduledUpdateConfig)...)
+		diags.Append(fwflex.Flatten(ctx, v.ThreadsPerCore, &m.ThreadsPerCore)...)
+		diags.Append(fwflex.Flatten(ctx, v.TrainingPlanArn, &m.TrainingPlanArn)...)
+	}
+	return diags
+}
+
 type clusterLifeCycleConfigModel struct {
 	OnCreate    types.String `tfsdk:"on_create"`
 	SourceS3Uri types.String `tfsdk:"source_s3_uri"`
@@ -457,6 +941,44 @@ type clusterInstanceStorageConfigModel struct {
 
 type clusterEbsVolumeConfigModel struct {
 	VolumeSizeInGB types.Int32 `tfsdk:"volume_size_in_gb"`
+}
+
+var (
+	_ fwflex.Expander  = clusterInstanceStorageConfigModel{}
+	_ fwflex.Flattener = &clusterInstanceStorageConfigModel{}
+)
+
+func (m clusterInstanceStorageConfigModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.EbsVolumeConfig.IsNull():
+		clusterEbsVolumeConfigModel := fwdiag.Must(m.EbsVolumeConfig.ToPtr(ctx))
+
+		return &awstypes.ClusterInstanceStorageConfigMemberEbsVolumeConfig{
+			Value: awstypes.ClusterEbsVolumeConfig{
+				VolumeSizeInGB: fwflex.Int32FromFramework(ctx, clusterEbsVolumeConfigModel.VolumeSizeInGB),
+			},
+		}, diags
+	}
+
+	return nil, diags
+}
+
+func (m *clusterInstanceStorageConfigModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.ClusterInstanceStorageConfigMemberEbsVolumeConfig:
+		var model clusterEbsVolumeConfigModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.EbsVolumeConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+	}
+
+	return diags
 }
 
 type clusterNodeDetailsModel struct {
@@ -525,5 +1047,23 @@ type vpcConfigModel struct {
 }
 
 func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	return nil, nil
+	input := sagemaker.ListClustersInput{}
+	conn := client.SageMakerClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := sagemaker.NewListClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ClusterSummaries {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCluster, client,
+				sweepfw.NewAttribute(names.AttrARN, aws.ToString(v.ClusterArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }
