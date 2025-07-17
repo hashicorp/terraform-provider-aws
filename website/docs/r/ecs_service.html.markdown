@@ -132,6 +132,7 @@ The following arguments are optional:
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launch_type`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. [See below](#deployment_circuit_breaker).
+* `deployment_configuration` - (Optional) Configuration block for deployment settings. [See below](#deployment_configuration).
 * `deployment_controller` - (Optional) Configuration block for deployment controller configuration. [See below](#deployment_controller).
 * `deployment_maximum_percent` - (Optional) Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.
 * `deployment_minimum_healthy_percent` - (Optional) Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
@@ -167,44 +168,21 @@ The `alarms` configuration block supports the following:
 * `enable` - (Required) Whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
-### volume_configuration
+### deployment_configuration
 
-The `volume_configuration` configuration block supports the following:
+The `deployment_configuration` configuration block supports the following:
 
-* `name` - (Required) Name of the volume.
-* `managed_ebs_volume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
+* `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`. Default: `ROLLING`.
+* `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Only used when `strategy` is set to `BLUE_GREEN`.
+* `lifecycle_hook` - (Optional) Configuration block for lifecycle hooks that are invoked during deployments. [See below](#lifecycle_hook).
 
-### vpc_lattice_configurations
+### lifecycle_hook
 
-`vpc_lattice_configurations` supports the following:
+The `lifecycle_hook` configuration block supports the following:
 
-* `role_arn` - (Required) The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
-* `target_group_arn` - (Required) The full ARN of the target group or groups associated with the VPC Lattice configuration.
-* `port_name` - (Required) The name of the port for a target group associated with the VPC Lattice configuration.
-
-### managed_ebs_volume
-
-The `managed_ebs_volume` configuration block supports the following:
-
-* `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
-* `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
-* `file_system_type` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
-* `iops` - (Optional) Number of I/O operations per second (IOPS).
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
-* `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
-* `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
-* `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
-* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
-* `volume_type` - (Optional) Volume type.
-* `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
-
-### capacity_provider_strategy
-
-The `capacity_provider_strategy` configuration block supports the following:
-
-* `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
-* `capacity_provider` - (Required) Short name of the capacity provider.
-* `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+* `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
+* `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
+* `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
 
 ### deployment_circuit_breaker
 
@@ -227,8 +205,18 @@ The `deployment_controller` configuration block supports the following:
 * `target_group_arn` - (Required for ALB/NLB) ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) Name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) Port on the container to associate with the load balancer.
+* `advanced_configuration` - (Optional) Configuration block for Blue/Green deployment settings. Required when using `BLUE_GREEN` deployment strategy. [See below](#advanced_configuration).
 
 -> **Version note:** Multiple `load_balancer` configuration block support was added in Terraform AWS Provider version 2.22.0. This allows configuration of [ECS service support for multiple target groups](https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecs-services-now-support-multiple-load-balancer-target-groups/).
+
+### advanced_configuration
+
+The `advanced_configuration` configuration block supports the following:
+
+* `alternate_target_group_arn` - (Required) ARN of the alternate target group to use for Blue/Green deployments.
+* `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
+* `test_listener_rule` - (Required) ARN of the listener rule that routes test traffic.
+* `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
 
 ### network_configuration
 
@@ -330,6 +318,26 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `dns_name` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+* `test_traffic_rules` - (Optional) Configuration block for test traffic routing rules. [See below](#test_traffic_rules).
+
+### test_traffic_rules
+
+The `test_traffic_rules` configuration block supports the following:
+
+* `header` - (Optional) Configuration block for header-based routing rules. [See below](#header).
+
+### header
+
+The `header` configuration block supports the following:
+
+* `name` - (Required) Name of the HTTP header to match.
+* `value` - (Required) Configuration block for header value matching criteria. [See below](#value).
+
+### value
+
+The `value` configuration block supports the following:
+
+* `exact` - (Required) Exact string value to match in the header.
 
 ### tag_specifications
 
