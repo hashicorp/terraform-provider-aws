@@ -37,7 +37,7 @@ func newResourceNetworkFirewallTransitGatewayAttachmentAccepter(_ context.Contex
 	r := &resourceNetworkFirewallTransitGatewayAttachmentAccepter{}
 
 	r.SetDefaultCreateTimeout(60 * time.Minute)
-	r.SetDefaultDeleteTimeout(90 * time.Minute)
+	r.SetDefaultDeleteTimeout(60 * time.Minute)
 
 	return r, nil
 }

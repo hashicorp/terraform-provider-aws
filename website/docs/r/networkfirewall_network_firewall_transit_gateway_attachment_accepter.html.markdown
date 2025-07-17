@@ -42,7 +42,7 @@ This resource exports no additional attributes.
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `delete` - (Default `90m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
