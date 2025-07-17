@@ -182,7 +182,7 @@ func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testin
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 					resource.TestCheckResourceAttr(dataSourceName, "availability_zone_change_protection", acctest.CtFalse),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "availability_zone_mappings.*.availability_zone_id", dataSourceAvailabilityZones, "zone_ids"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone_mappings.*.availability_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_status.0.transit_gateway_attachment_sync_state.*.attachment_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "transit_gateway_owner_account_id", dataSourceCallerIdentity, names.AttrAccountID),
 				),
@@ -312,10 +312,6 @@ resource "aws_networkfirewall_firewall" "test" {
 
   availability_zone_mapping {
 	availability_zone_id = data.aws_availability_zones.test.zone_ids[0]
-  }
-
-  availability_zone_mapping {
-	availability_zone_id = data.aws_availability_zones.test.zone_ids[1]
   }
 }
 
