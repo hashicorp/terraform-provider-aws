@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -120,7 +119,8 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	keyPair, err := findKeyPairByName(ctx, conn, d.Id())
 
@@ -134,14 +134,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "key-pair/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, keyPairARN(ctx, c, d.Id()))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyPair.KeyName)
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
@@ -194,4 +187,7 @@ func openSSHPublicKeysEqual(v1, v2 string) bool {
 	}
 
 	return key1.Type() == key2.Type() && bytes.Equal(key1.Marshal(), key2.Marshal())
+}
+func keyPairARN(ctx context.Context, c *conns.AWSClient, keyName string) string {
+	return c.RegionalARN(ctx, names.EC2, "key-pair/"+keyName)
 }
