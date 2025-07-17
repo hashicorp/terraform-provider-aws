@@ -31,6 +31,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 The following arguments are required:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_attachment_id` - (Required) The unique identifier of the transit gateway attachment to accept. This ID is returned in the response when creating a transit gateway-attached firewall..
 
 ## Attribute Reference

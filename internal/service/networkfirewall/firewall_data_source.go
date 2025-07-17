@@ -181,7 +181,7 @@ func dataSourceFirewall() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"status_message": {
+									names.AttrStatusMessage: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -421,7 +421,7 @@ func flattenDataSourceTransitGatewayAttachmentSyncState(apiObject *awstypes.Tran
 
 	tfMap := map[string]any{
 		"attachment_id":                     apiObject.AttachmentId,
-		"status_message":                    apiObject.StatusMessage,
+		names.AttrStatusMessage:             apiObject.StatusMessage,
 		"transit_gateway_attachment_status": apiObject.TransitGatewayAttachmentStatus,
 	}
 
