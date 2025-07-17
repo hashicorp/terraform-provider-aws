@@ -638,7 +638,7 @@ func resourceService() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -782,7 +782,7 @@ func resourceService() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -966,17 +966,17 @@ func resourceService() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"header": {
+															names.AttrHeader: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"name": {
+																		names.AttrName: {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
-																		"value": {
+																		names.AttrValue: {
 																			Type:     schema.TypeList,
 																			Required: true,
 																			MaxItems: 1,
@@ -2477,7 +2477,7 @@ func expandLifecycleHooks(tfList []interface{}) []awstypes.DeploymentLifecycleHo
 			hook.HookTargetArn = aws.String(v)
 		}
 
-		if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 			hook.RoleArn = aws.String(v)
 		}
 
@@ -2844,7 +2844,7 @@ func expandServiceLoadBalancers(tfList []interface{}) []awstypes.LoadBalancer {
 				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
 				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
 				TestListenerRule:        aws.String(config["test_listener_rule"].(string)),
-				RoleArn:                 aws.String(config["role_arn"].(string)),
+				RoleArn:                 aws.String(config[names.AttrRoleARN].(string)),
 			}
 		}
 
@@ -2877,7 +2877,7 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
 					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
 					"test_listener_rule":         aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule),
-					"role_arn":                   aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
+					names.AttrRoleARN:                   aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
 				},
 			}
 		}
@@ -3154,7 +3154,7 @@ func expandServiceConnectTestTrafficRules(tfList []any) *awstypes.ServiceConnect
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ServiceConnectTestTrafficRules{}
 
-	if v, ok := tfMap["header"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrHeader].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Header = expandServiceConnectHeader(v)
 	}
 
@@ -3169,7 +3169,7 @@ func flattenServiceConnectTestTrafficRules(apiObject *awstypes.ServiceConnectTes
 	tfMap := map[string]any{}
 
 	if apiObject.Header != nil {
-		tfMap["header"] = flattenServiceConnectHeader(apiObject.Header)
+		tfMap[names.AttrHeader] = flattenServiceConnectHeader(apiObject.Header)
 	}
 
 	return []any{tfMap}
@@ -3331,10 +3331,10 @@ func expandServiceConnectHeader(tfList []any) *awstypes.ServiceConnectTestTraffi
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ServiceConnectTestTrafficHeaderRules{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["value"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Value = expandServiceConnectHeaderValue(v)
 	}
 
@@ -3349,10 +3349,10 @@ func flattenServiceConnectHeader(apiObject *awstypes.ServiceConnectTestTrafficHe
 	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = flattenServiceConnectHeaderValue(v)
+		tfMap[names.AttrValue] = flattenServiceConnectHeaderValue(v)
 	}
 
 	return []any{tfMap}

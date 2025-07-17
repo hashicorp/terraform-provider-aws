@@ -111,12 +111,12 @@ func TestServiceNameFromARN(t *testing.T) {
 		{
 			name:     "short ARN format",
 			arn:      "arn:aws:ecs:us-west-2:123456789:service/service_name", //lintignore:AWSAT003,AWSAT005
-			expected: "service_name",
+			expected: names.AttrServiceName,
 		},
 		{
 			name:     "long ARN format",
 			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name", //lintignore:AWSAT003,AWSAT005
-			expected: "service_name",
+			expected: names.AttrServiceName,
 		},
 		{
 			name:     "ARN with special characters",
@@ -1007,8 +1007,8 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "2"),
 					// Lifecycle hooks configuration checks
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.hook_target_arn", "aws_lambda_function.hook_success", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.role_arn", "aws_iam_role.global", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.hook_target_arn", "aws_lambda_function.hook_success", names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.role_arn", "aws_iam_role.global", names.AttrARN),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_SCALE_UP"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_TEST_TRAFFIC_SHIFT"),
 					// Load balancer advanced configuration checks
