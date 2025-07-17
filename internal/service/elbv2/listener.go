@@ -763,8 +763,11 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.Protocol = awstypes.ProtocolEnum(v.(string))
 		}
 
-		if v, ok := d.GetOk("ssl_policy"); ok {
-			input.SslPolicy = aws.String(v.(string))
+		if d.HasChange("ssl_policy") {
+			v := d.Get("ssl_policy")
+			if v.(string) != "" {
+				input.SslPolicy = aws.String(v.(string))
+			}
 		}
 
 		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
