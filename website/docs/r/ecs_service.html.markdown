@@ -168,6 +168,45 @@ The `alarms` configuration block supports the following:
 * `enable` - (Required) Whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
+### volume_configuration
+
+The `volume_configuration` configuration block supports the following:
+
+* `name` - (Required) Name of the volume.
+* `managed_ebs_volume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
+
+### vpc_lattice_configurations
+
+`vpc_lattice_configurations` supports the following:
+
+* `role_arn` - (Required) The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure.
+* `target_group_arn` - (Required) The full ARN of the target group or groups associated with the VPC Lattice configuration.
+* `port_name` - (Required) The name of the port for a target group associated with the VPC Lattice configuration.
+
+### managed_ebs_volume
+
+The `managed_ebs_volume` configuration block supports the following:
+
+* `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
+* `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
+* `file_system_type` - (Optional) Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
+* `iops` - (Optional) Number of I/O operations per second (IOPS).
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
+* `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
+* `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
+* `volume_type` - (Optional) Volume type.
+* `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
+
+### capacity_provider_strategy
+
+The `capacity_provider_strategy` configuration block supports the following:
+
+* `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+* `capacity_provider` - (Required) Short name of the capacity provider.
+* `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+
 ### deployment_configuration
 
 The `deployment_configuration` configuration block supports the following:
