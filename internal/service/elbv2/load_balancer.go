@@ -379,17 +379,20 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		Names: []string{name},
 	})
 
+	lbType := awstypes.LoadBalancerTypeEnum(d.Get("load_balancer_type").(string))
+
 	if err != nil && !tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s): %s", name, err)
 	}
 
 	if exist != nil {
-		return sdkdiag.AppendErrorf(diags, "ELBv2 Load Balancer (%s) already exists", name)
+		if exist.Type == lbType {
+			return sdkdiag.AppendErrorf(diags, "ELBv2 Load Balancer (%s) already exists", name)
+		}
 	}
 
 	d.Set(names.AttrName, name)
 
-	lbType := awstypes.LoadBalancerTypeEnum(d.Get("load_balancer_type").(string))
 	input := &elasticloadbalancingv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
