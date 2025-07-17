@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/batch v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.8.4
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.2.4
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.31.2
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.45.3
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.61.2
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.21
@@ -88,7 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.49.3
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/detective v1.33.2
@@ -128,11 +128,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.4
-	github.com/aws/aws-sdk-go-v2/service/glue v1.117.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.28.6
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.75.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.76.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.4
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.27.2
@@ -235,7 +235,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.46.0
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.35.7
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.35.8
 	github.com/aws/aws-sdk-go-v2/service/shield v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/signer v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.7
