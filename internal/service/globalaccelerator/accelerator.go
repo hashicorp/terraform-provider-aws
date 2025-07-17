@@ -31,6 +31,7 @@ import (
 // @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
