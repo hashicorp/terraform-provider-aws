@@ -104,10 +104,6 @@ func testAccCheckNetworkFirewallTransitGatewayAttachmentAccepterDestroy(ctx cont
 			if rs.Type != "aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter" {
 				continue
 			}
-
-			// TIP: ==== FINDERS ====
-			// The find function should be exported. Since it won't be used outside of the package, it can be exported
-			// in the `exports_test.go` file.
 			out, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 			if retry.NotFound(err) {
 				return nil
@@ -162,7 +158,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-		
+	
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -194,7 +190,7 @@ resource "aws_ram_principal_association" "test" {
 
 resource "aws_networkfirewall_firewall_policy" "test" {
   provider = "awsalternate"
-  
+
   name = %[1]q
 
   firewall_policy {
@@ -206,17 +202,17 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 resource "aws_networkfirewall_firewall" "test" {
   provider = "awsalternate"
   
-  name                                = %[1]q
-  firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
-  transit_gateway_id                  = aws_ec2_transit_gateway.test.id
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  transit_gateway_id  = aws_ec2_transit_gateway.test.id
 
   availability_zone_mapping {
-	availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
+    availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
   }
 
   depends_on = [
-	aws_ram_resource_association.test,
-	aws_ram_principal_association.test,
+    aws_ram_resource_association.test,
+    aws_ram_principal_association.test,
   ]
 }
 

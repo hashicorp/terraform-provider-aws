@@ -900,10 +900,10 @@ resource "aws_networkfirewall_firewall" "test" {
   availability_zone_change_protection = %[2]t
 
   dynamic "availability_zone_mapping" {
-	for_each = slice(data.aws_availability_zones.available.zone_ids, %[3]d, %[4]d)
-	content {	
-	  availability_zone_id = availability_zone_mapping.value
-	}
+    for_each = slice(data.aws_availability_zones.available.zone_ids, %[3]d, %[4]d)
+    content {
+      availability_zone_id = availability_zone_mapping.value
+    }
   }
 }
 `, rName, changeProtection, avaiabilityZoneStartIndex, avaiabilityZoneEndIndex)
