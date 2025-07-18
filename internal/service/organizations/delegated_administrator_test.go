@@ -30,7 +30,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organization awstypes.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
+	servicePrincipal := "securitylake.amazonaws.com"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
@@ -61,7 +61,7 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organization awstypes.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
-	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
+	servicePrincipal := "securitylake.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
