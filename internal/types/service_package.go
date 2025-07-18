@@ -142,8 +142,9 @@ func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...Ident
 }
 
 type IdentityAttribute struct {
-	name     string
-	required bool
+	name                  string
+	required              bool
+	resourceAttributeName string
 }
 
 func (ia IdentityAttribute) Name() string {
@@ -154,10 +155,25 @@ func (ia IdentityAttribute) Required() bool {
 	return ia.required
 }
 
+func (ia IdentityAttribute) ResourceAttributeName() string {
+	if ia.resourceAttributeName == "" {
+		return ia.name
+	}
+	return ia.resourceAttributeName
+}
+
 func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
 		name:     name,
 		required: required,
+	}
+}
+
+func StringIdentityAttributeMappedName(name string, required bool, resourceAttributeName string) IdentityAttribute {
+	return IdentityAttribute{
+		name:                  name,
+		required:              required,
+		resourceAttributeName: resourceAttributeName,
 	}
 }
 
