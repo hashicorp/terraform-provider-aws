@@ -1,8 +1,3 @@
-resource "aws_glue_registry" "test" {
-{{- template "region" }}
-  registry_name = var.rName
-}
-
 resource "aws_glue_schema" "test" {
 {{- template "region" }}
   schema_name       = var.rName
