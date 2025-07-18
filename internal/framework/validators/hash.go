@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
