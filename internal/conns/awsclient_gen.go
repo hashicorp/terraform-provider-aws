@@ -210,6 +210,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
+	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
@@ -1080,6 +1081,10 @@ func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
 
 func (c *AWSClient) S3TablesClient(ctx context.Context) *s3tables.Client {
 	return errs.Must(client[*s3tables.Client](ctx, c, names.S3Tables, make(map[string]any)))
+}
+
+func (c *AWSClient) S3VectorsClient(ctx context.Context) *s3vectors.Client {
+	return errs.Must(client[*s3vectors.Client](ctx, c, names.S3Vectors, make(map[string]any)))
 }
 
 func (c *AWSClient) SESClient(ctx context.Context) *ses.Client {
