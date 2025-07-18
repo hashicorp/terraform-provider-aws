@@ -5,47 +5,47 @@ package s3_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketMetadataTableConfiguration_basic(t *testing.T) {
+func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var bucketMetadataTableConfigurationResult awstypes.GetBucketMetadataTableConfigurationResult
+	var v awstypes.MetadataConfigurationResult
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_metadata_table_configuration.test"
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataTableConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetadataTableConfigurationConfig_basic(rName),
+				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataTableConfigurationExists(ctx, resourceName, &bucketMetadataTableConfigurationResult),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata_table_configuration.0.s3_tables_destination.0.table_name"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_table_configuration.0.s3_tables_destination.0.table_name", "s3metadata_test_uniq"),
+					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.journal_table_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.journal_table_configuration.0.table_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.journal_table_configuration.0.table_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -53,21 +53,16 @@ func TestAccS3BucketMetadataTableConfiguration_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
 				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
-				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 		},
 	})
 }
 
-func TestAccS3BucketMetadataTableConfiguration_disappears(t *testing.T) {
+func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var bucketMetadataTableConfigurationResult awstypes.GetBucketMetadataTableConfigurationResult
+	var v awstypes.MetadataConfigurationResult
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_metadata_table_configuration.test"
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -75,13 +70,13 @@ func TestAccS3BucketMetadataTableConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataTableConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetadataTableConfigurationConfig_basic(rName),
+				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataTableConfigurationExists(ctx, resourceName, &bucketMetadataTableConfigurationResult),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketMetadataTableConfiguration, resourceName),
+					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketMetadataConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,88 +84,70 @@ func TestAccS3BucketMetadataTableConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketMetadataTableConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBucketMetadataConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_s3_bucket_metadata_table_configuration" {
+			if rs.Type != "aws_s3_bucket_metadata_configuration" {
 				continue
 			}
 
-			bucket := rs.Primary.Attributes[names.AttrBucket]
-			if bucket == "" {
-				return create.Error(names.S3, create.ErrActionCheckingExistence, tfs3.ResNameBucketMetadataTableConfiguration, rs.Primary.ID, errors.New("no bucket is set"))
-			}
+			_, err := tfs3.FindBucketMetadataConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], rs.Primary.Attributes[names.AttrExpectedBucketOwner])
 
-			_, err := tfs3.FindBucketMetadataTableConfigurationByBucket(ctx, conn, bucket)
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3, create.ErrActionCheckingDestroyed, tfs3.ResNameBucketMetadataTableConfiguration, bucket, err)
+				continue
 			}
 
-			return create.Error(names.S3, create.ErrActionCheckingDestroyed, tfs3.ResNameBucketMetadataTableConfiguration, bucket, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Bucket Metadata Configuration %s still exists", rs.Primary.Attributes[names.AttrBucket])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBucketMetadataTableConfigurationExists(ctx context.Context, name string, bucketmetadatatableconfiguration *awstypes.GetBucketMetadataTableConfigurationResult) resource.TestCheckFunc {
+func testAccCheckBucketMetadataConfigurationExists(ctx context.Context, n string, v *awstypes.MetadataConfigurationResult) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3, create.ErrActionCheckingExistence, tfs3.ResNameBucketMetadataTableConfiguration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.S3, create.ErrActionCheckingExistence, tfs3.ResNameBucketMetadataTableConfiguration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		bucket := rs.Primary.Attributes[names.AttrBucket]
-		if bucket == "" {
-			return create.Error(names.S3, create.ErrActionCheckingExistence, tfs3.ResNameBucketMetadataTableConfiguration, rs.Primary.ID, errors.New("no bucket is set"))
-		}
+		output, err := tfs3.FindBucketMetadataConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], rs.Primary.Attributes[names.AttrExpectedBucketOwner])
 
-		resp, err := tfs3.FindBucketMetadataTableConfigurationByBucket(ctx, conn, bucket)
 		if err != nil {
-			return create.Error(names.S3, create.ErrActionCheckingExistence, tfs3.ResNameBucketMetadataTableConfiguration, rs.Primary.ID, err)
+			return err
 		}
 
-		*bucketmetadatatableconfiguration = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccBucketMetadataTableConfigurationConfig_base(bucketName string) string {
+func testAccBucketMetadataConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  force_destroy = true
-  bucket        = %[1]q
+  bucket = %[1]q
 }
 
-resource "aws_s3tables_table_bucket" "test_destination" {
-  name = "%s-destination"
-}
-`, bucketName, bucketName)
-}
-
-func testAccBucketMetadataTableConfigurationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccBucketMetadataTableConfigurationConfig_base(rName), `
-resource "aws_s3_bucket_metadata_table_configuration" "test" {
+resource "aws_s3_bucket_metadata_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
-  metadata_table_configuration {
-    s3_tables_destination {
-      table_bucket_arn = aws_s3tables_table_bucket.test_destination.arn
-      table_name       = "s3metadata_test_uniq"
+  metadata_configuration {
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
     }
   }
 }
-`)
+`, rName)
 }
