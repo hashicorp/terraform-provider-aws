@@ -25,16 +25,19 @@ var (
 )
 
 var (
-	// ListOfStringType is a custom type used for defining a List of strings.
-	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}, nil}
-
 	// ListOfARNType is a custom type used for defining a List of ARNs.
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}, nil}
+
+	// ListOfInt64Type is a custom type used for defining a List of int64s.
+	ListOfInt64Type = listTypeOf[basetypes.Int64Value]{basetypes.ListType{ElemType: basetypes.Int64Type{}}, nil}
+
+	// ListOfStringType is a custom type used for defining a List of strings.
+	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}, nil}
 )
 
 type validateAttributeFunc[T attr.Value] func(context.Context, path.Path, []attr.Value) diag.Diagnostics
 
-// TODO Replace with Go 1.24 generic type alias when available.
+// ListOfStringEnumType is a custom type used for defining a List of string enums.
 func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
 	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
@@ -115,8 +118,9 @@ type ListValueOf[T attr.Value] struct {
 }
 
 type (
-	ListOfString                         = ListValueOf[basetypes.StringValue]
 	ListOfARN                            = ListValueOf[ARN]
+	ListOfInt64                          = ListValueOf[basetypes.Int64Value]
+	ListOfString                         = ListValueOf[basetypes.StringValue]
 	ListOfStringEnum[T enum.Valueser[T]] = ListValueOf[StringEnum[T]]
 )
 

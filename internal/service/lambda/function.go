@@ -1272,7 +1272,14 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 			return nil, "", err
 		}
 
-		return output, string(output.LastUpdateStatus), nil
+		// "LastUpdateStatus":null can be returned (when SnapStart is enabled?).
+		// lambda.NewFunctionUpdatedWaiter handles this as a retryable status.
+		status := output.LastUpdateStatus
+		if status == "" {
+			status = awstypes.LastUpdateStatusInProgress
+		}
+
+		return output, string(status), nil
 	}
 }
 

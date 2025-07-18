@@ -13,14 +13,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -708,84 +702,6 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.ocsp_configuration.0.enabled", acctest.CtFalse),
 				),
-			},
-		},
-	})
-}
-
-func TestAccACMPCACertificateAuthority_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var certificateAuthority awstypes.CertificateAuthority
-	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccCertificateAuthorityConfig_required(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
-					}),
-				},
 			},
 		},
 	})

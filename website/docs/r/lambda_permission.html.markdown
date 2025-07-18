@@ -215,7 +215,7 @@ resource "aws_lambda_permission" "logging" {
 The following arguments are required:
 
 * `action` - (Required) Lambda action to allow in this statement (e.g., `lambda:InvokeFunction`)
-* `function_name` - (Required) Name of the Lambda function
+* `function_name` - (Required) Name or ARN of the Lambda function
 * `principal` - (Required) AWS service or account that invokes the function (e.g., `s3.amazonaws.com`, `sns.amazonaws.com`, AWS account ID, or AWS IAM principal)
 
 The following arguments are optional:

@@ -286,8 +286,9 @@ func testAccConfigDirectoryBucket_availableAZs() string {
 func testAccDirectoryBucketConfig_baseAZ(rName string) string {
 	return acctest.ConfigCompose(testAccConfigDirectoryBucket_availableAZs(), fmt.Sprintf(`
 locals {
-  location_name = data.aws_availability_zones.available.zone_ids[0]
-  bucket        = "%[1]s--${local.location_name}--x-s3"
+  location_name     = data.aws_availability_zones.available.zone_ids[0]
+  bucket            = "%[1]s--${local.location_name}--x-s3"
+  access_point_name = "%[1]s--${local.location_name}--xa-s3"
 }
 `, rName))
 }

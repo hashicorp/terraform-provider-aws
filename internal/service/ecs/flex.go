@@ -56,54 +56,6 @@ func flattenCapacityProviderStrategyItems(apiObjects []awstypes.CapacityProvider
 	return tfList
 }
 
-func expandLoadBalancers(tfList []any) []awstypes.LoadBalancer {
-	apiObjects := make([]awstypes.LoadBalancer, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]any)
-
-		apiObject := awstypes.LoadBalancer{
-			ContainerName: aws.String(tfMap["container_name"].(string)),
-			ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
-		}
-
-		if v, ok := tfMap["elb_name"]; ok && v.(string) != "" {
-			apiObject.LoadBalancerName = aws.String(v.(string))
-		}
-
-		if v, ok := tfMap["target_group_arn"]; ok && v.(string) != "" {
-			apiObject.TargetGroupArn = aws.String(v.(string))
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
-	tfList := make([]any, 0, len(apiObjects))
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]any{
-			"container_name": aws.ToString(apiObject.ContainerName),
-			"container_port": aws.ToInt32(apiObject.ContainerPort),
-		}
-
-		if apiObject.LoadBalancerName != nil {
-			tfMap["elb_name"] = aws.ToString(apiObject.LoadBalancerName)
-		}
-
-		if apiObject.TargetGroupArn != nil {
-			tfMap["target_group_arn"] = aws.ToString(apiObject.TargetGroupArn)
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
 func expandTaskSetLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
