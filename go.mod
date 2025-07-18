@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.46.3
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.46.4
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.4
@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.232.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.233.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.0
@@ -165,7 +165,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.45.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.40.2
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.75.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.76.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.76.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.25.0
@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/rum v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/rum v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.84.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.4
@@ -235,7 +235,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/ses v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.46.0
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.35.8
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.35.9
 	github.com/aws/aws-sdk-go-v2/service/shield v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/signer v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.34.7
@@ -250,7 +250,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.28.6
-	github.com/aws/aws-sdk-go-v2/service/synthetics v1.35.3
+	github.com/aws/aws-sdk-go-v2/service/synthetics v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.31.2
