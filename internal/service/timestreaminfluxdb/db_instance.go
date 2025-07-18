@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
@@ -30,13 +31,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -375,18 +376,12 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	out, err := conn.CreateDbInstance(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
 	if out == nil || out.Id == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -397,10 +392,7 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 	output, err := waitDBInstanceCreated(ctx, conn, state.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBInstance, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -432,10 +424,7 @@ func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 
@@ -477,20 +466,14 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 
 		_, err := conn.UpdateDbInstance(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 
@@ -525,20 +508,14 @@ func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequ
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionDeleting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForDeletion, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 }
@@ -555,18 +532,12 @@ func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.Va
 	}
 
 	if allocatedStorage.ValueInt64() > math.MaxInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was greater than the maximum allowed value for int32",
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("allocated_storage was greater than the maximum allowed value for int32"))
 		return
 	}
 
 	if allocatedStorage.ValueInt64() < math.MinInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was less than the minimum allowed value for int32",
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("allocated_storage was less than the minimum allowed value for int32"))
 		return
 	}
 }
@@ -583,10 +554,10 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
@@ -601,10 +572,10 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
@@ -618,10 +589,10 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*timestreaminfluxdb.GetDbInstanceOutput); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
@@ -632,7 +603,7 @@ func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id s
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 		return out, string(out.Status), nil
 	}
@@ -646,18 +617,18 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	out, err := conn.GetDbInstance(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil
