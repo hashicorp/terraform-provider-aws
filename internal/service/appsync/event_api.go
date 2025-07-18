@@ -1,0 +1,578 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package appsync
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_appsync_event_api", name="Event API")
+// @IdentityAttribute("id")
+// @Testing(importStateIdAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
+func newEventApiResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceEventApi{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameEventApi = "Event API"
+)
+
+type resourceEventApi struct {
+	framework.ResourceWithModel[resourceEventApiModel]
+	framework.WithTimeouts
+}
+
+func (r *resourceEventApi) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"created": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"dns": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+			},
+			"owner_contact": schema.StringAttribute{
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"waf_web_acl_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"xray_enabled": schema.BoolAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"event_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[eventConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"auth_providers": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authProviderModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_type": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"cognito_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[cognitoConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"aws_region": schema.StringAttribute{
+													Required: true,
+												},
+												"user_pool_id": schema.StringAttribute{
+													Required: true,
+												},
+												"app_id_client_regex": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+									"lambda_authorizer_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaAuthorizerConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"authorizer_result_ttl_in_seconds": schema.Int64Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.UseStateForUnknown(),
+													},
+												},
+												"authorizer_uri": schema.StringAttribute{
+													Required: true,
+												},
+												"identity_validation_expression": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+									"openid_connect_config": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[openIDConnectConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"auth_ttl": schema.Int64Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.UseStateForUnknown(),
+													},
+												},
+												names.AttrClientID: schema.StringAttribute{
+													Optional: true,
+												},
+												"iat_ttl": schema.Int64Attribute{
+													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Int64{
+														int64planmodifier.UseStateForUnknown(),
+													},
+												},
+												names.AttrIssuer: schema.StringAttribute{
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"connection_auth_modes": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_type": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+									},
+								},
+							},
+						},
+						"default_publish_auth_modes": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_type": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+									},
+								},
+							},
+						},
+						"default_subscribe_auth_modes": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"auth_type": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+									},
+								},
+							},
+						},
+						"log_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[eventLogConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"cloudwatch_logs_role_arn": schema.StringAttribute{
+										Required: true,
+									},
+									"log_level": schema.StringAttribute{
+										Required:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.EventLogLevel](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *resourceEventApi) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().AppSyncClient(ctx)
+
+	var plan resourceEventApiModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var input appsync.CreateApiInput
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input.Tags = getTagsIn(ctx)
+
+	out, err := conn.CreateApi(ctx, &input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventApi, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.Api == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventApi, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.Api, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitEventApiCreated(ctx, conn, plan.ApiId.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, ResNameEventApi, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func (r *resourceEventApi) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().AppSyncClient(ctx)
+
+	var state resourceEventApiModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	apiId := state.ApiId.ValueString()
+
+	out, err := findEventApiByID(ctx, conn, apiId)
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionReading, ResNameEventApi, state.ApiId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceEventApi) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().AppSyncClient(ctx)
+
+	var plan, state resourceEventApiModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input appsync.UpdateApiInput
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		input.ApiId = plan.ApiId.ValueStringPointer()
+
+		out, err := conn.UpdateApi(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventApi, plan.ApiId.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil || out.Api == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventApi, plan.ApiId.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, out.Api, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceEventApi) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().AppSyncClient(ctx)
+
+	var state resourceEventApiModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := appsync.DeleteApiInput{
+		ApiId: state.ApiId.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteApi(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, ResNameEventApi, state.ApiId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitEventApiDeleted(ctx, conn, state.ApiId.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, ResNameEventApi, state.ApiId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceEventApi) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+const (
+	statusDeleting = "Deleting"
+	statusNormal   = "Normal"
+)
+
+func waitEventApiCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusEventApi(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		fmt.Printf("[DEBUG] waitEventApiCreated: Wait failed with error: %v\n", err)
+	} else {
+		fmt.Printf("[DEBUG] waitEventApiCreated: Wait completed successfully for API: %s\n", id)
+	}
+
+	if out, ok := outputRaw.(*awstypes.Api); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitEventApiDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
+	fmt.Printf("[DEBUG] waitEventApiDeleted: Starting wait for API deletion: %s\n", id)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusEventApi(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		fmt.Printf("[DEBUG] waitEventApiDeleted: Wait failed with error: %v\n", err)
+	} else {
+		fmt.Printf("[DEBUG] waitEventApiDeleted: Wait completed successfully for API: %s\n", id)
+	}
+
+	if out, ok := outputRaw.(*awstypes.Api); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusEventApi(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		out, err := findEventApiByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return out, statusNormal, nil
+	}
+}
+
+func findEventApiByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.Api, error) {
+	input := appsync.GetApiInput{
+		ApiId: aws.String(id),
+	}
+
+	out, err := conn.GetApi(ctx, &input)
+	if err != nil {
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
+			}
+		}
+		return nil, err
+	}
+
+	if out == nil || out.Api == nil {
+		return nil, tfresource.NewEmptyResultError(&input)
+	}
+
+	return out.Api, nil
+}
+
+type resourceEventApiModel struct {
+	framework.WithRegionModel
+	ApiArn       types.String                                      `tfsdk:"arn"`
+	ApiId        types.String                                      `tfsdk:"id"`
+	Created      timetypes.RFC3339                                 `tfsdk:"created"`
+	Dns          fwtypes.MapOfString                               `tfsdk:"dns"`
+	EventConfig  fwtypes.ListNestedObjectValueOf[eventConfigModel] `tfsdk:"event_config"`
+	Name         types.String                                      `tfsdk:"name"`
+	OwnerContact types.String                                      `tfsdk:"owner_contact"`
+	Tags         tftags.Map                                        `tfsdk:"tags"`
+	TagsAll      tftags.Map                                        `tfsdk:"tags_all"`
+	Timeouts     timeouts.Value                                    `tfsdk:"timeouts"`
+	WafWebAclArn types.String                                      `tfsdk:"waf_web_acl_arn"`
+	XrayEnabled  types.Bool                                        `tfsdk:"xray_enabled"`
+}
+
+type eventConfigModel struct {
+	AuthProviders             fwtypes.ListNestedObjectValueOf[authProviderModel]   `tfsdk:"auth_providers"`
+	ConnectionAuthModes       fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"connection_auth_modes"`
+	DefaultPublishAuthModes   fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_publish_auth_modes"`
+	DefaultSubscribeAuthModes fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_subscribe_auth_modes"`
+	LogConfig                 fwtypes.ListNestedObjectValueOf[eventLogConfigModel] `tfsdk:"log_config"`
+}
+
+type authProviderModel struct {
+	AuthType               fwtypes.StringEnum[awstypes.AuthenticationType]              `tfsdk:"auth_type"`
+	CognitoConfig          fwtypes.ListNestedObjectValueOf[cognitoConfigModel]          `tfsdk:"cognito_config"`
+	LambdaAuthorizerConfig fwtypes.ListNestedObjectValueOf[lambdaAuthorizerConfigModel] `tfsdk:"lambda_authorizer_config"`
+	OpenIDConnectConfig    fwtypes.ListNestedObjectValueOf[openIDConnectConfigModel]    `tfsdk:"openid_connect_config"`
+}
+
+type authModeModel struct {
+	AuthType fwtypes.StringEnum[awstypes.AuthenticationType] `tfsdk:"auth_type"`
+}
+
+type cognitoConfigModel struct {
+	AwsRegion        types.String `tfsdk:"aws_region"`
+	UserPoolId       types.String `tfsdk:"user_pool_id"`
+	AppIdClientRegex types.String `tfsdk:"app_id_client_regex"`
+}
+
+type lambdaAuthorizerConfigModel struct {
+	AuthorizerResultTtlInSeconds types.Int64  `tfsdk:"authorizer_result_ttl_in_seconds"`
+	AuthorizerUri                types.String `tfsdk:"authorizer_uri"`
+	IdentityValidationExpression types.String `tfsdk:"identity_validation_expression"`
+}
+
+type openIDConnectConfigModel struct {
+	AuthTtl  types.Int64  `tfsdk:"auth_ttl"`
+	ClientId types.String `tfsdk:"client_id"`
+	IatTtl   types.Int64  `tfsdk:"iat_ttl"`
+	Issuer   types.String `tfsdk:"issuer"`
+}
+
+type eventLogConfigModel struct {
+	CloudWatchLogsRoleArn types.String                               `tfsdk:"cloudwatch_logs_role_arn"`
+	LogLevel              fwtypes.StringEnum[awstypes.EventLogLevel] `tfsdk:"log_level"`
+}
