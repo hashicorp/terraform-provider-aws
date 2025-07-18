@@ -9,6 +9,7 @@ var (
 	ResourceDataProtectionSettings    = newDataProtectionSettingsResource
 	ResourceIPAccessSettings          = newIPAccessSettingsResource
 	ResourceNetworkSettings           = newNetworkSettingsResource
+	ResourcePortal                    = newPortalResource
 	ResourceTrustStore                = newTrustStoreResource
 	ResourceUserAccessLoggingSettings = newUserAccessLoggingSettingsResource
 	ResourceUserSettings              = newUserSettingsResource
@@ -17,6 +18,7 @@ var (
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
 	FindIPAccessSettingsByARN          = findIPAccessSettingsByARN
 	FindNetworkSettingsByARN           = findNetworkSettingsByARN
+	FindPortalByARN                    = findPortalByARN
 	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN
