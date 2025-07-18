@@ -20,6 +20,7 @@ const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
+	errCodeMetadataConfigurationNotFound        = "MetadataConfigurationNotFound"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchBucket                         = "NoSuchBucket"
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
