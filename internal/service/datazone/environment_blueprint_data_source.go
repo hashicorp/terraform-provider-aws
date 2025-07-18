@@ -6,6 +6,7 @@ package datazone
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -97,11 +98,11 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 
 	out, err := conn.ListEnvironmentBlueprints(ctx, in)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	for i := range out.Items {
@@ -112,7 +113,7 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 	}
 
 	if out.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, out.NextToken)
