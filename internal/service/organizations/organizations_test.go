@@ -75,6 +75,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
 			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
+			"Identity":               testAccOrganizationsPolicy_IdentitySerial,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccPolicyAttachment_Account,

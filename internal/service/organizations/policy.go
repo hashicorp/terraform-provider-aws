@@ -19,14 +19,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_policy", name="Policy")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @WrappedImport(false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Policy")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -194,10 +202,13 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
+		return nil, err
+	}
+
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policy, err := findPolicyByID(ctx, conn, d.Id())
-
 	if err != nil {
 		return nil, err
 	}

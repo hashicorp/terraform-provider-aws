@@ -390,6 +390,7 @@ func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, met
 	if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
 		return nil, err
 	}
+
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	org, err := findOrganization(ctx, conn)
