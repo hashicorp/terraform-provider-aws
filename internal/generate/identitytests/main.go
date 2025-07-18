@@ -797,6 +797,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						)
 					}
 				}
+				if attr, ok := args.Keyword["emailAddress"]; ok {
+					varName := "address"
+					if len(attr) > 0 {
+						varName = attr
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(
+							`domain := acctest.RandomDomainName()
+%s := acctest.RandomEmailAddress(domain)`, varName),
+					})
+					d.additionalTfVars[varName] = varName
+				}
 				if attr, ok := args.Keyword["domainTfVar"]; ok {
 					varName := "domain"
 					if len(attr) > 0 {
