@@ -167,7 +167,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	repository, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*types.Repository, error) {
 		return findRepositoryByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -180,8 +180,6 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
-
-	repository := outputRaw.(*types.Repository)
 
 	d.Set(names.AttrARN, repository.RepositoryArn)
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {

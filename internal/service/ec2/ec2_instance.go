@@ -19,7 +19,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -1155,7 +1154,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
@@ -1396,14 +1396,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// ARN
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	// Instance attributes
 	{
@@ -4120,4 +4113,7 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 		}
 	}
 	return false
+}
+func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
 }

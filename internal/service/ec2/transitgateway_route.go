@@ -102,7 +102,7 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	transitGatewayRoute, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.TransitGatewayRoute, error) {
 		return findTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
@@ -115,8 +115,6 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
-
-	transitGatewayRoute := outputRaw.(*awstypes.TransitGatewayRoute)
 
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 {

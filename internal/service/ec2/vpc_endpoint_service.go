@@ -5,12 +5,10 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -217,7 +215,8 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	svcCfg, err := findVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
@@ -232,14 +231,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpcEndpointServiceARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZones, svcCfg.AvailabilityZones)
 	d.Set("base_endpoint_dns_names", svcCfg.BaseEndpointDnsNames)
 	d.Set("gateway_load_balancer_arns", svcCfg.GatewayLoadBalancerArns)
@@ -403,4 +395,12 @@ func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) 
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
 		return aws.ToString(v.Region)
 	})
+}
+
+func vpcEndpointServiceARN(ctx context.Context, c *conns.AWSClient, serviceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpc-endpoint-service/"+serviceID)
+}
+
+func vpcEndpointServiceARNWithRegion(ctx context.Context, c *conns.AWSClient, region, serviceID string) string {
+	return c.RegionalARNWithRegion(ctx, names.EC2, region, "vpc-endpoint-service/"+serviceID)
 }

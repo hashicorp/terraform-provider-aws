@@ -94,7 +94,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetLifecyclePolicyOutput, error) {
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -107,8 +107,6 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
 
 	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

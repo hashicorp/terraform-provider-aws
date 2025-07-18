@@ -10,7 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -57,7 +57,7 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -86,7 +86,7 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,7 +132,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -196,7 +196,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -231,7 +231,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.NetworkAcl
+	var v awstypes.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -288,7 +288,7 @@ func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *awstypes.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

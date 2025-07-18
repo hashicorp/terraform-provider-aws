@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -102,7 +102,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 
 	input := ec2.CreateVerifiedAccessInstanceInput{
 		ClientToken:       aws.String(sdkid.UniqueId()),
-		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessInstance),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVerifiedAccessInstance),
 	}
 
 	if v, ok := d.GetOk("cidr_endpoints_custom_subdomain"); ok {
@@ -215,7 +215,7 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []any {
+func flattenVerifiedAccessTrustProviders(apiObjects []awstypes.VerifiedAccessTrustProviderCondensed) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -233,7 +233,7 @@ func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustP
 	return tfList
 }
 
-func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]any {
+func flattenVerifiedAccessTrustProvider(apiObject awstypes.VerifiedAccessTrustProviderCondensed) map[string]any {
 	tfMap := map[string]any{
 		"device_trust_provider_type": apiObject.DeviceTrustProviderType,
 		"trust_provider_type":        apiObject.TrustProviderType,

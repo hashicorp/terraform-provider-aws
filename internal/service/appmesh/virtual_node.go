@@ -1004,7 +1004,7 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	vn, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualNodeData, error) {
 		return findVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -1017,8 +1017,6 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node (%s): %s", d.Id(), err)
 	}
-
-	vn := outputRaw.(*awstypes.VirtualNodeData)
 
 	d.Set(names.AttrARN, vn.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))

@@ -99,33 +99,33 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 	var retryCount int32
 	testCases := []struct {
 		Name        string
-		F           func() (any, error)
+		F           func(context.Context) (any, error)
 		NewResource bool
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, nil
 			},
 		},
 		{
 			Name: "no error new resource",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, nil
 			},
 			NewResource: true,
 		},
 		{
 			Name: "non-retryable other error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "non-retryable other error new resource",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			NewResource: true,
@@ -133,14 +133,14 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 		},
 		{
 			Name: "retryable NotFoundError not new resource",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, &retry.NotFoundError{}
 			},
 			ExpectError: true,
 		},
 		{
 			Name: "retryable NotFoundError new resource timeout",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, &retry.NotFoundError{}
 			},
 			NewResource: true,
@@ -148,7 +148,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 		},
 		{
 			Name: "retryable NotFoundError success new resource",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				if atomic.CompareAndSwapInt32(&retryCount, 0, 1) {
 					return nil, &retry.NotFoundError{}
 				}

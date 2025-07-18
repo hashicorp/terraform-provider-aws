@@ -757,7 +757,7 @@ func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) reso
 			return fmt.Errorf("externally creating IAM Policy (%s): %s", aws.ToString(user.UserName), err)
 		}
 
-		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func() (any, error) {
+		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 			return tfiam.FindPolicyByARN(ctx, conn, aws.ToString(output.Policy.Arn))
 		}, true)
 		if err != nil {

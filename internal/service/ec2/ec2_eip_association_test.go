@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEC2EIPAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -50,7 +50,7 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 
 func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -74,7 +74,7 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 
 func TestAccEC2EIPAssociation_instance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -103,7 +103,7 @@ func TestAccEC2EIPAssociation_instance_basic(t *testing.T) {
 
 func TestAccEC2EIPAssociation_instance_publicIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,7 +132,7 @@ func TestAccEC2EIPAssociation_instance_publicIP(t *testing.T) {
 
 func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -166,7 +166,7 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 
 func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var a types.Address
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -202,7 +202,7 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	})
 }
 
-func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *types.Address) resource.TestCheckFunc {
+func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *awstypes.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
