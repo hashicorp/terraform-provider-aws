@@ -66,6 +66,7 @@ func resourceFleet() *schema.Resource {
 						"machine_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.MachineType](),
 						},
 						"memory": {
