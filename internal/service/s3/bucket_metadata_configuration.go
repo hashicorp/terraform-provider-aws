@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -171,6 +172,9 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 											Attributes: map[string]schema.Attribute{
 												"days": schema.Int32Attribute{
 													Optional: true,
+													Validators: []validator.Int32{
+														int32validator.Between(7, 2147483647),
+													},
 												},
 												"expiration": schema.StringAttribute{
 													CustomType: fwtypes.StringEnumType[awstypes.ExpirationState](),

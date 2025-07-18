@@ -1,28 +1,35 @@
 ---
 subcategory: "S3 (Simple Storage)"
 layout: "aws"
-page_title: "AWS: aws_s3_bucket_metadata_table_configuration"
+page_title: "AWS: aws_s3_bucket_metadata_configuration"
 description: |-
-  Terraform resource for managing an AWS S3 (Simple Storage) Bucket Metadata Table Configuration.
+  Manages Amazon S3 Metadata for a bucket.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
-# Resource: aws_s3_bucket_metadata_table_configuration
 
-Terraform resource for managing an AWS S3 (Simple Storage) Bucket Metadata Table Configuration.
+# Resource: aws_s3_bucket_metadata_configuration
+
+Manages Amazon S3 Metadata for a bucket.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_s3_bucket_metadata_table_configuration" "example" {
+resource "aws_s3_bucket_metadata_configuration" "example" {
+  bucket = aws_s3_bucket.example.bucket
+
+  metadata_configuration {
+    inventory_table_configuration {
+      configuration_state = "ENABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
+    }
+  }
 }
 ```
 
@@ -30,40 +37,101 @@ resource "aws_s3_bucket_metadata_table_configuration" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `bucket` - (Required) General purpose bucket that you want to create the metadata configuration for.
+* `metadata_configuration` - (Required) Metadata configuration. See [`metadata_configuration` Block](#metadata_configuration-block) for details.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `checksum_algorithm` - (Optional) Checksum algorithm to use with the metadata configuration. Valid values: `CRC32`, `CRC32C`, `SHA1`, `SHA256`, `CRC64NVME`.
+* `content_md5` - (Optional) `Content-MD5` header for the metadata configuration.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `metadata_configuration` Block
+
+The `metadata_configuration` configuration block supports the following arguments:
+
+* `inventory_table_configuration` - (Required) Inventory table configuration. See [`inventory_table_configuration` Block](#inventory_table_configuration-block) for details.
+* `journal_table_configuration` - (Required) Journal table configuration. See [`journal_table_configuration` Block](#journal_table_configuration-block) for details.
+
+### `inventory_table_configuration` Block
+
+The `inventory_table_configuration` configuration block supports the following arguments:
+
+* `configuration_state` - (Required) Configuration state of the inventory table, indicating whether the inventory table is enabled or disabled. Valid values: `ENABLED`, `DISABLED`.
+* `encryption_configuration` - (Optional) Encryption configuration for the inventory table. See [`encryption_configuration` Block](#encryption_configuration-block) for details.
+
+### `journal_table_configuration` Block
+
+The `journal_table_configuration` configuration block supports the following arguments:
+
+* `encryption_configuration` - (Optional) Encryption configuration for the journal table. See [`encryption_configuration` Block](#encryption_configuration-block) for details.
+* `record_expiration` - (Required) Journal table record expiration settings. See [`record_expiration` Block](#record_expiration-block) for details.
+
+### `encryption_configuration` Block
+
+The `encryption_configuration` configuration block supports the following arguments:
+
+* `kms_key_arn` - (Optional) KMS key ARN when `sse_algorithm` is `aws:kms`.
+* `sse_algorithm` - (Required) Encryption type for the metadata table. Valid values: `aws:kms`, `AES256`.
+
+### `record_expiration` Block
+
+The `record_expiration` configuration block supports the following arguments:
+
+* `days` - (Optional) Number of days to retain journal table records.
+* `expiration` - (Required) Whether journal table record expiration is enabled or disabled. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Bucket Metadata Table Configuration. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `metadata_configuration.0.destination` - Destination information for the S3 Metadata configuration.
+    * `table_bucket_arn` - ARN of the table bucket where the metadata configuration is stored.
+    * `table_bucket_type` - Type of the table bucket where the metadata configuration is stored.
+    * `table_namespace` - Namespace in the table bucket where the metadata tables for the metadata configuration are stored.
+* `metadata_configuration.0.inventory_table_configuration.0.table_arn` - Inventory table ARN.
+* `metadata_configuration.0.inventory_table_configuration.0.table_name` - Inventory table name.
+* `metadata_configuration.0.journal_table_configuration.0.table_arn` - Journal table ARN.
+* `metadata_configuration.0.journal_table_configuration.0.table_name` - Journal table name.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 (Simple Storage) Bucket Metadata Table Configuration using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket metadata configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
 ```terraform
 import {
-  to = aws_s3_bucket_metadata_table_configuration.example
-  id = "bucket_metadata_table_configuration-id-12345678"
+  to = aws_s3_bucket_metadata_configuration.example
+  id = "bucket-name"
 }
 ```
 
-Using `terraform import`, import S3 (Simple Storage) Bucket Metadata Table Configuration using the `example_id_arg`. For example:
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```terraform
+import {
+  to = aws_s3_bucket_metadata_configuration.example
+  id = "bucket-name,123456789012"
+}
+```
+
+**Using `terraform import` to import** S3 bucket metadata configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
 ```console
-% terraform import aws_s3_bucket_metadata_table_configuration.example bucket_metadata_table_configuration-id-12345678
+% terraform import aws_s3_bucket_metadata_configuration.example bucket-name
+```
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```console
+% terraform import aws_s3_bucket_metadata_configuration.example bucket-name,123456789012
 ```
