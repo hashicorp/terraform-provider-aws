@@ -134,6 +134,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_organizations_organization",
 			Name:     "Organization",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 		},
 		{
 			Factory:  resourceOrganizationalUnit,
