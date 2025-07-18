@@ -370,6 +370,10 @@ func resourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"authentication_method": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"babelfish_database_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -423,6 +427,10 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"plugin_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service_access_role_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1922,6 +1930,9 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
 		apiObject.AfterConnectScript = aws.String(v)
 	}
+	if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
+		apiObject.AuthenticationMethod = awstypes.PostgreSQLAuthenticationMethod(v)
+	}
 	if v, ok := tfMap["babelfish_database_name"].(string); ok && v != "" {
 		apiObject.BabelfishDatabaseName = aws.String(v)
 	}
@@ -1964,6 +1975,9 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
 		apiObject.PluginName = awstypes.PluginNameValue(v)
 	}
+	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+		apiObject.ServiceAccessRoleArn = aws.String(v)
+	}
 	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
 		apiObject.SlotName = aws.String(v)
 	}
@@ -1981,6 +1995,7 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	if v := apiObject.AfterConnectScript; v != nil {
 		tfMap["after_connect_script"] = aws.ToString(v)
 	}
+	tfMap["authentication_method"] = string(apiObject.AuthenticationMethod)
 	if v := apiObject.BabelfishDatabaseName; v != nil {
 		tfMap["babelfish_database_name"] = aws.ToString(v)
 	}
@@ -2017,6 +2032,9 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 		tfMap["max_file_size"] = aws.ToInt32(v)
 	}
 	tfMap["plugin_name"] = string(apiObject.PluginName)
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.ToString(v)
+	}
 	if v := apiObject.SlotName; v != nil {
 		tfMap["slot_name"] = aws.ToString(v)
 	}

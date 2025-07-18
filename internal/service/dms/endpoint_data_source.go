@@ -262,6 +262,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"authentication_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"babelfish_database_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -315,6 +319,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Computed: true,
 						},
 						"plugin_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_access_role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
