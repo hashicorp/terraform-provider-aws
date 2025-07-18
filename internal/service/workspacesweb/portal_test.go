@@ -38,8 +38,8 @@ func TestAccWorkSpacesWebPortal_basic(t *testing.T) {
 				Config: testAccPortalConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeStandardRegular)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardRegular)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "portal_arn", "workspaces-web", regexache.MustCompile(`portal/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "portal_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "portal_status", string(awstypes.PortalStatusIncomplete)),
@@ -102,8 +102,8 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 				Config: testAccPortalConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-before"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeStandardRegular)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-before"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardRegular)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", string(awstypes.AuthenticationTypeStandard)),
 					resource.TestCheckResourceAttr(resourceName, "portal_status", string(awstypes.PortalStatusIncomplete)),
@@ -120,8 +120,8 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 				Config: testAccPortalConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-after"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeStandardLarge)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-after"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardLarge)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "2"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", string(awstypes.AuthenticationTypeIamIdentityCenter)),
 					resource.TestCheckResourceAttr(resourceName, "portal_status", string(awstypes.PortalStatusActive)),
@@ -151,8 +151,8 @@ func TestAccWorkSpacesWebPortal_complete(t *testing.T) {
 				Config: testAccPortalConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "test-complete"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", string(awstypes.InstanceTypeStandardLarge)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-complete"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardLarge)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "2"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", string(awstypes.AuthenticationTypeStandard)),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName, names.AttrARN),
@@ -238,16 +238,20 @@ func testAccPortalConfig_updateAfter() string {
 func testAccPortalConfig_template(displayName, instanceType string, maxConcurrentSessions int, authenticationType string) string {
 	return fmt.Sprintf(`
 resource "aws_workspacesweb_portal" "test" {
-  display_name           = %q
-  instance_type          = %q
+  display_name            = %q
+  instance_type           = %q
   max_concurrent_sessions = %d
-  authentication_type    = %q
+  authentication_type     = %q
 }
 `, displayName, instanceType, maxConcurrentSessions, authenticationType)
 }
 
 func testAccPortalConfig_complete() string {
 	return fmt.Sprintf(`
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   policy = jsonencode({
@@ -257,7 +261,7 @@ resource "aws_kms_key" "test" {
         Sid    = "Enable IAM User Permissions"
         Effect = "Allow"
         Principal = {
-          AWS = "*"
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
         }
         Action   = "kms:*"
         Resource = "*"
@@ -288,7 +292,7 @@ resource "aws_workspacesweb_portal" "test" {
   max_concurrent_sessions = 2
   authentication_type     = %q
   customer_managed_key    = aws_kms_key.test.arn
-  
+
   additional_encryption_context = {
     Environment = "Production"
   }

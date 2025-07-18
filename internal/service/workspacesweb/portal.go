@@ -22,11 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -90,7 +92,7 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"creation_date": schema.StringAttribute{
+			names.AttrCreationDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -109,11 +111,11 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": schema.StringAttribute{
+			names.AttrInstanceType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InstanceType](),
 				Optional:   true,
 				Computed:   true,
@@ -160,7 +162,7 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -252,7 +254,7 @@ func (r *portalResource) Read(ctx context.Context, request resource.ReadRequest,
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	output, err := findPortalByARN(ctx, conn, data.PortalARN.ValueString())
-	if tfresource.NotFound(err) {
+	if tfretry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -335,7 +337,7 @@ func (r *portalResource) Delete(ctx context.Context, request resource.DeleteRequ
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.DeletePortalInput{
-		PortalArn: aws.String(data.PortalARN.ValueString()),
+		PortalArn: data.PortalARN.ValueStringPointer(),
 	}
 	_, err := conn.DeletePortal(ctx, &input)
 
@@ -361,18 +363,11 @@ func (r *portalResource) ImportState(ctx context.Context, request resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("portal_arn"), request, response)
 }
 
-// Status constants
-const (
-	statusPending  = "Pending"
-	statusActive   = "Active"
-	statusDeleting = "Deleting"
-)
-
 // Waiters
 func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.PortalStatusPending)},
-		Target:                    []string{string(awstypes.PortalStatusIncomplete), string(awstypes.PortalStatusActive)},
+		Pending:                   enum.Slice(awstypes.PortalStatusPending),
+		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
 		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -389,8 +384,8 @@ func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn stri
 
 func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.PortalStatusPending)},
-		Target:                    []string{string(awstypes.PortalStatusIncomplete), string(awstypes.PortalStatusActive)},
+		Pending:                   enum.Slice(awstypes.PortalStatusPending),
+		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
 		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -407,7 +402,7 @@ func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn stri
 
 func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, string(awstypes.PortalStatusActive), string(awstypes.PortalStatusPending), string(awstypes.PortalStatusIncomplete)},
+		Pending: enum.Slice(awstypes.PortalStatusActive, awstypes.PortalStatusIncomplete, awstypes.PortalStatusPending),
 		Target:  []string{},
 		Refresh: statusPortal(ctx, conn, arn),
 		Timeout: timeout,
@@ -423,9 +418,9 @@ func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, arn stri
 
 // Status function
 func statusPortal(ctx context.Context, conn *workspacesweb.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findPortalByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if tfretry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -439,15 +434,15 @@ func statusPortal(ctx context.Context, conn *workspacesweb.Client, arn string) r
 
 // Finder function
 func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.Portal, error) {
-	input := &workspacesweb.GetPortalInput{
+	input := workspacesweb.GetPortalInput{
 		PortalArn: aws.String(arn),
 	}
 
-	output, err := conn.GetPortal(ctx, input)
+	output, err := conn.GetPortal(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -456,7 +451,7 @@ func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string
 	}
 
 	if output == nil || output.Portal == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.Portal, nil
