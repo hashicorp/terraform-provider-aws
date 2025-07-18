@@ -58,6 +58,11 @@ func resourceFleet() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"instance_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"machine_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -585,6 +590,10 @@ func expandComputeConfiguration(tfMap map[string]any) *types.ComputeConfiguratio
 		apiObject.MachineType = types.MachineType(v)
 	}
 
+	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
+	}
+
 	if v, ok := tfMap["memory"].(int); ok {
 		apiObject.Memory = aws.Int64(int64(v))
 	}
@@ -672,6 +681,10 @@ func flattenComputeConfiguration(apiObject *types.ComputeConfiguration) map[stri
 
 	if v := apiObject.MachineType; v != "" {
 		tfMap["machine_type"] = v
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap["instance_type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Memory; v != nil {
