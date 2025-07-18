@@ -13,6 +13,7 @@ var (
 	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID               = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
 	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
+	FindTransitGatewayAttachmentByID                               = findTransitGatewayAttachmentByID
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
 	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID

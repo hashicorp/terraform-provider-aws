@@ -448,6 +448,123 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, true, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -748,4 +865,46 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallConfig_transitGatewayAttachment(rName string, changeProtection bool, avaiabilityZoneStartIndex, avaiabilityZoneEndIndex int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                                = %[1]q
+  firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
+  transit_gateway_id                  = aws_ec2_transit_gateway.test.id
+  availability_zone_change_protection = %[2]t
+
+  dynamic "availability_zone_mapping" {
+    for_each = slice(data.aws_availability_zones.available.zone_ids, %[3]d, %[4]d)
+    content {
+      availability_zone_id = availability_zone_mapping.value
+    }
+  }
+}
+`, rName, changeProtection, avaiabilityZoneStartIndex, avaiabilityZoneEndIndex)
 }
