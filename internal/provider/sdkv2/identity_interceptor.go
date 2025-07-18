@@ -100,7 +100,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 

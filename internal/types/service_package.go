@@ -100,7 +100,7 @@ type Identity struct {
 	IsSingleton            bool   // Singleton
 	IsARN                  bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN, Single-Parameter
+	IdentityAttribute      string // ARN, Framework Single-Parameter
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string

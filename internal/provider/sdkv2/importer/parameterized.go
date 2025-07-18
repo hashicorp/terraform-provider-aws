@@ -52,11 +52,11 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, a
 	return nil
 }
 
-func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attrName string, client AWSClient) error {
+func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attr inttypes.IdentityAttribute, client AWSClient) error {
 	if rd.Id() != "" {
 		importID := rd.Id()
-		if attrName != names.AttrID {
-			rd.Set(attrName, importID)
+		if attr.ResourceAttributeName() != names.AttrID {
+			rd.Set(attr.ResourceAttributeName(), importID)
 		}
 
 		return nil
@@ -71,17 +71,17 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 		return err
 	}
 
-	valRaw, ok := identity.GetOk(attrName)
+	valRaw, ok := identity.GetOk(attr.Name())
 	if !ok {
-		return fmt.Errorf("identity attribute %q is required", attrName)
+		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
 	val, ok := valRaw.(string)
 	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, valRaw)
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 	}
-	setAttribute(rd, attrName, val)
+	setAttribute(rd, attr.ResourceAttributeName(), val)
 
-	if attrName != names.AttrID {
+	if attr.ResourceAttributeName() != names.AttrID {
 		rd.SetId(val)
 	}
 

@@ -27,6 +27,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -351,7 +352,7 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 			d.SetId(d.Id())
 		}
 	} else {
-		if err := importer.GlobalSingleParameterized(ctx, d, names.AttrID, meta.(importer.AWSClient)); err != nil {
+		if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
 			return nil, err
 		}
 	}
