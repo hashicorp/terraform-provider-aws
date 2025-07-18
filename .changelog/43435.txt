@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_elasticache_serverless_cache: The `security_group_ids` argument is now required
+```
