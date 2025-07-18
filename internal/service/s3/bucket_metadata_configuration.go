@@ -22,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,7 +38,6 @@ func newBucketMetadataConfigurationResource(_ context.Context) (resource.Resourc
 	r := &bucketMetadataConfigurationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -86,6 +86,8 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 						"inventory_table_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[inventoryTableConfigurationModel](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -185,7 +187,6 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Delete: true,
 			}),
 		},
 	}
@@ -215,82 +216,32 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	jtcr, err := waitBucketMetadataJournalTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts))
-
-	if err != nil {
+	if _, err := waitBucketMetadataJournalTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata journal table configuration (%s) create", bucket), err.Error())
 
 		return
 	}
 
-	// Set values for unknowns.
-	metadataConfiguration, diags := data.MetadataConfiguration.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	journalTableConfiguration, diags := metadataConfiguration.JournalTableConfiguration.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	journalTableConfiguration.TableARN = fwflex.StringToFrameworkARN(ctx, jtcr.TableArn)
-	journalTableConfiguration.TableName = fwflex.StringToFramework(ctx, jtcr.TableName)
-
-	tfJournalTableConfiguration, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, journalTableConfiguration)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	metadataConfiguration.JournalTableConfiguration = tfJournalTableConfiguration
-
-	tfMetadataConfiguration, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, metadataConfiguration)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	data.MetadataConfiguration = tfMetadataConfiguration
-
-	if input.MetadataConfiguration.InventoryTableConfiguration != nil {
-		itcr, err := waitBucketMetadataInventoryTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts))
-
-		if err != nil {
+	if input.MetadataConfiguration.InventoryTableConfiguration.ConfigurationState == awstypes.InventoryConfigurationStateEnabled {
+		if _, err := waitBucketMetadataInventoryTableConfigurationCreated(ctx, conn, bucket, expectedBucketOwner, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for S3 Bucket Metadata inventory table configuration (%s) create", bucket), err.Error())
 
 			return
 		}
+	}
 
-		// Set values for unknowns.
-		metadataConfiguration, diags := data.MetadataConfiguration.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	// Set values for unknowns.
+	output, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
-		inventoryTableConfiguration, diags := metadataConfiguration.InventoryTableConfiguration.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
 
-		inventoryTableConfiguration.TableARN = fwflex.StringToFrameworkARN(ctx, itcr.TableArn)
-		inventoryTableConfiguration.TableName = fwflex.StringToFramework(ctx, itcr.TableName)
+		return
+	}
 
-		tfInventoryTableConfiguration, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, inventoryTableConfiguration)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		metadataConfiguration.InventoryTableConfiguration = tfInventoryTableConfiguration
-
-		tfMetadataConfiguration, diags := fwtypes.NewListNestedObjectValueOfPtr(ctx, metadataConfiguration)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-		data.MetadataConfiguration = tfMetadataConfiguration
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data.MetadataConfiguration, flex.WithFieldNameSuffix("Result"))...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -322,7 +273,7 @@ func (r *bucketMetadataConfigurationResource) Read(ctx context.Context, request 
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data, fwflex.WithFieldNameSuffix("Result"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.MetadataConfiguration, fwflex.WithFieldNameSuffix("Result"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -382,14 +333,16 @@ func (r *bucketMetadataConfigurationResource) ImportState(ctx context.Context, r
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	if expectedBucketOwner != "" {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+	}
 }
 
 func waitBucketMetadataInventoryTableConfigurationCreated(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, timeout time.Duration) (*awstypes.InventoryTableConfigurationResult, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{inventoryTableConfigurationStatusCreating, inventoryTableConfigurationStatusBackfilling},
 		Target:                    []string{inventoryTableConfigurationStatusActive},
-		Refresh:                   statusBucketMetadataInventoryTableConfiguration(ctx, conn, bucket, expectedBucketOwner),
+		Refresh:                   statusBucketMetadataInventoryTableConfiguration(conn, bucket, expectedBucketOwner),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -411,7 +364,7 @@ func waitBucketMetadataJournalTableConfigurationCreated(ctx context.Context, con
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{journalTableConfigurationStatusCreating},
 		Target:                    []string{journalTableConfigurationStatusActive},
-		Refresh:                   statusBucketMetadataJournalTableConfiguration(ctx, conn, bucket, expectedBucketOwner),
+		Refresh:                   statusBucketMetadataJournalTableConfiguration(conn, bucket, expectedBucketOwner),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -429,8 +382,8 @@ func waitBucketMetadataJournalTableConfigurationCreated(ctx context.Context, con
 	return nil, err
 }
 
-func statusBucketMetadataInventoryTableConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusBucketMetadataInventoryTableConfiguration(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
 		if tfresource.NotFound(err) {
@@ -450,8 +403,8 @@ func statusBucketMetadataInventoryTableConfiguration(ctx context.Context, conn *
 	}
 }
 
-func statusBucketMetadataJournalTableConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusBucketMetadataJournalTableConfiguration(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		mcr, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
 
 		if tfresource.NotFound(err) {
@@ -503,6 +456,7 @@ func findBucketMetadataConfiguration(ctx context.Context, conn *s3.Client, input
 }
 
 type bucketMetadataConfigurationResourceModel struct {
+	framework.WithRegionModel
 	Bucket                types.String                                                `tfsdk:"bucket"`
 	ChecksumAlgorithm     fwtypes.StringEnum[awstypes.ChecksumAlgorithm]              `tfsdk:"checksum_algorithm"`
 	ContentMD5            types.String                                                `tfsdk:"content_md5"`

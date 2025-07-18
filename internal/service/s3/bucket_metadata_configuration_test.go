@@ -8,12 +8,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,15 +41,36 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.journal_table_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.journal_table_configuration.0.table_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.journal_table_configuration.0.table_name"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"destination": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"table_bucket_arn":  tfknownvalue.RegionalARNExact("s3tables", "bucket/aws-s3"),
+									"table_bucket_type": tfknownvalue.StringExact(awstypes.S3TablesBucketTypeAws),
+									"table_namespace":   knownvalue.NotNull(),
+								}),
+							}),
+							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"table_arn":  knownvalue.Null(),
+									"table_name": knownvalue.Null(),
+								}),
+							}),
+							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"table_arn":  tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
+									"table_name": knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
 				},
 			},
 			{
@@ -141,6 +167,10 @@ resource "aws_s3_bucket_metadata_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 
   metadata_configuration {
+    inventory_table_configuration {
+      configuration_state = "DISABLED"
+    }
+
     journal_table_configuration {
       record_expiration {
         days       = 7
