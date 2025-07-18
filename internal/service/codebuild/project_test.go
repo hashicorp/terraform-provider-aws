@@ -3172,32 +3172,6 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccGitHubSourceLocationFromEnv()))
 }
 
-func testAccProjectConfig_regionOverride(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
-resource "aws_codebuild_project" "test" {
-  region = %[3]q
-
-  name         = %[1]q
-  service_role = aws_iam_role.test.arn
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
-  }
-
-  source {
-    location = %[2]q
-    type     = "GITHUB"
-  }
-}
-`, rName, testAccGitHubSourceLocationFromEnv(), acctest.AlternateRegion()))
-}
-
 func testAccProjectConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
