@@ -1,3 +1,0 @@
-variable "rName" {
-  type = string
-}
