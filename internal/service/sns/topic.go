@@ -248,6 +248,7 @@ var (
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
