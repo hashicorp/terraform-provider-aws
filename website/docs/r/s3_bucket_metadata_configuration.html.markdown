@@ -42,8 +42,6 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `checksum_algorithm` - (Optional) Checksum algorithm to use with the metadata configuration. Valid values: `CRC32`, `CRC32C`, `SHA1`, `SHA256`, `CRC64NVME`.
-* `content_md5` - (Optional) `Content-MD5` header for the metadata configuration.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `metadata_configuration` Block
