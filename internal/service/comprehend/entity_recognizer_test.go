@@ -1003,16 +1003,6 @@ func testAccCheckEntityRecognizerExists(ctx context.Context, name string, entity
 	}
 }
 
-// func testAccCheckEntityRecognizerRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if entityRecognizerIdentity(before, after) {
-// 			return fmt.Errorf("Comprehend Entity Recognizer not recreated")
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckEntityRecognizerNotRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !entityRecognizerIdentity(before, after) {

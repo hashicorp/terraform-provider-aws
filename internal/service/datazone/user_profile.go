@@ -142,7 +142,7 @@ func (r *userProfileResource) Create(ctx context.Context, req resource.CreateReq
 	resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id) // set partial state to taint if wait fails
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := tfresource.RetryGWhenNotFound(ctx, createTimeout, func() (*datazone.GetUserProfileOutput, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 		return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 	})
 
@@ -226,7 +226,7 @@ func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := tfresource.RetryGWhenNotFound(ctx, updateTimeout, func() (*datazone.GetUserProfileOutput, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, updateTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 			return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 		})
 

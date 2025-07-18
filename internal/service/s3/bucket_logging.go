@@ -180,7 +180,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 

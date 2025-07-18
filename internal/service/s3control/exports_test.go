@@ -39,4 +39,6 @@ var (
 	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey
 	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
 	FindStorageLensConfigurationByAccountIDAndConfigID     = findStorageLensConfigurationByAccountIDAndConfigID
+
+	AccessPointParseResourceID = accessPointParseResourceID
 )

@@ -426,7 +426,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting AppStream Stack (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func(ctx context.Context) (any, error) {
 		return findStackByID(ctx, conn, d.Id())
 	})
 

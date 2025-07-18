@@ -23,6 +23,7 @@ var (
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
 	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
 	RoleNameFromARN                         = roleNameFromARN
+	ServiceNameFromARN                      = serviceNameFromARN
 	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,9 +17,9 @@ import (
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,9 +45,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags(t *testing.T)
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,9 +69,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_NullMap(t *te
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,9 +93,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_EmptyMap(t *t
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		Steps: []resource.TestStep{
@@ -126,9 +125,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_DefaultTags_n
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		Steps: []resource.TestStep{
@@ -164,9 +163,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_IgnoreTags_Ov
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		Steps: []resource.TestStep{

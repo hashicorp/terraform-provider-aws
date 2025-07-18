@@ -254,7 +254,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sagemaker_servicecatalog_portfolio_status",
 			Name:     "Servicecatalog Portfolio Status",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalSingletonIdentity(),
+			Identity: inttypes.RegionalSingletonIdentity(
+				inttypes.WithV6_0SDKv2Fix(),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
 			},
@@ -285,6 +287,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("domain_id", true),
+				inttypes.StringIdentityAttribute("user_profile_name", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      userProfileImportID{},
+			},
 		},
 		{
 			Factory:  resourceWorkforce,

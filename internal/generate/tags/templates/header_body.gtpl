@@ -4,8 +4,10 @@ package {{ .ServicePackage }}
 import (
 	"context"
 	"fmt"
+	"maps"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}"

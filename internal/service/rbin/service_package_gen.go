@@ -33,7 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceRule,
+			Factory:  resourceRule,
 			TypeName: "aws_rbin_rule",
 			Name:     "Rule",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

@@ -20,7 +20,7 @@ func TestAccACMCertificateDataSource_tags(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -50,7 +50,7 @@ func TestAccACMCertificateDataSource_tags_NullMap(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func TestAccACMCertificateDataSource_tags_EmptyMap(t *testing.T) {
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -102,7 +102,7 @@ func TestAccACMCertificateDataSource_tags_DefaultTags_nonOverlapping(t *testing.
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ACMServiceID),
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func TestAccACMCertificateDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testi
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ACMServiceID),
 		Steps: []resource.TestStep{
@@ -176,7 +176,7 @@ func TestAccACMCertificateDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *test
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.ACMServiceID),
 		Steps: []resource.TestStep{

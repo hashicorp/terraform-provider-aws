@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_ecs_service: `deployment_controller.type` changes no longer force a replacement
+```
+```release-note:enhancement
+resource/aws_ecs_service: Add `deployment_configuration` argument
+```
+```release-note:enhancement
+resource/aws_ecs_service: Add `load_balancer.advanced_configuration` argument
+```
+```release-note:enhancement
+resource/aws_ecs_service: Add `service.client_alias.test_traffic_rules` argument
+```
