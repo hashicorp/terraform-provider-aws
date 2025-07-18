@@ -244,6 +244,24 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	return identity
 }
 
+func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
+			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
+		},
+		IsSingleParameter: true,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
 func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource:  true,

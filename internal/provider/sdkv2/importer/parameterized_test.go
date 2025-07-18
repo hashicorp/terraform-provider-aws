@@ -28,6 +28,10 @@ func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity 
 	return inttypes.RegionalSingleParameterIdentity(attrName)
 }
 
+func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
+}
+
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -84,12 +88,15 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				region:    region,
 			}
 
+			identitySpec := regionalSingleParameterizedIdentitySpec(tc.attrName)
+
 			d := schema.TestResourceDataRaw(t, regionalSingleParameterizedSchema, map[string]any{
 				"region": tc.inputRegion,
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalSingleParameterized(ctx, d, tc.attrName, client)
+			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -134,14 +141,18 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
+		identitySpec        inttypes.Identity
 		identityAttrs       map[string]string
 		expectedRegion      string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
 		"Attr_Required": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"name": "a_name",
 			},
@@ -149,7 +160,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -158,7 +171,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithDefaultRegion": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"region": region,
 				"name":   "a_name",
@@ -167,7 +182,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithRegionOverride": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"region": anotherRegion,
 				"name":   "a_name",
@@ -176,7 +193,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WrongAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"name":       "a_name",
@@ -185,7 +204,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 		},
 
 		"ID_Required": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"id": "a_name",
 			},
@@ -193,7 +214,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"id":         "a_name",
@@ -202,7 +225,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithDefaultRegion": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"region": region,
 				"id":     "a_name",
@@ -211,7 +236,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithRegionOverride": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"region": anotherRegion,
 				"id":     "a_name",
@@ -220,12 +247,25 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WrongAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"id":         "a_name",
 			},
 			expectError: true,
+		},
+
+		"name mapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpecNameMapped("id_name", "name"),
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+			},
+			expectedRegion: region,
+			expectError:    false,
 		},
 	}
 
@@ -239,12 +279,11 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := regionalSingleParameterizedIdentitySpec(tc.attrName)
-
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalSingleParameterized(ctx, d, tc.attrName, client)
+			attr := tc.identitySpec.Attributes[len(tc.identitySpec.Attributes)-1]
+			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -261,7 +300,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check ID value
 			// ID must always be set for SDKv2 resources
-			if e, a := tc.identityAttrs[tc.attrName], getAttributeValue(t, d, "id"); e != a {
+			if e, a := tc.identityAttrs[tc.identityAttrName], getAttributeValue(t, d, "id"); e != a {
 				t.Errorf("expected `id` to be %q, got %q", e, a)
 			}
 
@@ -272,8 +311,8 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check name value
 			var expectedNameValue string
-			if tc.attrName == "name" {
-				expectedNameValue = tc.identityAttrs["name"]
+			if tc.resourceAttrName == "name" {
+				expectedNameValue = tc.identityAttrs[tc.identityAttrName]
 			}
 			if e, a := expectedNameValue, getAttributeValue(t, d, "name"); e != a {
 				t.Errorf("expected `name` to be %q, got %q", e, a)

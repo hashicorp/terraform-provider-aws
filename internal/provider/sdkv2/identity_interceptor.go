@@ -96,6 +96,7 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 
 func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
+		attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -109,7 +110,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
