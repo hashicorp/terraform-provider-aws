@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,6 +48,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/o-[0-9a-z]{10}/\d{12}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceIdentity, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
