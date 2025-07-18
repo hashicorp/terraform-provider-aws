@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
@@ -22,13 +23,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -138,7 +139,7 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 
 func (r *applicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data applicationResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -146,7 +147,7 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 	conn := r.Meta().QBusinessClient(ctx)
 
 	input := &qbusiness.CreateApplicationInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, data, input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -155,10 +156,7 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 
 	out, err := conn.CreateApplication(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionCreating, ResNameApplication, data.DisplayName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.DisplayName.String())
 		return
 	}
 
@@ -166,34 +164,28 @@ func (r *applicationResource) Create(ctx context.Context, req resource.CreateReq
 	resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)
 
 	if _, err := waitApplicationActive(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForCreation, ResNameApplication, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
 	findOut, err := findApplicationByID(ctx, conn, id)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionCreating, ResNameApplication, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
 	// Set unknown values
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, findOut, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data applicationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -207,25 +199,22 @@ func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionReading, ResNameApplication, data.ApplicationId.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ApplicationId.String())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (r *applicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state, plan applicationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -239,51 +228,42 @@ func (r *applicationResource) Update(ctx context.Context, req resource.UpdateReq
 		conn := r.Meta().QBusinessClient(ctx)
 
 		input := &qbusiness.UpdateApplicationInput{}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, input))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		_, err := conn.UpdateApplication(ctx, input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameApplication, plan.ApplicationId.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ApplicationId.String())
 			return
 		}
 
 		id := plan.ApplicationId.ValueString()
 		if _, err := waitApplicationActive(ctx, conn, id, r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForUpdate, ResNameApplication, id, err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
 
 		findOut, err := findApplicationByID(ctx, conn, id)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.QBusiness, create.ErrActionUpdating, ResNameApplication, id, err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
 
 		// Set unknown values
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &plan)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, findOut, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data applicationResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -299,18 +279,12 @@ func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteReq
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionDeleting, ResNameApplication, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
 	if _, err := waitApplicationDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QBusiness, create.ErrActionWaitingForDeletion, ResNameApplication, id, err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
@@ -322,18 +296,18 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 
 	output, err := conn.GetApplication(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output, nil
@@ -348,7 +322,7 @@ func statusApplication(ctx context.Context, conn *qbusiness.Client, id string) r
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.Status), nil
@@ -369,9 +343,9 @@ func waitApplicationActive(ctx context.Context, conn *qbusiness.Client, id strin
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
 		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
-		return output, err
+		return output, smarterr.NewError(err)
 	}
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
@@ -388,9 +362,9 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id stri
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
 		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
-		return output, err
+		return output, smarterr.NewError(err)
 	}
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 type applicationResourceModel struct {
