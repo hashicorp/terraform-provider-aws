@@ -104,8 +104,8 @@ data "aws_codebuild_fleet" "test" {
 func testAccFleetDataSourceConfig_customInstanceType(rName, instanceType string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_fleet" "test" {
-  base_capacity     = 1
-  compute_type      = "CUSTOM_INSTANCE_TYPE"
+  base_capacity = 1
+  compute_type  = "CUSTOM_INSTANCE_TYPE"
   compute_configuration {
     instance_type = %[2]q
   }
