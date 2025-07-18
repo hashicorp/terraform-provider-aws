@@ -88,6 +88,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"DelegatedAdministrator": {
 			acctest.CtBasic:      testAccDelegatedAdministrator_basic,
 			acctest.CtDisappears: testAccDelegatedAdministrator_disappears,
+			"Identity":           testAccOrganizationsDelegatedAdministrator_IdentitySerial,
 		},
 		"DelegatedAdministrators": {
 			acctest.CtBasic: testAccDelegatedAdministratorsDataSource_basic,

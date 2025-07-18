@@ -112,13 +112,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 		},
 		{
 			Factory:  resourceDelegatedAdministrator,
 			TypeName: "aws_organizations_delegated_administrator",
 			Name:     "Delegated Administrator",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_principal", true),
+				inttypes.StringIdentityAttributeWithMappedName("delegated_account_id", true, names.AttrAccountID),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      delegatedAdministratorImportID{},
+			},
 		},
 		{
 			Factory:  resourceOrganization,

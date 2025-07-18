@@ -26,15 +26,21 @@ import (
 )
 
 // @SDKResource("aws_organizations_delegated_administrator", name="Delegated Administrator")
+// @IdentityAttribute("service_principal")
+// @IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")
+// @IdAttrFormat("{account_id}/{service_principal}")
+// @ImportIDHandler("delegatedAdministratorImportID")
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
+// @Testing(serialize=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(useAlternateAccount=true)
+// @Testing(generator=false)
 func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {
@@ -165,11 +171,11 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 }
 
 func findDelegatedAdministratorByTwoPartKey(ctx context.Context, conn *organizations.Client, accountID, servicePrincipal string) (*awstypes.DelegatedAdministrator, error) {
-	input := &organizations.ListDelegatedAdministratorsInput{
+	input := organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	return findDelegatedAdministrator(ctx, conn, input, func(v *awstypes.DelegatedAdministrator) bool {
+	return findDelegatedAdministrator(ctx, conn, &input, func(v *awstypes.DelegatedAdministrator) bool {
 		return aws.ToString(v.Id) == accountID
 	})
 }
@@ -208,10 +214,7 @@ func findDelegatedAdministrators(ctx context.Context, conn *organizations.Client
 const delegatedAdministratorResourceIDSeparator = "/"
 
 func delegatedAdministratorCreateResourceID(accountID, servicePrincipal string) string {
-	parts := []string{accountID, servicePrincipal}
-	id := strings.Join(parts, delegatedAdministratorResourceIDSeparator)
-
-	return id
+	return accountID + delegatedAdministratorResourceIDSeparator + servicePrincipal
 }
 
 func delegatedAdministratorParseResourceID(id string) (string, string, error) {
@@ -222,4 +225,23 @@ func delegatedAdministratorParseResourceID(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
+}
+
+type delegatedAdministratorImportID struct{}
+
+func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
+	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
+}
+
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
+	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]string{
+		names.AttrAccountID: accountID,
+		"service_principal": servicePrincipal,
+	}
+	return id, result, nil
 }
