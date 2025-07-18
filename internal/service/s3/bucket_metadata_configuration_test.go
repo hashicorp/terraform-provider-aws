@@ -59,13 +59,13 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 							}),
 							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"table_arn":  knownvalue.Null(),
+									"table_arn":         knownvalue.Null(),
 									names.AttrTableName: knownvalue.Null(),
 								}),
 							}),
 							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"table_arn":  tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
+									"table_arn":         tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
 									names.AttrTableName: knownvalue.NotNull(),
 								}),
 							}),
