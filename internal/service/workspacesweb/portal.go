@@ -2,84 +2,48 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/workspacesweb/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_workspacesweb_portal", name="Portal")
-func newResourcePortal(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePortal{}
-	
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+// @Tags(identifierAttribute="portal_arn")
+// @Testing(tagsTest=true)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.Portal")
+// @Testing(importStateIdAttribute="portal_arn")
+func newPortalResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &portalResource{}
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -88,120 +52,143 @@ const (
 	ResNamePortal = "Portal"
 )
 
-type resourcePortal struct {
-	framework.ResourceWithConfigure
+type portalResource struct {
+	framework.ResourceWithModel[portalResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourcePortal) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_workspacesweb_portal"
-}
-
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
-// Optional: true,
-//
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
-// Computed: true,
-//
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
-func (r *resourcePortal) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
-				Optional: true,
+			"additional_encryption_context": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.RequiresReplace(),
+				},
 			},
-			// TIP: ==== "ID" ATTRIBUTE ====
-			// When using the Terraform Plugin Framework, there is no required "id" attribute.
-			// This is different from the Terraform Plugin SDK. 
-			//
-			// Only include an "id" attribute if the AWS API has an "Id" field, such as "PortalId"
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as 
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK 
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+			"authentication_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"browser_settings_arn": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"browser_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.BrowserType](),
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"creation_date": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"customer_managed_key": schema.StringAttribute{
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"type": schema.StringAttribute{
-				Required: true,
+			"data_protection_settings_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+			"display_name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"instance_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InstanceType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"ip_access_settings_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"max_concurrent_sessions": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+			},
+			"network_settings_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"portal_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"portal_endpoint": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"portal_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.PortalStatus](),
+				Computed:   true,
+			},
+			"renderer_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.RendererType](),
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"status_reason": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"trust_store_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"user_access_logging_settings_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"user_settings_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				// TIP: ==== CUSTOM TYPES ====
-				// Use a custom type to identify the model type of the tested object
-				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
-				// TIP: ==== LIST VALIDATORS ====
-				// List and set validators take the place of MaxItems and MinItems in 
-				// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-				// make a nested object required. Similar to Plugin-SDK, complex objects 
-				// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-				//
-				// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields, 
-				// see:
-				// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"nested_required": schema.StringAttribute{
-							Required: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
-				},
-			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -210,376 +197,234 @@ func (r *resourcePortal) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *resourcePortal) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes. 
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().WorkSpacesWebClient(ctx)
-	
-	// TIP: -- 2. Fetch the plan
-	var plan resourcePortalModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *portalResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data portalResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
+	conn := r.Meta().WorkSpacesWebClient(ctx)
+
 	var input workspacesweb.CreatePortalInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `PortalId`
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Portal"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	
 
-	// TIP: -- 4. Call the AWS Create function
-	out, err := conn.CreatePortal(ctx, &input)
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreatePortal(ctx, &input)
+
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionCreating, ResNamePortal, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Portal == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionCreating, ResNamePortal, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating WorkSpacesWeb Portal", err.Error())
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.PortalARN = fwflex.StringToFramework(ctx, output.PortalArn)
+	data.PortalEndpoint = fwflex.StringToFramework(ctx, output.PortalEndpoint)
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitPortalCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	// Wait for portal to be created
+	portal, err := waitPortalCreated(ctx, conn, data.PortalARN.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionWaitingForCreation, ResNamePortal, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) creation", data.PortalARN.ValueString()), err.Error())
 		return
 	}
-	
-	// TIP: -- 7. Save the request plan to response state
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, portal, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourcePortal) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().WorkSpacesWebClient(ctx)
-	
-	// TIP: -- 2. Fetch the state
-	var state resourcePortalModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *portalResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data portalResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
-	out, err := findPortalByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
+
+	conn := r.Meta().WorkSpacesWebClient(ctx)
+
+	output, err := findPortalByARN(ctx, conn, data.PortalARN.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionSetting, ResNamePortal, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Portal (%s)", data.PortalARN.ValueString()), err.Error())
 		return
 	}
-	
-	// TIP: -- 5. Set the arguments and attributes
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 6. Set the state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePortal) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := r.Meta().WorkSpacesWebClient(ctx)
-	
-	// TIP: -- 2. Fetch the plan
-	var plan, state resourcePortalModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *portalResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old portalResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	
-	// TIP: -- 3. Populate a modify input structure and check for changes
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	conn := r.Meta().WorkSpacesWebClient(ctx)
+
+	if !new.AuthenticationType.Equal(old.AuthenticationType) ||
+		!new.BrowserSettingsARN.Equal(old.BrowserSettingsARN) ||
+		!new.DataProtectionSettingsARN.Equal(old.DataProtectionSettingsARN) ||
+		!new.DisplayName.Equal(old.DisplayName) ||
+		!new.InstanceType.Equal(old.InstanceType) ||
+		!new.IPAccessSettingsARN.Equal(old.IPAccessSettingsARN) ||
+		!new.MaxConcurrentSessions.Equal(old.MaxConcurrentSessions) ||
+		!new.NetworkSettingsARN.Equal(old.NetworkSettingsARN) ||
+		!new.TrustStoreARN.Equal(old.TrustStoreARN) ||
+		!new.UserAccessLoggingSettingsARN.Equal(old.UserAccessLoggingSettingsARN) ||
+		!new.UserSettingsARN.Equal(old.UserSettingsARN) {
 		var input workspacesweb.UpdatePortalInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-		
-		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdatePortal(ctx, &input)
+
+		_, err := conn.UpdatePortal(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionUpdating, ResNamePortal, plan.ID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Portal (%s)", new.PortalARN.ValueString()), err.Error())
 			return
 		}
-		if out == nil || out.Portal == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionUpdating, ResNamePortal, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+
+		updateTimeout := r.CreateTimeout(ctx, new.Timeouts)
+		// Wait for portal to be updated
+		portal, err := waitPortalUpdated(ctx, conn, new.PortalARN.ValueString(), updateTimeout)
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) update", new.PortalARN.ValueString()), err.Error())
 			return
 		}
-		
-		// TIP: Using the output from the update function, re-set any computed attributes
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, portal, &new)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitPortalUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionWaitingForUpdate, ResNamePortal, plan.ID.String(), err),
-			err.Error(),
-		)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *portalResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data portalResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourcePortal) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().WorkSpacesWebClient(ctx)
-	
-	// TIP: -- 2. Fetch the state
-	var state resourcePortalModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	
-	// TIP: -- 3. Populate a delete input structure
+
 	input := workspacesweb.DeletePortalInput{
-		PortalId: state.ID.ValueStringPointer(),
+		PortalArn: aws.String(data.PortalARN.ValueString()),
 	}
-	
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeletePortal(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionDeleting, ResNamePortal, state.ID.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-	
-	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPortalDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WorkSpacesWeb, create.ErrActionWaitingForDeletion, ResNamePortal, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Portal (%s)", data.PortalARN.ValueString()), err.Error())
+		return
+	}
+
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	// Wait for portal to be deleted
+	_, err = waitPortalDeleted(ctx, conn, data.PortalARN.ValueString(), deleteTimeout)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) deletion", data.PortalARN.ValueString()), err.Error())
 		return
 	}
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
-func (r *resourcePortal) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *portalResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("portal_arn"), request, response)
 }
 
-
-
-
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
+// Status constants
 const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
+	statusPending  = "Pending"
+	statusActive   = "Active"
+	statusDeleting = "Deleting"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
-func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, id string, timeout time.Duration) (*awstypes.Portal, error) {
+// Waiters
+func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusPortal(ctx, conn, id),
+		Pending:                   []string{string(awstypes.PortalStatusPending)},
+		Target:                    []string{string(awstypes.PortalStatusIncomplete), string(awstypes.PortalStatusActive)},
+		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*workspacesweb.Portal); ok {
+	if out, ok := outputRaw.(*awstypes.Portal); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, id string, timeout time.Duration) (*awstypes.Portal, error) {
+func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusPortal(ctx, conn, id),
+		Pending:                   []string{string(awstypes.PortalStatusPending)},
+		Target:                    []string{string(awstypes.PortalStatusIncomplete), string(awstypes.PortalStatusActive)},
+		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*workspacesweb.Portal); ok {
+	if out, ok := outputRaw.(*awstypes.Portal); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, id string, timeout time.Duration) (*awstypes.Portal, error) {
+func waitPortalDeleted(ctx context.Context, conn *workspacesweb.Client, arn string, timeout time.Duration) (*awstypes.Portal, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusPortal(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, string(awstypes.PortalStatusActive), string(awstypes.PortalStatusPending), string(awstypes.PortalStatusIncomplete)},
+		Target:  []string{},
+		Refresh: statusPortal(ctx, conn, arn),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*workspacesweb.Portal); ok {
+	if out, ok := outputRaw.(*awstypes.Portal); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
-func statusPortal(ctx context.Context, conn *workspacesweb.Client, id string) retry.StateRefreshFunc {
+// Status function
+func statusPortal(ctx context.Context, conn *workspacesweb.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findPortalByID(ctx, conn, id)
+		out, err := findPortalByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -588,62 +433,59 @@ func statusPortal(ctx context.Context, conn *workspacesweb.Client, id string) re
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.PortalStatus), nil
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
-func findPortalByID(ctx context.Context, conn *workspacesweb.Client, id string) (*awstypes.Portal, error) {
-	in := &workspacesweb.GetPortalInput{
-		Id: aws.String(id),
+// Finder function
+func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.Portal, error) {
+	input := &workspacesweb.GetPortalInput{
+		PortalArn: aws.String(arn),
 	}
 
-	out, err := conn.GetPortal(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	output, err := conn.GetPortal(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Portal == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Portal == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Portal, nil
+	return output.Portal, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name. 
-//
-// Nested objects are represented in their own data struct. These will 
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
-type resourcePortalModel struct {
-	ARN             types.String                                          `tfsdk:"arn"`
-	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
-	Description     types.String                                          `tfsdk:"description"`
-	ID              types.String                                          `tfsdk:"id"`
-	Name            types.String                                          `tfsdk:"name"`
-	Timeouts        timeouts.Value                                        `tfsdk:"timeouts"`
-	Type            types.String                                          `tfsdk:"type"`
-}
-
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+// Data model
+type portalResourceModel struct {
+	framework.WithRegionModel
+	AdditionalEncryptionContext  fwtypes.MapOfString                             `tfsdk:"additional_encryption_context"`
+	AuthenticationType           fwtypes.StringEnum[awstypes.AuthenticationType] `tfsdk:"authentication_type"`
+	BrowserSettingsARN           types.String                                    `tfsdk:"browser_settings_arn"`
+	BrowserType                  fwtypes.StringEnum[awstypes.BrowserType]        `tfsdk:"browser_type"`
+	CreationDate                 timetypes.RFC3339                               `tfsdk:"creation_date"`
+	CustomerManagedKey           types.String                                    `tfsdk:"customer_managed_key"`
+	DataProtectionSettingsARN    types.String                                    `tfsdk:"data_protection_settings_arn"`
+	DisplayName                  types.String                                    `tfsdk:"display_name"`
+	InstanceType                 fwtypes.StringEnum[awstypes.InstanceType]       `tfsdk:"instance_type"`
+	IPAccessSettingsARN          types.String                                    `tfsdk:"ip_access_settings_arn"`
+	MaxConcurrentSessions        types.Int64                                     `tfsdk:"max_concurrent_sessions"`
+	NetworkSettingsARN           types.String                                    `tfsdk:"network_settings_arn"`
+	PortalARN                    types.String                                    `tfsdk:"portal_arn"`
+	PortalEndpoint               types.String                                    `tfsdk:"portal_endpoint"`
+	PortalStatus                 fwtypes.StringEnum[awstypes.PortalStatus]       `tfsdk:"portal_status"`
+	RendererType                 fwtypes.StringEnum[awstypes.RendererType]       `tfsdk:"renderer_type"`
+	StatusReason                 types.String                                    `tfsdk:"status_reason"`
+	Tags                         tftags.Map                                      `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                      `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                  `tfsdk:"timeouts"`
+	TrustStoreARN                types.String                                    `tfsdk:"trust_store_arn"`
+	UserAccessLoggingSettingsARN types.String                                    `tfsdk:"user_access_logging_settings_arn"`
+	UserSettingsARN              types.String                                    `tfsdk:"user_settings_arn"`
 }
