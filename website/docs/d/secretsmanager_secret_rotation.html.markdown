@@ -32,4 +32,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `rotation_enabled` - Specifies whether automatic rotation is enabled for this secret.
 * `rotation_lambda_arn` - Amazon Resource Name (ARN) of the lambda function used for rotation.
-* `rotation_rules` - Configuration block for rotation rules. Includes properties `automaticallyAfterDays`, `duration`, and `scheduleExpression`.
+* `rotation_rules` - Configuration block for rotation rules. See [`rotation_rules`](#rotation_rules) below.
+
+### rotation_rules
+
+* `automatically_after_days` - Number of days between automatic scheduled rotations of the secret.
+* `duration` - Length of the rotation window in hours.
+* `schedule_expression` - A `cron()` or `rate()` expression that defines the schedule for rotating the secret.
