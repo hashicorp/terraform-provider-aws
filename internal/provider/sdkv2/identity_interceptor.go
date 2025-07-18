@@ -50,7 +50,7 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 					}
 
 				default:
-					val, ok := getAttributeOk(d, attr.Name())
+					val, ok := getAttributeOk(d, attr.ResourceAttributeName())
 					if !ok {
 						continue
 					}

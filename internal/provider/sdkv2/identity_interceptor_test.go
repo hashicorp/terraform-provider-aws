@@ -36,26 +36,34 @@ func TestIdentityInterceptor(t *testing.T) {
 		"region": attribute.Region(),
 	}
 
-	identitySpec := regionalSingleParameterizedIdentitySpec("name")
-	identitySchema := identity.NewIdentitySchema(identitySpec)
-
-	invocation := newIdentityInterceptor(identitySpec.Attributes)
-	interceptor := invocation.interceptor.(identityInterceptor)
-
 	client := mockClient{
 		accountID: accountID,
 		region:    region,
 	}
 
 	testCases := map[string]struct {
+		attrName     string
+		identitySpec inttypes.Identity
 	}{
-		"with id": {},
+		"same names": {
+			attrName:     "name",
+			identitySpec: regionalSingleParameterizedIdentitySpec("name"),
+		},
+		"name mapped": {
+			attrName:     "resource_name",
+			identitySpec: regionalSingleParameterizedIdentitySpecNameMapped("resource_name", "name"),
+		},
 	}
 
-	for tname, _ := range testCases {
+	for tname, tc := range testCases {
 		t.Run(tname, func(t *testing.T) {
 			t.Parallel()
 			ctx := t.Context()
+
+			invocation := newIdentityInterceptor(tc.identitySpec.Attributes)
+			interceptor := invocation.interceptor.(identityInterceptor)
+
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 
 			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
 			d.SetId("some_id")
@@ -83,8 +91,8 @@ func TestIdentityInterceptor(t *testing.T) {
 			if e, a := region, identity.Get(names.AttrRegion); e != a {
 				t.Errorf("expected region %q, got %q", e, a)
 			}
-			if e, a := name, identity.Get("name"); e != a {
-				t.Errorf("expected name %q, got %q", e, a)
+			if e, a := name, identity.Get(tc.attrName); e != a {
+				t.Errorf("expected %s %q, got %q", tc.attrName, e, a)
 			}
 		})
 	}
@@ -155,6 +163,18 @@ func TestIdentityInterceptor_Read_Removed(t *testing.T) {
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
 	return inttypes.RegionalSingleParameterIdentity(attrName)
+}
+
+func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
+	return inttypes.Identity{
+		IsGlobalResource:  true,
+		IdentityAttribute: identityAttrName,
+		Attributes: []inttypes.IdentityAttribute{
+			inttypes.StringIdentityAttribute("account_id", false),
+			inttypes.StringIdentityAttribute("region", false),
+			inttypes.StringIdentityAttributeMappedName(identityAttrName, true, resourceAttrName),
+		},
+	}
 }
 
 type mockClient struct {
