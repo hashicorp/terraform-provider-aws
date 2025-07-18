@@ -123,21 +123,15 @@ func (i Identity) HasInherentRegion() bool {
 
 func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
-		{
-			Name:     "account_id",
-			Required: false,
-		},
-		{
-			Name:     "region",
-			Required: false,
-		},
+		StringIdentityAttribute("account_id", false),
+		StringIdentityAttribute("region", false),
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
 		Attributes: append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
-		identity.IDAttrShadowsAttr = attributes[0].Name
+		identity.IDAttrShadowsAttr = attributes[0].Name()
 	}
 
 	for _, opt := range opts {
@@ -148,14 +142,22 @@ func RegionalParameterizedIdentity(attributes []IdentityAttribute, opts ...Ident
 }
 
 type IdentityAttribute struct {
-	Name     string
-	Required bool
+	name     string
+	required bool
+}
+
+func (ia IdentityAttribute) Name() string {
+	return ia.name
+}
+
+func (ia IdentityAttribute) Required() bool {
+	return ia.required
 }
 
 func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	return IdentityAttribute{
-		Name:     name,
-		Required: required,
+		name:     name,
+		required: required,
 	}
 }
 
@@ -182,10 +184,7 @@ func arnIdentity(isGlobalResource bool, name string, opts []IdentityOptsFunc) Id
 		IsGlobalARNFormat: isGlobalResource,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute(name, true),
 		},
 	}
 
@@ -204,10 +203,9 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	identity := RegionalARNIdentityNamed(name, opts...)
 
 	identity.IsGlobalARNFormat = true
-	identity.Attributes = slices.Insert(identity.Attributes, 0, IdentityAttribute{
-		Name:     "region",
-		Required: false,
-	})
+	identity.Attributes = slices.Insert(identity.Attributes, 0,
+		StringIdentityAttribute("region", false),
+	)
 
 	return identity
 }
@@ -216,18 +214,9 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	identity := Identity{
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
+			StringIdentityAttribute(name, true),
 		},
 		IsSingleParameter: true,
 	}
@@ -244,14 +233,8 @@ func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identi
 		IsGlobalResource:  true,
 		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     name,
-				Required: true,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute(name, true),
 		},
 		IsSingleParameter: true,
 	}
@@ -265,10 +248,7 @@ func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identi
 
 func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
-		{
-			Name:     "account_id",
-			Required: false,
-		},
+		StringIdentityAttribute("account_id", false),
 	}
 	baseAttributes = slices.Grow(baseAttributes, len(attributes))
 	identity := Identity{
@@ -276,7 +256,7 @@ func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...Identit
 		Attributes:       append(baseAttributes, attributes...),
 	}
 	if len(attributes) == 1 {
-		identity.IDAttrShadowsAttr = attributes[0].Name
+		identity.IDAttrShadowsAttr = attributes[0].Name()
 	}
 
 	for _, opt := range opts {
@@ -291,10 +271,7 @@ func GlobalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 		IsGlobalResource: true,
 		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
+			StringIdentityAttribute("account_id", false),
 		},
 	}
 
@@ -310,14 +287,8 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 		IsGlobalResource: false,
 		IsSingleton:      true,
 		Attributes: []IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttribute("region", false),
 		},
 	}
 

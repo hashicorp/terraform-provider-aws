@@ -25,24 +25,7 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 }
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: attrName,
-		Attributes: []inttypes.IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
-			{
-				Name:     attrName,
-				Required: true,
-			},
-		},
-	}
+	return inttypes.RegionalSingleParameterIdentity(attrName)
 }
 
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
@@ -307,20 +290,7 @@ var globalSingleParameterizedSchema = map[string]*schema.Schema{
 }
 
 func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: attrName,
-		Attributes: []inttypes.IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     attrName,
-				Required: true,
-			},
-		},
-	}
+	return inttypes.GlobalSingleParameterIdentity(attrName)
 }
 
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {

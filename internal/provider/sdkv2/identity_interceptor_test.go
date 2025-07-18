@@ -154,24 +154,7 @@ func TestIdentityInterceptor_Read_Removed(t *testing.T) {
 }
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: attrName,
-		Attributes: []inttypes.IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
-			{
-				Name:     attrName,
-				Required: true,
-			},
-		},
-	}
+	return inttypes.RegionalSingleParameterIdentity(attrName)
 }
 
 type mockClient struct {

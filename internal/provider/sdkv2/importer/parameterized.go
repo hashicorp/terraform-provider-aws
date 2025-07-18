@@ -114,20 +114,20 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 		}
 
 		for _, attr := range attrs {
-			switch attr.Name {
+			switch attr.Name() {
 			case names.AttrAccountID, names.AttrRegion:
 				// Do nothing
 
 			default:
-				valRaw, ok := identity.GetOk(attr.Name)
-				if attr.Required && !ok {
-					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				valRaw, ok := identity.GetOk(attr.Name())
+				if attr.Required() && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
 				val, ok := valRaw.(string)
 				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 				}
-				setAttribute(rd, attr.Name, val)
+				setAttribute(rd, attr.Name(), val)
 			}
 		}
 
@@ -159,20 +159,20 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, a
 		}
 
 		for _, attr := range attrs {
-			switch attr.Name {
+			switch attr.Name() {
 			case names.AttrAccountID:
 				// Do nothing
 
 			default:
-				valRaw, ok := identity.GetOk(attr.Name)
-				if attr.Required && !ok {
-					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				valRaw, ok := identity.GetOk(attr.Name())
+				if attr.Required() && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
 				val, ok := valRaw.(string)
 				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 				}
-				setAttribute(rd, attr.Name, val)
+				setAttribute(rd, attr.Name(), val)
 			}
 		}
 
