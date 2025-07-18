@@ -36,4 +36,5 @@ var (
 	FindMacSecKeyByTwoPartKey          = findMacSecKeyByTwoPartKey
 	FindVirtualInterfaceByID           = findVirtualInterfaceByID
 	GatewayAssociationStateUpgradeV0   = gatewayAssociationStateUpgradeV0
+	GatewayAssociationStateUpgradeV1   = gatewayAssociationStateUpgradeV1
 )
