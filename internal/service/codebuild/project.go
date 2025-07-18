@@ -34,7 +34,8 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("project/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
-// @Testing(identityTest=false)
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
