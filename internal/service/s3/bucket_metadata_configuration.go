@@ -104,7 +104,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"encryption_configuration": schema.ListNestedBlock{
+									names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[metadataTableEncryptionConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -142,7 +142,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"encryption_configuration": schema.ListNestedBlock{
+									names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[metadataTableEncryptionConfigurationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),

@@ -50,7 +50,7 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"destination": knownvalue.ListExact([]knownvalue.Check{
+							names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"table_bucket_arn":  tfknownvalue.RegionalARNExact("s3tables", "bucket/aws-s3"),
 									"table_bucket_type": tfknownvalue.StringExact(awstypes.S3TablesBucketTypeAws),
@@ -60,13 +60,13 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"table_arn":  knownvalue.Null(),
-									"table_name": knownvalue.Null(),
+									names.AttrTableName: knownvalue.Null(),
 								}),
 							}),
 							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"table_arn":  tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
-									"table_name": knownvalue.NotNull(),
+									names.AttrTableName: knownvalue.NotNull(),
 								}),
 							}),
 						}),
