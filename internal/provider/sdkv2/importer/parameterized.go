@@ -172,7 +172,7 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, a
 				if !ok {
 					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 				}
-				setAttribute(rd, attr.Name(), val)
+				setAttribute(rd, attr.ResourceAttributeName(), val)
 			}
 		}
 

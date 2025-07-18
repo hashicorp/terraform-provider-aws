@@ -169,7 +169,7 @@ func StringIdentityAttribute(name string, required bool) IdentityAttribute {
 	}
 }
 
-func StringIdentityAttributeMappedName(name string, required bool, resourceAttributeName string) IdentityAttribute {
+func StringIdentityAttributeWithMappedName(name string, required bool, resourceAttributeName string) IdentityAttribute {
 	return IdentityAttribute{
 		name:                  name,
 		required:              required,

@@ -166,15 +166,7 @@ func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity 
 }
 
 func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: identityAttrName,
-		Attributes: []inttypes.IdentityAttribute{
-			inttypes.StringIdentityAttribute("account_id", false),
-			inttypes.StringIdentityAttribute("region", false),
-			inttypes.StringIdentityAttributeMappedName(identityAttrName, true, resourceAttrName),
-		},
-	}
+	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
 }
 
 type mockClient struct {

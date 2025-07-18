@@ -740,6 +740,18 @@ func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identi
 	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
+func globalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]string) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for identityAttrName, resourceAttrName := range attrNames {
+		if identityAttrName == resourceAttrName {
+			attrs = append(attrs, inttypes.StringIdentityAttribute(identityAttrName, true))
+		} else {
+			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
+		}
+	}
+	return inttypes.GlobalParameterizedIdentity(attrs)
+}
+
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -820,16 +832,34 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 
 	testCases := map[string]struct {
 		identityAttrs       map[string]string
+		identitySpec        inttypes.Identity
 		expectedID          string
 		expectedAttrs       map[string]string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
-		"Identity": {
+		"same names": {
 			identityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectedID:   "a_name,a_type",
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectError: false,
+		},
+		"name mapped": {
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			identitySpec: globalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
 			expectedID: "a_name,a_type",
 			expectedAttrs: map[string]string{
 				"name": "a_name",
@@ -849,17 +879,15 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			importSpec := inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      testImportID{t: t},
 			}
 
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec.Attributes, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
