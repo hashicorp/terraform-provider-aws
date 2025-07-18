@@ -21,6 +21,10 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+const (
+	organizationIDRegexPattern = `^o-[0-9a-f]{10}`
+)
+
 func TestAccOrganizations_serial(t *testing.T) {
 	t.Parallel()
 
@@ -53,10 +57,11 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"update":                             testAccOrganizationalUnit_update,
 			"tags":                               testAccOrganizationalUnit_tags,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
-			"DescendantOUsDataSource_basic":      testOrganizationalUnitDescendantOUsDataSource_basic,
+			"DescendantOUsDataSource_basic":      testAccOrganizationalUnitDescendantOUsDataSource_basic,
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
+			"Identity":                           testAccOrganizationsOrganizationalUnit_IdentitySerial,
 		},
 		"Policy": {
 			acctest.CtBasic:          testAccPolicy_basic,
