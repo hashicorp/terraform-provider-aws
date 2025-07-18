@@ -33,7 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.LogDeliveryConfigurationType")
 // @Testing(importStateIdFunc="testAccLogDeliveryConfigurationImportStateIdFunc")
 // @Testing(importStateIdAttribute="user_pool_id")
-// @Testing(preIdentityVersion="")
+// @Testing(preIdentityVersion="v6.3.0")
 func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &LogDeliveryConfigurationResource{}
 	return r, nil
