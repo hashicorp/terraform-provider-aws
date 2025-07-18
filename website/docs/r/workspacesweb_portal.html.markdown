@@ -35,15 +35,15 @@ resource "aws_workspacesweb_portal" "example" {
   authentication_type     = "IAM_Identity_Center"
   customer_managed_key    = aws_kms_key.example.arn
   max_concurrent_sessions = 10
-  
+
   additional_encryption_context = {
     Environment = "Production"
   }
-  
+
   tags = {
     Name = "example-portal"
   }
-  
+
   timeouts {
     create = "10m"
     update = "10m"
