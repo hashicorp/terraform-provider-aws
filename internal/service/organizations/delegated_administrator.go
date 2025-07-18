@@ -114,10 +114,8 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
 	delegatedAccount, err := findDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
 
@@ -148,13 +146,10 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
-	log.Printf("[DEBUG] Deleting Organizations Delegated Administrator: %s", d.Id())
-	_, err = conn.DeregisterDelegatedAdministrator(ctx, &organizations.DeregisterDelegatedAdministratorInput{
+	_, err := conn.DeregisterDelegatedAdministrator(ctx, &organizations.DeregisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
 		ServicePrincipal: aws.String(servicePrincipal),
 	})
@@ -217,16 +212,6 @@ func delegatedAdministratorCreateResourceID(accountID, servicePrincipal string) 
 	return accountID + delegatedAdministratorResourceIDSeparator + servicePrincipal
 }
 
-func delegatedAdministratorParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
-}
-
 type delegatedAdministratorImportID struct{}
 
 func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
@@ -234,14 +219,15 @@ func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
 }
 
 func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
-	accountID, servicePrincipal, err := delegatedAdministratorParseResourceID(id)
-	if err != nil {
-		return "", nil, err
+	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		result := map[string]string{
+			names.AttrAccountID: parts[0],
+			"service_principal": parts[1],
+		}
+		return id, result, nil
 	}
 
-	result := map[string]string{
-		names.AttrAccountID: accountID,
-		"service_principal": servicePrincipal,
-	}
-	return id, result, nil
+	return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
 }
