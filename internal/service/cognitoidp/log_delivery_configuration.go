@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -18,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -138,17 +139,11 @@ func (r *LogDeliveryConfigurationResource) Create(ctx context.Context, req resou
 
 	out, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, "Log Delivery Configuration", plan.UserPoolID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserPoolID.String())
 		return
 	}
 	if out == nil || out.LogDeliveryConfiguration == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionCreating, "Log Delivery Configuration", plan.UserPoolID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.UserPoolID.String())
 		return
 	}
 
@@ -176,10 +171,7 @@ func (r *LogDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, "Log Delivery Configuration", state.UserPoolID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserPoolID.String())
 		return
 	}
 
@@ -216,17 +208,11 @@ func (r *LogDeliveryConfigurationResource) Update(ctx context.Context, req resou
 
 		out, err := conn.SetLogDeliveryConfiguration(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, "Log Delivery Configuration", plan.UserPoolID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.UserPoolID.String())
 			return
 		}
 		if out == nil || out.LogDeliveryConfiguration == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionUpdating, "Log Delivery Configuration", plan.UserPoolID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.UserPoolID.String())
 			return
 		}
 
@@ -260,10 +246,7 @@ func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resou
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionDeleting, "Log Delivery Configuration", state.UserPoolID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.UserPoolID.String())
 		return
 	}
 }
@@ -282,11 +265,11 @@ func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognito
 			}
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.LogDeliveryConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
 	return out.LogDeliveryConfiguration, nil
