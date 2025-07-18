@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
@@ -243,7 +242,7 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data.MetadataConfiguration, flex.WithFieldNameSuffix("Result"))...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.MetadataConfiguration, fwflex.WithFieldNameSuffix("Result"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
