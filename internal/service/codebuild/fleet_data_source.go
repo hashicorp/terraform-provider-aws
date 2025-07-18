@@ -40,7 +40,7 @@ func dataSourceFleet() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
