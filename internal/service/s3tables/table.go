@@ -6,9 +6,9 @@ package s3tables
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
@@ -31,11 +31,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -239,13 +239,13 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var plan tableResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input s3tables.CreateTableInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -253,12 +253,12 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	// Handle metadata separately since it's an interface type
 	if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
 		metadataModel, d := plan.Metadata.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, metadataModel, &input.Metadata)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, metadataModel, &input.Metadata))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -266,16 +266,13 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	_, err := conn.CreateTable(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
 	if !plan.MaintenanceConfiguration.IsUnknown() && !plan.MaintenanceConfiguration.IsNull() {
 		mc, d := plan.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -289,7 +286,7 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 			}
 
 			value, d := expandTableMaintenanceIcebergCompaction(ctx, mc.IcebergCompaction)
-			resp.Diagnostics.Append(d...)
+			smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -297,10 +294,7 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 				return
 			}
 		}
@@ -314,7 +308,7 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 			}
 
 			value, d := expandTableMaintenanceIcebergSnapshotManagement(ctx, mc.IcebergSnapshotManagement)
-			resp.Diagnostics.Append(d...)
+			smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -322,10 +316,7 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 				return
 			}
 		}
@@ -333,14 +324,11 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	table, err := findTable(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -352,13 +340,10 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 	}
 	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -372,31 +357,28 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	switch {
 	case errs.IsA[*awstypes.NotFoundException](err):
 	case err != nil:
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var state tableResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -407,14 +389,11 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, ResNameTable, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Table"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Table")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -426,13 +405,10 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 	}
 	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -445,33 +421,30 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	})
 	if err != nil {
 		if !errs.IsA[*awstypes.NotFoundException](err) {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		}
 	} else {
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var plan, state tableResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -493,22 +466,19 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 		_, err := conn.RenameTable(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, ResNameTable, state.Name.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		}
 	}
 
 	if !plan.MaintenanceConfiguration.Equal(state.MaintenanceConfiguration) {
 		planMC, d := plan.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		stateMC, d := state.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -522,7 +492,7 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 
 			value, d := expandTableMaintenanceIcebergCompaction(ctx, planMC.IcebergCompaction)
-			resp.Diagnostics.Append(d...)
+			smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -530,10 +500,7 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 				return
 			}
 		}
@@ -547,7 +514,7 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 
 			value, d := expandTableMaintenanceIcebergSnapshotManagement(ctx, planMC.IcebergSnapshotManagement)
-			resp.Diagnostics.Append(d...)
+			smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -555,10 +522,7 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 				return
 			}
 		}
@@ -566,14 +530,11 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	table, err := findTable(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -585,26 +546,23 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 	}
 	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	plan.MaintenanceConfiguration = maintenanceConfiguration
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var state tableResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -621,10 +579,7 @@ func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, ResNameTable, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 }
@@ -632,11 +587,7 @@ func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseTableIdentifier(req.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -653,17 +604,17 @@ func findTable(ctx context.Context, conn *s3tables.Client, bucketARN, namespace,
 	out, err := conn.GetTable(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
-			}
+			})
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil

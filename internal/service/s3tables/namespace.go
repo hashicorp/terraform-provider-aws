@@ -6,9 +6,9 @@ package s3tables
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
@@ -24,11 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -91,13 +91,13 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var plan namespaceResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input s3tables.CreateNamespaceInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -105,43 +105,34 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 
 	out, err := conn.CreateNamespace(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Namespace.String())
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Namespace.String())
 		return
 	}
 
 	namespace, err := findNamespace(ctx, conn, plan.TableBucketARN.ValueString(), out.Namespace[0])
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Namespace.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, namespace, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, namespace, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	plan.Namespace = types.StringValue(out.Namespace[0])
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var state namespaceResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -152,26 +143,23 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameNamespace, state.Namespace.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Namespace.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
 	var state namespaceResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -187,10 +175,7 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, resNameNamespace, state.Namespace.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Namespace.String())
 		return
 	}
 }
@@ -198,11 +183,7 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 func (r *namespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	identifier, err := parseNamespaceIdentifier(req.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import IDs for S3 Tables Namespaces must use the format <table bucket ARN>"+namespaceIDSeparator+"<namespace>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -218,17 +199,17 @@ func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name s
 	out, err := conn.GetNamespace(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
-			}
+			})
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil
@@ -278,7 +259,7 @@ func parseNamespaceIdentifier(s string) (namespaceIdentifier, error) {
 }
 
 func (id namespaceIdentifier) String() string {
-	return id.TableBucketARN + tableIDSeparator +
+	return id.TableBucketARN + namespaceIDSeparator +
 		id.Namespace
 }
 
