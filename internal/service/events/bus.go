@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -74,6 +75,26 @@ func resourceBus() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
+			"log_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include_detail": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.IncludeDetail](),
+						},
+						"level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.Level](),
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -110,6 +131,10 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if v, ok := d.GetOk("kms_key_identifier"); ok {
 		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateEventBus(ctx, input)
@@ -164,6 +189,7 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	d.Set("log_config", flattenLogConfig(output.LogConfig))
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -173,7 +199,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChanges("dead_letter_config", names.AttrDescription, "kms_key_identifier") {
+	if d.HasChanges("dead_letter_config", names.AttrDescription, "kms_key_identifier", "log_config") {
 		input := &eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
@@ -191,6 +217,10 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if v, ok := d.GetOk("kms_key_identifier"); ok {
 			input.KmsKeyIdentifier = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("log_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := conn.UpdateEventBus(ctx, input)
@@ -266,6 +296,34 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) []map[string]any
 	tfMap := map[string]any{}
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
+	}
+	return []map[string]any{tfMap}
+}
+
+func expandLogConfig(tfMap map[string]any) *types.LogConfig {
+	if tfMap == nil {
+		return nil
+	}
+	apiObject := &types.LogConfig{}
+	if v, ok := tfMap["include_detail"].(string); ok && v != "" {
+		apiObject.IncludeDetail = types.IncludeDetail(v)
+	}
+	if v, ok := tfMap["level"].(string); ok && v != "" {
+		apiObject.Level = types.Level(v)
+	}
+	return apiObject
+}
+
+func flattenLogConfig(apiObject *types.LogConfig) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{}
+	if v := apiObject.IncludeDetail; v != "" {
+		tfMap["include_detail"] = string(v)
+	}
+	if v := apiObject.Level; v != "" {
+		tfMap["level"] = string(v)
 	}
 	return []map[string]any{tfMap}
 }
