@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_bedrock_inference_profiles
 
-Terraform data source for managing AWS Bedrock AWS Bedrock Inference Profiles.
+Terraform data source for managing AWS Bedrock Inference Profiles.
 
 ## Example Usage
 

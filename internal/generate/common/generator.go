@@ -86,6 +86,15 @@ func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	}
 }
 
+func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
+	return &fileDestination{
+		filename: filename,
+		baseDestination: baseDestination{
+			formatter: formatter,
+		},
+	}
+}
+
 type fileDestination struct {
 	baseDestination
 	append   bool
