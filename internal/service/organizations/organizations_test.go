@@ -22,7 +22,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 const (
-	organizationIDRegexPattern = `^o-[0-9a-f]{10}`
+	organizationIDRegexPattern = `o-[0-9a-z]{10}`
 )
 
 func TestAccOrganizations_serial(t *testing.T) {

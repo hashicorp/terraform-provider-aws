@@ -32,7 +32,10 @@ func testAccPolicy_basic(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -41,7 +44,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_required(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/"+organizationIDRegexPattern+"/service_control_policy/p-[0-9a-f]{8}")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/"+organizationIDRegexPattern+"/service_control_policy/p-[0-9a-z]{8}")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -77,7 +80,10 @@ func testAccPolicy_concurrent(t *testing.T) {
 	resourceName5 := "aws_organizations_policy.test5"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -103,7 +109,10 @@ func testAccPolicy_description(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -139,7 +148,10 @@ func testAccPolicy_tags(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -187,7 +199,10 @@ func testAccPolicy_skipDestroy(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyNoDestroy(ctx),
@@ -215,7 +230,10 @@ func testAccPolicy_disappears(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -241,7 +259,10 @@ func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 	AiOptOutPolicyContent := `{ "services": { "rekognition": { "opt_out_policy": { "@@assign": "optOut" } }, "lex": { "opt_out_policy": { "@@assign": "optIn" } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -340,7 +361,10 @@ func testAccPolicy_type_Backup(t *testing.T) {
 }`, acctest.AlternateRegion(), acctest.Region(), acctest.Partition())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -370,7 +394,10 @@ func testAccPolicy_type_SCP(t *testing.T) {
 	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -407,7 +434,10 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
@@ -436,14 +466,14 @@ func testAccPolicy_importManagedPolicy(t *testing.T) {
 	resourceID := "p-FullAWSAccess"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccPolicyConfig_managedSetup,
-			},
 			{
 				Config:        testAccPolicyConfig_managed,
 				ResourceName:  resourceName,
@@ -532,8 +562,6 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy)
 
 func testAccPolicyConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = <<EOF
 {
@@ -548,16 +576,14 @@ EOF
 
   description = %[1]q
   name        = %[2]q
-
-  depends_on = [aws_organizations_organization.test]
 }
+
+data "aws_organizations_organization" "current" {}
 `, description, rName)
 }
 
 func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = <<EOF
 {
@@ -571,20 +597,18 @@ resource "aws_organizations_policy" "test" {
 EOF
 
   name = %[1]q
-
-  depends_on = [aws_organizations_organization.test]
 
   tags = {
     %[2]q = %[3]q
   }
 }
+
+data "aws_organizations_organization" "current" {}
 `, rName, tagKey1, tagValue1)
 }
 
 func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = <<EOF
 {
@@ -598,34 +622,30 @@ resource "aws_organizations_policy" "test" {
 EOF
 
   name = %[1]q
-
-  depends_on = [aws_organizations_organization.test]
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
+
+data "aws_organizations_organization" "current" {}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPolicyConfig_required(rName, content string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = %[1]s
   name    = %[2]q
-
-  depends_on = [aws_organizations_organization.test]
 }
+
+data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName)
 }
 
 func testAccPolicyConfig_concurrent(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test1" {
   content = <<EOF
 {
@@ -639,8 +659,6 @@ resource "aws_organizations_policy" "test1" {
 EOF
 
   name = "%[1]s1"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test2" {
@@ -656,8 +674,6 @@ resource "aws_organizations_policy" "test2" {
 EOF
 
   name = "%[1]s2"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test3" {
@@ -673,8 +689,6 @@ resource "aws_organizations_policy" "test3" {
 EOF
 
   name = "%[1]s3"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test4" {
@@ -690,8 +704,6 @@ resource "aws_organizations_policy" "test4" {
 EOF
 
   name = "%[1]s4"
-
-  depends_on = [aws_organizations_organization.test]
 }
 
 resource "aws_organizations_policy" "test5" {
@@ -707,52 +719,38 @@ resource "aws_organizations_policy" "test5" {
 EOF
 
   name = "%[1]s5"
-
-  depends_on = [aws_organizations_organization.test]
 }
+
+data "aws_organizations_organization" "current" {}
 `, rName)
 }
 
 func testAccPolicyConfig_type(rName, content, policyType string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = %[1]s
   name    = %[2]q
   type    = %[3]q
-
-  depends_on = [aws_organizations_organization.test]
 }
+
+data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName, policyType)
 }
 
 func testAccPolicyConfig_skipDestroy(rName, content string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_policy" "test" {
   content = %[1]s
   name    = %[2]q
 
   skip_destroy = true
-
-  depends_on = [aws_organizations_organization.test]
 }
+
+data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName)
 }
 
-const testAccPolicyConfig_managedSetup = `
-resource "aws_organizations_organization" "test" {
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
-}
-`
-
 const testAccPolicyConfig_managed = `
-resource "aws_organizations_organization" "test" {
-  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
-}
-
 resource "aws_organizations_policy" "test" {
   name = "FullAWSAccess"
 }
