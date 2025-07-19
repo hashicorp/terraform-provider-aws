@@ -85,12 +85,10 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	targetID := d.Get("target_id").(string)
+	policyID := d.Get("policy_id").(string)
 
-	_, err = findPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
+	_, err := findPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organizations Policy Attachment %s not found, removing from state", d.Id())
@@ -125,13 +123,10 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		return nil
 	}
 
-	targetID, policyID, err := policyAttachmentParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	targetID := d.Get("target_id").(string)
+	policyID := d.Get("policy_id").(string)
 
-	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())
-	_, err = conn.DetachPolicy(ctx, &organizations.DetachPolicyInput{
+	_, err := conn.DetachPolicy(ctx, &organizations.DetachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	})
@@ -154,16 +149,6 @@ func policyAttachmentCreateResourceID(targetID, policyID string) string {
 	id := strings.Join(parts, policyAttachmentResourceIDSeparator)
 
 	return id
-}
-
-func policyAttachmentParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, policyAttachmentResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]sPOLICYID", id, policyAttachmentResourceIDSeparator)
 }
 
 func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
