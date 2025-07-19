@@ -57,7 +57,7 @@ See [Configuring logs for Amazon EventBridge event buses](https://docs.aws.amazo
 
     * `aws_cloudwatch_log_delivery_source` for each log type (INFO, ERROR, TRACE)
     * `aws_cloudwatch_log_delivery_destination` for the log destination (S3 bucket, CloudWatch Logs log group, or Data Firehose delivery stream)
-    * `aws_cloudwatch_log_delivery` to link each log type’s delivery source to the delivery destination 
+    * `aws_cloudwatch_log_delivery` to link each log type’s delivery source to the delivery destination
 
 #### Example Usage
 
@@ -248,7 +248,7 @@ resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
     LogDeliveryEnabled = "true"
   }
 
-# other config...
+  # other config...
 }
 
 resource "aws_cloudwatch_log_delivery_destination" "firehose" {
@@ -302,7 +302,7 @@ The following arguments are optional:
 * `description` - (Optional) Event bus description.
 * `event_source_name` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
 * `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
-* `log_config` - (Optional) Block for logging configuration settings for the event bus. 
+* `log_config` - (Optional) Block for logging configuration settings for the event bus.
     * `include_detail` - (Optional) Whether EventBridge include detailed event information in the records it generates. Valid values are `NONE` and `FULL`.
     * `level` - (Optional) Level of logging detail to include. Valid values are `OFF`, `ERROR`, `INFO`, and `TRACE`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
