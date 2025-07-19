@@ -43,6 +43,22 @@ func dataSourceBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"log_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include_detail": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"level": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,6 +83,7 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	d.Set("log_config", flattenLogConfig(output.LogConfig))
 	d.Set(names.AttrName, output.Name)
 
 	return diags
