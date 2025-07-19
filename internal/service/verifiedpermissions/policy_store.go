@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -52,6 +53,12 @@ func (r *policyStoreResource) Schema(ctx context.Context, request resource.Schem
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDeletionProtection: schema.StringAttribute{
+				Optional:   true,
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
+				Default:    stringdefault.StaticString(string(awstypes.DeletionProtectionDisabled)),
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -175,7 +182,7 @@ func (r *policyStoreResource) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	if !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
+	if !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) || !new.DeletionProtection.Equal(old.DeletionProtection) {
 		var input verifiedpermissions.UpdatePolicyStoreInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -231,6 +238,7 @@ type policyStoreResourceModel struct {
 	framework.WithRegionModel
 	ARN                types.String                                        `tfsdk:"arn"`
 	Description        types.String                                        `tfsdk:"description"`
+	DeletionProtection fwtypes.StringEnum[awstypes.DeletionProtection]     `tfsdk:"deletion_protection"`
 	ID                 types.String                                        `tfsdk:"id"`
 	PolicyStoreID      types.String                                        `tfsdk:"policy_store_id"`
 	Tags               tftags.Map                                          `tfsdk:"tags"`
