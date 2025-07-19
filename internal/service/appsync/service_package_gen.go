@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newEventApiResource,
+			Factory:  newEventAPIResource,
 			TypeName: "aws_appsync_event_api",
 			Name:     "Event API",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

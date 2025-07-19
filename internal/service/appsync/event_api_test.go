@@ -59,7 +59,7 @@ import (
 // resource name.
 //
 // Acceptance test access AWS and cost money to run.
-func TestAccAppSyncEventApi_basic(t *testing.T) {
+func TestAccAppSyncEventAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -77,12 +77,12 @@ func TestAccAppSyncEventApi_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventApiDestroy(ctx),
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventApiConfig_basic(rName),
+				Config: testAccEventAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "api_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created"),
@@ -100,7 +100,7 @@ func TestAccAppSyncEventApi_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncEventApi_disappears(t *testing.T) {
+func TestAccAppSyncEventAPI_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -118,13 +118,13 @@ func TestAccAppSyncEventApi_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventApiDestroy(ctx),
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventApiConfig_basic(rName),
+				Config: testAccEventAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceEventApi, resourceName),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceEventAPI, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +132,7 @@ func TestAccAppSyncEventApi_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncEventApi_eventConfigComprehensive(t *testing.T) {
+func TestAccAppSyncEventAPI_eventConfigComprehensive(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -150,12 +150,12 @@ func TestAccAppSyncEventApi_eventConfigComprehensive(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventApiDestroy(ctx),
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventApiConfig_eventConfigComprehensive(rName),
+				Config: testAccEventAPIConfig_eventConfigComprehensive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -204,7 +204,7 @@ func TestAccAppSyncEventApi_eventConfigComprehensive(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncEventApi_tags(t *testing.T) {
+func TestAccAppSyncEventAPI_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -222,12 +222,12 @@ func TestAccAppSyncEventApi_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventApiDestroy(ctx),
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventApiConfig_tags1(rName, "key1", "value1"),
+				Config: testAccEventAPIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -240,9 +240,9 @@ func TestAccAppSyncEventApi_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventApiConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEventAPIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -252,9 +252,9 @@ func TestAccAppSyncEventApi_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventApiConfig_tags1(rName, "key2", "value2"),
+				Config: testAccEventAPIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -265,7 +265,7 @@ func TestAccAppSyncEventApi_tags(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncEventApi_update(t *testing.T) {
+func TestAccAppSyncEventAPI_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -284,12 +284,12 @@ func TestAccAppSyncEventApi_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventApiDestroy(ctx),
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventApiConfig_eventConfigComprehensive(rName),
+				Config: testAccEventAPIConfig_eventConfigComprehensive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -297,9 +297,9 @@ func TestAccAppSyncEventApi_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEventApiConfig_eventConfigComprehensive(rNameUpdated),
+				Config: testAccEventAPIConfig_eventConfigComprehensive(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventApiExists(ctx, resourceName, &eventapi),
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
@@ -315,7 +315,7 @@ func TestAccAppSyncEventApi_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEventApiDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEventAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -324,37 +324,37 @@ func testAccCheckEventApiDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfappsync.FindEventApiByID(ctx, conn, rs.Primary.ID)
+			_, err := tfappsync.FindEventAPIByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameEventApi, rs.Primary.ID, err)
+				return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameEventAPI, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameEventApi, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameEventAPI, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEventApiExists(ctx context.Context, name string, eventapi *awstypes.Api) resource.TestCheckFunc {
+func testAccCheckEventAPIExists(ctx context.Context, name string, eventapi *awstypes.Api) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventApi, name, errors.New("not found"))
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventAPI, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventApi, name, errors.New("not set"))
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventAPI, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
-		resp, err := tfappsync.FindEventApiByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfappsync.FindEventAPIByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventApi, rs.Primary.ID, err)
+			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameEventAPI, rs.Primary.ID, err)
 		}
 
 		*eventapi = *resp
@@ -363,7 +363,7 @@ func testAccCheckEventApiExists(ctx context.Context, name string, eventapi *awst
 	}
 }
 
-func testAccEventApiConfig_basic(rName string) string {
+func testAccEventAPIConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_event_api" "test" {
   name = %[1]q
@@ -371,7 +371,7 @@ resource "aws_appsync_event_api" "test" {
 `, rName)
 }
 
-func testAccEventApiConfig_eventConfigComprehensive(rName string) string {
+func testAccEventAPIConfig_eventConfigComprehensive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -527,7 +527,7 @@ data "aws_region" "current" {}
 `, rName)
 }
 
-func testAccEventApiConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccEventAPIConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_event_api" "test" {
   name = %[1]q
@@ -539,7 +539,7 @@ resource "aws_appsync_event_api" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccEventApiConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEventAPIConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_event_api" "test" {
   name = %[1]q
