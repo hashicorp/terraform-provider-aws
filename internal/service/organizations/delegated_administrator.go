@@ -33,8 +33,8 @@ import (
 // @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
 // @Testing(serialize=true)
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
 func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{

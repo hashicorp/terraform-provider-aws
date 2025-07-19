@@ -164,6 +164,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_organizations_policy_attachment",
 			Name:     "Policy Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_id", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      policyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourcePolicy,

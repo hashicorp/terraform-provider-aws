@@ -83,6 +83,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Root":               testAccPolicyAttachment_Root,
 			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
 			acctest.CtDisappears: testAccPolicyAttachment_disappears,
+			"Identity":           testAccOrganizationsPolicyAttachment_IdentitySerial,
 		},
 		"PolicyDataSource": {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
