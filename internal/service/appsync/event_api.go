@@ -40,8 +40,8 @@ import (
 // @IdentityAttribute("id")
 // @Testing(importStateIdAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
-func newEventApiResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEventApi{}
+func newEventAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceEventAPI{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -51,15 +51,15 @@ func newEventApiResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 const (
-	ResNameEventApi = "Event API"
+	ResNameEventAPI = "Event API"
 )
 
-type resourceEventApi struct {
-	framework.ResourceWithModel[resourceEventApiModel]
+type resourceEventAPI struct {
+	framework.ResourceWithModel[resourceEventAPIModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceEventApi) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceEventAPI) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -253,10 +253,10 @@ func (r *resourceEventApi) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *resourceEventApi) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceEventAPI) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var plan resourceEventApiModel
+	var plan resourceEventAPIModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -273,14 +273,14 @@ func (r *resourceEventApi) Create(ctx context.Context, req resource.CreateReques
 	out, err := conn.CreateApi(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventApi, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventAPI, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Api == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventApi, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventAPI, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -292,10 +292,10 @@ func (r *resourceEventApi) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitEventApiCreated(ctx, conn, plan.ApiId.ValueString(), createTimeout)
+	_, err = waitEventAPICreated(ctx, conn, plan.ApiId.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, ResNameEventApi, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, ResNameEventAPI, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -304,10 +304,10 @@ func (r *resourceEventApi) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEventApi) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceEventAPI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var state resourceEventApiModel
+	var state resourceEventAPIModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -315,7 +315,7 @@ func (r *resourceEventApi) Read(ctx context.Context, req resource.ReadRequest, r
 
 	apiId := state.ApiId.ValueString()
 
-	out, err := findEventApiByID(ctx, conn, apiId)
+	out, err := findEventAPIByID(ctx, conn, apiId)
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -323,7 +323,7 @@ func (r *resourceEventApi) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionReading, ResNameEventApi, state.ApiId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionReading, ResNameEventAPI, state.ApiId.String(), err),
 			err.Error(),
 		)
 		return
@@ -337,10 +337,10 @@ func (r *resourceEventApi) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEventApi) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceEventAPI) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var plan, state resourceEventApiModel
+	var plan, state resourceEventAPIModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -365,14 +365,14 @@ func (r *resourceEventApi) Update(ctx context.Context, req resource.UpdateReques
 		out, err := conn.UpdateApi(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventApi, plan.ApiId.String(), err),
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventAPI, plan.ApiId.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.Api == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventApi, plan.ApiId.String(), nil),
+				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventAPI, plan.ApiId.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -387,10 +387,10 @@ func (r *resourceEventApi) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEventApi) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceEventAPI) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var state resourceEventApiModel
+	var state resourceEventAPIModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -407,24 +407,24 @@ func (r *resourceEventApi) Delete(ctx context.Context, req resource.DeleteReques
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, ResNameEventApi, state.ApiId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, ResNameEventAPI, state.ApiId.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitEventApiDeleted(ctx, conn, state.ApiId.ValueString(), deleteTimeout)
+	_, err = waitEventAPIDeleted(ctx, conn, state.ApiId.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, ResNameEventApi, state.ApiId.String(), err),
+			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, ResNameEventAPI, state.ApiId.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceEventApi) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceEventAPI) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -433,11 +433,11 @@ const (
 	statusNormal   = "Normal"
 )
 
-func waitEventApiCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
+func waitEventAPICreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusEventApi(ctx, conn, id),
+		Refresh:                   statusEventAPI(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -445,9 +445,9 @@ func waitEventApiCreated(ctx context.Context, conn *appsync.Client, id string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		fmt.Printf("[DEBUG] waitEventApiCreated: Wait failed with error: %v\n", err)
+		fmt.Printf("[DEBUG] waitEventAPICreated: Wait failed with error: %v\n", err)
 	} else {
-		fmt.Printf("[DEBUG] waitEventApiCreated: Wait completed successfully for API: %s\n", id)
+		fmt.Printf("[DEBUG] waitEventAPICreated: Wait completed successfully for API: %s\n", id)
 	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
@@ -457,20 +457,20 @@ func waitEventApiCreated(ctx context.Context, conn *appsync.Client, id string, t
 	return nil, err
 }
 
-func waitEventApiDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
-	fmt.Printf("[DEBUG] waitEventApiDeleted: Starting wait for API deletion: %s\n", id)
+func waitEventAPIDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
+	fmt.Printf("[DEBUG] waitEventAPIDeleted: Starting wait for API deletion: %s\n", id)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
-		Refresh: statusEventApi(ctx, conn, id),
+		Refresh: statusEventAPI(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		fmt.Printf("[DEBUG] waitEventApiDeleted: Wait failed with error: %v\n", err)
+		fmt.Printf("[DEBUG] waitEventAPIDeleted: Wait failed with error: %v\n", err)
 	} else {
-		fmt.Printf("[DEBUG] waitEventApiDeleted: Wait completed successfully for API: %s\n", id)
+		fmt.Printf("[DEBUG] waitEventAPIDeleted: Wait completed successfully for API: %s\n", id)
 	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
@@ -480,9 +480,9 @@ func waitEventApiDeleted(ctx context.Context, conn *appsync.Client, id string, t
 	return nil, err
 }
 
-func statusEventApi(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
+func statusEventAPI(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := findEventApiByID(ctx, conn, id)
+		out, err := findEventAPIByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -495,7 +495,7 @@ func statusEventApi(ctx context.Context, conn *appsync.Client, id string) retry.
 	}
 }
 
-func findEventApiByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.Api, error) {
+func findEventAPIByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.Api, error) {
 	input := appsync.GetApiInput{
 		ApiId: aws.String(id),
 	}
@@ -518,7 +518,7 @@ func findEventApiByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	return out.Api, nil
 }
 
-type resourceEventApiModel struct {
+type resourceEventAPIModel struct {
 	framework.WithRegionModel
 	ApiArn       types.String                                      `tfsdk:"arn"`
 	ApiId        types.String                                      `tfsdk:"id"`
