@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
@@ -25,12 +26,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -257,13 +258,13 @@ func (r *resourceEventAPI) Create(ctx context.Context, req resource.CreateReques
 	conn := r.Meta().AppSyncClient(ctx)
 
 	var plan resourceEventAPIModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input appsync.CreateApiInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -272,21 +273,15 @@ func (r *resourceEventAPI) Create(ctx context.Context, req resource.CreateReques
 
 	out, err := conn.CreateApi(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventAPI, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	if out == nil || out.Api == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionCreating, ResNameEventAPI, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.Api, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.Api, &plan), smerr.ID, plan.Name.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -294,21 +289,18 @@ func (r *resourceEventAPI) Create(ctx context.Context, req resource.CreateReques
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitEventAPICreated(ctx, conn, plan.ApiId.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForCreation, ResNameEventAPI, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan), smerr.ID, plan.ApiId.String())
 }
 
 func (r *resourceEventAPI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
 	var state resourceEventAPIModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,40 +314,37 @@ func (r *resourceEventAPI) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionReading, ResNameEventAPI, state.ApiId.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state), smerr.ID, state.ApiId.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.ApiId.String())
 }
 
 func (r *resourceEventAPI) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
 	var plan, state resourceEventAPIModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d, smerr.ID, plan.ApiId.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input appsync.UpdateApiInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input), smerr.ID, plan.ApiId.String())
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -364,34 +353,28 @@ func (r *resourceEventAPI) Update(ctx context.Context, req resource.UpdateReques
 
 		out, err := conn.UpdateApi(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventAPI, plan.ApiId.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ApiId.String())
 			return
 		}
 		if out == nil || out.Api == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppSync, create.ErrActionUpdating, ResNameEventAPI, plan.ApiId.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ApiId.String())
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.Api, &plan)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.Api, &plan), smerr.ID, plan.ApiId.String())
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan), smerr.ID, plan.ApiId.String())
 }
 
 func (r *resourceEventAPI) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().AppSyncClient(ctx)
 
 	var state resourceEventAPIModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -406,20 +389,14 @@ func (r *resourceEventAPI) Delete(ctx context.Context, req resource.DeleteReques
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionDeleting, ResNameEventAPI, state.ApiId.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitEventAPIDeleted(ctx, conn, state.ApiId.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppSync, create.ErrActionWaitingForDeletion, ResNameEventAPI, state.ApiId.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
 		return
 	}
 }
@@ -451,10 +428,10 @@ func waitEventAPICreated(ctx context.Context, conn *appsync.Client, id string, t
 	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitEventAPIDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
@@ -474,10 +451,10 @@ func waitEventAPIDeleted(ctx context.Context, conn *appsync.Client, id string, t
 	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusEventAPI(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
@@ -488,7 +465,7 @@ func statusEventAPI(ctx context.Context, conn *appsync.Client, id string) retry.
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, statusNormal, nil
@@ -503,16 +480,16 @@ func findEventAPIByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	out, err := conn.GetApi(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
-			}
+			})
 		}
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.Api == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
 	return out.Api, nil
