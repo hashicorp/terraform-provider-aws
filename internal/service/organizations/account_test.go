@@ -60,7 +60,7 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/o-.+$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/`+organizationIDRegexPattern+`/\d{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
@@ -94,7 +94,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/o-.+$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/`+organizationIDRegexPattern+`/\d{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttr(resourceName, "govcloud_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
@@ -167,7 +167,7 @@ func testAccAccount_AccountUpdate(t *testing.T) {
 				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/o-.+$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile(`account/`+organizationIDRegexPattern+`/\d{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
