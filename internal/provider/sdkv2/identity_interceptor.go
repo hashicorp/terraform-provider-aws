@@ -191,3 +191,15 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 		}
 	}
 }
+
+func customResourceImporter(r *schema.Resource, identity *inttypes.Identity, importSpec *inttypes.SDKv2Import) {
+	importF := r.Importer.StateContext
+
+	r.Importer = &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			ctx = importer.Context(ctx, identity, importSpec)
+
+			return importF(ctx, rd, meta)
+		},
+	}
+}
