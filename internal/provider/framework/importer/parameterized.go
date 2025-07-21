@@ -82,18 +82,20 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 				// Do nothing
 
 			default:
-				attrPath := path.Root(attr.Name())
+				identityPath := path.Root(attr.Name())
+				resourcePath := path.Root(attr.ResourceAttributeName())
+
 				var parameterAttr types.String
-				response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
+				response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
 				if response.Diagnostics.HasError() {
 					return
 				}
 				parameterVal := parameterAttr.ValueString()
 
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
 
 				if identity := response.Identity; identity != nil {
-					response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
+					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
 				}
 			}
 		}
