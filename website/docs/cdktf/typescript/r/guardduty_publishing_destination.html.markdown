@@ -90,7 +90,7 @@ class MyConvertedCode extends TerraformStack {
           ],
           resources: [
             "arn:aws:kms:${" +
-              dataAwsRegionCurrent.name +
+              dataAwsRegionCurrent.region +
               "}:${" +
               current.accountId +
               "}:key/*",
@@ -107,7 +107,7 @@ class MyConvertedCode extends TerraformStack {
           ],
           resources: [
             "arn:aws:kms:${" +
-              dataAwsRegionCurrent.name +
+              dataAwsRegionCurrent.region +
               "}:${" +
               current.accountId +
               "}:key/*",
@@ -138,6 +138,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detectorId` - (Required) The detector ID of the GuardDuty.
 * `destinationArn` - (Required) The bucket arn and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `AWSLogs/[Account-ID]/GuardDuty/[Region]/` if not provided
 * `kmsKeyArn` - (Required) The ARN of the KMS key used to encrypt GuardDuty findings. GuardDuty enforces this to be encrypted.
@@ -147,9 +148,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The ID of the GuardDuty PublishingDestination and the detector ID. Format: `<DetectorID>:<PublishingDestinationID>`
+This resource exports no additional attributes.
 
 ## Import
 
@@ -183,4 +182,4 @@ Using `terraform import`, import GuardDuty PublishingDestination using the maste
 % terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-62a290b6c0d879190b7ab5d6098de0abf59abd632ca625aa1c6a6b8f48e6ac47 -->
+<!-- cache-key: cdktf-0.20.8 input-92b642995ef7e60acd232ab8b1063ec7974a691dea6c055ffb9f452b48dfc782 -->

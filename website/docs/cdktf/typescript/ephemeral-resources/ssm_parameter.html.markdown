@@ -12,7 +12,7 @@ description: |-
 
 Retrieve information about an SSM parameter, including its value.
 
-~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 
@@ -36,6 +36,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The Amazon Resource Name (ARN) of the parameter that you want to query
 * `withDecryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).
 
@@ -49,4 +50,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `version` - The parameter version.
 * `withDecryption` - Indicates whether the secure string parameters were decrypted.
 
-<!-- cache-key: cdktf-0.20.8 input-3a2cb76eefd85427ab2a79875cbde9d976d94fbbf481aabea1468ff17a55a7f3 -->
+<!-- cache-key: cdktf-0.20.8 input-6fc477cd1a26e75163f3bc9e97e96d1cd971e51c67a5bada2cc3806403da32f4 -->

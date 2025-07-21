@@ -54,6 +54,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `is_alias` - (Optional) Whether the entry should be an alias. Default: `false`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -86,4 +87,4 @@ Using `terraform import`, import Lightsail Domain Entry using the id attribute. 
 % terraform import aws_lightsail_domain_entry.example www,example.com,A,127.0.0.1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b446cab80e64b7833d14141c652e433b430878593f425642b4cfc0090354a635 -->
+<!-- cache-key: cdktf-0.20.8 input-02ae3a4ff4b9a47e906a1b53cf5f2991f58445992008551f90adf810d0b1ef9a -->

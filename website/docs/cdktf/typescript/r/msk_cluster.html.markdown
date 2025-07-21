@@ -212,6 +212,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `brokerNodeGroupInfo` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `clusterName` - (Required) Name of the MSK cluster.
 * `kafkaVersion` - (Required) Specify the desired Kafka software version.
@@ -401,4 +402,4 @@ Using `terraform import`, import MSK clusters using the cluster `arn`. For examp
 % terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c8989fe83c9321b1629c7a505f58852b9ced96b6455e8404c0eb7b4f5b8f3426 -->
+<!-- cache-key: cdktf-0.20.8 input-64e618369318decedd7afaa035ed68507b7e5a21b51fd67a80bb34b50219c0f1 -->

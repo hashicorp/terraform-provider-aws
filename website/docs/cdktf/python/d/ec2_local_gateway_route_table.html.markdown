@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `local_gateway_route_table_id` - (Optional) Local Gateway Route Table Id assigned to desired local gateway route table
 * `local_gateway_id` - (Optional) ID of the specific local gateway route table to retrieve.
 * `outpost_arn` - (Optional) ARN of the Outpost the local gateway route table is associated with.
@@ -73,4 +74,4 @@ This data source exports no additional attributes.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-4107c1640fa0267af83c92498cf8211c7e9331d51b4fd356537ee10682cd23a5 -->
+<!-- cache-key: cdktf-0.20.8 input-aec63c509d7516fff2a964f60b545804f123aa49eb5919b812b762841b87e940 -->

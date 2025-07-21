@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
   given by `source_ami_region`.
@@ -82,4 +83,4 @@ configuration.
 * `update` - (Default `40m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-d5fcd6011bb66e5d779ef5d7339819041b38b36d03570590f8e5ea6b0b071e1a -->
+<!-- cache-key: cdktf-0.20.8 input-f98d7e99c733a296b32252161fdfde5067757995a233d70155a1867ce5b7501b -->

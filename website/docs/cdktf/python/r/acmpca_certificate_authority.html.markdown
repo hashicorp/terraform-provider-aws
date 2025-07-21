@@ -135,6 +135,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
@@ -232,4 +233,4 @@ Using `terraform import`, import `aws_acmpca_certificate_authority` using the ce
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->
+<!-- cache-key: cdktf-0.20.8 input-449076f65ae9804f638028cc528cd156eddcb4de1fdb91f7fea07302be21940d -->

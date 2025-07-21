@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_update` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`.
 * `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -84,4 +85,4 @@ Using `terraform import`, import Rekognition Project using the `name`. For examp
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2911f88ffdd746ae5c0ae2f4557150fcdb3003e8a3d7b928bade028d86f4b442 -->
+<!-- cache-key: cdktf-0.20.8 input-f66df78d0d6846053af6874a794c937ddec44f1dad9ac18763555e8c3d26ce3f -->

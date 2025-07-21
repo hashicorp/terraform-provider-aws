@@ -31,7 +31,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         current = DataAwsRegion(self, "current")
         DataAwsService(self, "test",
-            region=Token.as_string(current.name),
+            region=Token.as_string(current.region),
             service_id="ec2"
         )
 ```
@@ -79,8 +79,8 @@ class MyConvertedCode(TerraformStack):
 The following arguments are optional:
 
 * `dns_name` - (Optional) DNS name of the service (_e.g.,_ `rds.us-east-1.amazonaws.com`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
-* `partition` - (Optional) Partition corresponding to the region.
-* `region` - (Optional) Region of the service (_e.g.,_ `us-west-2`, `ap-northeast-1`).
+* `partition` - (Optional) Partition corresponding to the Region.
+* `region` - (Optional) Region of the service (_e.g.,_ `us-west-2`, `ap-northeast-1`). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `reverse_dns_name` - (Optional) Reverse DNS name of the service (_e.g.,_ `com.amazonaws.us-west-2.s3`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required.
 * `reverse_dns_prefix` - (Optional) Prefix of the service (_e.g.,_ `com.amazonaws` in AWS Commercial, `cn.com.amazonaws` in AWS China).
 * `service_id` - (Optional) Service endpoint ID (_e.g.,_ `s3`, `rds`, `ec2`). One of `dns_name`, `reverse_dns_name`, or `service_id` is required. A service's endpoint ID can be found in the [_AWS General Reference_](https://docs.aws.amazon.com/general/latest/gr/aws-service-information.html).
@@ -91,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `supported` - Whether the service is supported in the region's partition. New services may not be listed immediately as supported.
 
-<!-- cache-key: cdktf-0.20.8 input-33b4a9f0e8c2b1624e282ff97612c76cb6451b7673c9c36bd37b86feb1cdfbd9 -->
+<!-- cache-key: cdktf-0.20.8 input-614ed1836522df7379d817a7f5bc13d58145a2c196d0fd6c55a97357d1aad993 -->

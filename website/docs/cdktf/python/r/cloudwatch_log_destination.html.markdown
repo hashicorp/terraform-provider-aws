@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the log destination.
 * `role_arn` - (Required) The ARN of an IAM role that grants Amazon CloudWatch Logs permissions to put data into the target.
 * `target_arn` - (Required) The ARN of the target Amazon Kinesis stream resource for the destination.
@@ -74,4 +75,4 @@ Using `terraform import`, import CloudWatch Logs destinations using the `name`. 
 % terraform import aws_cloudwatch_log_destination.test_destination test_destination
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-46d1c43716e504d59d633735be752913c3042813cb3fadb4b8427dbfc5e8d918 -->
+<!-- cache-key: cdktf-0.20.8 input-2c90fc95453511cca0d232029fc86cddee3c7dfc4f70ec3b68313ca65c638377 -->
