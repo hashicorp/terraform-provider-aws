@@ -68,6 +68,10 @@ The following arguments are required:
 * `certificateName` - (Required) Name of your SSL/TLS certificate.
 * `lbName` - (Required) Name of the load balancer to which you want to associate the SSL/TLS certificate.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -106,4 +110,4 @@ Using `terraform import`, import `aws_lightsail_lb_certificate_attachment` using
 % terraform import aws_lightsail_lb_certificate_attachment.example example-load-balancer,example-certificate
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ad3c12ff975397b1412042e86627047db846cf68bdef23923364da5e59142686 -->
+<!-- cache-key: cdktf-0.20.8 input-d191b3466cd4a8b89d4e50aaac87ddea5fda4cb40ec8cd2dfedf72a0fa2b0eb9 -->

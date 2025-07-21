@@ -149,7 +149,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
@@ -162,8 +162,6 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)

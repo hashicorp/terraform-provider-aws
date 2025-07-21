@@ -350,7 +350,7 @@ type kmsKeyInfo struct {
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	return tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*kmsKeyInfo, error) {
 		var err error
 		var key kmsKeyInfo
 
@@ -394,12 +394,6 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 
 		return &key, nil
 	}, isNewResource)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return outputRaw.(*kmsKeyInfo), nil
 }
 
 func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {

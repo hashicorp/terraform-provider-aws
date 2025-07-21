@@ -14,7 +14,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,7 +28,7 @@ import (
 
 func TestAccVPCNetworkInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -73,7 +73,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +119,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6Primary(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -143,7 +143,7 @@ func TestAccVPCNetworkInterface_ipv6Primary(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6PrimaryEnable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -175,7 +175,7 @@ func TestAccVPCNetworkInterface_ipv6PrimaryEnable(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6PrimaryDisable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -209,7 +209,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -254,7 +254,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -304,7 +304,7 @@ func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 
 func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkInterface types.NetworkInterface
+	var networkInterface awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -328,7 +328,7 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 
 func TestAccVPCNetworkInterface_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -402,7 +402,7 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -437,7 +437,7 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	var attachmentId string
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -478,7 +478,7 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 
 func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -521,7 +521,7 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 
 func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -589,7 +589,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -618,7 +618,7 @@ func TestAccVPCNetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -664,7 +664,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -714,7 +714,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -760,7 +760,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -810,7 +810,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_privateIPSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkInterface, lastInterface types.NetworkInterface
+	var networkInterface, lastInterface awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -906,7 +906,7 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var networkInterface, lastInterface types.NetworkInterface
+	var networkInterface, lastInterface awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1073,7 +1073,7 @@ func regionalPrivateDNSSuffix(region string) string {
 	return fmt.Sprintf("%s.compute.internal", region)
 }
 
-func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIExists(ctx context.Context, n string, v *awstypes.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1124,7 +1124,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *types.NetworkInterface, attachmentId *string) resource.TestCheckFunc {
+func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *awstypes.NetworkInterface, attachmentId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok || rs.Primary.ID == "" {
@@ -1162,7 +1162,7 @@ func testAccCheckENIRemoveExternalAttachment(ctx context.Context, attachmentId *
 	}
 }
 
-func testAccCheckENIPrivateIPSet(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPSet(ips []string, iface *awstypes.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
@@ -1174,7 +1174,7 @@ func testAccCheckENIPrivateIPSet(ips []string, iface *types.NetworkInterface) re
 	}
 }
 
-func testAccCheckENIPrivateIPList(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPList(ips []string, iface *awstypes.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
@@ -1205,7 +1205,7 @@ func stringSlicesEqual(s1, s2 []string) bool {
 	return reflect.DeepEqual(s1, s2)
 }
 
-func testAccCheckENISame(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENISame(iface1 *awstypes.NetworkInterface, iface2 *awstypes.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(iface1.NetworkInterfaceId) != aws.ToString(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("interface %s should not have been replaced with %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
@@ -1214,7 +1214,7 @@ func testAccCheckENISame(iface1 *types.NetworkInterface, iface2 *types.NetworkIn
 	}
 }
 
-func testAccCheckENIDifferent(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIDifferent(iface1 *awstypes.NetworkInterface, iface2 *awstypes.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(iface1.NetworkInterfaceId) == aws.ToString(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("interface %s should have been replaced, have %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))

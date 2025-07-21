@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_id` - (Required) Authorizer identifier.
 * `rest_api_id` - (Required) ID of the associated REST API.
 
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_arns` - List of the Amazon Cognito user pool ARNs.
 * `type` - Type of the authorizer.
 
-<!-- cache-key: cdktf-0.20.8 input-159a2c20934f01979bff3e655f88ae9b2b39ddbcd289fa6af63d0a4f6cf88401 -->
+<!-- cache-key: cdktf-0.20.8 input-6b500714dfcf6faac5477e5cec4deef3d1c3744bb4e3257f1cd0ab986aca71e3 -->
