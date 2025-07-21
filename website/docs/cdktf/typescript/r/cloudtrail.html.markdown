@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:cloudtrail:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:trail/example",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:cloudtrail:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:trail/example",
@@ -483,6 +483,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advancedEventSelector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `eventSelector`.
 * `cloudWatchLogsGroupArn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloudWatchLogsRoleArn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -571,4 +572,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-26297bfd292ca930ba753b2272b274951231e47c2f8d534370f28bd5d55535b6 -->
+<!-- cache-key: cdktf-0.20.8 input-a1f175998792e4fbf1f09fac4172e6ca4d2fdde7fc2ceb0d008fa36c132b4212 -->

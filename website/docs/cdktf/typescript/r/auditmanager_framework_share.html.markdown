@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `comment` - (Optional) Comment from the sender about the share request.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import Audit Manager Framework Share using the `id`. F
 % terraform import aws_auditmanager_framework_share.example abcdef-123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-42c9dd2a57c9eab7b67d4ec5e6b61d93e0a4c2c04e03cccef7a678c35942ad70 -->
+<!-- cache-key: cdktf-0.20.8 input-02ac8c1b6c93f0768497e9f6f6e9bd504ebfff8a5ee0abaa1a16e3ea709b3f80 -->

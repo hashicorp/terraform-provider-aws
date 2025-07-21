@@ -60,8 +60,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_ids` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resource_types` - (Required) Type of resources to scan.
@@ -80,4 +81,4 @@ This resource exports no additional attributes.
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-89c0c72a488b36e9c62f0a2c9cee15a41ab1fd5afcccb4a7f1813eef314ce9e8 -->
+<!-- cache-key: cdktf-0.20.8 input-32e542f832e63d6801de5c6b25b48365c254edf97049b40f81fd16807d847bb6 -->

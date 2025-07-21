@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `monitoringScheduleConfig` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -100,4 +101,4 @@ Using `terraform import`, import monitoring schedules using the `name`. For exam
 % terraform import aws_sagemaker_monitoring_schedule.test_monitoring_schedule monitoring-schedule-foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-44748918193f30db5935d91e72f39a680d45c6c159d5a3fac56be1919cfc2aed -->
+<!-- cache-key: cdktf-0.20.8 input-c9bf0ba762ca0b57e3926a73f6a094ab84a74b5aeb21cf438a72e7be5bc6efdd -->

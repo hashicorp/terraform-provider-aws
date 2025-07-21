@@ -177,7 +177,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
+	statement, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (*policyStatement, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	}, d.IsNewResource())
 
@@ -191,9 +191,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
-	statement := outputRaw.(*PolicyStatement)
 	qualifier, _ := getQualifierFromAliasOrVersionARN(statement.Resource)
-
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
@@ -339,7 +337,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	return output, nil
 }
 
-func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, statementID, qualifier string) (*PolicyStatement, error) {
+func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, statementID, qualifier string) (*policyStatement, error) {
 	input := &lambda.GetPolicyInput{
 		FunctionName: aws.String(functionName),
 	}
@@ -353,7 +351,7 @@ func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, f
 		return nil, err
 	}
 
-	policy := &Policy{}
+	policy := &policy{}
 	err = json.Unmarshal([]byte(aws.ToString(output.Policy)), policy)
 
 	if err != nil {
@@ -390,13 +388,13 @@ func getFunctionNameFromARN(arn string) (string, error) {
 	return matches[5], nil
 }
 
-type Policy struct {
+type policy struct {
 	Version   string
-	Statement []PolicyStatement
+	Statement []policyStatement
 	Id        string
 }
 
-type PolicyStatement struct {
+type policyStatement struct {
 	Condition map[string]map[string]string
 	Action    string
 	Resource  string

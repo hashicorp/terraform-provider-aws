@@ -280,7 +280,12 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteAgent(ctx, &input)
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+		return conn.DeleteAgent(ctx, &input)
+	}, "in-use by these location(s)")
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags

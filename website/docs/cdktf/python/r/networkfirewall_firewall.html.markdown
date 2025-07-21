@@ -52,6 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delete_protection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
 * `description` - (Optional) A friendly description of the firewall.
 * `enabled_analysis_types` - (Optional) Set of types for which to collect analysis metrics. See [Reporting on network traffic in Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/reporting.html) for details on how to use the data. Valid values: `TLS_SNI`, `HTTP_HOST`. Defaults to `[]`.
@@ -126,4 +127,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-905c62ff27a184c8442df9bdf136d3644a726d36906f900e33d1b3ffddca7244 -->
+<!-- cache-key: cdktf-0.20.8 input-af3221c7c4798f1a9a7daf3eaa25d66c7b379d69cd36788173f3405c0035706e -->

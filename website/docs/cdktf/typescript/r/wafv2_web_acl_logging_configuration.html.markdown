@@ -151,7 +151,7 @@ class MyConvertedCode extends TerraformStack {
                 test: "ArnLike",
                 values: [
                   "arn:aws:logs:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:*",
@@ -195,6 +195,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logDestinationConfigs` - (Required) Configuration block that allows you to associate Amazon Kinesis Data Firehose, Cloudwatch Log log group, or S3 bucket Amazon Resource Names (ARNs) with the web ACL. **Note:** data firehose, log group, or bucket name **must** be prefixed with `aws-waf-logs-`, e.g. `aws-waf-logs-example-firehose`, `aws-waf-logs-example-log-group`, or `aws-waf-logs-example-bucket`.
 * `loggingFilter` - (Optional) Configuration block that specifies which web requests are kept in the logs and which are dropped. It allows filtering based on the rule action and the web request labels applied by matching rules during web ACL evaluation. For more details, refer to the [Logging Filter](#logging-filter) section below.
 * `redactedFields` - (Optional) Configuration for parts of the request that you want to keep out of the logs. Up to 100 `redactedFields` blocks are supported. See [Redacted Fields](#redacted-fields) below for more details.
@@ -293,4 +294,4 @@ Using `terraform import`, import WAFv2 Web ACL Logging Configurations using the 
 % terraform import aws_wafv2_web_acl_logging_configuration.example arn:aws:wafv2:us-west-2:123456789012:regional/webacl/test-logs/a1b2c3d4-5678-90ab-cdef
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-77202e72b4847e387989a5959c4c52f53cf2808fd468712b7f94ab48b8195a39 -->
+<!-- cache-key: cdktf-0.20.8 input-974e175f5df0d59bd80fac1c1a0926a37ef18a1f6e83015d2afcfb41f1d7d42f -->

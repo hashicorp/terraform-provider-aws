@@ -38,10 +38,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoEnable` - (Required) Whether to enable Amazon Macie automatically for accounts that are added to the organization in AWS Organizations.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-76abdcaa73b6331faa70ba5f2884ffb27eca344cc59a639c103c46fdd8299139 -->
+<!-- cache-key: cdktf-0.20.8 input-403fcd55e16a7d3418ffb927311ee699afecd3032aabca5d2c585acc2b067021 -->

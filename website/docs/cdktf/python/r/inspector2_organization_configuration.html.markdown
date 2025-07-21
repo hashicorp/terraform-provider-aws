@@ -44,8 +44,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_enable` - (Required) Configuration block for auto enabling. See below.
 
 ### `auto_enable`
@@ -69,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2f7568ec1fd919b178cca6ea075dd866febcd9389f4b99da49a45417fd14c06f -->
+<!-- cache-key: cdktf-0.20.8 input-2dba2da6be47cbdc415fb2f6a8b0824ad9055627df753ce8e6dec8d82c391849 -->

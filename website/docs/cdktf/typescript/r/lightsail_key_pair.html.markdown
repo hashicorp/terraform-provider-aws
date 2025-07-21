@@ -92,6 +92,7 @@ The following arguments are optional:
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `pgpKey` - (Optional) PGP key to encrypt the resulting private key material. Only used when creating a new key pair.
 * `publicKey` - (Optional) Public key material. This public key will be imported into Lightsail.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ~> **Note:** A PGP key is not required, however it is strongly encouraged. Without a PGP key, the private key material will be stored in state unencrypted. `pgpKey` is ignored if `publicKey` is supplied.
@@ -113,4 +114,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import Lightsail Key Pairs because the private and public key are only available on initial creation.
 
-<!-- cache-key: cdktf-0.20.8 input-a704262008cfd7b286c8e6fe3752481edc4b9fc4f99a873d4cd78ced0fb71075 -->
+<!-- cache-key: cdktf-0.20.8 input-84b7e532ec5f11b80d2eddc7de3540267490703305fb82d8c29d826f093c365b -->
