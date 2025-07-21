@@ -29,7 +29,7 @@ func TestIdentityInterceptor(t *testing.T) {
 	ctx := t.Context()
 
 	accountID := "123456789012"
-	region := "us-west-2"
+	region := "us-west-2" //lintignore:AWSAT003
 	name := "a_name"
 
 	resourceSchema := schema.Schema{
@@ -174,25 +174,25 @@ func (c mockClient) Region(_ context.Context) string {
 }
 
 func (c mockClient) DefaultTagsConfig(ctx context.Context) *tftags.DefaultConfig {
-	panic("not implemented")
+	panic("not implemented") //lintignore:R009
 }
 
 func (c mockClient) IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig {
-	panic("not implemented")
+	panic("not implemented") //lintignore:R009
 }
 
 func (c mockClient) Partition(context.Context) string {
-	panic("not implemented")
+	panic("not implemented") //lintignore:R009
 }
 
 func (c mockClient) ServicePackage(_ context.Context, name string) conns.ServicePackage {
-	panic("not implemented")
+	panic("not implemented") //lintignore:R009
 }
 
 func (c mockClient) ValidateInContextRegionInPartition(ctx context.Context) error {
-	panic("not implemented")
+	panic("not implemented") //lintignore:R009
 }
 
-func (c mockClient) AwsConfig(context.Context) aws.Config {
-	panic("not implemented")
+func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
+	panic("not implemented") //lintignore:R009
 }
