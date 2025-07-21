@@ -1,0 +1,218 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package workspacesweb_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccWorkSpacesWebIdentityProvider_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProvider
+	resourceName := "aws_workspacesweb_identity_provider.test"
+	portalResourceName := "aws_workspacesweb_portal.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "identity_provider_arn", "workspaces-web", regexache.MustCompile(`identityProvider/.+$`)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "identity_provider_arn"),
+				ImportStateVerifyIdentifierAttribute: "identity_provider_arn",
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProvider
+	resourceName := "aws_workspacesweb_identity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIdentityProvider, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProvider
+	resourceName := "aws_workspacesweb_identity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata"),
+				),
+			},
+			{
+				Config: testAccIdentityProviderConfig_updated(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test-updated"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeOidc)),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata-updated"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_id", "test-client-id"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_secret", "test-client-secret"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.oidc_issuer", "https://example.com/issuer"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "identity_provider_arn"),
+				ImportStateVerifyIdentifierAttribute: "identity_provider_arn",
+			},
+		},
+	})
+}
+
+func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_workspacesweb_identity_provider" {
+				continue
+			}
+
+			_, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WorkSpaces Web Identity Provider %s still exists", rs.Primary.Attributes["identity_provider_arn"])
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *awstypes.IdentityProvider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+
+		output, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccIdentityProviderConfig_basic() string {
+	return `
+resource "aws_workspacesweb_portal" "test" {
+  display_name = "test"
+}
+
+resource "aws_workspacesweb_identity_provider" "test" {
+  identity_provider_name = "test"
+  identity_provider_type = "SAML"
+  portal_arn            = aws_workspacesweb_portal.test.portal_arn
+
+  identity_provider_details = {
+    MetadataURL = "https://example.com/metadata"
+  }
+}
+`
+}
+
+func testAccIdentityProviderConfig_updated() string {
+	return `
+resource "aws_workspacesweb_portal" "test" {
+  display_name = "test"
+}
+
+resource "aws_workspacesweb_identity_provider" "test" {
+  identity_provider_name = "test-updated"
+  identity_provider_type = "OIDC"
+  portal_arn            = aws_workspacesweb_portal.test.portal_arn
+
+  identity_provider_details = {
+    MetadataURL = "https://example.com/metadata-updated"
+    client_id = "test-client-id"
+    client_secret = "test-client-secret"
+    oidc_issuer = "https://example.com/issuer"
+  }
+}
+`
+}
