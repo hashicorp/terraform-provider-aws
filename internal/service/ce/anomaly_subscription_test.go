@@ -10,18 +10,10 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -277,155 +269,6 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-		},
-	})
-}
-
-func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription awstypes.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-
-			// Step 2: Import command
-			{
-				Config:            testAccAnomalySubscriptionConfig_basic(rName, address),
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			// Step 3: Import block with Import ID
-			{
-				Config:          testAccAnomalySubscriptionConfig_basic(rName, address),
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-					},
-				},
-			},
-
-			// Step 4: Import block with Resource Identity
-			{
-				Config:          testAccAnomalySubscriptionConfig_basic(rName, address),
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var subscription awstypes.AnomalySubscription
-	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
-		CheckDestroy: testAccCheckAnomalySubscriptionDestroy(ctx),
-		ErrorCheck:   acctest.ErrorCheck(t, names.CEServiceID),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccAnomalySubscriptionConfig_basic(rName, address),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.GlobalARNRegexp("ce", regexache.MustCompile(`anomalysubscription/.+`)),
-					}),
-				},
 			},
 		},
 	})
