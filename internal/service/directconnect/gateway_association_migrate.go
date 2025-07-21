@@ -19,32 +19,41 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"associated_gateway_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"associated_gateway_owner_account_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"associated_gateway_type": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_association_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_owner_account_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"proposal_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"vpn_gateway_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -54,29 +63,37 @@ func resourceGatewayAssociationResourceV1() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"associated_gateway_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"associated_gateway_owner_account_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"associated_gateway_type": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_association_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"dx_gateway_owner_account_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"proposal_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
