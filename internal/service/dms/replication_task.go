@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -408,6 +409,18 @@ func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) ret
 			return nil, "", err
 		}
 
+		if status := aws.ToString(output.Status); status == replicationTaskStatusStopped {
+			stopReason := aws.ToString(output.StopReason)
+			switch {
+			case strings.Contains(stopReason, "FULL_LOAD_ONLY_FINISHED"):
+				return output, replicationTaskStatusStoppedFullLoadOnlyFinished, nil
+			case strings.Contains(stopReason, "STOPPED_AFTER_FULL_LOAD"):
+				return output, replicationTaskStatusStoppedAfterFullLoad, nil
+			case strings.Contains(stopReason, "STOPPED_AFTER_CACHED_EVENTS"):
+				return output, replicationTaskStatusStoppedAfterCachedEvents, nil
+			}
+		}
+
 		return output, aws.ToString(output.Status), nil
 	}
 }
@@ -509,9 +522,10 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string
 	const (
 		timeout = 5 * time.Minute
 	)
+
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
-		Target:     []string{replicationTaskStatusRunning},
+		Target:     []string{replicationTaskStatusRunning, replicationTaskStatusStoppedAfterCachedEvents, replicationTaskStatusStoppedAfterFullLoad, replicationTaskStatusStoppedFullLoadOnlyFinished},
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
