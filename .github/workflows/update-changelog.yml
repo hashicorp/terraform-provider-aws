@@ -99,7 +99,7 @@ jobs:
           This PR adds a changelog entry for the next minor version v${{ steps.version.outputs.next_version }} following the release of v${{ github.event.inputs.previous_version }}.
 
           - Added changelog section for v${{ steps.version.outputs.next_version }} (Unreleased)
-          
+
           ### Relations
           EOF
 
