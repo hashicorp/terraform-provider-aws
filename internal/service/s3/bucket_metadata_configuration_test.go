@@ -112,7 +112,7 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"configuration_state": tfknownvalue.StringExact(awstypes.InventoryConfigurationStateEnabled),
-									"encryption_configuration": knownvalue.ListExact([]knownvalue.Check{
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											names.AttrKMSKeyARN: knownvalue.Null(),
 											"sse_algorithm":     tfknownvalue.StringExact(awstypes.TableSseAlgorithmAes256),
@@ -164,15 +164,15 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"configuration_state":      tfknownvalue.StringExact(awstypes.InventoryConfigurationStateDisabled),
-									"encryption_configuration": knownvalue.ListSizeExact(0),
-									"table_arn":                knownvalue.Null(),
-									names.AttrTableName:        knownvalue.Null(),
+									"configuration_state":             tfknownvalue.StringExact(awstypes.InventoryConfigurationStateDisabled),
+									names.AttrEncryptionConfiguration: knownvalue.ListSizeExact(0),
+									"table_arn":                       knownvalue.Null(),
+									names.AttrTableName:               knownvalue.Null(),
 								}),
 							}),
 							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectPartial(map[string]knownvalue.Check{
-									"encryption_configuration": knownvalue.ListExact([]knownvalue.Check{
+									names.AttrEncryptionConfiguration: knownvalue.ListExact([]knownvalue.Check{
 										knownvalue.ObjectExact(map[string]knownvalue.Check{
 											names.AttrKMSKeyARN: knownvalue.NotNull(),
 											"sse_algorithm":     tfknownvalue.StringExact(awstypes.TableSseAlgorithmAwsKms),
