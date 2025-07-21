@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/identityschema"
@@ -53,63 +54,113 @@ func TestIdentityInterceptor(t *testing.T) {
 		"type":   "some_type",
 	}
 
-	testCases := map[string]struct {
-		attrName     string
-		identitySpec inttypes.Identity
+	testOperations := map[string]struct {
+		operation func(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics)
 	}{
-		"same names": {
-			attrName:     "name",
-			identitySpec: regionalSingleParameterIdentitySpec("name"),
+		"create": {
+			operation: create,
 		},
-		"name mapped": {
-			attrName:     "resource_name",
-			identitySpec: regionalSingleParameterIdentitySpecNameMapped("resource_name", "name"),
+		"read": {
+			operation: read,
 		},
 	}
 
-	for tname, tc := range testCases {
+	for tname, tc := range testOperations {
 		t.Run(tname, func(t *testing.T) {
 			t.Parallel()
-			ctx := t.Context()
 
-			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
+			operation := tc.operation
 
-			interceptor := newIdentityInterceptor(tc.identitySpec.Attributes)
-
-			identity := emtpyIdentityFromSchema(ctx, &identitySchema)
-
-			request := resource.CreateRequest{
-				Config:   configFromSchema(ctx, resourceSchema, stateAttrs),
-				Plan:     planFromSchema(ctx, resourceSchema, stateAttrs),
-				Identity: identity,
-			}
-			response := resource.CreateResponse{
-				State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
-				Identity: identity,
-			}
-			opts := interceptorOptions[resource.CreateRequest, resource.CreateResponse]{
-				c:        client,
-				request:  &request,
-				response: &response,
-				when:     After,
+			testCases := map[string]struct {
+				attrName     string
+				identitySpec inttypes.Identity
+			}{
+				"same names": {
+					attrName:     "name",
+					identitySpec: regionalSingleParameterIdentitySpec("name"),
+				},
+				"name mapped": {
+					attrName:     "resource_name",
+					identitySpec: regionalSingleParameterIdentitySpecNameMapped("resource_name", "name"),
+				},
 			}
 
-			diags := interceptor.create(ctx, opts)
-			if len(diags) > 0 {
-				t.Fatalf("unexpected diags during interception: %s", diags)
-			}
+			for tname, tc := range testCases {
+				t.Run(tname, func(t *testing.T) {
+					t.Parallel()
+					ctx := t.Context()
 
-			if e, a := accountID, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("account_id")); e != a {
-				t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
-			}
-			if e, a := region, getIdentityAttributeValue(ctx, t, response.Identity, path.Root("region")); e != a {
-				t.Errorf("expected Identity `region` to be %q, got %q", e, a)
-			}
-			if e, a := name, getIdentityAttributeValue(ctx, t, response.Identity, path.Root(tc.attrName)); e != a {
-				t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+					identitySchema := identity.NewIdentitySchema(tc.identitySpec)
+
+					interceptor := newIdentityInterceptor(tc.identitySpec.Attributes)
+
+					identity := emtpyIdentityFromSchema(ctx, &identitySchema)
+
+					responseIdentity, diags := operation(ctx, interceptor, resourceSchema, stateAttrs, identity, client)
+					if len(diags) > 0 {
+						t.Fatalf("unexpected diags during interception: %s", diags)
+					}
+
+					if e, a := accountID, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root("account_id")); e != a {
+						t.Errorf("expected Identity `account_id` to be %q, got %q", e, a)
+					}
+					if e, a := region, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root("region")); e != a {
+						t.Errorf("expected Identity `region` to be %q, got %q", e, a)
+					}
+					if e, a := name, getIdentityAttributeValue(ctx, t, responseIdentity, path.Root(tc.attrName)); e != a {
+						t.Errorf("expected Identity `%s` to be %q, got %q", tc.attrName, e, a)
+					}
+				})
 			}
 		})
 	}
+}
+
+func create(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.CreateRequest{
+		Config:   configFromSchema(ctx, resourceSchema, stateAttrs),
+		Plan:     planFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.CreateResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.CreateRequest, resource.CreateResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	diags := interceptor.create(ctx, opts)
+	if diags.HasError() {
+		return nil, diags
+	}
+	return response.Identity, diags
+}
+
+func read(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
+	request := resource.ReadRequest{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	response := resource.ReadResponse{
+		State:    stateFromSchema(ctx, resourceSchema, stateAttrs),
+		Identity: identity,
+	}
+	opts := interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+		c:        client,
+		request:  &request,
+		response: &response,
+		when:     After,
+	}
+
+	diags := interceptor.read(ctx, opts)
+	if diags.HasError() {
+		return nil, diags
+	}
+	return response.Identity, diags
 }
 
 func getIdentityAttributeValue(ctx context.Context, t *testing.T, identity *tfsdk.ResourceIdentity, path path.Path) string {
