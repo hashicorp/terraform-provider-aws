@@ -53,13 +53,16 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `arn` – (Required) Amazon Resource Name (ARN) of the resource.
+* `arn` - (Required) Amazon Resource Name (ARN) of the resource.
 
 The following arguments are optional:
 
-* `roleArn` – (Optional) Role that has read/write access to the resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `roleArn` - (Optional) Role that has read/write access to the resource.
 * `useServiceLinkedRole` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
 * `hybridAccessEnabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.
+* `withFederation`- (Optional) Whether or not the resource is a federated resource. Set to true when registering AWS Glue connections for federated catalog functionality.
+* `withPrivilegedAccess` - (Optional) Boolean to grant the calling principal the permissions to perform all supported Lake Formation operations on the registered data location.
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
@@ -69,4 +72,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `lastModified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-<!-- cache-key: cdktf-0.20.8 input-5970095587554c3a95bb54c03adea93f4524b57f2455f2dcc9fb934b4090d05b -->
+<!-- cache-key: cdktf-0.20.8 input-1b00e3a131d1fe3bfb1681d441c5ae9446653803683ae849bce3ea4c1b2debd2 -->

@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the repository.
 * `encryption_configuration` - (Optional) Encryption configuration for the repository. See [below for schema](#encryption_configuration).
 * `force_delete` - (Optional) If `true`, will delete the repository even if it contains images.
@@ -93,4 +94,4 @@ Using `terraform import`, import ECR Repositories using the `name`. For example:
 % terraform import aws_ecr_repository.service test-service
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1209b507b315e404a10f48d280e6590a59e9ffd637d877733fc8905cf37de81 -->
+<!-- cache-key: cdktf-0.20.8 input-5a26de0c0a0fb91a86397fad139037647b6c19a2adb7d9bafc261e02acfec931 -->

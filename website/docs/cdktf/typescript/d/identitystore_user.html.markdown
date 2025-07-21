@@ -61,8 +61,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alternateIdentifier` (Optional) A unique identifier for a user or group that is not the primary identifier. Conflicts with `userId` and `filter`. Detailed below.
-* `filter` - (Optional, **Deprecated** use the `alternateIdentifier` attribute instead) Configuration block for filtering by a unique attribute of the user. Detailed below.
 * `userId` - (Optional) The identifier for a user in the Identity Store.
 
 -> Exactly one of the above arguments must be provided. Passing both `filter` and `userId` is allowed for backwards compatibility.
@@ -82,15 +82,6 @@ The `externalId` configuration block supports the following arguments:
 
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
-
-### `filter` Configuration Block
-
-~> The `filter` configuration block has been deprecated. Use `alternateIdentifier` instead.
-
-The following arguments are supported by the `filter` configuration block:
-
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `UserName` is the only valid attribute path.
-* `attributeValue` - (Required) Value for an attribute.
 
 ### `uniqueAttribute` Configuration Block
 
@@ -141,4 +132,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userName` - User's user name value.
 * `userType` - The user type.
 
-<!-- cache-key: cdktf-0.20.8 input-8c28f2f52361f5a36e7b173700680cb27d3254e1fd37a8faf2c90f48b32a9d09 -->
+<!-- cache-key: cdktf-0.20.8 input-670d9a4ed0f164cbcab3972da4a52d838a4b9a95fb5101bdfade807d743f2eb2 -->

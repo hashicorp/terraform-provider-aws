@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The optional description for the tracker resource.
 * `kmsKeyId` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `positionFiltering` - (Optional) The position filtering method of the tracker resource. Valid values: `TimeBased`, `DistanceBased`, `AccuracyBased`. Default: `TimeBased`.
@@ -84,4 +85,4 @@ Using `terraform import`, import `aws_location_tracker` resources using the trac
 % terraform import aws_location_tracker.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-92c1e9973bd9acd1e32bccee7a0c518d0693fd82125603fc93d69ca391807e92 -->
+<!-- cache-key: cdktf-0.20.8 input-9cb54744f4257ddb11101774f3e0a0db41062ed1f48d03ed32002dd4c3f8280d -->

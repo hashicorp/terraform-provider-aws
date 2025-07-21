@@ -1619,7 +1619,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1645,7 +1645,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1675,7 +1675,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1701,7 +1701,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1726,7 +1726,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1752,7 +1752,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1777,8 +1777,8 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-    test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri      = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
+    test_s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1803,7 +1803,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1830,7 +1830,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1857,7 +1857,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
   }
 
   depends_on = [
@@ -1887,7 +1887,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri          = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
     label_delimiter = %[2]q
   }
 
@@ -1916,7 +1916,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1982,7 +1982,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2044,7 +2044,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2072,7 +2072,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2137,7 +2137,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2201,7 +2201,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2230,7 +2230,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2260,7 +2260,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2286,7 +2286,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2317,7 +2317,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2373,7 +2373,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2429,7 +2429,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2490,7 +2490,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2551,7 +2551,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2607,7 +2607,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2638,7 +2638,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2832,7 +2832,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2940,7 +2940,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -3041,7 +3041,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [

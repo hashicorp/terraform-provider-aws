@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) A description of the filter.
 * `networkServices` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazon-dns`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -86,4 +87,4 @@ Using `terraform import`, import traffic mirror filter using the `id`. For examp
 % terraform import aws_ec2_traffic_mirror_filter.foo tmf-0fbb93ddf38198f64
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-08ada8ec01a41a5d998f21a5946d9d4b579e2fe8c3ac968d45ecefd291cbd4c3 -->
+<!-- cache-key: cdktf-0.20.8 input-ed4f7bcdabc38f734462a6e69703cdf5a957ea23eb97ad89f96106e9402fff65 -->

@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `function_arn` - (Required) Amazon Resource Name (ARN) of the Lambda Function, omitting any version or alias qualifier.
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
@@ -71,4 +72,4 @@ Using `terraform import`, import `aws_connect_lambda_function_association` using
 % terraform import aws_connect_lambda_function_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111,arn:aws:lambda:us-west-2:123456789123:function:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0dc6354187f80cf8f051974afaaff4271402269b69f61f468fc0147b5f4d0bfa -->
+<!-- cache-key: cdktf-0.20.8 input-84b6f0f6580191de8a498f5202c6718a2856a86b0d37e1e5c2ebc5e357954d59 -->

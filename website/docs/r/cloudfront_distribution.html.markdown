@@ -294,6 +294,12 @@ resource "aws_cloudfront_distribution" "example" {
 
 resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
   region = "us-east-1"
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-Firehose
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
 
   # other config
 }

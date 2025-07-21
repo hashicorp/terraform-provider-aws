@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `keyId` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`
     * Key ARN. E.g. - `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
@@ -68,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `publicKeyPem` - Exported public key. The value is Privacy Enhanced Mail (PEM) encoded.
 * `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `SIGN_VERIFY`.
 
-<!-- cache-key: cdktf-0.20.8 input-e92373b825f621846e8ded65d7c84fea8edd86969a5767cfd3e37eec9a81adfa -->
+<!-- cache-key: cdktf-0.20.8 input-a087797f12c6d71b970cd4429bf03fc74775c51f859e129499a8bf67869c5955 -->

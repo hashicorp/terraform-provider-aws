@@ -107,6 +107,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required, Forces new resource) Application ID.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
 * `content` - (Required, Forces new resource) Content of the configuration or the configuration data.
@@ -146,4 +147,4 @@ Using `terraform import`, import AppConfig Hosted Configuration Versions using t
 % terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a6ff65d582f450abdbc1195a62bdb811f1120a5973cdab88491b53812cadd935 -->
+<!-- cache-key: cdktf-0.20.8 input-80ed3ce9eee4b0c529f00125746589d51a2b5072643cb5ca1093de76ac75b14b -->

@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) A friendly name of the IP set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the IP set.
@@ -84,4 +85,4 @@ Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For exampl
 % terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f82196903999cd43c0b830f8f317087ee826d45acc561c615922f3847ef0b30 -->
+<!-- cache-key: cdktf-0.20.8 input-0066f005528cdd6fd5c5ad42c70abd3a1cefdddfae954a65a2ef3302ca213e33 -->

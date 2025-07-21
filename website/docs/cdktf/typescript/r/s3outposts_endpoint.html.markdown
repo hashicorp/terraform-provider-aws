@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `outpostId` - (Required) Identifier of the Outpost to contain this endpoint.
 * `securityGroupId` - (Required) Identifier of the EC2 Security Group.
 * `subnetId` - (Required) Identifier of the EC2 Subnet.
@@ -89,4 +90,4 @@ Using `terraform import`, import S3 Outposts Endpoints using Amazon Resource Nam
 % terraform import aws_s3outposts_endpoint.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/endpoint/0123456789abcdef,sg-12345678,subnet-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b93127d0ddadbf29aad3870a10cc0f25e4ba9456be004933e642fe9c8e38df8b -->
+<!-- cache-key: cdktf-0.20.8 input-7f5733229c18a286743242d55101e196a3bc1bb2fdf737698a6169ea6bed875f -->

@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `asset_type` - (Required) The type of asset that is added to a data set. Valid values include `API_GATEWAY_API`, `LAKE_FORMATION_DATA_PERMISSION`, `REDSHIFT_DATA_SHARE`, `S3_DATA_ACCESS`, `S3_SNAPSHOT`.
 * `description` - (Required) A description for the data set.
 * `name` - (Required) The name of the data set.
@@ -75,4 +76,4 @@ Using `terraform import`, import DataExchange DataSets using their `id`. For exa
 % terraform import aws_dataexchange_data_set.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-51afa30f2f8158580256c7a7ad60a8367c9d13d2134a0f35b3d3d7a17a0e95a0 -->
+<!-- cache-key: cdktf-0.20.8 input-ec30cf2498ee9250d0e5b3ee15d1b2b235f3ff23b5763294b3aaf317bd5903c0 -->
