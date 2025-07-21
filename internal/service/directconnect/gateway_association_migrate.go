@@ -105,10 +105,10 @@ func gatewayAssociationStateUpgradeV1(ctx context.Context, rawState map[string]a
 
 	log.Println("[INFO] Found Direct Connect Gateway Association state v1; migrating to v2")
 
-	// transit_gateway_attachment_id was added, handle the case where it's not yet present.
+	// transit_gateway_attachment_id was introduced in v6.5.0, handle the case where it's not yet present.
 	if rawState["associated_gateway_type"].(string) == string(awstypes.GatewayTypeTransitGateway) {
 		if v, ok := rawState[names.AttrTransitGatewayAttachmentID]; !ok || v == nil {
-			output, err := findTransitGatewayAttachmentForDxGateway(ctx, conn, rawState["dx_gateway_id"].(string), rawState["associated_gateway_id"].(string))
+			output, err := findTransitGatewayAttachmentForGateway(ctx, conn, rawState["associated_gateway_id"].(string), rawState["dx_gateway_id"].(string))
 
 			if err != nil {
 				return nil, err

@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypesec2 "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,10 +179,10 @@ func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.DirectConnectClient(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
-
 	output, err := findGatewayAssociationByID(ctx, conn, associationID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -195,25 +195,26 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway Association (%s): %s", d.Id(), err)
 	}
 
+	associatedGatewayID, dxGatewayID := aws.ToString(output.AssociatedGateway.Id), aws.ToString(output.DirectConnectGatewayId)
 	if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 	}
-	d.Set("associated_gateway_id", output.AssociatedGateway.Id)
+	d.Set("associated_gateway_id", associatedGatewayID)
 	d.Set("associated_gateway_owner_account_id", output.AssociatedGateway.OwnerAccount)
 	d.Set("associated_gateway_type", output.AssociatedGateway.Type)
 	d.Set("dx_gateway_association_id", output.AssociationId)
-	d.Set("dx_gateway_id", output.DirectConnectGatewayId)
+	d.Set("dx_gateway_id", dxGatewayID)
 	d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
-
 	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
-		ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
-		transitGatewayAttachment, err := findTransitGatewayAttachmentForDxGateway(ctx, ec2Conn, aws.ToString(output.DirectConnectGatewayId), aws.ToString(output.AssociatedGateway.Id))
+		transitGatewayAttachment, err := findTransitGatewayAttachmentForGateway(ctx, c.EC2Client(ctx), associatedGatewayID, dxGatewayID)
 
 		if err != nil {
-			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Direct Connect Gateway Attachment", err))
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s) Attachment (%s): %s", associatedGatewayID, dxGatewayID, err)
 		}
 
 		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachment.TransitGatewayAttachmentId)
+	} else {
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
 	}
 
 	return diags
@@ -385,61 +386,25 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 	return output, nil
 }
 
-func findTransitGatewayAttachmentForDxGateway(ctx context.Context, conn *ec2.Client, dxGatewayId, transitGatewayId string) (*awstypesec2.TransitGatewayAttachment, error) {
-	filters := []awstypesec2.Filter{
-		{
-			Name:   aws.String("resource-type"),
-			Values: enum.Slice(awstypesec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+func findTransitGatewayAttachmentForGateway(ctx context.Context, conn *ec2.Client, tgwID, dxGatewayID string) (*ec2types.TransitGatewayAttachment, error) {
+	input := ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: []ec2types.Filter{
+			{
+				Name:   aws.String("resource-type"),
+				Values: enum.Slice(ec2types.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+			},
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{dxGatewayID},
+			},
+			{
+				Name:   aws.String("transit-gateway-id"),
+				Values: []string{tgwID},
+			},
 		},
-		{
-			Name:   aws.String("resource-id"),
-			Values: []string{dxGatewayId},
-		},
-		{
-			Name:   aws.String("transit-gateway-id"),
-			Values: []string{transitGatewayId},
-		},
 	}
 
-	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: filters,
-	}
-
-	return findTransitGatewayAttachment(ctx, conn, input)
-}
-
-func findTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypesec2.TransitGatewayAttachment, error) {
-	output, err := findTransitGatewayAttachments(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypesec2.TransitGatewayAttachment, error) {
-	var output []awstypesec2.TransitGatewayAttachment
-
-	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTransitGatewayAttachmentID.NotFound") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.TransitGatewayAttachments...)
-	}
-
-	return output, nil
+	return tfec2.FindTransitGatewayAttachment(ctx, conn, &input)
 }
 
 func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
