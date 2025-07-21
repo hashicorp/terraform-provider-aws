@@ -95,15 +95,9 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 									},
 									"table_arn": schema.StringAttribute{
 										Computed: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
-										},
 									},
 									names.AttrTableName: schema.StringAttribute{
 										Computed: true,
-										PlanModifiers: []planmodifier.String{
-											stringplanmodifier.UseStateForUnknown(),
-										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -387,7 +381,35 @@ func (r *bucketMetadataConfigurationResource) Update(ctx context.Context, reques
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	// Set values for unknowns.
+	output, err := findBucketMetadataConfigurationByTwoPartKey(ctx, conn, bucket, expectedBucketOwner)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Bucket Metadata Configuration (%s)", bucket), err.Error())
+
+		return
+	}
+
+	// Encryption configurations are not returned via the API.
+	// Propagate from Plan.
+	inventoryEncryptionConfiguration, journalEncryptionConfiguration, diags := getMetadataTableEncryptionConfigurationModels(ctx, &new)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new.MetadataConfiguration, fwflex.WithFieldNameSuffix("Result"))...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	diags = setMetadataTableEncryptionConfigurationModels(ctx, &new, inventoryEncryptionConfiguration, journalEncryptionConfiguration)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
 
 func (r *bucketMetadataConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -570,9 +592,17 @@ func getMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bu
 		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
+	if metadataConfigurationModel == nil {
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+	}
+
 	inventoryTableConfigurationModel, d := metadataConfigurationModel.InventoryTableConfiguration.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
+		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+	}
+
+	if inventoryTableConfigurationModel == nil {
 		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
@@ -580,6 +610,10 @@ func getMetadataTableEncryptionConfigurationModels(ctx context.Context, data *bu
 	diags.Append(d...)
 	if diags.HasError() {
 		return nullMetadataTableEncryptionConfigurationModel, nullMetadataTableEncryptionConfigurationModel, diags
+	}
+
+	if journalTableConfigurationModel == nil {
+		return inventoryTableConfigurationModel.EncryptionConfiguration, nullMetadataTableEncryptionConfigurationModel, diags
 	}
 
 	return inventoryTableConfigurationModel.EncryptionConfiguration, journalTableConfigurationModel.EncryptionConfiguration, diags

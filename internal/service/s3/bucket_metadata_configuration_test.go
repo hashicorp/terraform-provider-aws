@@ -84,6 +84,118 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.MetadataConfigurationResult
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetadataConfigurationConfig_encryption1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"configuration_state": tfknownvalue.StringExact(awstypes.InventoryConfigurationStateEnabled),
+									"encryption_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											names.AttrKMSKeyARN: knownvalue.Null(),
+											"sse_algorithm":     tfknownvalue.StringExact(awstypes.TableSseAlgorithmAes256),
+										}),
+									}),
+									"table_arn":         tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
+									names.AttrTableName: knownvalue.NotNull(),
+								}),
+							}),
+							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"record_expiration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"days":       knownvalue.Null(),
+											"expiration": tfknownvalue.StringExact(awstypes.ExpirationStateDisabled),
+										}),
+									}),
+									"table_arn":         tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
+									names.AttrTableName: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
+				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
+				ImportStateVerifyIgnore: []string{
+					"metadata_configuration.0.inventory_table_configuration.0.encryption_configuration",
+					"metadata_configuration.0.journal_table_configuration.0.encryption_configuration",
+				},
+			},
+			{
+				Config: testAccBucketMetadataConfigurationConfig_encryption2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"inventory_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"configuration_state":      tfknownvalue.StringExact(awstypes.InventoryConfigurationStateDisabled),
+									"encryption_configuration": knownvalue.ListSizeExact(0),
+									"table_arn":                knownvalue.Null(),
+									names.AttrTableName:        knownvalue.Null(),
+								}),
+							}),
+							"journal_table_configuration": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"encryption_configuration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											names.AttrKMSKeyARN: knownvalue.NotNull(),
+											"sse_algorithm":     tfknownvalue.StringExact(awstypes.TableSseAlgorithmAwsKms),
+										}),
+									}),
+									"record_expiration": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"days":       knownvalue.Int32Exact(30),
+											"expiration": tfknownvalue.StringExact(awstypes.ExpirationStateEnabled),
+										}),
+									}),
+									"table_arn":         tfknownvalue.RegionalARNRegexp("s3tables", regexache.MustCompile(`bucket/aws-s3/table/.+`)),
+									names.AttrTableName: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
@@ -164,7 +276,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_metadata_configuration" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   metadata_configuration {
     inventory_table_configuration {
@@ -175,6 +287,74 @@ resource "aws_s3_bucket_metadata_configuration" "test" {
       record_expiration {
         days       = 7
         expiration = "ENABLED"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketMetadataConfigurationConfig_encryption1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket_metadata_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  metadata_configuration {
+    inventory_table_configuration {
+      configuration_state = "ENABLED"
+
+      encryption_configuration {
+        sse_algorithm = "AES256"
+      }
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        expiration = "DISABLED"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketMetadataConfigurationConfig_encryption2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket_metadata_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  metadata_configuration {
+    inventory_table_configuration {
+      configuration_state = "DISABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 30
+        expiration = "ENABLED"
+      }
+
+      encryption_configuration {
+        sse_algorithm = "aws:kms"
+        kms_key_arn   = aws_kms_key.test.arn
       }
     }
   }
