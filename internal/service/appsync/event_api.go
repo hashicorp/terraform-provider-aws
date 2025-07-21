@@ -38,6 +38,7 @@ import (
 )
 
 // @FrameworkResource("aws_appsync_event_api", name="Event API")
+// @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
 // @Testing(importStateIdAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")

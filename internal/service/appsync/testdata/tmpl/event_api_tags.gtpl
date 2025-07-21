@@ -1,11 +1,11 @@
 resource "aws_cognito_user_pool" "test" {
-  name = var.name
   {{- template "region" }}
+  name = var.rName
 }
 
 resource "aws_iam_role" "lambda" {
-  name = var.name
   {{- template "region" }}
+  name = var.rName
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -34,35 +34,35 @@ data "aws_iam_policy_document" "lambda_basic" {
 }
 
 resource "aws_iam_role_policy" "lambda_basic" {
-  name   = var.name
+  {{- template "region" }}
+  name   = var.rName
   role   = aws_iam_role.lambda.id
   policy = data.aws_iam_policy_document.lambda_basic.json
-  {{- template "region" }}
 }
 
 resource "aws_lambda_function" "test" {
+  {{- template "region" }}
   filename         = "test-fixtures/lambdatest.zip"
-  function_name    = var.name
+  function_name    = var.rName
   role            = aws_iam_role.lambda.arn
   handler         = "index.handler"
   runtime         = "nodejs18.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
 
   depends_on = [aws_iam_role_policy.lambda_basic]
-  {{- template "region" }}
 }
 
 resource "aws_lambda_permission" "appsync_invoke" {
+  {{- template "region" }}
   statement_id  = "AllowExecutionFromAppSync"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.function_name
   principal     = "appsync.amazonaws.com"
-  {{- template "region" }}
 }
 
 resource "aws_iam_role" "cloudwatch" {
-  name = var.name
   {{- template "region" }}
+  name = var.rName
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -91,16 +91,16 @@ data "aws_iam_policy_document" "cloudwatch_logs" {
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
-  name   = var.name
+  {{- template "region" }}
+  name   = var.rName
   role   = aws_iam_role.cloudwatch.id
   policy = data.aws_iam_policy_document.cloudwatch_logs.json
-  {{- template "region" }}
 }
 
 resource "aws_appsync_event_api" "test" {
-  name          = var.name
-  owner_contact = "test@example.com"
   {{- template "region" }}
+  name          = var.rName
+  owner_contact = "test@example.com"
 
   event_config {
     auth_providers {
@@ -149,12 +149,7 @@ resource "aws_appsync_event_api" "test" {
     aws_lambda_permission.appsync_invoke,
     aws_iam_role_policy.cloudwatch
   ]
+  {{- template "tags" . }}
 }
 
 data "aws_region" "current" {}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_cognito_user_pool" "test" {
+
   name = var.rName
 }
 
 resource "aws_iam_role" "lambda" {
+
   name = var.rName
+
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -23,6 +26,7 @@ resource "aws_iam_role" "lambda" {
 }
 
 data "aws_iam_policy_document" "lambda_basic" {
+
   statement {
     effect = "Allow"
     actions = [
@@ -35,12 +39,14 @@ data "aws_iam_policy_document" "lambda_basic" {
 }
 
 resource "aws_iam_role_policy" "lambda_basic" {
+
   name   = var.rName
   role   = aws_iam_role.lambda.id
   policy = data.aws_iam_policy_document.lambda_basic.json
 }
 
 resource "aws_lambda_function" "test" {
+
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = var.rName
   role            = aws_iam_role.lambda.arn
@@ -52,6 +58,7 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_lambda_permission" "appsync_invoke" {
+
   statement_id  = "AllowExecutionFromAppSync"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.function_name
@@ -60,7 +67,6 @@ resource "aws_lambda_permission" "appsync_invoke" {
 
 resource "aws_iam_role" "cloudwatch" {
   name = var.rName
-
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -94,8 +100,10 @@ resource "aws_iam_role_policy" "cloudwatch" {
 }
 
 resource "aws_appsync_event_api" "test" {
+
   name          = var.rName
   owner_contact = "test@example.com"
+
 
   event_config {
     auth_providers {
@@ -144,12 +152,36 @@ resource "aws_appsync_event_api" "test" {
     aws_lambda_permission.appsync_invoke,
     aws_iam_role_policy.cloudwatch
   ]
+
+  tags = {
+    Name = var.rName
+  }
 }
 
-data "aws_region" "current" {}
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
 
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
+}
+
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
+  type     = string
+  nullable = false
 }
