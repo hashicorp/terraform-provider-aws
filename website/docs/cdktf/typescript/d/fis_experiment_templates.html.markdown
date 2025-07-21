@@ -89,6 +89,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired experiment templates.
 
@@ -98,4 +99,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the experiment template ids found.
 
-<!-- cache-key: cdktf-0.20.8 input-34e1ab0361e5b787a939b2c8842596350431d2cbff4a5f9cc56a762387ff3ab3 -->
+<!-- cache-key: cdktf-0.20.8 input-a513ae368cb8423036cb07c5fb9b81e5dad86afc1dfb866d0f71b299557550a9 -->

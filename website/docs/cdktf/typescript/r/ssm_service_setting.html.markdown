@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `settingId` - (Required) ID of the service setting.
 * `settingValue` - (Required) Value of the service setting.
 
@@ -82,4 +83,4 @@ Using `terraform import`, import AWS SSM Service Setting using the `settingId`. 
 % terraform import aws_ssm_service_setting.example arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-489362aa670f8e29ed8ee958af1a046523f1410820fe12b9bf0f827690afb34c -->
+<!-- cache-key: cdktf-0.20.8 input-a6fa90154400e1c2ad4a6df2ea58199a9d9539c71573319019c6d0832606c0dd -->

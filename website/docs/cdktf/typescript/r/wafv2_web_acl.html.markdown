@@ -494,6 +494,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associationConfig` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`associationConfig`](#association_config-block) below for details.
 * `captchaConfig` - (Optional) Specifies how AWS WAF should handle CAPTCHA evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`captchaConfig`](#captcha_config-block) below for details.
 * `challengeConfig` - (Optional) Specifies how AWS WAF should handle Challenge evaluations on the ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`challengeConfig`](#challenge_config-block) below for details.
@@ -855,6 +856,7 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 * `awsManagedRulesBotControlRuleSet` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`awsManagedRulesBotControlRuleSet`](#aws_managed_rules_bot_control_rule_set-block) for more details
 * `awsManagedRulesAcfpRuleSet` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
+* `awsManagedRulesAntiDdosRuleSet` - (Optional) Configuration for using the anti-DDoS managed rule group. See [`awsManagedRulesAntiDdosRuleSet`](#aws_managed_rules_anti_ddos_rule_set-block) for more details.
 * `awsManagedRulesAtpRuleSet` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `loginPath` - (Optional, **Deprecated**) The path of the login endpoint for your application.
 * `passwordField` - (Optional, **Deprecated**) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
@@ -873,6 +875,19 @@ The `managedRuleGroupConfigs` block support the following arguments:
 * `registrationPagePath` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
 * `requestInspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`requestInspection`](#request_inspection-block) for more details.
 * `responseInspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`responseInspection`](#response_inspection-block) for more details.
+
+### `awsManagedRulesAntiDdosRuleSet` Block
+
+* `clientSideActionConfig` - (Required) Configuration for the request handling that's applied by the managed rule group rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` during a distributed denial of service (DDoS) attack. See [`clientSideActionConfig`](#client_side_action_config-block) for more details.
+* `sensitivityToBlock` - (Optional) Sensitivity that the rule group rule DDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW` (Default), `MEDIUM`, and `HIGH`.
+
+### `clientSideActionConfig` Block
+
+* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`.
+    * `exemptUriRegularExpression` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge.
+        * `regexString` - (Optional) Regular expression string.
+    * `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
+    * `usageOfAction` - (Required) Configuration whether to use the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests` in the rule group evaluation. Valid values are `ENABLED` and `DISABLED`.
 
 ### `awsManagedRulesAtpRuleSet` Block
 
@@ -1281,4 +1296,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2a83f1c599b9f6e519a765ca5bece64ac86a11205b334fe9e1003e6ee3ef6da9 -->
+<!-- cache-key: cdktf-0.20.8 input-9bb3813b6e70cbf794d0edb7fa099e74cd4d1c389a273431955edf915caaff91 -->

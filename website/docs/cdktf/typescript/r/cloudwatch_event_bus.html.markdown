@@ -76,12 +76,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 The following arguments are required:
 
 * `name` - (Required) Name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure that the `name` matches the `eventSourceName`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deadLetterConfig` - (Optional) Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block supports the following arguments:
     * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - (Optional) Event bus description.
@@ -129,4 +131,4 @@ Using `terraform import`, import EventBridge event buses using the name of the e
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74e8cec84020e703b4118381101396b748434325ddcdb39a4b7ebee3a37c011f -->
+<!-- cache-key: cdktf-0.20.8 input-3f21b0e794eb065ee5cb5f49d0bb1e2fa44076f576497d700e7d08174b5a95c0 -->

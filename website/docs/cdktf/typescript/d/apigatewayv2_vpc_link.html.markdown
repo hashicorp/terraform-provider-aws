@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcLinkId` - (Required) VPC Link ID
 
 ## Attribute Reference
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnetIds` - List of subnets attached to the VPC Link.
 * `tags` - VPC Link Tags.
 
-<!-- cache-key: cdktf-0.20.8 input-db9af2f442336fd7de2229afb09e10b9b5c69f60032807dbab92c400c5bb0259 -->
+<!-- cache-key: cdktf-0.20.8 input-6e8ca25652c542ddade159d59ce5b1818f6f19534ddadca40a7bcf2304c4ce28 -->

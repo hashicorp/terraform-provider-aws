@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
 * `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
@@ -137,4 +138,4 @@ Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier
 % terraform import aws_apigatewayv2_api.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5937fe25e59e4f0b489f0ac096dfb790d69bf92f8804fa8f94094536f0c538fd -->
+<!-- cache-key: cdktf-0.20.8 input-98d6e7b7b70154ad6c2106a94f00cf739e406da481a9585c8e450c28f6152114 -->

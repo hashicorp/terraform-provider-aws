@@ -112,6 +112,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `folderType` - (Optional) The type of folder. By default, it is `SHARED`. Valid values are: `SHARED`.
 * `parentFolderArn` - (Optional) The Amazon Resource Name (ARN) for the parent folder. If not set, creates a root-level folder.
@@ -175,4 +176,4 @@ Using `terraform import`, import a QuickSight folder using the AWS account ID an
 % terraform import aws_quicksight_folder.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bfe67ec1b66703fe4dec29123039432b9ff61c08d31438163738103ae03db233 -->
+<!-- cache-key: cdktf-0.20.8 input-d394f5d3569bed873d9f957a18808c9ca7ba718f5a92d4e06f6ce611f99f68a8 -->
