@@ -284,9 +284,9 @@ func resourceApplication() *schema.Resource {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"application_restore_type": {
+														// NOTE: Set as required in Cloudformation: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-kinesisanalyticsv2-application-applicationrestoreconfiguration.html
 														Type:             schema.TypeString,
-														Optional:         true,
-														Computed:         true,
+														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ApplicationRestoreType](),
 													},
 													"snapshot_name": {
@@ -1283,7 +1283,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 
-			if d.HasChange("application_configuration.0.run_configuration") {
+			if runConfig := d.Get("application_configuration.0.run_configuration").([]any); len(runConfig) > 0 {
 				application, err := findApplicationDetailByName(ctx, conn, applicationName)
 
 				if err != nil {
@@ -1291,9 +1291,21 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				}
 
 				if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
-					input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+					var needsRunConfigUpdate bool
+					// NOTE: Always apply application_restore_configuration if set (prevents dangerous defaults)
+					if restoreConfig := d.Get("application_configuration.0.run_configuration.0.application_restore_configuration").([]any); len(restoreConfig) > 0 && restoreConfig[0] != nil {
+						needsRunConfigUpdate = true
+					}
 
-					updateApplication = true
+					// Catch any other run config changes
+					if d.HasChange("application_configuration.0.run_configuration") {
+						needsRunConfigUpdate = true
+					}
+
+					if needsRunConfigUpdate {
+						input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+						updateApplication = true
+					}
 				}
 			}
 
