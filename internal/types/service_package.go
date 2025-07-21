@@ -280,6 +280,24 @@ func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identi
 	return identity
 }
 
+func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource:  true,
+		IdentityAttribute: name,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
+		},
+		IsSingleParameter: true,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
 func GlobalParameterizedIdentity(attributes []IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	baseAttributes := []IdentityAttribute{
 		StringIdentityAttribute("account_id", false),
