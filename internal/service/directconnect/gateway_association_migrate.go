@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -110,11 +111,14 @@ func gatewayAssociationStateUpgradeV1(ctx context.Context, rawState map[string]a
 		if v, ok := rawState[names.AttrTransitGatewayAttachmentID]; !ok || v == nil {
 			output, err := findTransitGatewayAttachmentForGateway(ctx, conn, rawState["associated_gateway_id"].(string), rawState["dx_gateway_id"].(string))
 
-			if err != nil {
+			switch {
+			case tfawserr.ErrCodeEquals(err, "UnauthorizedOperation"):
+				rawState[names.AttrTransitGatewayAttachmentID] = nil
+			case err != nil:
 				return nil, err
+			default:
+				rawState[names.AttrTransitGatewayAttachmentID] = aws.ToString(output.TransitGatewayAttachmentId)
 			}
-
-			rawState[names.AttrTransitGatewayAttachmentID] = aws.ToString(output.TransitGatewayAttachmentId)
 		}
 	}
 

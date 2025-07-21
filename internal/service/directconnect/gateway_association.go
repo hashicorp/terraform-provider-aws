@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -208,11 +209,14 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
 		transitGatewayAttachment, err := findTransitGatewayAttachmentForGateway(ctx, c.EC2Client(ctx), associatedGatewayID, dxGatewayID)
 
-		if err != nil {
+		switch {
+		case tfawserr.ErrCodeEquals(err, "UnauthorizedOperation"):
+			d.Set(names.AttrTransitGatewayAttachmentID, nil)
+		case err != nil:
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s) Attachment (%s): %s", associatedGatewayID, dxGatewayID, err)
+		default:
+			d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachment.TransitGatewayAttachmentId)
 		}
-
-		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachment.TransitGatewayAttachmentId)
 	} else {
 		d.Set(names.AttrTransitGatewayAttachmentID, nil)
 	}
