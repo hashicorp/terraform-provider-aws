@@ -332,6 +332,10 @@ func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
 	return inttypes.GlobalSingleParameterIdentity(attrName)
 }
 
+func globalSingleParameterizedIdentitySpecWithMappedName(attrName, resourceAttrName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentityWithMappedName(attrName, resourceAttrName)
+}
+
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -366,7 +370,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := regionalSingleParameterizedIdentitySpec(tc.attrName)
+			identitySpec := globalSingleParameterizedIdentitySpec(tc.attrName)
 
 			d := schema.TestResourceDataRaw(t, globalSingleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
@@ -411,20 +415,23 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 	region := "a-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
 		identityAttrs       map[string]string
+		resourceAttrName    string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
 		"Attr_Required": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"name": "a_name",
 			},
 			expectError: false,
 		},
 		"Attr_WithAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -432,7 +439,8 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError: false,
 		},
 		"Attr_WrongAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"name":       "a_name",
@@ -441,14 +449,16 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 		},
 
 		"ID_Required": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"id": "a_name",
 			},
 			expectError: false,
 		},
 		"ID_WithAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"id":         "a_name",
@@ -456,12 +466,22 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError: false,
 		},
 		"ID_WrongAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"id":         "a_name",
 			},
 			expectError: true,
+		},
+
+		"name mapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+			},
+			expectError: false,
 		},
 	}
 
@@ -475,7 +495,12 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := globalSingleParameterizedIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = globalSingleParameterizedIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = globalSingleParameterizedIdentitySpecWithMappedName(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			identitySchema := identity.NewIdentitySchema(identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
@@ -498,14 +523,14 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check ID value
 			// ID must always be set for SDKv2 resources
-			if e, a := tc.identityAttrs[tc.attrName], getAttributeValue(t, d, "id"); e != a {
+			if e, a := tc.identityAttrs[tc.identityAttrName], getAttributeValue(t, d, "id"); e != a {
 				t.Errorf("expected `id` to be %q, got %q", e, a)
 			}
 
 			// Check name value
 			var expectedNameValue string
-			if tc.attrName == "name" {
-				expectedNameValue = tc.identityAttrs["name"]
+			if tc.resourceAttrName == "name" {
+				expectedNameValue = tc.identityAttrs[tc.identityAttrName]
 			}
 			if e, a := expectedNameValue, getAttributeValue(t, d, "name"); e != a {
 				t.Errorf("expected `name` to be %q, got %q", e, a)
