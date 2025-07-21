@@ -59,7 +59,7 @@ func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resou
 			"log_configurations": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[logConfigurationModel](ctx),
 				Validators: []validator.List{
-                                        listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
