@@ -30,11 +30,11 @@ resource "aws_comprehend_entity_recognizer" "example" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
