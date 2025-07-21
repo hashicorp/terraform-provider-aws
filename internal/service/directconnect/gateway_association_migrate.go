@@ -11,7 +11,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,62 +18,32 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{Type: schema.TypeString},
 			},
-
 			"associated_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id", "vpn_gateway_id"},
+				Type: schema.TypeString,
 			},
-
 			"associated_gateway_owner_account_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidAccountID,
-				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+				Type: schema.TypeString,
 			},
-
 			"associated_gateway_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
-
 			"dx_gateway_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
-
 			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type: schema.TypeString,
 			},
-
 			"dx_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
-
 			"proposal_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+				Type: schema.TypeString,
 			},
-
 			"vpn_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				Type: schema.TypeString,
 			},
 		},
 	}
@@ -84,51 +53,29 @@ func resourceGatewayAssociationResourceV1() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{Type: schema.TypeString},
 			},
 			"associated_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				Type: schema.TypeString,
 			},
 			"associated_gateway_owner_account_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidAccountID,
-				ConflictsWith: []string{"associated_gateway_id"},
-				RequiredWith:  []string{"proposal_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				Type: schema.TypeString,
 			},
 			"associated_gateway_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
 			"dx_gateway_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
 			"dx_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type: schema.TypeString,
 			},
 			"dx_gateway_owner_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
 			},
 			"proposal_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"associated_gateway_id"},
-				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				Type: schema.TypeString,
 			},
 		},
 	}
