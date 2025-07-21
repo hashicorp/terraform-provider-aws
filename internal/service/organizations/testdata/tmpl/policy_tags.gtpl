@@ -13,5 +13,3 @@ resource "aws_organizations_policy" "test" {
 EOF
 {{- template "tags" . }}
 }
-
-data "aws_organizations_organization" "current" {}

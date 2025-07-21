@@ -16,8 +16,6 @@ resource "aws_organizations_policy" "test" {
 EOF
 }
 
-data "aws_organizations_organization" "current" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string

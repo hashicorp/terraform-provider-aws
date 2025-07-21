@@ -577,8 +577,6 @@ EOF
   description = %[1]q
   name        = %[2]q
 }
-
-data "aws_organizations_organization" "current" {}
 `, description, rName)
 }
 
@@ -602,8 +600,6 @@ EOF
     %[2]q = %[3]q
   }
 }
-
-data "aws_organizations_organization" "current" {}
 `, rName, tagKey1, tagValue1)
 }
 
@@ -628,8 +624,6 @@ EOF
     %[4]q = %[5]q
   }
 }
-
-data "aws_organizations_organization" "current" {}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
@@ -639,8 +633,6 @@ resource "aws_organizations_policy" "test" {
   content = %[1]s
   name    = %[2]q
 }
-
-data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName)
 }
 
@@ -720,8 +712,6 @@ EOF
 
   name = "%[1]s5"
 }
-
-data "aws_organizations_organization" "current" {}
 `, rName)
 }
 
@@ -732,8 +722,6 @@ resource "aws_organizations_policy" "test" {
   name    = %[2]q
   type    = %[3]q
 }
-
-data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName, policyType)
 }
 
@@ -746,7 +734,6 @@ resource "aws_organizations_policy" "test" {
   skip_destroy = true
 }
 
-data "aws_organizations_organization" "current" {}
 `, strconv.Quote(content), rName)
 }
 
