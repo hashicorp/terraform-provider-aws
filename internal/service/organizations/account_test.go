@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -361,7 +360,10 @@ func testAccOrganizationsAccount_Identity_ExistingResource(t *testing.T) {
 
 	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	orgsEmailDomain := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN")
+	rInt := sdkacctest.RandInt()
+	name := fmt.Sprintf("tf_acctest_%d", rInt)
+	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -376,10 +378,13 @@ func testAccOrganizationsAccount_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Account/basic_v5.100.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
 				},
+				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 				),
@@ -390,10 +395,13 @@ func testAccOrganizationsAccount_Identity_ExistingResource(t *testing.T) {
 
 			// Step 2: v6.0 Identity set on refresh
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Account/basic_v6.0.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.0.0",
+					},
 				},
+				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 				),
@@ -417,10 +425,7 @@ func testAccOrganizationsAccount_Identity_ExistingResource(t *testing.T) {
 			// Step 3: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Account/basic/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
+				Config:                   testAccAccountConfig_closeOnDeletion(name, email),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
