@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElasticacheClustersDataSource_filter(t *testing.T) {
+func TestAccElastiCacheClustersDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cacheCluster types.CacheCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
