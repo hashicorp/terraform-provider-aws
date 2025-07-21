@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_flow: Remove node and connection limits
+```
