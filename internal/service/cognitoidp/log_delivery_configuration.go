@@ -36,16 +36,16 @@ import (
 // @Testing(importStateIdAttribute="user_pool_id")
 // @Testing(preIdentityVersion="v6.3.0")
 func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &LogDeliveryConfigurationResource{}
+	r := &logDeliveryConfigurationResource{}
 	return r, nil
 }
 
-type LogDeliveryConfigurationResource struct {
+type logDeliveryConfigurationResource struct {
 	framework.ResourceWithModel[resourceLogDeliveryConfigurationModel]
 	framework.WithImportByIdentity
 }
 
-func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *logDeliveryConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrUserPoolID: schema.StringAttribute{
@@ -123,7 +123,7 @@ func (r *LogDeliveryConfigurationResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func (r *LogDeliveryConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *logDeliveryConfigurationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
 
 	var plan resourceLogDeliveryConfigurationModel
@@ -156,7 +156,7 @@ func (r *LogDeliveryConfigurationResource) Create(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *LogDeliveryConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *logDeliveryConfigurationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
 
 	var state resourceLogDeliveryConfigurationModel
@@ -184,7 +184,7 @@ func (r *LogDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *LogDeliveryConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *logDeliveryConfigurationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
 
 	var plan, state resourceLogDeliveryConfigurationModel
@@ -226,7 +226,7 @@ func (r *LogDeliveryConfigurationResource) Update(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *LogDeliveryConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *logDeliveryConfigurationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CognitoIDPClient(ctx)
 
 	var state resourceLogDeliveryConfigurationModel
