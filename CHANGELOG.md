@@ -1,4 +1,9 @@
 ## 6.5.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_s3_bucket_metadata_configuration` ([#41364](https://github.com/hashicorp/terraform-provider-aws/issues/41364))
+
 ## 6.4.0 (July 17, 2025)
 
 FEATURES:
