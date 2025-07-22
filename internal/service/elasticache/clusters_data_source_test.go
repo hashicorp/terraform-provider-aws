@@ -25,12 +25,12 @@ func TestAccElastiCacheClustersDataSource_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, t, resourceName, &cacheCluster),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_identifiers.#", "1"),

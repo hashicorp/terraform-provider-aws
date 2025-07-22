@@ -45,18 +45,14 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	input := &elasticache.DescribeCacheClustersInput{}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ElastiCacheFilters()
-	}
-
-	clusters, err := findCacheClusters(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheCluster])
+	clusters, err := findCacheClusters(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheCluster]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elasticache Clusters: %s", err)
 	}
 
 	var clusterARNs []string
-	var cluterIdentifiers []string
+	var clusterIdentifiers []string
 
 	for _, cluster := range clusters {
 		clusterARNs = append(clusterARNs, aws.ToString(cluster.ARN))
