@@ -55,7 +55,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
 			acctest.CtDisappears:                 testAccOrganizationalUnit_disappears,
 			"update":                             testAccOrganizationalUnit_update,
-			"tags":                               testAccOrganizationalUnit_tags,
+			"tags":                               testAccOrganizationsOrganizationalUnit_tagsSerial,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
 			"DescendantOUsDataSource_basic":      testAccOrganizationalUnitDescendantOUsDataSource_basic,
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
