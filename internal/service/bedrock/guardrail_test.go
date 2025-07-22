@@ -275,6 +275,10 @@ resource "aws_bedrock_guardrail" "test" {
   blocked_outputs_messaging = "test"
   description               = "test"
 
+  cross_region_inference {
+    guardrail_profile = "US Guardrail v1:0"
+  }
+
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -286,6 +290,7 @@ resource "aws_bedrock_guardrail" "test" {
       output_strength = "HIGH"
       type            = "VIOLENCE"
     }
+	tier_name = "STANDARD"
   }
 
   contextual_grounding_policy_config {
@@ -323,6 +328,7 @@ resource "aws_bedrock_guardrail" "test" {
       type       = "DENY"
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
+	tier_name = "CLASSIC"
   }
 
   word_policy_config {
