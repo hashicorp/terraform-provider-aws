@@ -15,6 +15,22 @@ inttypes.StringIdentityAttribute(
 {{- end -}}
 {{- end }}
 
+{{ define "SDKv2CommonIdentityOpts" -}}
+{{- if .HasV6_0SDKv2Fix }}
+	inttypes.WithV6_0SDKv2Fix(),
+{{- end }}
+{{- template "CommonIdentityOpts" . -}}
+{{- end }}
+
+{{ define "CommonIdentityOpts" -}}
+{{- if .MutableIdentity }}
+	inttypes.WithMutableIdentity(),
+{{ end -}}
+{{- if .HasIdentityFix }}
+	inttypes.WithIdentityFix(),
+{{ end -}}
+{{- end }}
+
 package {{ .ProviderPackage }}
 
 import (
@@ -136,9 +152,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
 					},
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end -}}
+					{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else }}
 					Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -146,9 +160,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
 					},
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end -}}
+					{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- end }}
 			{{- else if gt (len $value.IdentityAttributes) 0 }}
@@ -157,18 +169,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- range $value.IdentityAttributes -}}
 							{{ .Name }},
 						{{- end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- else }}
 					Identity: inttypes.RegionalSingleParameterIdentity(
 						{{- range $value.IdentityAttributes -}}
 							{{ .Name }},
 						{{- end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
@@ -196,12 +204,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 					{{- if .HasIdentityDuplicateAttrs -}}
 						inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 					{{- end -}}
-					{{- if .MutableIdentity }}
-						inttypes.WithMutableIdentity(),
-					{{- end }}
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end }}
+					{{- template "CommonIdentityOpts" . -}}
 				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
@@ -209,18 +212,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{ else }}
 					Identity: inttypes.RegionalSingletonIdentity(
 						{{- if .HasIdentityDuplicateAttrs -}}
 							inttypes.WithIdentityDuplicateAttrs({{ range .IdentityDuplicateAttrs }}{{ . }}, {{ end }}),
 						{{- end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "CommonIdentityOpts" . -}}
 					),
 				{{- end }}
 			{{- end }}
@@ -312,12 +311,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
 					},
-					{{- if $value.HasV6_0SDKv2Fix }}
-						inttypes.WithV6_0SDKv2Fix(),
-					{{ end -}}
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end -}}
+					{{- template "SDKv2CommonIdentityOpts" . -}}
 					),
 				{{- else }}
 					Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
@@ -325,12 +319,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 							{{ template "IdentifierAttribute" . }}
 						{{- end }}
 					},
-					{{- if $value.HasV6_0SDKv2Fix }}
-						inttypes.WithV6_0SDKv2Fix(),
-					{{ end -}}
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end -}}
+					{{- template "SDKv2CommonIdentityOpts" . -}}
 					),
 				{{- end }}
 			{{- else if gt (len $value.IdentityAttributes) 0 }}
@@ -339,24 +328,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 						{{- range $value.IdentityAttributes -}}
 							{{ .Name }},
 						{{- end -}}
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- else }}
 					Identity: inttypes.RegionalSingleParameterIdentity(
 						{{- range $value.IdentityAttributes -}}
 							{{ .Name }},
 						{{- end }}
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- end }}
 			{{- else if $value.ARNIdentity }}
@@ -374,34 +353,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 					{{- end }}
 				{{- end }}
 					inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-					{{- if $value.HasV6_0SDKv2Fix }}
-						inttypes.WithV6_0SDKv2Fix(),
-					{{ end -}}
-					{{- if .MutableIdentity }}
-						inttypes.WithMutableIdentity(),
-					{{- end }}
-					{{- if .HasIdentityFix }}
-						inttypes.WithIdentityFix(),
-					{{- end }}
+					{{- template "SDKv2CommonIdentityOpts" . }}
 				),
 			{{- else if $value.SingletonIdentity }}
 				{{- if or $.IsGlobal $value.IsGlobal }}
 					Identity: inttypes.GlobalSingletonIdentity(
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- else }}
 					Identity: inttypes.RegionalSingletonIdentity(
-						{{- if $value.HasV6_0SDKv2Fix }}
-							inttypes.WithV6_0SDKv2Fix(),
-						{{ end -}}
-						{{- if .HasIdentityFix }}
-							inttypes.WithIdentityFix(),
-						{{- end }}
+						{{- template "SDKv2CommonIdentityOpts" . }}
 					),
 				{{- end }}
 			{{- end }}
