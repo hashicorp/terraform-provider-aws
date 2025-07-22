@@ -49,7 +49,7 @@ jobs:
           github-token:
             ${{ secrets.BOB_GITHUB_TOKEN }}
 
-      - name: "promote to ${{ inputs.environment }}"
+      - name: "promote to ${{ inputs.release-channel }}"
         env:
           BOB_GITHUB_TOKEN: ${{ secrets.BOB_GITHUB_TOKEN }}
         run: |
