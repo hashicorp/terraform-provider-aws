@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.61.1
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.46.5
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.27.5
@@ -72,8 +72,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.7
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.3
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.8
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1
@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.233.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.1
@@ -222,7 +222,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.6.1
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.201.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.202.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.8
@@ -252,7 +252,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.12.3
-	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.10.6
+	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.47.1
