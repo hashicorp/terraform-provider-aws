@@ -13,12 +13,12 @@ var (
 	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID               = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
 	FindNetworkInterfaces                                          = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
-	FindTransitGatewayAttachmentByID                               = findTransitGatewayAttachmentByID
 	FindSecurityGroupByDescriptionAndVPCID                         = findSecurityGroupByDescriptionAndVPCID
 	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID
 	FindSecurityGroups                                             = findSecurityGroups
 	FindSubnetByID                                                 = findSubnetByID
+	FindTransitGatewayAttachmentByID                               = findTransitGatewayAttachmentByID
 	FindVPCByID                                                    = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
 	NetworkInterfaceDetachedTimeout                                = networkInterfaceDetachedTimeout
@@ -30,6 +30,8 @@ var (
 	ResourceTransitGatewayConnectPeer                              = resourceTransitGatewayConnectPeer
 	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
+	WaitTransitGatewayAttachmentAccepted                           = waitTransitGatewayAttachmentAccepted
+	WaitTransitGatewayAttachmentDeleted                            = waitTransitGatewayAttachmentDeleted
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )
 
