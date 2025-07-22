@@ -33,6 +33,10 @@ const (
 	replicationTaskStatusStopping  = "stopping"
 	replicationTaskStatusRunning   = "running"
 	replicationTaskStatusStarting  = "starting"
+
+	replicationTaskStatusStoppedFullLoadOnlyFinished = "stopped_FULL_LOAD_ONLY_FINISHED"
+	replicationTaskStatusStoppedAfterFullLoad        = "stopped_STOPPED_AFTER_FULL_LOAD"
+	replicationTaskStatusStoppedAfterCachedEvents    = "stopped_STOPPED_AFTER_CACHED_EVENTS"
 )
 
 const (
