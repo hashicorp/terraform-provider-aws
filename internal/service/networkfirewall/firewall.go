@@ -269,7 +269,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(aws.ToString(output.Firewall.FirewallArn))
 
 	if output.Firewall.TransitGatewayId != nil {
-		if _, err := waitFirewallTransitGatewayAttachment(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		if _, err := waitFirewallTransitGatewayAttachmentCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) create: %s", d.Id(), err)
 		}
 	} else {
@@ -643,6 +643,10 @@ func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfi
 			return nil, "", err
 		}
 
+		if output.FirewallStatus.TransitGatewayAttachmentSyncState == nil {
+			return nil, "", nil
+		}
+
 		return output, string(output.FirewallStatus.TransitGatewayAttachmentSyncState.TransitGatewayAttachmentStatus), nil
 	}
 }
@@ -664,7 +668,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, time
 	return nil, err
 }
 
-func waitFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
+func waitFirewallTransitGatewayAttachmentCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatusCreating),
 		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStatusPendingAcceptance, awstypes.TransitGatewayAttachmentStatusReady),
