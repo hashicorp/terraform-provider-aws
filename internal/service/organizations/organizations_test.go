@@ -91,7 +91,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"ResourcePolicy": {
 			acctest.CtBasic:      testAccResourcePolicy_basic,
 			acctest.CtDisappears: testAccResourcePolicy_disappears,
-			"tags":               testAccResourcePolicy_tags,
+			"tags":               testAccOrganizationsResourcePolicy_tagsSerial,
 			"Identity":           testAccOrganizationsResourcePolicy_IdentitySerial,
 		},
 		"DelegatedAdministrator": {
