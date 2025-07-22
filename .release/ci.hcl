@@ -91,11 +91,11 @@ event "promote-production" {
   promotion-events {
     bump-version-patch = true
 
-    # post-promotion {
-    #   organization = "hashicorp"
-    #   repository = "terraform-provider-aws"
-    #   workflow = "crt-post-promote-production.yml"
-    # }
+    post-promotion {
+      organization = "hashicorp"
+      repository = "terraform-provider-aws"
+      workflow = "crt-post-promote-production.yml"
+    }
   }
 
   depends = ["trigger-production"]
