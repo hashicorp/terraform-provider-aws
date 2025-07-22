@@ -50,10 +50,11 @@ func resourceCertificateAuthority() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateAuthorityUpdate,
 		DeleteWithoutTimeout: resourceCertificateAuthorityDelete,
 
-		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, d, names.AttrARN, []string{names.AttrID}); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
 					return nil, err
 				}
 
