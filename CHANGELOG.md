@@ -6,6 +6,7 @@ FEATURES:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_resource: Recompute `path` when `path_part` is updated ([#43215](https://github.com/hashicorp/terraform-provider-aws/issues/43215))
 * resource/aws_instance: Recompute `ipv6_addresses` when `ipv6_address_count` is updated ([#43158](https://github.com/hashicorp/terraform-provider-aws/issues/43158))
 
 ## 6.4.0 (July 17, 2025)
