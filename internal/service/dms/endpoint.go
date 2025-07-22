@@ -371,8 +371,9 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"authentication_method": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PostgreSQLAuthenticationMethod](),
 						},
 						"babelfish_database_name": {
 							Type:     schema.TypeString,
@@ -383,8 +384,9 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"database_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DatabaseMode](),
 						},
 						"ddl_artifacts_schema": {
 							Type:     schema.TypeString,
@@ -419,20 +421,23 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"map_long_varchar_as": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LongVarcharMappingType](),
 						},
 						"max_file_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
 						"plugin_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PluginNameValue](),
 						},
 						"service_access_role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"slot_name": {
 							Type:     schema.TypeString,
@@ -1995,14 +2000,14 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	if v := apiObject.AfterConnectScript; v != nil {
 		tfMap["after_connect_script"] = aws.ToString(v)
 	}
-	tfMap["authentication_method"] = string(apiObject.AuthenticationMethod)
+	tfMap["authentication_method"] = apiObject.AuthenticationMethod
 	if v := apiObject.BabelfishDatabaseName; v != nil {
 		tfMap["babelfish_database_name"] = aws.ToString(v)
 	}
 	if v := apiObject.CaptureDdls; v != nil {
 		tfMap["capture_ddls"] = aws.ToBool(v)
 	}
-	tfMap["database_mode"] = string(apiObject.DatabaseMode)
+	tfMap["database_mode"] = apiObject.DatabaseMode
 	if v := apiObject.DdlArtifactsSchema; v != nil {
 		tfMap["ddl_artifacts_schema"] = aws.ToString(v)
 	}
@@ -2027,11 +2032,11 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	if v := apiObject.MapJsonbAsClob; v != nil {
 		tfMap["map_jsonb_as_clob"] = aws.ToBool(v)
 	}
-	tfMap["map_long_varchar_as"] = string(apiObject.MapLongVarcharAs)
+	tfMap["map_long_varchar_as"] = apiObject.MapLongVarcharAs
 	if v := apiObject.MaxFileSize; v != nil {
 		tfMap["max_file_size"] = aws.ToInt32(v)
 	}
-	tfMap["plugin_name"] = string(apiObject.PluginName)
+	tfMap["plugin_name"] = apiObject.PluginName
 	if v := apiObject.ServiceAccessRoleArn; v != nil {
 		tfMap["service_access_role_arn"] = aws.ToString(v)
 	}
