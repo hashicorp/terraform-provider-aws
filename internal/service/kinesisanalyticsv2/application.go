@@ -284,7 +284,6 @@ func resourceApplication() *schema.Resource {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"application_restore_type": {
-														// NOTE: Set as required in Cloudformation: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-kinesisanalyticsv2-application-applicationrestoreconfiguration.html
 														Type:             schema.TypeString,
 														Required:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ApplicationRestoreType](),
