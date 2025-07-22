@@ -205,9 +205,9 @@ func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tfcognitoidp.FindLogDeliveryConfigurationByUserPoolID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID])
+			out, err := tfcognitoidp.FindLogDeliveryConfigurationByUserPoolID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) || (out != nil && out.LogConfigurations == nil) {
 				continue
 			}
 
