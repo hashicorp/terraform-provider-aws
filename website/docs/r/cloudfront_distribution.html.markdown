@@ -300,6 +300,7 @@ This resource supports the following arguments:
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
+ > **Note:** When specifying either `response_page_path` or `response_code`, **both** must be set. Omitting one will result in an API error from CloudFront.
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `default_root_object` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
