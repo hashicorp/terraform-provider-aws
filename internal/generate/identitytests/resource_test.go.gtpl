@@ -189,7 +189,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
@@ -232,7 +232,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
@@ -352,32 +352,34 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
-						{{ if .ArnIdentity -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-									names.AttrRegion: knownvalue.StringExact(acctest.Region()),
-								{{ end -}}
-								{{ .ARNAttribute }}: knownvalue.NotNull(),
-							}),
-							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-						{{ else if .IsRegionalSingleton -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion: knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
+					{{ else -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
 								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-							}),
-						{{ else -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								{{ if not .IsGlobal -}}
-									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-								{{ end -}}
-								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
-								{{ end }}
-							}),
+							{{ end -}}
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 							{{ end }}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
 					{{ end -}}
 				},
 			},
@@ -489,11 +491,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 							{{ range .IdentityAttributes -}}
-								{{ . }}: knownvalue.NotNull(),
+								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
-							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
 						{{ end }}
 					{{ end -}}
 				},
@@ -665,11 +669,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -722,11 +728,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -778,11 +786,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -859,7 +869,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.Null(),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.Null(),
+									{{ .Name }}: knownvalue.Null(),
 								{{ end }}
 							}),
 						{{ end -}}
@@ -907,11 +917,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -994,11 +1006,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},
@@ -1082,11 +1096,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},
@@ -1137,11 +1153,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},

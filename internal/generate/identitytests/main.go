@@ -433,7 +433,7 @@ type ResourceDatum struct {
 	isSingleton                 bool
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
-	identityAttributes          []string
+	identityAttributes          []identityAttribute
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
@@ -522,10 +522,17 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == triBooleanTrue
 }
 
-func (r ResourceDatum) IdentityAttributes() []string {
-	return tfslices.ApplyToAll(r.identityAttributes, func(s string) string {
-		return namesgen.ConstOrQuote(s)
-	})
+func (r ResourceDatum) IdentityAttributes() []identityAttribute {
+	return r.identityAttributes
+}
+
+type identityAttribute struct {
+	name     string
+	Optional bool
+}
+
+func (i identityAttribute) Name() string {
+	return namesgen.ConstOrQuote(i.name)
 }
 
 type goImport struct {
@@ -705,7 +712,21 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
-				d.identityAttributes = append(d.identityAttributes, args.Positional[0])
+
+				identityAttribute := identityAttribute{
+					name: args.Positional[0],
+				}
+
+				if attr, ok := args.Keyword["optional"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.Optional = b
+					}
+				}
+
+				d.identityAttributes = append(d.identityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
 				hasIdentity = true
@@ -1108,7 +1129,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if len(d.identityAttributes) == 1 {
-		d.identityAttribute = d.identityAttributes[0]
+		d.identityAttribute = d.identityAttributes[0].name
 	}
 
 	if hasIdentity {
