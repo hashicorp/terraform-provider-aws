@@ -5701,7 +5701,7 @@ resource "aws_wafv2_rule_group" "test" {
 }
 `, rName)
 }
-func TestAccWAFV2RuleGroup_rulesJson(t *testing.T) {
+func TestAccWAFV2RuleGroup_rulesJSON(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -5714,7 +5714,7 @@ func TestAccWAFV2RuleGroup_rulesJson(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_rulesJson(ruleGroupName),
+				Config: testAccRuleGroupConfig_rulesJSON(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
@@ -5732,7 +5732,7 @@ func TestAccWAFV2RuleGroup_rulesJson(t *testing.T) {
 	})
 }
 
-func testAccRuleGroupConfig_rulesJson(rName string) string {
+func testAccRuleGroupConfig_rulesJSON(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 100
