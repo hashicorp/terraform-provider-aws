@@ -19,6 +19,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// When running `aws_organizations_resource_policy` acceptance tests, if you are assuming a role in the alternate account,
+// ensure that the session name is set when assuming the role. Otherwise, the plan will be non-empty.
+// If using a named profile, set the `role_session_name` in the AWS credentials file.
+
 func testAccResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.ResourcePolicy
@@ -38,8 +42,9 @@ func testAccResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("resourcepolicy/o-.+/rp-.+$")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("resourcepolicy/"+organizationIDRegexPattern+"/rp-[0-9a-z]{8}$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^rp-[0-9a-z]{8}$`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},

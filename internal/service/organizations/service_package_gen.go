@@ -112,19 +112,29 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 		},
 		{
 			Factory:  resourceDelegatedAdministrator,
 			TypeName: "aws_organizations_delegated_administrator",
 			Name:     "Delegated Administrator",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("service_principal", true),
+				inttypes.StringIdentityAttributeWithMappedName("delegated_account_id", true, names.AttrAccountID),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      delegatedAdministratorImportID{},
+			},
 		},
 		{
 			Factory:  resourceOrganization,
 			TypeName: "aws_organizations_organization",
 			Name:     "Organization",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 		},
 		{
 			Factory:  resourceOrganizationalUnit,
@@ -133,7 +143,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourcePolicy,
@@ -142,13 +156,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
 		},
 		{
 			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_organizations_policy_attachment",
 			Name:     "Policy Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_id", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      policyAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceResourcePolicy,
@@ -157,7 +180,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }

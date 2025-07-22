@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,7 +64,7 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleParameterized(ctx, rd, names.AttrBucket, meta.(importer.AWSClient)); err != nil {
+				if err := importer.RegionalSingleParameterized(ctx, rd, inttypes.StringIdentityAttribute(names.AttrBucket, true), meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
