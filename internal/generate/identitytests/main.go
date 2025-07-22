@@ -216,55 +216,52 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
 
-			// if resource.HasV6_0SDKv2Fix {
-			if !resource.MutableIdentity {
-				if resource.PreIdentityVersion.Equal(v5_100_0) {
-					tfTemplatesV5, err := tfTemplates.Clone()
-					if err != nil {
-						g.Fatalf("cloning Terraform config template: %s", err)
-					}
-					ext := filepath.Ext(configTmplFile)
-					name := strings.TrimSuffix(configTmplFile, ext)
-					configTmplV5File := name + "_v5.100.0" + ext
-					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-					if _, err := os.Stat(configTmplV5Path); err == nil {
-						b, err := os.ReadFile(configTmplV5Path)
-						if err != nil {
-							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
-						}
-						configTmplV5 := string(b)
-						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-						if err != nil {
-							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
-						}
-					}
-					commonV5 := common
-					commonV5.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "5.100.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
-
-					commonV6 := common
-					commonV6.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "6.0.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
-				} else {
-					commonPreIdentity := common
-					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: resource.PreIdentityVersion.String(),
-						},
-					}
-					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+			if resource.PreIdentityVersion.Equal(v5_100_0) {
+				tfTemplatesV5, err := tfTemplates.Clone()
+				if err != nil {
+					g.Fatalf("cloning Terraform config template: %s", err)
 				}
+				ext := filepath.Ext(configTmplFile)
+				name := strings.TrimSuffix(configTmplFile, ext)
+				configTmplV5File := name + "_v5.100.0" + ext
+				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+				if _, err := os.Stat(configTmplV5Path); err == nil {
+					b, err := os.ReadFile(configTmplV5Path)
+					if err != nil {
+						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+					}
+					configTmplV5 := string(b)
+					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+					if err != nil {
+						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+					}
+				}
+				commonV5 := common
+				commonV5.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "5.100.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+
+				commonV6 := common
+				commonV6.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "6.0.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+			} else {
+				commonPreIdentity := common
+				commonPreIdentity.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: resource.PreIdentityVersion.String(),
+					},
+				}
+				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")

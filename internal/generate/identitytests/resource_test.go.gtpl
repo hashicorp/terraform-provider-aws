@@ -920,9 +920,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		})
 	}
 {{ else }}
-	{{ if .MutableIdentity }}
-		// Resource Identity not supported for Mutable Identity
-	{{ else if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
+	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{- template "Init" . }}
