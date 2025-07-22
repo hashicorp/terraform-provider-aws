@@ -1,7 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_cognitoidp_log_delivery_configuration" "test" {
+resource "aws_cognito_log_delivery_configuration" "test" {
   region = var.region
 
   user_pool_id = aws_cognito_user_pool.test.id
@@ -18,13 +18,11 @@ resource "aws_cognitoidp_log_delivery_configuration" "test" {
 
 resource "aws_cognito_user_pool" "test" {
   region = var.region
-
   name = var.rName
 }
 
 resource "aws_cloudwatch_log_group" "test" {
   region = var.region
-
   name = var.rName
 }
 

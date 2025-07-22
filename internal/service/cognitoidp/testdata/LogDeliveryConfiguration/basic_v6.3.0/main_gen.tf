@@ -1,7 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_cognitoidp_log_delivery_configuration" "test" {
+resource "aws_cognito_log_delivery_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
