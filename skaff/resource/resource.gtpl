@@ -57,7 +57,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/smarterr"
+	"github.com/YakDriver/smarterr"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
