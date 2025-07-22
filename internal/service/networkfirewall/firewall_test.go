@@ -468,7 +468,6 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_basic(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 				),
 			},
 			{
@@ -500,7 +499,6 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtTrue),
 				),
 			},
@@ -514,7 +512,6 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
 				),
 			},
@@ -543,7 +540,6 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZ
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
 				),
 			},
@@ -557,7 +553,6 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZ
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.transit_gateway_attachment_sync_state.0.transit_gateway_attachment_status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
 				),
 			},

@@ -78,7 +78,7 @@ This data source exports the following attributes in addition to the arguments a
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
-    * `transit_gateway_attachment_sync_state` - Set of transit gateway configured for use by the firewall.
+    * `transit_gateway_attachment_sync_states` - Set of transit gateway configured for use by the firewall.
         * `attachment_id` - The unique identifier of the transit gateway attachment.
         * `status_message` - A message providing additional information about the current status.
         * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.

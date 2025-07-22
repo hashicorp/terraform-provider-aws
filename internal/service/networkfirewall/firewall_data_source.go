@@ -172,7 +172,7 @@ func dataSourceFirewall() *schema.Resource {
 								},
 							},
 						},
-						"transit_gateway_attachment_sync_state": {
+						"transit_gateway_attachment_sync_states": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -278,10 +278,10 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mappings: %s", err)
 	}
-	d.Set("update_token", output.UpdateToken)
-	d.Set(names.AttrVPCID, firewall.VpcId)
 	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
 	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
+	d.Set("update_token", output.UpdateToken)
+	d.Set(names.AttrVPCID, firewall.VpcId)
 
 	setTagsOut(ctx, firewall.Tags)
 
@@ -305,7 +305,7 @@ func flattenDataSourceFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 		tfMap["sync_states"] = flattenDataSourceSyncStates(apiObject.SyncStates)
 	}
 	if apiObject.TransitGatewayAttachmentSyncState != nil {
-		tfMap["transit_gateway_attachment_sync_state"] = flattenDataSourceTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState)
+		tfMap["transit_gateway_attachment_sync_states"] = flattenDataSourceTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState)
 	}
 
 	return []any{tfMap}
@@ -420,8 +420,8 @@ func flattenDataSourceTransitGatewayAttachmentSyncState(apiObject *awstypes.Tran
 	}
 
 	tfMap := map[string]any{
-		"attachment_id":                     apiObject.AttachmentId,
-		names.AttrStatusMessage:             apiObject.StatusMessage,
+		"attachment_id":                     aws.ToString(apiObject.AttachmentId),
+		names.AttrStatusMessage:             aws.ToString(apiObject.StatusMessage),
 		"transit_gateway_attachment_status": apiObject.TransitGatewayAttachmentStatus,
 	}
 
