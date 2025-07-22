@@ -128,7 +128,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallDataSourceConfig_arnandname(rName),
+				Config: testAccFirewallDataSourceConfig_arnAndName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
@@ -191,137 +191,46 @@ func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testin
 	})
 }
 
-func testAccFirewallDataSourceDependenciesConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccFirewallDataSourceConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
   }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %[1]q
-  firewall_policy {
-    stateless_fragment_default_actions = ["aws:drop"]
-    stateless_default_actions          = ["aws:pass"]
-  }
-}
-`, rName)
+}`, rName))
 }
 
 func testAccFirewallDataSourceConfig_arn(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallDataSourceDependenciesConfig(rName),
-		fmt.Sprintf(`
-resource "aws_networkfirewall_firewall" "test" {
-  name                = %[1]q
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  vpc_id              = aws_vpc.test.id
-
-  subnet_mapping {
-    subnet_id = aws_subnet.test.id
-  }
-}
-
+	return acctest.ConfigCompose(testAccFirewallDataSourceConfig_baseVPC(rName), `
 data "aws_networkfirewall_firewall" "test" {
   arn = aws_networkfirewall_firewall.test.arn
 }
-`, rName))
+`)
 }
 
 func testAccFirewallDataSourceConfig_name(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallDataSourceDependenciesConfig(rName),
-		fmt.Sprintf(`
-resource "aws_networkfirewall_firewall" "test" {
-  name                = %[1]q
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  vpc_id              = aws_vpc.test.id
-
-  subnet_mapping {
-    subnet_id = aws_subnet.test.id
-  }
-}
-
+	return acctest.ConfigCompose(testAccFirewallDataSourceConfig_baseVPC(rName), `
 data "aws_networkfirewall_firewall" "test" {
-  name = %[1]q
-
-  depends_on = [aws_networkfirewall_firewall.test]
+  name = aws_networkfirewall_firewall.test.name
 }
-`, rName))
+`)
 }
 
-func testAccFirewallDataSourceConfig_arnandname(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFirewallDataSourceDependenciesConfig(rName),
-		fmt.Sprintf(`
-resource "aws_networkfirewall_firewall" "test" {
-  name                = %[1]q
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  vpc_id              = aws_vpc.test.id
-
-  subnet_mapping {
-    subnet_id = aws_subnet.test.id
-  }
-}
-
+func testAccFirewallDataSourceConfig_arnAndName(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallDataSourceConfig_baseVPC(rName), `
 data "aws_networkfirewall_firewall" "test" {
   arn  = aws_networkfirewall_firewall.test.arn
-  name = %[1]q
-
-  depends_on = [aws_networkfirewall_firewall.test]
+  name = aws_networkfirewall_firewall.test.name
 }
-`, rName))
+`)
 }
 
 func testAccFirewallDataSourceConfig_transitGatewayAttachment(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-data "aws_caller_identity" "current" {}
-
-resource "aws_ec2_transit_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkfirewall_firewall_policy" "test" {
-  name = %[1]q
-
-  firewall_policy {
-    stateless_fragment_default_actions = ["aws:drop"]
-    stateless_default_actions          = ["aws:pass"]
-  }
-}
-
+	return acctest.ConfigCompose(testAccFirewallConfig_baseTGW(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -333,9 +242,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 data "aws_networkfirewall_firewall" "test" {
-  name = %[1]q
-
-  depends_on = [aws_networkfirewall_firewall.test]
+  name = aws_networkfirewall_firewall.test.name
 }
-`, rName)
+`, rName))
 }
