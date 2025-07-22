@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_glue_registry: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_glue_schema: Add resource identity support
+```
