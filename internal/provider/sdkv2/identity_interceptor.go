@@ -131,7 +131,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalMultipleParameterized(ctx, rd, identitySpec.Attributes, importSpec, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 

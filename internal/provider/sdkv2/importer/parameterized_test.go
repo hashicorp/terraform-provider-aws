@@ -626,7 +626,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -783,7 +783,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
