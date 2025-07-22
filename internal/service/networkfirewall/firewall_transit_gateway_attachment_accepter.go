@@ -24,15 +24,15 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_networkfirewall_network_firewall_transit_gateway_attachment_accepter", name="Network Firewall Transit Gateway Attachment Accepter")
-func newResourceNetworkFirewallTransitGatewayAttachmentAccepter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceNetworkFirewallTransitGatewayAttachmentAccepter{}
+// @FrameworkResource("aws_networkfirewall_firewall_transit_gateway_attachment_accepter", name="Firewall Transit Gateway Attachment Accepter")
+func newFirewallTransitGatewayAttachmentAccepterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &firewallTransitGatewayAttachmentAccepterResource{}
 
 	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultDeleteTimeout(60 * time.Minute)
@@ -44,14 +44,14 @@ const (
 	ResNameNetworkFirewallTransitGatewayAttachmentAccepter = "Network Firewall Transit Gateway Attachment Accepter"
 )
 
-type resourceNetworkFirewallTransitGatewayAttachmentAccepter struct {
-	framework.ResourceWithModel[resourceNetworkFirewallTransitGatewayAttachmentAccepterModel]
+type firewallTransitGatewayAttachmentAccepterResource struct {
+	framework.ResourceWithModel[firewallTransitGatewayAttachmentAccepterResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
 
-func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrTransitGatewayAttachmentID)),
@@ -71,18 +71,18 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Schema(ctx con
 	}
 }
 
-func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().NetworkFirewallClient(ctx)
 	ec2Conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceNetworkFirewallTransitGatewayAttachmentAccepterModel
+	var plan firewallTransitGatewayAttachmentAccepterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var input networkfirewall.AcceptNetworkFirewallTransitGatewayAttachmentInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -103,14 +103,14 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx con
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = flex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
+	plan.ID = fwflex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx, ec2Conn, flex.StringValueFromFramework(ctx, plan.TransitGatewayAttachmentId), createTimeout)
+	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, plan.TransitGatewayAttachmentId), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionWaitingForCreation, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, plan.TransitGatewayAttachmentId.String(), err),
@@ -122,15 +122,15 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Create(ctx con
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ec2Conn := r.Meta().EC2Client(ctx)
 
-	var state resourceNetworkFirewallTransitGatewayAttachmentAccepterModel
+	var state firewallTransitGatewayAttachmentAccepterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	transitGatewayAttachmentId := flex.StringValueFromFramework(ctx, state.ID)
+	transitGatewayAttachmentId := fwflex.StringValueFromFramework(ctx, state.ID)
 	out, err := findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx, ec2Conn, transitGatewayAttachmentId)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -139,24 +139,24 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Read(ctx conte
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionReading, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, flex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
+			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionReading, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().NetworkFirewallClient(ctx)
 	ec2Conn := r.Meta().EC2Client(ctx)
 
-	var state resourceNetworkFirewallTransitGatewayAttachmentAccepterModel
+	var state firewallTransitGatewayAttachmentAccepterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -174,17 +174,17 @@ func (r *resourceNetworkFirewallTransitGatewayAttachmentAccepter) Delete(ctx con
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionDeleting, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, flex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
+			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionDeleting, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx, ec2Conn, flex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), deleteTimeout)
+	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionWaitingForDeletion, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, flex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
+			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionWaitingForDeletion, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
 			err.Error(),
 		)
 		return
@@ -256,7 +256,7 @@ func findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx context.Context
 	return out, nil
 }
 
-type resourceNetworkFirewallTransitGatewayAttachmentAccepterModel struct {
+type firewallTransitGatewayAttachmentAccepterResourceModel struct {
 	framework.WithRegionModel
 	ID                         types.String   `tfsdk:"id"`
 	TransitGatewayAttachmentId types.String   `tfsdk:"transit_gateway_attachment_id"`
