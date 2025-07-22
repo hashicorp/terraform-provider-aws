@@ -75,12 +75,12 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 		}
 
 		for _, attr := range identitySpec.Attributes {
-			switch attr.Name {
+			switch attr.Name() {
 			case names.AttrAccountID, names.AttrRegion:
 				// Do nothing
 
 			default:
-				attrPath := path.Root(attr.Name)
+				attrPath := path.Root(attr.Name())
 				var parameterAttr types.String
 				response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
 				if response.Diagnostics.HasError() {

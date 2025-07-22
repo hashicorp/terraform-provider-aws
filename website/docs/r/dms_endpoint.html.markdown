@@ -138,6 +138,7 @@ The following arguments are optional:
 -> Additional information can be found in the [Using PostgreSQL as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html).
 
 * `after_connect_script` - (Optional) For use with change data capture (CDC) only, this attribute has AWS DMS bypass foreign keys and user triggers to reduce the time it takes to bulk load data.
+* `authentication_method` - (Optional) Specifies the authentication method. Valid values: `password`, `iam`.
 * `babelfish_database_name` - (Optional) The Babelfish for Aurora PostgreSQL database name for the endpoint.
 * `capture_ddls` - (Optional) To capture DDL events, AWS DMS creates various artifacts in the PostgreSQL database when the task starts.
 * `database_mode` - (Optional) Specifies the default behavior of the replication's handling of PostgreSQL- compatible endpoints that require some additional configuration, such as Babelfish endpoints.
@@ -152,6 +153,7 @@ The following arguments are optional:
 * `map_long_varchar_as` - Optional When true, DMS migrates LONG values as VARCHAR.
 * `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
 * `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test_decoding`.
+* `service_access_role_arn` - (Optional) Specifies the IAM role to use to authenticate the connection.
 * `slot_name` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
 
 ### redis_settings

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,7 +18,7 @@ import (
 var _ crudInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
-	attributes []string
+	attributes []inttypes.IdentityAttribute
 }
 
 func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
@@ -39,23 +38,23 @@ func (r identityInterceptor) run(ctx context.Context, opts crudInterceptorOption
 			}
 
 			for _, attr := range r.attributes {
-				switch attr {
+				switch attr.Name() {
 				case names.AttrAccountID:
-					if err := identity.Set(attr, awsClient.AccountID(ctx)); err != nil {
+					if err := identity.Set(attr.Name(), awsClient.AccountID(ctx)); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
 				case names.AttrRegion:
-					if err := identity.Set(attr, awsClient.Region(ctx)); err != nil {
+					if err := identity.Set(attr.Name(), awsClient.Region(ctx)); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 
 				default:
-					val, ok := getAttributeOk(d, attr)
+					val, ok := getAttributeOk(d, attr.ResourceAttributeName())
 					if !ok {
 						continue
 					}
-					if err := identity.Set(attr, val); err != nil {
+					if err := identity.Set(attr.Name(), val); err != nil {
 						return sdkdiag.AppendFromErr(diags, err)
 					}
 				}
@@ -70,8 +69,11 @@ func getAttributeOk(d schemaResourceData, name string) (string, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
-	v, ok := d.GetOk(name)
-	return v.(string), ok
+	if v, ok := d.GetOk(name); !ok {
+		return "", false
+	} else {
+		return v.(string), true
+	}
 }
 
 func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptorInvocation {
@@ -79,9 +81,7 @@ func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) interceptor
 		when: After,
 		why:  Create | Read,
 		interceptor: identityInterceptor{
-			attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
-				return v.Name
-			}),
+			attributes: attributes,
 		},
 	}
 }
@@ -96,10 +96,11 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 
 func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
+		attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -109,7 +110,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.IdentityAttribute, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 

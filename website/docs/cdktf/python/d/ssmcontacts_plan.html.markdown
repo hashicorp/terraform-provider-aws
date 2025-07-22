@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 
 ## Attribute Reference
@@ -45,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `stage` - List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.
 
-<!-- cache-key: cdktf-0.20.8 input-92a72d4072ec7f614f162d990ca656e1ab1bfa4324ea98598545cebc4173cb62 -->
+<!-- cache-key: cdktf-0.20.8 input-a7dd58fa8dff0a64d78af27ab26d877e106efc20a04ab17798687fd51132fe8d -->

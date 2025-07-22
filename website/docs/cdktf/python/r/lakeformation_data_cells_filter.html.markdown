@@ -45,8 +45,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `table_data` - (Required) Information about the data cells filter. See [Table Data](#table-data) below for details.
 
 ### Table Data
@@ -106,4 +107,4 @@ Using `terraform import`, import Lake Formation Data Cells Filter using the `id`
 % terraform import aws_lakeformation_data_cells_filter.example database_name,name,table_catalog_id,table_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-90a60f5519ebcb7059d4d20667167c76c44a101f6078b3622f7b7f6e54918452 -->
+<!-- cache-key: cdktf-0.20.8 input-bc1efcc4e8b163d3c1be8c5127557cc9319b4546d1fcbbed4ac501bf845a20e2 -->

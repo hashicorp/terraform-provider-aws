@@ -123,7 +123,7 @@ func (r identityInterceptor) delete(ctx context.Context, opts interceptorOptions
 func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) identityInterceptor {
 	return identityInterceptor{
 		attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
-			return v.Name
+			return v.Name()
 		}),
 	}
 }

@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `user_name` - (Required) Name of the user.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `minimum_engine_version` - Minimum engine version supported for the user.
 * `tags` - Map of tags assigned to the user.
 
-<!-- cache-key: cdktf-0.20.8 input-f1d8066d63d40b01ad504eef7f9a373b8dd197da76bdab1fde6e4713d309ee09 -->
+<!-- cache-key: cdktf-0.20.8 input-bf355f5ee03097eb8d7ac1639f8aed02bb4134efd53a38df6e0afe4739c493b7 -->

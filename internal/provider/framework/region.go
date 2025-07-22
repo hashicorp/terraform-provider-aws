@@ -15,12 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) diag.Diagnostics {
+func validateInContextRegionInPartition(ctx context.Context, c awsClient) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if err := c.ValidateInContextRegionInPartition(ctx); err != nil {

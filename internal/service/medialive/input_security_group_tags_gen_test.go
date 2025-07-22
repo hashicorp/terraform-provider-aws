@@ -21,7 +21,7 @@ func TestAccMediaLiveInputSecurityGroup_tags(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -194,7 +194,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_null(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -257,7 +257,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyMap(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -316,7 +316,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_AddOnUpdate(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -393,7 +393,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -477,7 +477,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -608,7 +608,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_EmptyTag_OnUpdate_Replace(t *testin
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
@@ -693,7 +693,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_providerOnly(t *testing
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -865,7 +865,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nonOverlapping(t *testi
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1018,7 +1018,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_overlapping(t *testing.
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1187,7 +1187,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToProviderOnly(t 
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1273,7 +1273,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_updateToResourceOnly(t 
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1358,7 +1358,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyResourceTag(t *tes
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1420,7 +1420,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_emptyProviderOnlyTag(t 
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1474,7 +1474,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullOverlappingResource
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1533,7 +1533,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_DefaultTags_nullNonOverlappingResou
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1592,7 +1592,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnCreate(t *testing.T) 
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1644,7 +1644,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Add(t *testing
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1737,7 +1737,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_ComputedTag_OnUpdate_Replace(t *tes
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1820,7 +1820,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),
@@ -1978,7 +1978,7 @@ func TestAccMediaLiveInputSecurityGroup_tags_IgnoreTags_Overlap_ResourceTag(t *t
 	var v medialive.DescribeInputSecurityGroupOutput
 	resourceName := "aws_medialive_input_security_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		CheckDestroy: testAccCheckInputSecurityGroupDestroy(ctx),

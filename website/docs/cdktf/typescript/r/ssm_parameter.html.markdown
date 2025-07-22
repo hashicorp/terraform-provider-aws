@@ -14,7 +14,7 @@ Provides an SSM Parameter resource.
 
 ~> **Note:** The `overwrite` argument makes it possible to overwrite an existing SSM Parameter created outside of Terraform.
 
--> **Note:** Write-Only argument `valueWo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `valueWo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -95,6 +95,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowedPattern` - (Optional) Regular expression used to validate the parameter value.
 * `dataType` - (Optional) Data type of the parameter. Valid values: `text`, `aws:ssm:integration` and `aws:ec2:image` for AMI format, see the [Native parameter support for Amazon Machine Image IDs](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html).
 * `description` - (Optional) Description of the parameter.
@@ -150,4 +151,4 @@ Using `terraform import`, import SSM Parameters using the parameter store `name`
 % terraform import aws_ssm_parameter.my_param /my_path/my_paramname
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-71aa49c9d142a96bd5aa017f019eff2027a6d133a0d73891901202bc296004dc -->
+<!-- cache-key: cdktf-0.20.8 input-a232bcf8a0c2cf54365938efe48323f887180b91090ca98841d9a0e0edcf7470 -->

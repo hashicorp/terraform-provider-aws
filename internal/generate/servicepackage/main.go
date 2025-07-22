@@ -194,8 +194,9 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 }
 
 type identityAttribute struct {
-	Name     string
-	Optional bool
+	Name                  string
+	Optional              bool
+	ResourceAttributeName string
 }
 
 type goImport struct {
@@ -390,6 +391,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						identityAttribute.Optional = b
 					}
+				}
+
+				if attr, ok := args.Keyword["resourceAttributeName"]; ok {
+					identityAttribute.ResourceAttributeName = namesgen.ConstOrQuote(attr)
 				}
 
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)

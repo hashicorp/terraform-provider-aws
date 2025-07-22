@@ -147,6 +147,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the S3 bucket.
 * `versioningConfiguration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
@@ -230,4 +231,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f387859e1c4ace75d718b32236f2b55857b5ddbb6588f6fc4186285c2f0e2659 -->
+<!-- cache-key: cdktf-0.20.8 input-126e307ddd056204d888b70a85a42477befa2ef1cf9ac175430fbba51fbef6dc -->

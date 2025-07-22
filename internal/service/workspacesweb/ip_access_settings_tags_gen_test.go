@@ -21,7 +21,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags(t *testing.T) {
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -202,7 +202,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_null(t *testing.T) {
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -263,7 +263,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyMap(t *testing.T) {
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -312,7 +312,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_AddOnUpdate(t *testing.T) {
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -390,7 +390,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -479,7 +479,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnUpdate_Add(t *testing.
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -616,7 +616,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_EmptyTag_OnUpdate_Replace(t *test
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckIPAccessSettingsDestroy(ctx),
@@ -704,7 +704,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_providerOnly(t *testi
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -884,7 +884,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nonOverlapping(t *tes
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1043,7 +1043,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_overlapping(t *testin
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1218,7 +1218,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_updateToProviderOnly(
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1306,7 +1306,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_updateToResourceOnly(
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1393,7 +1393,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_emptyResourceTag(t *t
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1458,7 +1458,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_emptyProviderOnlyTag(
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1515,7 +1515,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nullOverlappingResour
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1583,7 +1583,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_DefaultTags_nullNonOverlappingRes
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1653,7 +1653,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnCreate(t *testing.T
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1707,7 +1707,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnUpdate_Add(t *testi
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1802,7 +1802,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_ComputedTag_OnUpdate_Replace(t *t
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -1887,7 +1887,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_IgnoreTags_Overlap_DefaultTag(t *
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),
@@ -2045,7 +2045,7 @@ func TestAccWorkSpacesWebIPAccessSettings_tags_IgnoreTags_Overlap_ResourceTag(t 
 	var v types.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckIPAccessSettingsDestroy(ctx),

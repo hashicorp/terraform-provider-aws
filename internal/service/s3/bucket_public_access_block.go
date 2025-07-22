@@ -58,6 +58,10 @@ func resourceBucketPublicAccessBlock() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -180,6 +184,11 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 	bucket := d.Id()
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Skipping destruction of S3 Bucket Public Access Block: %s", d.Id())
+		return diags
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Public Access Block: %s", d.Id())
