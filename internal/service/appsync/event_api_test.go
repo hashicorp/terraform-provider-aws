@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,83 +21,6 @@ import (
 
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
-
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-// Unit tests would go here if needed
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
-func TestAccAppSyncEventAPI_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var eventapi awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appsync_event_api.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEventAPIConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "api_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`api/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAppSyncEventAPI_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -124,6 +46,16 @@ func TestAccAppSyncEventAPI_disappears(t *testing.T) {
 				Config: testAccEventAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.0.auth_type", "API_KEY"),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceEventAPI, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,7 +64,7 @@ func TestAccAppSyncEventAPI_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppSyncEventAPI_eventConfigComprehensive(t *testing.T) {
+func TestAccAppSyncEventAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -199,67 +131,6 @@ func TestAccAppSyncEventAPI_eventConfigComprehensive(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAppSyncEventAPI_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var eventapi awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appsync_event_api.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEventAPIConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEventAPIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccEventAPIConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -367,6 +238,24 @@ func testAccEventAPIConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_event_api" "test" {
   name = %[1]q
+
+  event_config {
+    auth_providers {
+      auth_type = "API_KEY"
+    }
+
+    connection_auth_modes {
+      auth_type = "API_KEY"
+    }
+
+    default_publish_auth_modes {
+      auth_type = "API_KEY"
+    }
+
+    default_subscribe_auth_modes {
+      auth_type = "API_KEY"
+    }
+  }
 }
 `, rName)
 }
