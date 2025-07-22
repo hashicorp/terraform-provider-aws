@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_s3_bucket_metadata_configuration` ([#41364](https://github.com/hashicorp/terraform-provider-aws/issues/41364))
 
+BUG FIXES:
+
+* resource/aws_instance: Recompute `ipv6_addresses` when `ipv6_address_count` is updated ([#43158](https://github.com/hashicorp/terraform-provider-aws/issues/43158))
+
 ## 6.4.0 (July 17, 2025)
 
 FEATURES:
