@@ -1,20 +1,18 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lb_trust_store" "test" {
-{{- template "region" }}
   name                             = var.rName
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
-
-{{- template "tags" . }}
 }
 
 resource "aws_s3_bucket" "test" {
-{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   rule {
@@ -23,7 +21,6 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
-{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   block_public_acls       = true
@@ -33,7 +30,6 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_object" "test" {
-{{- template "region" }}
   bucket  = aws_s3_bucket.test.bucket
   key     = "${var.rName}.pem"
   content = <<EOT
@@ -76,4 +72,10 @@ hAqfbOov9uFU7QAFHx5yllOGtycJ1kE8zaI8S6XXj0909b7EiKP+IqFe35FrpiZY
 LDgwwPky7T6W4ohoGv+p497rbPtHsLq9
 -----END CERTIFICATE-----
 EOT
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
