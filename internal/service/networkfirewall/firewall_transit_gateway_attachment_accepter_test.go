@@ -5,21 +5,19 @@ package networkfirewall_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +30,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_basic(t *tes
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_transit_gateway_attachment_accepter.test"
-	var v ec2awstypes.TransitGatewayAttachment
+	var v ec2types.TransitGatewayAttachment
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -65,7 +63,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var v ec2awstypes.TransitGatewayAttachment
+	var v ec2types.TransitGatewayAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_transit_gateway_attachment_accepter.test"
 
@@ -103,43 +101,44 @@ func testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx context.Con
 			if rs.Type != "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" {
 				continue
 			}
-			out, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
-			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, rs.Primary.ID, err)
-			}
-			if out != nil && out.State != ec2awstypes.TransitGatewayAttachmentStateDeleting {
-				return nil
+
+			output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			if output.State == ec2types.TransitGatewayAttachmentStateDeleted {
+				continue
+			}
+
+			return fmt.Errorf("NetworkFirewall Firewall Transit Gateway Attachment %s still exists", rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx context.Context, name string, v *ec2awstypes.TransitGatewayAttachment) resource.TestCheckFunc {
+func testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx context.Context, n string, v *ec2types.TransitGatewayAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
+		output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
+
 		if err != nil {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameNetworkFirewallTransitGatewayAttachmentAccepter, rs.Primary.ID, err)
+			return err
 		}
 
-		v = resp
+		v = output
 
 		return nil
 	}

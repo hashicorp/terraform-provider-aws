@@ -3,13 +3,12 @@
 
 package networkfirewall
 
-import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -19,14 +18,12 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,21 +37,15 @@ func newFirewallTransitGatewayAttachmentAccepterResource(_ context.Context) (res
 	return r, nil
 }
 
-const (
-	ResNameNetworkFirewallTransitGatewayAttachmentAccepter = "Network Firewall Transit Gateway Attachment Accepter"
-)
-
 type firewallTransitGatewayAttachmentAccepterResource struct {
 	framework.ResourceWithModel[firewallTransitGatewayAttachmentAccepterResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
-	framework.WithImportByID
 }
 
-func (r *firewallTransitGatewayAttachmentAccepterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *firewallTransitGatewayAttachmentAccepterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrTransitGatewayAttachmentID)),
 			names.AttrTransitGatewayAttachmentID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -71,194 +62,102 @@ func (r *firewallTransitGatewayAttachmentAccepterResource) Schema(ctx context.Co
 	}
 }
 
-func (r *firewallTransitGatewayAttachmentAccepterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data firewallTransitGatewayAttachmentAccepterResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NetworkFirewallClient(ctx)
-	ec2Conn := r.Meta().EC2Client(ctx)
 
-	var plan firewallTransitGatewayAttachmentAccepterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	tgwAttachmentID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayAttachmentID)
+	input := networkfirewall.AcceptNetworkFirewallTransitGatewayAttachmentInput{
+		TransitGatewayAttachmentId: aws.String(tgwAttachmentID),
 	}
 
-	var input networkfirewall.AcceptNetworkFirewallTransitGatewayAttachmentInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	_, err := conn.AcceptNetworkFirewallTransitGatewayAttachment(ctx, &input)
 
-	out, err := conn.AcceptNetworkFirewallTransitGatewayAttachment(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, plan.TransitGatewayAttachmentId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.TransitGatewayAttachmentId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, plan.TransitGatewayAttachmentId.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("accepting NetworkFirewall Firewall Transit Gateway Attachment (%s)", tgwAttachmentID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	plan.ID = fwflex.StringToFramework(ctx, out.TransitGatewayAttachmentId)
+	if _, err := tfec2.WaitTransitGatewayAttachmentAccepted(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) accept", tgwAttachmentID), err.Error())
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, plan.TransitGatewayAttachmentId), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionWaitingForCreation, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, plan.TransitGatewayAttachmentId.String(), err),
-			err.Error(),
-		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *firewallTransitGatewayAttachmentAccepterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	ec2Conn := r.Meta().EC2Client(ctx)
+func (r *firewallTransitGatewayAttachmentAccepterResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data firewallTransitGatewayAttachmentAccepterResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	var state firewallTransitGatewayAttachmentAccepterResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	tgwAttachmentID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayAttachmentID)
+	_, err := tfec2.FindTransitGatewayAttachmentByID(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
-	transitGatewayAttachmentId := fwflex.StringValueFromFramework(ctx, state.ID)
-	out, err := findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx, ec2Conn, transitGatewayAttachmentId)
-	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
-		return
-	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionReading, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading NetworkFirewall Firewall Transit Gateway Attachment (%s)", tgwAttachmentID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *firewallTransitGatewayAttachmentAccepterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().NetworkFirewallClient(ctx)
-	ec2Conn := r.Meta().EC2Client(ctx)
-
-	var state firewallTransitGatewayAttachmentAccepterResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *firewallTransitGatewayAttachmentAccepterResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data firewallTransitGatewayAttachmentAccepterResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().NetworkFirewallClient(ctx)
+
+	tgwAttachmentID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayAttachmentID)
 	input := networkfirewall.DeleteNetworkFirewallTransitGatewayAttachmentInput{
-		TransitGatewayAttachmentId: state.TransitGatewayAttachmentId.ValueStringPointer(),
+		TransitGatewayAttachmentId: aws.String(tgwAttachmentID),
 	}
 
 	_, err := conn.DeleteNetworkFirewallTransitGatewayAttachment(ctx, &input)
 
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionDeleting, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx, ec2Conn, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionWaitingForDeletion, ResNameNetworkFirewallTransitGatewayAttachmentAccepter, fwflex.StringValueFromFramework(ctx, state.TransitGatewayAttachmentId), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting NetworkFirewall Firewall Transit Gateway Attachment (%s)", tgwAttachmentID), err.Error())
+
+		return
+	}
+
+	if _, err := tfec2.WaitTransitGatewayAttachmentDeleted(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) delete", tgwAttachmentID), err.Error())
+
 		return
 	}
 }
 
-func waitNetworkFirewallTransitGatewayAttachmentAccepterCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2awstypes.TransitGatewayAttachmentState, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(ec2awstypes.TransitGatewayAttachmentStatePending, ec2awstypes.TransitGatewayAttachmentStatePendingAcceptance),
-		Target:                    enum.Slice(ec2awstypes.TransitGatewayAttachmentStateAvailable),
-		Refresh:                   statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*ec2awstypes.TransitGatewayAttachment); ok {
-		return &out.State, err
-	}
-
-	return nil, err
-}
-
-func waitNetworkFirewallTransitGatewayAttachmentAccepterDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachmentStatus, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(ec2awstypes.TransitGatewayAttachmentStateDeleting, ec2awstypes.TransitGatewayAttachmentStateAvailable),
-		Target:  enum.Slice(ec2awstypes.TransitGatewayAttachmentStateDeleted),
-		Refresh: statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*networkfirewall.DescribeFirewallOutput); ok {
-		return &out.FirewallStatus.TransitGatewayAttachmentSyncState.TransitGatewayAttachmentStatus, err
-	}
-
-	return nil, err
-}
-
-func statusNetworkFirewallTransitGatewayAttachmentAccepter(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func(context.Context) (any, string, error) {
-		out, err := findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx, conn, id)
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
-func findNetworkFirewallTransitGatewayAttachmentAccepterById(ctx context.Context, conn *ec2.Client, id string) (*ec2awstypes.TransitGatewayAttachment, error) {
-	if id == "" {
-		return nil, &retry.NotFoundError{
-			Message: "Network Firewall Transit Gateway Attachment Accepter ID is empty",
-		}
-	}
-	out, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, &retry.NotFoundError{
-			Message: "Network Firewall Transit Gateway Attachment Accepter not found",
-		}
-	}
-
-	return out, nil
+func (r *firewallTransitGatewayAttachmentAccepterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrTransitGatewayAttachmentID), request, response)
 }
 
 type firewallTransitGatewayAttachmentAccepterResourceModel struct {
 	framework.WithRegionModel
-	ID                         types.String   `tfsdk:"id"`
-	TransitGatewayAttachmentId types.String   `tfsdk:"transit_gateway_attachment_id"`
+	TransitGatewayAttachmentID types.String   `tfsdk:"transit_gateway_attachment_id"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
 }
