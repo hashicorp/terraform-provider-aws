@@ -1,5 +1,9 @@
 ## 6.5.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_cognito_log_delivery_configuration: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing ([#43356](https://github.com/hashicorp/terraform-provider-aws/issues/43356))
+
 FEATURES:
 
 * **New Resource:** `aws_s3_bucket_metadata_configuration` ([#41364](https://github.com/hashicorp/terraform-provider-aws/issues/41364))
