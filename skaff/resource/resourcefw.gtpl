@@ -61,7 +61,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/smarterr"
+	"github.com/YakDriver/smarterr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 {{- if .IncludeTags }}
