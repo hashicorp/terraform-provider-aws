@@ -373,8 +373,7 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalSingleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.GlobalSingleParameterized(ctx, d, attr, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -503,8 +502,7 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.GlobalSingleParameterized(ctx, d, attr, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

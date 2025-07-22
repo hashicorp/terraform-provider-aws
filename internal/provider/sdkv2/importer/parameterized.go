@@ -54,7 +54,9 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, i
 	return nil
 }
 
-func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attr inttypes.IdentityAttribute, client AWSClient) error {
+func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+
 	if rd.Id() != "" {
 		importID := rd.Id()
 		if attr.ResourceAttributeName() != names.AttrID {
