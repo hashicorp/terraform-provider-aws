@@ -373,6 +373,7 @@ func resourceEndpoint() *schema.Resource {
 						"authentication_method": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.PostgreSQLAuthenticationMethod](),
 						},
 						"babelfish_database_name": {
