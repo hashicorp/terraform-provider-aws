@@ -38,7 +38,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @WrappedImport(false)
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
 // @Testing(generator="acctest.RandomDomainName()")
 // @Testing(importIgnore="permanent_deletion_time_in_days")
