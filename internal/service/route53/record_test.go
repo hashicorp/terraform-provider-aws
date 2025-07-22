@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -68,6 +70,9 @@ func TestAccRoute53Record_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{fqdn}_{type}"),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -75,86 +80,6 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-		},
-	})
-}
-
-func TestAccRoute53Record_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				Config: testAccRecordConfig_basic(zoneName.String(), recordName.String()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-					// 	names.AttrAccountID: tfknownvalue.AccountID(),
-					// 	"zone_id":           knownvalue.NotNull(),
-					// 	names.AttrName:      knownvalue.NotNull(),
-					// 	names.AttrType:      knownvalue.NotNull(),
-					// 	"set_identifier":    knownvalue.Null(),
-					// }),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
-				},
-			},
-
-			// Step 2: Import command
-			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			// Step 3: Import block with Import ID
-			{
-				ImportStateKind: resource.ImportBlockWithID,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-					},
-				},
-			},
-
-			// // Step 4: Import block with Resource Identity
-			// {
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-			// 		},
-			// 	},
-			// },
 		},
 	})
 }
@@ -181,17 +106,18 @@ func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
-					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-					// 	names.AttrAccountID: tfknownvalue.AccountID(),
-					// 	"zone_id":           knownvalue.NotNull(),
-					// 	names.AttrName:      knownvalue.NotNull(),
-					// 	names.AttrType:      knownvalue.NotNull(),
-					// 	"set_identifier":    knownvalue.NotNull(),
-					// }),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{fqdn}_{type}_{set_identifier}"),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
 				},
 			},
 
@@ -219,21 +145,21 @@ func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
 				},
 			},
 
-			// // Step 4: Import block with Resource Identity
-			// {
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
-			// 		},
-			// 	},
-			// },
+			// Step 4: Import block with Resource Identity
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					},
+				},
+			},
 		},
 	})
 }
@@ -1001,6 +927,10 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{fqdn}_{type}_{set_identifier}"),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1013,6 +943,10 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_A_set-id$`))),
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{fqdn}_{type}_{set_identifier}"),
+				},
 			},
 		},
 	})

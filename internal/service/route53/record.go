@@ -30,6 +30,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+/*
+  NOTE: aws_route53_record has a mutable identity ONLY because we shortcut the replace resource flow
+	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
+*/
+
 // @SDKResource("aws_route53_record", name="Record")
 // @IdentityAttribute("zone_id")
 // @IdentityAttribute("name")
@@ -37,10 +42,10 @@ import (
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
 // @WrappedImport(false)
-// @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="6.4.0")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
