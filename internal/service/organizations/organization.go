@@ -24,13 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_organization", name="Organization")
 // @IdentityAttribute("id")
-// @WrappedImport(false)
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Organization")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
@@ -387,7 +386,9 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	if err := importer.GlobalSingleParameterized(ctx, d, inttypes.StringIdentityAttribute(names.AttrID, true), meta.(importer.AWSClient)); err != nil {
+	identitySpec := importer.IdentitySpec(ctx)
+
+	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
 		return nil, err
 	}
 
