@@ -3,7 +3,6 @@
 
 resource "aws_cognito_log_delivery_configuration" "test" {
   region = var.region
-
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
