@@ -1774,6 +1774,9 @@ func expandRateBasedStatementCustomKeys(l []any) []awstypes.RateBasedStatementCu
 	for _, ck := range l {
 		r := awstypes.RateBasedStatementCustomKey{}
 		m := ck.(map[string]any)
+		if v, ok := m["asn"]; ok && len(v.([]any)) > 0 {
+			r.ASN = &awstypes.RateLimitAsn{}
+		}
 		if v, ok := m["cookie"]; ok {
 			r.Cookie = expandRateLimitCookie(v.([]any))
 		}
@@ -3379,6 +3382,11 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 	for i, o := range apiObject {
 		tfMap := map[string]any{}
 
+		if o.ASN != nil {
+			tfMap["asn"] = []any{
+				map[string]any{},
+			}
+		}
 		if o.Cookie != nil {
 			tfMap["cookie"] = flattenRateLimitCookie(o.Cookie)
 		}
