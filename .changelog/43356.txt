@@ -1,7 +1,7 @@
 ```release-note:new-resource
-aws_cloudfront_anycast_ip_list
+aws_cognito_log_delivery_configurati9on
 ```
 
 ```release-note:note
-resource/aws_cloudfront_anycast_ip_list: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing
+resource/aws_cognito_log_delivery_configuration: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing
 ```
