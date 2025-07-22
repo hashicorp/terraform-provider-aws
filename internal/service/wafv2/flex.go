@@ -1091,7 +1091,7 @@ func expandRuleGroupRulesJSON(rawRules string) ([]awstypes.Rule, error) {
 	}
 
 	for _, v := range temp {
-		walkRuleGroupJSON(reflect.ValueOf(v))
+		walkRulesGroupJSON(reflect.ValueOf(v))
 	}
 
 	out, err := tfjson.EncodeToBytes(temp)
@@ -1160,7 +1160,7 @@ func walkWebACLJSON(v reflect.Value) {
 	}
 }
 
-func walkRuleGroupJSON(v reflect.Value) {
+func walkRulesGroupJSON(v reflect.Value) {
 	m := map[string][]struct {
 		key        string
 		outputType any
@@ -1196,12 +1196,12 @@ func walkRuleGroupJSON(v reflect.Value) {
 					}
 				}
 			} else {
-				walkRuleGroupJSON(v.MapIndex(k))
+				walkRulesGroupJSON(v.MapIndex(k))
 			}
 		}
 	case reflect.Array, reflect.Slice:
 		for i := range v.Len() {
-			walkRuleGroupJSON(v.Index(i))
+			walkRulesGroupJSON(v.Index(i))
 		}
 	default:
 	}

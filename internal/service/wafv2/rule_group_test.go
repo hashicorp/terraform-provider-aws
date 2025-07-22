@@ -5718,14 +5718,14 @@ func TestAccWAFV2RuleGroup_ruleJSON(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "rule_json"),
+					resource.TestCheckResourceAttrSet(resourceName, "rules_json"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"rule_json", names.AttrRule},
+				ImportStateVerifyIgnore: []string{"rules_json", names.AttrRule},
 				ImportStateIdFunc:       testAccRuleGroupImportStateIdFunc(resourceName),
 			},
 		},
@@ -5739,7 +5739,7 @@ resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
   scope    = "REGIONAL"
 
-  rule_json = jsonencode([{
+  rules_json = jsonencode([{
     Name     = "rule-1"
     Priority = 1
     Action = {

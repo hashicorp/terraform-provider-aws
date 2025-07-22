@@ -100,7 +100,7 @@ func resourceRuleGroup() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-				"rule_json": {
+				"rules_json": {
 					Type:             schema.TypeString,
 					Optional:         true,
 					ConflictsWith:    []string{names.AttrRule},
@@ -114,7 +114,7 @@ func resourceRuleGroup() *schema.Resource {
 				names.AttrRule: {
 					Type:          schema.TypeSet,
 					Optional:      true,
-					ConflictsWith: []string{"rule_json"},
+					ConflictsWith: []string{"rules_json"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrAction: {
@@ -178,7 +178,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Rules = expandRules(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("rule_json"); ok {
+	if v, ok := d.GetOk("rules_json"); ok {
 		rules, err := expandRuleGroupRulesJSON(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
@@ -237,12 +237,12 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
-	if _, ok := d.GetOk("rule_json"); !ok {
+	if _, ok := d.GetOk("rules_json"); !ok {
 		if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 		}
 	} else {
-		d.Set("rule_json", d.Get("rule_json"))
+		d.Set("rules_json", d.Get("rules_json"))
 		d.Set(names.AttrRule, nil)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
@@ -269,7 +269,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			input.Rules = expandRules(v.(*schema.Set).List())
 		}
 
-		if v, ok := d.GetOk("rule_json"); ok {
+		if v, ok := d.GetOk("rules_json"); ok {
 			rules, err := expandRuleGroupRulesJSON(v.(string))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "expanding WAFv2 RuleGroup JSON rule (%s): %s", d.Id(), err)
