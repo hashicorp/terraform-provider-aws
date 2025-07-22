@@ -95,8 +95,7 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
-			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
+			err := importer.RegionalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -282,8 +281,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			attr := tc.identitySpec.Attributes[len(tc.identitySpec.Attributes)-1]
-			err := importer.RegionalSingleParameterized(ctx, d, attr, client)
+			err := importer.RegionalSingleParameterized(ctx, d, tc.identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

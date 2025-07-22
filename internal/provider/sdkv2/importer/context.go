@@ -22,18 +22,18 @@ func Context(ctx context.Context, identity *inttypes.Identity, importSpec *intty
 	return ctx
 }
 
-func IdentitySpec(ctx context.Context) *inttypes.Identity {
+func IdentitySpec(ctx context.Context) inttypes.Identity {
 	val := ctx.Value(identitySpecKey)
 	if identity, ok := val.(*inttypes.Identity); ok {
-		return identity
+		return *identity
 	}
-	return nil
+	return inttypes.Identity{}
 }
 
-func ImportSpec(ctx context.Context) *inttypes.SDKv2Import {
+func ImportSpec(ctx context.Context) inttypes.SDKv2Import {
 	val := ctx.Value(importSpecKey)
 	if importSpec, ok := val.(*inttypes.SDKv2Import); ok {
-		return importSpec
+		return *importSpec
 	}
-	return nil
+	return inttypes.SDKv2Import{}
 }

@@ -65,7 +65,7 @@ func resourceBucket() *schema.Resource {
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				identitySpec := importer.IdentitySpec(ctx)
 
-				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec.Attributes[len(identitySpec.Attributes)-1], meta.(importer.AWSClient)); err != nil {
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
