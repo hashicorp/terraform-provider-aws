@@ -67,7 +67,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtBasic:          testAccPolicy_basic,
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
-			"Tags":                   testAccPolicy_tags,
+			"tags":                   testAccOrganizationsPolicy_tagsSerial,
 			"SkipDestroy":            testAccPolicy_skipDestroy,
 			acctest.CtDisappears:     testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
