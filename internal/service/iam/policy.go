@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"reflect"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -101,6 +102,11 @@ func resourcePolicy() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"delay_after_policy_creation_in_ms": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  -1,
+			},
 		},
 	}
 }
@@ -233,16 +239,54 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		input := &iam.CreatePolicyVersionInput{
-			PolicyArn:      aws.String(d.Id()),
-			PolicyDocument: aws.String(policy),
-			SetAsDefault:   true,
-		}
+		delayAfterPolicyCreationInMs := d.Get("delay_after_policy_creation_in_ms").(int)
 
-		_, err = conn.CreatePolicyVersion(ctx, input)
+		if delayAfterPolicyCreationInMs == -1 {
+			input := &iam.CreatePolicyVersionInput{
+				PolicyArn:      aws.String(d.Id()),
+				PolicyDocument: aws.String(policy),
+				SetAsDefault:   true,
+			}
+			_, err = conn.CreatePolicyVersion(ctx, input)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
+			}
+		} else {
+
+			// Creating a policy and setting its version as default in a single operation can expose a brief interval where
+			// valid STS tokens with attached Session Policies are rejected by AWS authorization servers that have
+			// not received the new default policy version. Separating this into two distinct actions of creating a policy version,
+			// pausing briefly, and then setting that to the default version can avoid this issue, and may be required
+			// in environments with very high S3 IO loads.
+
+			input := &iam.CreatePolicyVersionInput{
+				PolicyArn:      aws.String(d.Id()),
+				PolicyDocument: aws.String(policy),
+				SetAsDefault:   false,
+			}
+
+			var policyVersionOutput *iam.CreatePolicyVersionOutput
+			policyVersionOutput, err = conn.CreatePolicyVersion(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", d.Id(), err)
+			}
+
+			// Ensuring Thread Sleeps for n ms before Setting version as default version
+			// The value is passed through a variable.
+			time.Sleep(time.Duration(delayAfterPolicyCreationInMs) * time.Millisecond)
+
+			policyInput := &iam.SetDefaultPolicyVersionInput{
+				PolicyArn: aws.String(d.Id()),
+				VersionId: policyVersionOutput.PolicyVersion.VersionId,
+			}
+
+			_, err = conn.SetDefaultPolicyVersion(ctx, policyInput)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting Default Policy version for IAM Policy (%s): %s", d.Id(), err)
+			}
+
 		}
 	}
 
