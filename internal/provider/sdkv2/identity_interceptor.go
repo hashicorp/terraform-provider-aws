@@ -121,7 +121,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalMultipleParameterized(ctx, rd, identitySpec.Attributes, importSpec, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 

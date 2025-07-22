@@ -892,7 +892,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -985,7 +985,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
