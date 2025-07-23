@@ -103,7 +103,7 @@ The `content_policy_config` configuration block supports the following arguments
 * `filters_config` - (Optional) Set of content filter configs in content policy.
   See [Filters Config](#content-filters-config) for more information.
 
-* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#tier-config) for more information.
+* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
 
 #### Content Filters Config
 
@@ -113,7 +113,7 @@ The `filters_config` configuration block supports the following arguments:
 * `output_strength` - (Optional) Strength for filters.
 * `type` - (Optional) Type of filter in content policy.
 
-#### Tier Config
+#### Content Tier Config
 The tier_config configuration block supports the following arguments:
 
 * `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
@@ -140,6 +140,7 @@ The `filters_config` configuration block supports the following arguments:
 ### Topic Policy Config
 
 * `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
+* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#topics-tier-config) for more information.
 
 #### Topics Config
 
@@ -147,6 +148,11 @@ The `filters_config` configuration block supports the following arguments:
 * `name` (Required) Name of topic in topic policy.
 * `type` (Required) Type of topic in a policy.
 * `examples` (Optional) List of text examples.
+
+#### Topics Tier Config
+The tier_config configuration block supports the following arguments:
+
+* `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Sensitive Information Policy Config
 
