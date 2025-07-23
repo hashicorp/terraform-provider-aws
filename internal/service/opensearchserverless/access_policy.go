@@ -31,11 +31,12 @@ import (
 )
 
 // @FrameworkResource("aws_opensearchserverless_access_policy", name="Access Policy)
-func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAccessPolicy{}, nil
+func newAccessPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &accessPolicyResource{}, nil
 }
 
-type resourceAccessPolicyData struct {
+type accessPolicyResourceModel struct {
+	framework.WithRegionModel
 	Description   types.String                                  `tfsdk:"description"`
 	ID            types.String                                  `tfsdk:"id"`
 	Name          types.String                                  `tfsdk:"name"`
@@ -48,22 +49,24 @@ const (
 	ResNameAccessPolicy = "Access Policy"
 )
 
-type resourceAccessPolicy struct {
-	framework.ResourceWithConfigure
+type accessPolicyResource struct {
+	framework.ResourceWithModel[accessPolicyResourceModel]
 }
 
-func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *accessPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -72,18 +75,21 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-				Required:   true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
 				},
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.AccessPolicyType](),
-				Required:   true,
+				Description: "Type of access policy. Must be `data`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.AccessPolicyType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -92,8 +98,8 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceAccessPolicyData
+func (r *accessPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan accessPolicyResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -134,10 +140,10 @@ func (r *resourceAccessPolicy) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *accessPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceAccessPolicyData
+	var state accessPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,10 +172,10 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *accessPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceAccessPolicyData
+	var plan, state accessPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -203,10 +209,10 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *accessPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceAccessPolicyData
+	var state accessPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -231,7 +237,7 @@ func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *accessPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
@@ -239,7 +245,7 @@ func (r *resourceAccessPolicy) ImportState(ctx context.Context, req resource.Imp
 		return
 	}
 
-	state := resourceAccessPolicyData{
+	state := accessPolicyResourceModel{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
 		Type: fwtypes.StringEnumValue(awstypes.AccessPolicyType(parts[1])),

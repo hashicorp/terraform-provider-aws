@@ -57,6 +57,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) ARN of the application.
 * `semanticVersion` - (Optional) Requested version of the application. By default, retrieves the latest version.
 
@@ -70,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sourceCodeUrl` - URL pointing to the source code of the application version.
 * `templateUrl` - URL pointing to the Cloud Formation template for the application version.
 
-<!-- cache-key: cdktf-0.20.8 input-4067d08c02e21d01320463b039dbb33009c80dd466c694f17352beb6a7e00e63 -->
+<!-- cache-key: cdktf-0.20.8 input-944b82ac5dd958af9069727776a1201fed695ed3d6cfd0589c43e546316c2d39 -->

@@ -81,42 +81,43 @@ resource "aws_bedrock_model_invocation_logging_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logging_config` - (Required) The logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 
 ### `logging_config` Block
 
 The `logging_config` configuration block supports the following arguments:
 
-* `cloudwatch_config` – (Optional) CloudWatch logging configuration. See [`cloudwatch_config` Block](#cloudwatch_config-block) for details.
-* `embedding_data_delivery_enabled` – (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
-* `image_data_delivery_enabled` – (Optional) Set to include image data in the log delivery. Defaults to `true`.
-* `s3_config` – (Optional) S3 configuration for storing log data. See [`s3_config` Block](#s3_config-block) for details.
-* `text_data_delivery_enabled` – (Optional) Set to include text data in the log delivery. Defaults to `true`.
-* `video_data_delivery_enabled` – (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `cloudwatch_config` - (Optional) CloudWatch logging configuration. See [`cloudwatch_config` Block](#cloudwatch_config-block) for details.
+* `embedding_data_delivery_enabled` - (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
+* `image_data_delivery_enabled` - (Optional) Set to include image data in the log delivery. Defaults to `true`.
+* `s3_config` - (Optional) S3 configuration for storing log data. See [`s3_config` Block](#s3_config-block) for details.
+* `text_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `video_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
 
 ### `cloudwatch_config` Block
 
 The `cloudwatch_config` configuration block supports the following arguments:
 
-* `large_data_delivery_s3_config` – (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
-* `log_group_name` – (Required) Log group name.
-* `role_arn` – (Optional) The role ARN.
+* `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
+* `log_group_name` - (Required) Log group name.
+* `role_arn` - (Optional) The role ARN.
 
 ### `large_data_delivery_s3_config` Block
 
 The `large_data_delivery_s3_config` configuration block supports the following arguments:
 
-* `bucket_name` – (Required) S3 bucket name.
-* `key_prefix` – (Optional) S3 prefix.
+* `bucket_name` - (Required) S3 bucket name.
+* `key_prefix` - (Optional) S3 prefix.
 
 ### `s3_config` Block
 
 The `s3_config` configuration block supports the following arguments:
 
-* `bucket_name` – (Required) S3 bucket name.
-* `key_prefix` – (Optional) S3 prefix.
+* `bucket_name` - (Required) S3 bucket name.
+* `key_prefix` - (Optional) S3 prefix.
 
 ## Attribute Reference
 

@@ -28,8 +28,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +43,11 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
+// @IdentityAttribute("name")
+// @WrappedImport(false)
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
+// @Testing(idAttrDuplicates="name")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -50,7 +56,15 @@ func resourceRole() *schema.Resource {
 		DeleteWithoutTimeout: resourceRoleDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceRoleImport,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.GlobalSingleParameterized(ctx, rd, inttypes.StringIdentityAttribute(names.AttrName, true), meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
+				rd.Set("force_detach_policies", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -272,7 +286,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -285,8 +299,6 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
 	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
@@ -510,11 +522,6 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	return diags
-}
-
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	d.Set("force_detach_policies", false)
-	return []*schema.ResourceData{d}, nil
 }
 
 func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDetach, hasInline, hasManaged bool) error {
@@ -972,13 +979,22 @@ func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyI
 	return matches == len(readPolicies)
 }
 
-func roleTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListRoleTags(ctx, &iam.ListRoleTagsInput{
+func roleTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListRoleTagsInput{
 		RoleName: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListRoleTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

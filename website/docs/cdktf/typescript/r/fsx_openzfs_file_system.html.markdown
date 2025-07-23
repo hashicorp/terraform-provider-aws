@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automaticBackupRetentionDays` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backupId` - (Optional) The ID of the source backup to create the filesystem from.
 * `copyTagsToBackups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
@@ -194,4 +195,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-67a663675d69054fe474ba406dfee59b4e50902da7ac5e76ba4e62668071d3cf -->
+<!-- cache-key: cdktf-0.20.8 input-d0f3f2a4d81f90025831b0d35e5c5cb45f0f8fc9587bd32b8dfed4bb55fc24b9 -->

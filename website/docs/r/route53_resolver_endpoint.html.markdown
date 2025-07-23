@@ -44,6 +44,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
 or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).

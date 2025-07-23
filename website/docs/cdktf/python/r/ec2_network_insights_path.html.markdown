@@ -38,12 +38,13 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `source` - (Required) ID or ARN of the resource which is the source of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN.
-* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN. Either the `destination` argument or the `destination_address` argument in the `filter_at_source` block must be specified.
 * `protocol` - (Required) Protocol to use for analysis. Valid options are `tcp` or `udp`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_ip` - (Optional) IP address of the source resource.
+* `destination` - (Optional) ID or ARN of the resource which is the destination of the path. Can be an Instance, Internet Gateway, Network Interface, Transit Gateway, VPC Endpoint, VPC Peering Connection or VPN Gateway. If the resource is in another account, you must specify an ARN. Either the `destination` argument or the `destination_address` argument in the `filter_at_source` block must be specified.
 * `destination_ip` - (Optional) IP address of the destination resource.
 * `destination_port` - (Optional) Destination port to analyze access to.
 * `filter_at_destination` - (Optional) Scopes the analysis to network paths that match specific filters at the destination. If you specify this parameter, you can't specify `destination_ip`. See below for details. Note that Terraform performs drift detection on this argument only when the value is provided.
@@ -97,4 +98,4 @@ Using `terraform import`, import Network Insights Paths using the `id`. For exam
 % terraform import aws_ec2_network_insights_path.test nip-00edfba169923aefd
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-450750dfbb986194793d0f9913cf2f7d0845171d392345f307355e7830c3e579 -->
+<!-- cache-key: cdktf-0.20.8 input-ad5430f95c8e64069ff99a27cebeced357149a6b873461f388c73276f8884d08 -->

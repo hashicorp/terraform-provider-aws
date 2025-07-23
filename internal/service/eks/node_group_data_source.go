@@ -233,7 +233,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

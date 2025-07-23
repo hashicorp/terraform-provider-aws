@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `nas1_configuration` - (Optional) Specifies the configuration for the Network attached storage (`NAS_1`) file system volume. This parameter is required when `volume_type` is `NAS_1`. See [`nas1_configuration` Argument Reference](#nas1_configuration-argument-reference) below.
 * `description` - (Optional) Description of the volume.
 * `tags` - (Optional) A list of key-value pairs to label the volume. You can add up to 50 tags to a volume
@@ -59,15 +60,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) identifier of the KX volume.
 * `created_timestamp` - The timestamp at which the volume was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `status` - The status of volume creation.
-    * `CREATING` – The volume creation is in progress.
-    * `CREATE_FAILED` – The volume creation has failed.
-    * `ACTIVE` – The volume is active.
-    * `UPDATING` – The volume is in the process of being updated.
-    * `UPDATE_FAILED` – The update action failed.
-    * `UPDATED` – The volume is successfully updated.
-    * `DELETING` – The volume is in the process of being deleted.
-    * `DELETE_FAILED` – The system failed to delete the volume.
-    * `DELETED` – The volume is successfully deleted.
+    * `CREATING` - The volume creation is in progress.
+    * `CREATE_FAILED` - The volume creation has failed.
+    * `ACTIVE` - The volume is active.
+    * `UPDATING` - The volume is in the process of being updated.
+    * `UPDATE_FAILED` - The update action failed.
+    * `UPDATED` - The volume is successfully updated.
+    * `DELETING` - The volume is in the process of being deleted.
+    * `DELETE_FAILED` - The system failed to delete the volume.
+    * `DELETED` - The volume is successfully deleted.
 * `status_reason` - The error message when a failed state occurs.
 * `last_modified_timestamp` - Last timestamp at which the volume was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 

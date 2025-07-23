@@ -31,13 +31,12 @@ resource "aws_guardduty_organization_admin_account" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_account_id` - (Required) AWS account identifier to designate as a delegated administrator for GuardDuty.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - AWS account identifier.
+This resource exports no additional attributes.
 
 ## Import
 

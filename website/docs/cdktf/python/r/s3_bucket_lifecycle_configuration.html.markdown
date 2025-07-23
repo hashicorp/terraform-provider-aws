@@ -436,6 +436,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
 * `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
@@ -594,4 +595,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0d372dca2d3f39b30f3f701e0194d2114ccebccece26beba7e16ae8a2c88e3f8 -->
+<!-- cache-key: cdktf-0.20.8 input-1e6502cd817f3a3ccd8407fd6d401855e2d6773f4629763c8a1870acd94a37ba -->

@@ -54,7 +54,7 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcEndpoint(self, "example",
             security_group_ids=[Token.as_string(aws_security_group_example.id)],
-            service_name="com.amazonaws.${" + current.name + "}.datasync",
+            service_name="com.amazonaws.${" + current.region + "}.datasync",
             subnet_ids=[Token.as_string(aws_subnet_example.id)],
             vpc_endpoint_type="Interface",
             vpc_id=Token.as_string(aws_vpc_example.id)
@@ -81,6 +81,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DataSync Agent.
 * `activation_key` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
@@ -129,4 +130,4 @@ Using `terraform import`, import `aws_datasync_agent` using the DataSync Agent A
 % terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0acba5dd129383087553f49e6f95af67ac05fa502cb2be0e9157f77f225a5cfa -->
+<!-- cache-key: cdktf-0.20.8 input-277ce9a9e8daac3a6f8a10f28dab4725882397430f8a07c1b9738289592bf8c0 -->

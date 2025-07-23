@@ -560,6 +560,7 @@ service/cognitoidp:
               - 'website/**/cognito_resource_*'
               - 'website/**/cognito_user*'
               - 'website/**/cognito_risk*'
+              - 'website/**/cognito_log*'
 service/cognitosync:
   - any:
       - changed-files:
@@ -926,6 +927,12 @@ service/evidently:
           - any-glob-to-any-file:
               - 'internal/service/evidently/**/*'
               - 'website/**/evidently_*'
+service/evs:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/evs/**/*'
+              - 'website/**/evs_*'
 service/finspace:
   - any:
       - changed-files:
@@ -2280,6 +2287,7 @@ service/vpc:
               - 'website/**/vpc\.*'
               - 'website/**/vpcs\.*'
               - 'website/**/vpc_block_public_access_*'
+              - 'website/**/vpc_route_server*'
 service/vpclattice:
   - any:
       - changed-files:

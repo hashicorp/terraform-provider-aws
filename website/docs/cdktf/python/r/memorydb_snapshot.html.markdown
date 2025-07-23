@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -100,4 +101,4 @@ Using `terraform import`, import a snapshot using the `name`. For example:
 % terraform import aws_memorydb_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-472b6583ce4bfcb329a2db7ea7a926933996c5a2cf3009e05e6c6d3eeb644d01 -->
+<!-- cache-key: cdktf-0.20.8 input-20908b53b5478faadd81d8dc73a3882f1e858c7ce43e429dbac813dfff8ef353 -->

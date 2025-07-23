@@ -51,6 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vocabularyFilterFileUri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom VocabularyFilter. Conflicts with `words` argument.
 * `tags` - (Optional) A map of tags to assign to the VocabularyFilter. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `words` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabularyFilterFileUri` argument.
@@ -95,4 +96,4 @@ Using `terraform import`, import Transcribe VocabularyFilter using the `vocabula
 % terraform import aws_transcribe_vocabulary_filter.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-16b5be2fa7e21b3d5f8eb7e880ca04a14415ca27a321bb6d553621e84cea648d -->
+<!-- cache-key: cdktf-0.20.8 input-776ce9ebfe48d55f7e97f237fc10b3df02aeea4d4c2b1ff0907348615fb09b5a -->

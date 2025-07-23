@@ -324,7 +324,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findBucketNotificationConfiguration(ctx, conn, bucket, "")
 		})
 

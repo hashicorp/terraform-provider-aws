@@ -143,6 +143,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_id` - (Required) EC2 Transit Gateway identifier. The EC2 Transit Gateway must have `multicast_support` enabled.
 * `auto_accept_shared_associations` - (Optional) Whether to automatically accept cross-account subnet associations that are associated with the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
 * `igmpv2_support` - (Optional) Whether to enable Internet Group Management Protocol (IGMP) version 2 for the EC2 Transit Gateway Multicast Domain. Valid values: `disable`, `enable`. Default value: `disable`.
@@ -190,4 +191,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_multicast_domain` usin
 % terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8493dfab227c918d9b3e4e208962affb97781a33e5cd93321c066ab973c7252b -->
+<!-- cache-key: cdktf-0.20.8 input-15adbcefec8eee09bda32e477e6f72b6b962e9c5d7ddd5fbe0520972882a2982 -->

@@ -149,7 +149,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 	versionID := aws.ToString(output.VersionId)
 	d.SetId(secretVersionCreateResourceID(secretID, versionID))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 	})
 
@@ -333,7 +333,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
 
 		if err != nil {

@@ -7,6 +7,7 @@ set -euo pipefail
 go test \
     ./internal/acctest/... \
     ./internal/attrmap/... \
+    ./internal/backoff/... \
     ./internal/conns/... \
     ./internal/create/... \
     ./internal/dns/... \
@@ -30,11 +31,14 @@ go test \
     ./internal/sdkv2/... \
     ./internal/semver/... \
     ./internal/slices/... \
+    ./internal/smerr/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
+    ./internal/unique/... \
     ./internal/vault/... \
+    ./internal/vcr/... \
     ./internal/verify/... \
     ./internal/yaml/... \
     -json

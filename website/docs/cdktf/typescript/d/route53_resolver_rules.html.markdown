@@ -87,8 +87,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `nameRegex` - (Optional) Regex string to filter resolver rule names.
   The filtering is done locally, so could have a performance impact if the result is large.
   This argument should be used along with other arguments to limit the number of results returned.
@@ -104,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `resolverRuleIds` - IDs of the matched resolver rules.
 
-<!-- cache-key: cdktf-0.20.8 input-9b0c7f44fbc4c3e685d8f6ce94f95d724eb10dbce507d5f4308b0a1bf1da3367 -->
+<!-- cache-key: cdktf-0.20.8 input-73f8aa3c799ae00e1bf4834f0308a418457cd527e7fa7059e4cb3853cc2a43ad -->

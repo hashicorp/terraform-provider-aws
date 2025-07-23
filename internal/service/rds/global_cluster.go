@@ -26,6 +26,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -288,7 +289,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get(names.AttrForceDestroy).(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
@@ -528,7 +529,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
-	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
 

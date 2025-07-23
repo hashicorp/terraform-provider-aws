@@ -92,6 +92,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessEndpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints.
   See [`accessEndpoints`](#access_endpoints) below.
 * `applicationSettings` - (Optional) Settings for application settings persistence.
@@ -177,4 +178,4 @@ Using `terraform import`, import `aws_appstream_stack` using the id. For example
 % terraform import aws_appstream_stack.example stackID
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-858ba96061de489da95e152e74e50a69c0d660931c493804bc82ecc05dea7905 -->
+<!-- cache-key: cdktf-0.20.8 input-cb2bdf6e130f23e2b7a12e4882a4ebdc1202f0e431368e87980d99b9785db0c0 -->

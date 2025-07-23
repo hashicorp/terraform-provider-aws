@@ -16,6 +16,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_default_tags", name="Default Tags")
+// @Region(overrideEnabled=false)
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
@@ -23,7 +24,7 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type defaultTagsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[defaultTagsDataSourceModel]
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {

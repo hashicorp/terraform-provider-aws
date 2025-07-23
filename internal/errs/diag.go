@@ -75,19 +75,6 @@ func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {
 	return d
 }
 
-// newAttributeConflictsError is included for use with NewAttributeConflictsWillBeError.
-// The typical behavior is covered using the schema ConflictsWith parameter.
-func newAttributeConflictsError(path, otherPath cty.Path) diag.Diagnostic {
-	return NewAttributeErrorDiagnostic(
-		path,
-		"Invalid Attribute Combination",
-		fmt.Sprintf("Attribute %q cannot be specified when %q is specified.",
-			PathString(path),
-			PathString(otherPath),
-		),
-	)
-}
-
 // NewAttributeConflictsWhenError returns an error diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath has the given value.
 func NewAttributeConflictsWhenError(path, otherPath cty.Path, otherValue string) diag.Diagnostic {
@@ -141,15 +128,6 @@ func NewAttributeRequiredError(parentPath cty.Path, attrname string) diag.Diagno
 func NewAttributeRequiredWillBeError(parentPath cty.Path, attrname string) diag.Diagnostic {
 	return willBeError(
 		NewAttributeRequiredError(parentPath, attrname),
-	)
-}
-
-// NewAttributeConflictsWillBeError returns a warning diagnostic indicating that the attribute at the given path cannot be
-// specified when the attribute at otherPath is set.
-// This is intended to be used for situations where the conflict will become an error in a future release.
-func NewAttributeConflictsWillBeError(path, otherPath cty.Path) diag.Diagnostic {
-	return willBeError(
-		newAttributeConflictsError(path, otherPath),
 	)
 }
 

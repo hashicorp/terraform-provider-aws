@@ -94,6 +94,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 * `keyId` - (Optional) An AWS KMS customer master key (CMK) ARN.
 
@@ -131,4 +134,4 @@ Using `terraform import`, import XRay Encryption Config using the region name. F
 % terraform import aws_xray_encryption_config.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55d226205a72425f4aa1a56a07d4e3a41a8d86c6c3b3f83bf024e6de8c19b0ed -->
+<!-- cache-key: cdktf-0.20.8 input-36d30359305c0f8e3b2ebef145e3150d4a52f37a4742a8eaee93ca799c7c65af -->

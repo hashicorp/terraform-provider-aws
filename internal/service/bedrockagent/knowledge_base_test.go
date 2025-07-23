@@ -502,7 +502,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -538,7 +538,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -572,7 +572,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -610,7 +610,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -680,7 +680,7 @@ data "aws_iam_policy_document" "test_trust" {
       test     = "ArnLike"
       variable = "aws:SourceArn"
       values = [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
       ]
     }
   }
@@ -704,7 +704,7 @@ data "aws_iam_policy_document" "test" {
       "bedrock:InvokeModel",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
     ]
   }
 
@@ -794,7 +794,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -831,7 +831,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
@@ -907,7 +907,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   knowledge_base_configuration {
     type = "VECTOR"
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/%[2]s"
       embedding_model_configuration {
         bedrock_embedding_model_configuration {
           dimensions          = 1024

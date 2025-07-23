@@ -48,20 +48,22 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
-
 * `executable_users` - (Optional) Limit search to users with *explicit* launch permission on
  the image. Valid items are the numeric account ID or `self`.
-
 * `include_deprecated` - (Optional) If true, all deprecated AMIs are included in the response. If false, no deprecated AMIs are included in the response. If no value is specified, the default value is false.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
-
+* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `most_recent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -75,12 +77,9 @@ you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
-`id` is set to the ID of the found AMI. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
-
+* `id` - ID of the AMI.
 * `arn` - ARN of the AMI.
 * `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `boot_mode` - Boot mode of the image.
@@ -94,6 +93,7 @@ interpolation.
         * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
         * `volume_type` - The volume type.
+        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - Virtual device name (for instance stores).
 * `creation_date` - Date and time the image was created.
@@ -140,6 +140,9 @@ interpolation.
 * `platform_details` - Platform details associated with the billing code of the AMI.
 * `ena_support` - Whether enhanced networking with ENA is enabled.
 
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -148,4 +151,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-001f6f9d65f91435da56c242347f43a07ad28c6093d0f3fa2f0d69e7e6053d8f -->
+<!-- cache-key: cdktf-0.20.8 input-bb5d7d662f9b4a8aa15b1c63d1ee7a13e07553335a38463929c9138cdcf1191a -->

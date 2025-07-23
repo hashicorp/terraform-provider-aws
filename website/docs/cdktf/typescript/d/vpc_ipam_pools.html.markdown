@@ -49,12 +49,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-IPAM Pools in the current region.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Required) Custom filter block as described below.
 
-### filter
+The arguments of this data source act as filters for querying the available IPAM Pools in the current region.
+
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
@@ -85,4 +87,4 @@ The following attributes are available on each pool entry found.
 * `sourceIpamPoolId` - ID of the source IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-0f25f29b8da73a8eab1f57b2d6fd05fbdbacc033fa3a351d8ef07553310a8208 -->
+<!-- cache-key: cdktf-0.20.8 input-1946e2050bf733332e104bfaf0be02db51047c814595593fb08c003b5edf28cc -->

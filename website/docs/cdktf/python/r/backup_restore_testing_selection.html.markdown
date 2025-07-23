@@ -69,8 +69,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the backup restore testing selection.
 * `restore_testing_plan_name` - (Required) The name of the restore testing plan.
 * `protected_resource_type` - (Required) The type of the protected resource.
@@ -119,4 +120,4 @@ Using `terraform import`, import Backup Restore Testing Selection using `name:re
 % terraform import aws_backup_restore_testing_selection.example restore_testing_selection_12345678:restore_testing_plan_12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0b462169cc6dd60425a779d3182ec384b2e4a6c5af4616e9ea33d267cac37dff -->
+<!-- cache-key: cdktf-0.20.8 input-634e9168d7138755d44c46359397cc22eb75e05f9a21b1ac7bf6fe953a415e96 -->

@@ -74,6 +74,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Entity Recognizer.
@@ -188,4 +189,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-eb76cf76bcd9ae3f63202cc7186a5ea4ba2a43a084b6d50a4124097787c31abc -->
+<!-- cache-key: cdktf-0.20.8 input-32380dd4aac3d0cc4db7f12a767105b8c53b1f27df4e87bf32344b94f5e2e19f -->

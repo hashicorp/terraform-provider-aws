@@ -22,6 +22,7 @@ import (
 )
 
 // @SDKResource("aws_ram_sharing_with_organization", name="Sharing With Organization")
+// @Region(global=true)
 func resourceSharingWithOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
