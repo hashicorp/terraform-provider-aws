@@ -51,16 +51,17 @@ class MyConvertedCode(TerraformStack):
         aws_bedrock_model_invocation_logging_configuration_example =
         BedrockModelInvocationLoggingConfiguration(self, "example_3",
             depends_on=[aws_s3_bucket_policy_example],
-            logging_config=[{
-                "embedding_data_delivery_enabled": True,
-                "image_data_delivery_enabled": True,
-                "s3_config": [{
-                    "bucket_name": example.id,
-                    "key_prefix": "bedrock"
-                }
+            logging_config=[BedrockModelInvocationLoggingConfigurationLoggingConfig(
+                embedding_data_delivery_enabled=True,
+                image_data_delivery_enabled=True,
+                s3_config=[BedrockModelInvocationLoggingConfigurationLoggingConfigS3Config(
+                    bucket_name=example.id,
+                    key_prefix="bedrock"
+                )
                 ],
-                "text_data_delivery_enabled": True
-            }
+                text_data_delivery_enabled=True,
+                video_data_delivery_enabled=True
+            )
             ]
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -71,19 +72,41 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `logging_config` - (Required) The logging configuration values to set.
-    * `cloudwatch_config` – (Optional) CloudWatch logging configuration.
-        * `large_data_delivery_s3_config` – (Optional) S3 configuration for delivering a large amount of data.
-            * `bucket_name` – (Required) S3 bucket name.
-            * `key_prefix` – (Optional) S3 prefix.
-        * `log_group_name` – (Required) Log group name.
-        * `role_arn` – (Optional) The role ARN.
-    * `embedding_data_delivery_enabled` – (Optional) Set to include embeddings data in the log delivery.
-    * `image_data_delivery_enabled` – (Optional) Set to include image data in the log delivery.
-    * `s3_config` – (Optional) S3 configuration for storing log data.
-        * `bucket_name` – (Required) S3 bucket name.
-        * `key_prefix` – (Optional) S3 prefix.
-    * `text_data_delivery_enabled` – (Optional) Set to include text data in the log delivery.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `logging_config` - (Required) The logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
+
+### `logging_config` Block
+
+The `logging_config` configuration block supports the following arguments:
+
+* `cloudwatch_config` - (Optional) CloudWatch logging configuration. See [`cloudwatch_config` Block](#cloudwatch_config-block) for details.
+* `embedding_data_delivery_enabled` - (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
+* `image_data_delivery_enabled` - (Optional) Set to include image data in the log delivery. Defaults to `true`.
+* `s3_config` - (Optional) S3 configuration for storing log data. See [`s3_config` Block](#s3_config-block) for details.
+* `text_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `video_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
+
+### `cloudwatch_config` Block
+
+The `cloudwatch_config` configuration block supports the following arguments:
+
+* `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
+* `log_group_name` - (Required) Log group name.
+* `role_arn` - (Optional) The role ARN.
+
+### `large_data_delivery_s3_config` Block
+
+The `large_data_delivery_s3_config` configuration block supports the following arguments:
+
+* `bucket_name` - (Required) S3 bucket name.
+* `key_prefix` - (Optional) S3 prefix.
+
+### `s3_config` Block
+
+The `s3_config` configuration block supports the following arguments:
+
+* `bucket_name` - (Required) S3 bucket name.
+* `key_prefix` - (Optional) S3 prefix.
 
 ## Attribute Reference
 
@@ -116,4 +139,4 @@ Using `terraform import`, import Bedrock custom model using the `id` set to the 
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-133dcfe3fbb6e947216f40d4368e641199f134fa245d8476c232eb1f6c5b8f5a -->
+<!-- cache-key: cdktf-0.20.8 input-60a144b3051f0b928779ff9d01e9713b65c7e41053f147bdcfff4ec012f59519 -->

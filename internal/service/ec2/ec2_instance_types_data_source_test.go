@@ -57,9 +57,9 @@ func TestAccEC2InstanceTypesDataSource_filter(t *testing.T) {
 func testAccPreCheckInstanceTypes(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypesInput{}
+	input := ec2.DescribeInstanceTypesInput{}
 
-	_, err := conn.DescribeInstanceTypes(ctx, input)
+	_, err := conn.DescribeInstanceTypes(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

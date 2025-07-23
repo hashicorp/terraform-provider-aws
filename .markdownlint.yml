@@ -19,6 +19,9 @@ no-inline-html:
   allowed_elements:
     - br
     - sup
+    - details
+    - summary
+    - p
 
 # Disabled Rules
 # https://github.com/DavidAnson/markdownlint/blob/master/doc/Rules.md

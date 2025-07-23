@@ -80,11 +80,10 @@ func ResourceProtectionGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -97,7 +96,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("members"); ok {
-		input.Members = flex.ExpandStringValueList(v.([]interface{}))
+		input.Members = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceType); ok {
@@ -115,7 +114,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -142,7 +141,7 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
@@ -154,7 +153,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if v, ok := d.GetOk("members"); ok {
-			input.Members = flex.ExpandStringValueList(v.([]interface{}))
+			input.Members = flex.ExpandStringValueList(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrResourceType); ok {
@@ -171,7 +170,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 

@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Instance.
 
 By instance_alias
 
-```hcl
+```terraform
 data "aws_connect_instance" "foo" {
   instance_alias = "foo"
 }
@@ -22,7 +22,7 @@ data "aws_connect_instance" "foo" {
 
 By instance_id
 
-```hcl
+```terraform
 data "aws_connect_instance" "foo" {
   instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
 }
@@ -30,13 +30,13 @@ data "aws_connect_instance" "foo" {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
-
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
 ## Attribute Reference
 

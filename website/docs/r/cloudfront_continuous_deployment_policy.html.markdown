@@ -124,13 +124,14 @@ The following arguments are required:
 
 ### `session_stickiness_config`
 
-* `idle_ttl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` – `3600` (5–60 minutes). The value must be less than or equal to `maximum_ttl`.
-* `maximum_ttl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` – `3600` (5–60 minutes). The value must be greater than or equal to `idle_ttl`.
+* `idle_ttl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` - `3600` (5–60 minutes). The value must be less than or equal to `maximum_ttl`.
+* `maximum_ttl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` - `3600` (5–60 minutes). The value must be greater than or equal to `idle_ttl`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The continuous deployment policy ARN.
 * `etag` - Current version of the continuous distribution policy.
 * `id` - Identifier of the continuous deployment policy.
 * `last_modified_time` - Date and time the continuous deployment policy was last modified.

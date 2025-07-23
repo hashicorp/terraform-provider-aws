@@ -51,7 +51,7 @@ const (
 	resNameEmailIdentityFeedbackAttributes = "Email Identity Feedback Attributes"
 )
 
-func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -74,7 +74,7 @@ func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schem
 	return append(diags, resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -96,7 +96,7 @@ func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -124,7 +124,7 @@ func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schem
 	return append(diags, resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 

@@ -89,19 +89,17 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	in := &chimesdkvoice.CreateVoiceProfileDomainInput{
 		Name:                              aws.String(d.Get(names.AttrName).(string)),
-		ServerSideEncryptionConfiguration: expandServerSideEncryptionConfiguration(d.Get("server_side_encryption_configuration").([]interface{})),
+		ServerSideEncryptionConfiguration: expandServerSideEncryptionConfiguration(d.Get("server_side_encryption_configuration").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
 
@@ -123,7 +121,7 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVoiceProfileDomainRead(ctx, d, meta)...)
 }
 
-func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -152,7 +150,7 @@ func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -178,16 +176,17 @@ func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	log.Printf("[INFO] Deleting ChimeSDKVoice VoiceProfileDomain %s", d.Id())
 
-	_, err := conn.DeleteVoiceProfileDomain(ctx, &chimesdkvoice.DeleteVoiceProfileDomainInput{
+	input := chimesdkvoice.DeleteVoiceProfileDomainInput{
 		VoiceProfileDomainId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVoiceProfileDomain(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -223,21 +222,21 @@ func FindVoiceProfileDomainByID(ctx context.Context, conn *chimesdkvoice.Client,
 	return out.VoiceProfileDomain, nil
 }
 
-func flattenServerSideEncryptionConfiguration(apiObject *awstypes.ServerSideEncryptionConfiguration) []interface{} {
+func flattenServerSideEncryptionConfiguration(apiObject *awstypes.ServerSideEncryptionConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		names.AttrKMSKeyARN: apiObject.KmsKeyArn,
 	}}
 }
 
-func expandServerSideEncryptionConfiguration(tfList []interface{}) *awstypes.ServerSideEncryptionConfiguration {
+func expandServerSideEncryptionConfiguration(tfList []any) *awstypes.ServerSideEncryptionConfiguration {
 	if len(tfList) != 1 {
 		return nil
 	}
 	return &awstypes.ServerSideEncryptionConfiguration{
-		KmsKeyArn: aws.String(tfList[0].(map[string]interface{})[names.AttrKMSKeyARN].(string)),
+		KmsKeyArn: aws.String(tfList[0].(map[string]any)[names.AttrKMSKeyARN].(string)),
 	}
 }

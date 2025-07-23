@@ -33,7 +33,7 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "networkmanager", "link/{global_network_id}/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),

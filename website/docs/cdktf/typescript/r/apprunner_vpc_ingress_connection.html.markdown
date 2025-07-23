@@ -44,8 +44,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
 * `serviceArn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
 * `ingressVpcConfiguration` - (Required) Specifications for the customer’s Amazon VPC and the related AWS PrivateLink VPC endpoint that are used to create the VPC Ingress Connection resource. See [Ingress VPC Configuration](#ingress-vpc-configuration) below for more details.
@@ -99,4 +100,4 @@ Using `terraform import`, import App Runner VPC Ingress Connection using the `ar
 % terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ca4eb20c816b4fc2b57f0cfd6bbd31dc7537e74b1368f2c8074afd614895b23 -->
+<!-- cache-key: cdktf-0.20.8 input-54f3ec34c31b4322dcc47f315fdfd88542ec541ec78fd0564b6e8c9fff4b65d1 -->

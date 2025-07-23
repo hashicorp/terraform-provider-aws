@@ -24,7 +24,7 @@ resource "aws_securityhub_standards_subscription" "cis" {
 
 resource "aws_securityhub_standards_subscription" "pci_321" {
   depends_on    = [aws_securityhub_account.example]
-  standards_arn = "arn:aws:securityhub:${data.aws_region.current.name}::standards/pci-dss/v/3.2.1"
+  standards_arn = "arn:aws:securityhub:${data.aws_region.current.region}::standards/pci-dss/v/3.2.1"
 }
 ```
 
@@ -32,6 +32,7 @@ resource "aws_securityhub_standards_subscription" "pci_321" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standards_arn` - (Required) The ARN of a standard - see below.
 
 Currently available standards (remember to replace `${var.partition}` and `${var.region}` as appropriate):
@@ -51,6 +52,13 @@ Currently available standards (remember to replace `${var.partition}` and `${var
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of a resource that represents your subscription to a supported standard.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

@@ -119,7 +119,9 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
-		resp, err := conn.GetPipelineDefinition(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+
+		input := datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)}
+		resp, err := conn.GetPipelineDefinition(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("problem checking for DataPipeline Pipeline Definition existence: %w", err)
 		}
@@ -143,7 +145,8 @@ func testAccCheckPipelineDefinitionDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			resp, err := conn.GetPipelineDefinition(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+			input := datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)}
+			resp, err := conn.GetPipelineDefinition(ctx, &input)
 
 			if errs.IsA[*awstypes.PipelineNotFoundException](err) ||
 				errs.IsA[*awstypes.PipelineDeletedException](err) {

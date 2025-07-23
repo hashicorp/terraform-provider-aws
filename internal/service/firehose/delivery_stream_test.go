@@ -24,6 +24,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.FirehoseServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Read from timestamp feature is not currently available",
+	)
+}
+
 func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
@@ -996,6 +1006,42 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.topic_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.read_from_timestamp", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_ExtendedS3_readFromTimestamp(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_readFromTimestamp(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.0.connectivity", "PRIVATE"),
+					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.topic_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.read_from_timestamp", "2025-03-11T14:30:00Z"),
 				),
 			},
 			{
@@ -2453,7 +2499,7 @@ func testAccCheckDeliveryStreamDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, opensearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
+func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescription, s3config any, extendedS3config any, redshiftConfig any, elasticsearchConfig any, opensearchConfig any, splunkConfig any, httpEndpointConfig any) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -3303,6 +3349,36 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
+func testAccDeliveryStreamConfig_readFromTimestamp(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_base(rName),
+		testAccDeliveryStreamConfig_baseMSKClusterSource(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose, aws_iam_role_policy.msk_source, aws_msk_cluster_policy.test]
+  name       = %[1]q
+
+  msk_source_configuration {
+    authentication_configuration {
+      connectivity = "PRIVATE"
+      role_arn     = aws_iam_role.msk_source.arn
+    }
+
+    msk_cluster_arn     = aws_msk_serverless_cluster.test.arn
+    topic_name          = "test"
+    read_from_timestamp = "2025-03-11T14:30:00Z"
+  }
+
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+`, rName))
+}
+
 func testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
@@ -3702,7 +3778,9 @@ func testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName string) string {
 		testAccDeliveryStreamConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -4100,7 +4178,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4128,7 +4206,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn           = aws_iam_role.firehose.arn
     s3_backup_mode     = "FailedDataOnly"
-    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
     buffering_interval = 900
     buffering_size     = 100
     retry_duration     = 900
@@ -4159,7 +4237,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4205,7 +4283,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
-    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4256,7 +4334,7 @@ resource "aws_redshift_cluster" "test" {
   database_name             = "test"
   master_username           = "testuser"
   master_password           = "T3stPass"
-  node_type                 = "dc2.large"
+  node_type                 = "ra3.large"
   cluster_type              = "single-node"
   skip_final_snapshot       = true
   cluster_subnet_group_name = aws_redshift_subnet_group.test.id

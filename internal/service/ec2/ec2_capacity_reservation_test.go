@@ -452,11 +452,11 @@ func testAccCheckCapacityReservationDestroy(ctx context.Context) resource.TestCh
 func testAccPreCheckCapacityReservation(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeCapacityReservationsInput{
+	input := ec2.DescribeCapacityReservationsInput{
 		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.DescribeCapacityReservations(ctx, input)
+	_, err := conn.DescribeCapacityReservations(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

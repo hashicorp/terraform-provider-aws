@@ -15,13 +15,13 @@ import (
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandParameters(configured []interface{}) []awstypes.Parameter {
+func expandParameters(configured []any) []awstypes.Parameter {
 	parameters := make([]awstypes.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
 	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
+		data := pRaw.(map[string]any)
 
 		p := awstypes.Parameter{
 			ApplyMethod:    awstypes.ApplyMethod(data["apply_method"].(string)),
@@ -36,8 +36,8 @@ func expandParameters(configured []interface{}) []awstypes.Parameter {
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenParameters(list []awstypes.Parameter, parameterList []interface{}) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenParameters(list []awstypes.Parameter, parameterList []any) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 	for _, i := range list {
 		if i.ParameterValue != nil {
 			name := aws.ToString(i.ParameterName)
@@ -45,7 +45,7 @@ func flattenParameters(list []awstypes.Parameter, parameterList []interface{}) [
 			// Check if any non-user parameters are specified in the configuration.
 			parameterFound := false
 			for _, configParameter := range parameterList {
-				if configParameter.(map[string]interface{})[names.AttrName] == name {
+				if configParameter.(map[string]any)[names.AttrName] == name {
 					parameterFound = true
 				}
 			}
@@ -55,7 +55,7 @@ func flattenParameters(list []awstypes.Parameter, parameterList []interface{}) [
 				continue
 			}
 
-			result = append(result, map[string]interface{}{
+			result = append(result, map[string]any{
 				"apply_method":  string(i.ApplyMethod),
 				names.AttrName:  aws.ToString(i.ParameterName),
 				names.AttrValue: aws.ToString(i.ParameterValue),
@@ -65,7 +65,7 @@ func flattenParameters(list []awstypes.Parameter, parameterList []interface{}) [
 	return result
 }
 
-func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
+func validEventSubscriptionName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -78,7 +78,7 @@ func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validEventSubscriptionNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

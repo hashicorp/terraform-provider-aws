@@ -92,7 +92,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -122,7 +122,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceCustomDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -155,7 +155,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -166,10 +166,11 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
-	_, err = conn.DisassociateCustomDomain(ctx, &apprunner.DisassociateCustomDomainInput{
+	input := apprunner.DisassociateCustomDomainInput{
 		DomainName: aws.String(domainName),
 		ServiceArn: aws.String(serviceARN),
-	})
+	}
+	_, err = conn.DisassociateCustomDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -274,7 +275,7 @@ const (
 )
 
 func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
 		if tfresource.NotFound(err) {
@@ -329,11 +330,11 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	return nil, err
 }
 
-func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []interface{} {
-	var results []interface{}
+func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []any {
+	var results []any
 
 	for _, record := range records {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName:   aws.ToString(record.Name),
 			names.AttrStatus: record.Status,
 			names.AttrType:   aws.ToString(record.Type),

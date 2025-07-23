@@ -120,14 +120,14 @@ resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
 
   metric_query {
     id          = "e1"
+    return_data = true
     expression  = "ANOMALY_DETECTION_BAND(m1)"
     label       = "CPUUtilization (Expected)"
-    return_data = "true"
   }
 
   metric_query {
     id          = "m1"
-    return_data = "true"
+    return_data = true
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"
@@ -171,11 +171,9 @@ You must choose one or the other
 
 ## Argument Reference
 
-See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
-for details about valid values.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
@@ -184,7 +182,7 @@ This resource supports the following arguments:
 * `namespace` - (Optional) The namespace for the alarm's associated metric. See docs for the [list of namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/aws-namespaces.html).
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
-  Valid values are `10`, `30`, or any multiple of `60`.
+  Valid values are `10`, `20`, `30`, or any multiple of `60`.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
    Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
@@ -206,6 +204,9 @@ The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
+for details about valid values.
+
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 
 ### Nested fields
@@ -219,7 +220,7 @@ The following values are supported: `ignore`, and `evaluate`.
 * `metric` - (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.
 * `period` - (Optional) Granularity in seconds of returned data points.
   For metrics with regular resolution, valid values are any multiple of `60`.
-  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `20`, `30`, or any multiple of `60`.
 * `return_data` - (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 
 ~> **NOTE:**  You must specify either `metric` or `expression`. Not both.
@@ -233,7 +234,7 @@ The following values are supported: `ignore`, and `evaluate`.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
 * `period` - (Required) Granularity in seconds of returned data points.
   For metrics with regular resolution, valid values are any multiple of `60`.
-  For high-resolution metrics, valid values are `1`, `5`, `10`, `30`, or any multiple of `60`.
+  For high-resolution metrics, valid values are `1`, `5`, `10`, `20`, `30`, or any multiple of `60`.
 * `stat` - (Required) The statistic to apply to this metric.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.

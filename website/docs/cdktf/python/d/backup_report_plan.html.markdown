@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Backup report plan name.
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.
 
-<!-- cache-key: cdktf-0.20.8 input-bb9ee564d7e610ad5a515bf5d6d41add676ed63ed91647947ed5d6fcd34dde46 -->
+<!-- cache-key: cdktf-0.20.8 input-210b6698330ccaa2ced1564e83d0f117d33cdaa2adc37d1e0049361e0645fa4e -->

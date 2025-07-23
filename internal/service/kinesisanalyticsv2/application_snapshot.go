@@ -72,7 +72,7 @@ func resourceApplicationSnapshot() *schema.Resource {
 	}
 }
 
-func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
@@ -106,7 +106,7 @@ func resourceApplicationSnapshotCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceApplicationSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
@@ -135,7 +135,7 @@ func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceApplicationSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
@@ -232,7 +232,7 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 }
 
 func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
 		if tfresource.NotFound(err) {

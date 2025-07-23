@@ -88,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	"github.com/aws/aws-sdk-go-v2/service/drs"
+	"github.com/aws/aws-sdk-go-v2/service/dsql"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -106,6 +107,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
+	"github.com/aws/aws-sdk-go-v2/service/evs"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
@@ -128,8 +130,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
-	"github.com/aws/aws-sdk-go-v2/service/iotevents"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -157,6 +157,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
+	"github.com/aws/aws-sdk-go-v2/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/aws/aws-sdk-go-v2/service/mgn"
@@ -167,10 +168,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/service/notifications"
+	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -249,7 +251,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wellarchitected"
-	"github.com/aws/aws-sdk-go-v2/service/worklink"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -541,6 +542,10 @@ func (c *AWSClient) DSClient(ctx context.Context) *directoryservice.Client {
 	return errs.Must(client[*directoryservice.Client](ctx, c, names.DS, make(map[string]any)))
 }
 
+func (c *AWSClient) DSQLClient(ctx context.Context) *dsql.Client {
+	return errs.Must(client[*dsql.Client](ctx, c, names.DSQL, make(map[string]any)))
+}
+
 func (c *AWSClient) DataBrewClient(ctx context.Context) *databrew.Client {
 	return errs.Must(client[*databrew.Client](ctx, c, names.DataBrew, make(map[string]any)))
 }
@@ -635,6 +640,10 @@ func (c *AWSClient) EMRContainersClient(ctx context.Context) *emrcontainers.Clie
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless.Client {
 	return errs.Must(client[*emrserverless.Client](ctx, c, names.EMRServerless, make(map[string]any)))
+}
+
+func (c *AWSClient) EVSClient(ctx context.Context) *evs.Client {
+	return errs.Must(client[*evs.Client](ctx, c, names.EVS, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache.Client {
@@ -757,14 +766,6 @@ func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
 	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
 }
 
-func (c *AWSClient) IoTAnalyticsClient(ctx context.Context) *iotanalytics.Client {
-	return errs.Must(client[*iotanalytics.Client](ctx, c, names.IoTAnalytics, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTEventsClient(ctx context.Context) *iotevents.Client {
-	return errs.Must(client[*iotevents.Client](ctx, c, names.IoTEvents, make(map[string]any)))
-}
-
 func (c *AWSClient) KMSClient(ctx context.Context) *kms.Client {
 	return errs.Must(client[*kms.Client](ctx, c, names.KMS, make(map[string]any)))
 }
@@ -877,6 +878,10 @@ func (c *AWSClient) MediaPackageV2Client(ctx context.Context) *mediapackagev2.Cl
 	return errs.Must(client[*mediapackagev2.Client](ctx, c, names.MediaPackageV2, make(map[string]any)))
 }
 
+func (c *AWSClient) MediaPackageVODClient(ctx context.Context) *mediapackagevod.Client {
+	return errs.Must(client[*mediapackagevod.Client](ctx, c, names.MediaPackageVOD, make(map[string]any)))
+}
+
 func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore.Client {
 	return errs.Must(client[*mediastore.Client](ctx, c, names.MediaStore, make(map[string]any)))
 }
@@ -909,6 +914,14 @@ func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor.Cl
 	return errs.Must(client[*networkmonitor.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
 }
 
+func (c *AWSClient) NotificationsClient(ctx context.Context) *notifications.Client {
+	return errs.Must(client[*notifications.Client](ctx, c, names.Notifications, make(map[string]any)))
+}
+
+func (c *AWSClient) NotificationsContactsClient(ctx context.Context) *notificationscontacts.Client {
+	return errs.Must(client[*notificationscontacts.Client](ctx, c, names.NotificationsContacts, make(map[string]any)))
+}
+
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
 	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
@@ -923,10 +936,6 @@ func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis.Client 
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless.Client {
 	return errs.Must(client[*opensearchserverless.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks.Client {
-	return errs.Must(client[*opsworks.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations.Client {
@@ -1235,10 +1244,6 @@ func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
 	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
-}
-
-func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink.Client {
-	return errs.Must(client[*worklink.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {

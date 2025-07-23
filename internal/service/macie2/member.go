@@ -5,13 +5,14 @@ package macie2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_member", name="Member")
-// @Tags
+// @Tags(identifierAttribute="arn")
 func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
@@ -43,47 +45,18 @@ func resourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrEmail: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchemaForceNew(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"relationship_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"administrator_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_account_id": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"invited_at": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"updated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
-			},
-			"invite": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"invitation_disable_email_notification": {
 				Type:     schema.TypeBool,
@@ -93,107 +66,77 @@ func resourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"invite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"invited_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"master_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"relationship_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrStatus: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"updated_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(60 * time.Second),
-			Update: schema.DefaultTimeout(60 * time.Second),
+			Create: schema.DefaultTimeout(4 * time.Minute),
+			Update: schema.DefaultTimeout(4 * time.Minute),
 		},
 	}
 }
 
-func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	accountId := d.Get(names.AttrAccountID).(string)
-	input := &macie2.CreateMemberInput{
+	accountID := d.Get(names.AttrAccountID).(string)
+	input := macie2.CreateMemberInput{
 		Account: &awstypes.AccountDetail{
-			AccountId: aws.String(accountId),
+			AccountId: aws.String(accountID),
 			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		},
 		Tags: getTagsIn(ctx),
 	}
 
-	var err error
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		_, err := conn.CreateMember(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateMember(ctx, input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+		return conn.CreateMember(ctx, &input)
+	}, errCodeClientError)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Macie Member: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie Member (%s): %s", accountID, err)
 	}
 
-	d.SetId(accountId)
+	d.SetId(accountID)
 
-	if !d.Get("invite").(bool) {
-		return append(diags, resourceMemberRead(ctx, d, meta)...)
-	}
-
-	// Invitation workflow
-
-	inputInvite := &macie2.CreateInvitationsInput{
-		AccountIds: []string{d.Id()},
-	}
-
-	if v, ok := d.GetOk("invitation_disable_email_notification"); ok {
-		inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
-	}
-	if v, ok := d.GetOk("invitation_message"); ok {
-		inputInvite.Message = aws.String(v.(string))
-	}
-
-	log.Printf("[INFO] Inviting Macie2 Member: %+v", inputInvite)
-
-	var output *macie2.CreateInvitationsOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		output, err = conn.CreateInvitations(ctx, inputInvite)
-
-		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-			return retry.RetryableError(err)
+	if d.Get("invite").(bool) {
+		if err := inviteMember(ctx, conn, d, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateInvitations(ctx, inputInvite)
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s", err)
-	}
-
-	if len(output.UnprocessedAccounts) != 0 {
-		return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s: %s", output.UnprocessedAccounts[0].ErrorCode, aws.ToString(output.UnprocessedAccounts[0].ErrorMessage))
-	}
-
-	if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Macie Member (%s) invitation: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -213,113 +156,60 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("administrator_account_id", output.AdministratorAccountId)
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrEmail, output.Email)
-	d.Set("invited_at", aws.ToTime(output.InvitedAt).Format(time.RFC3339))
-	d.Set("master_account_id", output.MasterAccountId)
-	d.Set("relationship_status", output.RelationshipStatus)
-	d.Set("updated_at", aws.ToTime(output.UpdatedAt).Format(time.RFC3339))
-
-	setTagsOut(ctx, output.Tags)
-
 	relationshipStatus := output.RelationshipStatus
-	if relationshipStatus == awstypes.RelationshipStatusEnabled ||
-		relationshipStatus == awstypes.RelationshipStatusInvited ||
-		relationshipStatus == awstypes.RelationshipStatusEmailVerificationInProgress ||
-		relationshipStatus == awstypes.RelationshipStatusPaused {
+	switch relationshipStatus {
+	case awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEmailVerificationInProgress, awstypes.RelationshipStatusPaused:
 		d.Set("invite", true)
-	}
-
-	if relationshipStatus == awstypes.RelationshipStatusRemoved {
+	case awstypes.RelationshipStatusRemoved:
 		d.Set("invite", false)
 	}
-
-	// To fake a result for status in order to avoid an error related to difference for ImportVerifyState
-	// It sets to MacieStatusPaused because it can only be changed to PAUSED, normally when it's accepted its status is ENABLED
+	d.Set("invited_at", aws.ToTime(output.InvitedAt).Format(time.RFC3339))
+	d.Set("master_account_id", output.MasterAccountId)
+	d.Set("relationship_status", relationshipStatus)
+	// To fake a result for status in order to avoid an error related to difference for ImportVerifyState.
+	// It sets to MacieStatusPaused because it can only be changed to PAUSED, normally when it's accepted its status is ENABLED.
 	macieStatus := awstypes.MacieStatusEnabled
 	if relationshipStatus == awstypes.RelationshipStatusPaused {
 		macieStatus = awstypes.MacieStatusPaused
 	}
 	d.Set(names.AttrStatus, macieStatus)
+	d.Set("updated_at", aws.ToTime(output.UpdatedAt).Format(time.RFC3339))
+
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
-func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
-
-	// Invitation workflow
 
 	if d.HasChange("invite") {
 		if d.Get("invite").(bool) {
-			inputInvite := &macie2.CreateInvitationsInput{
-				AccountIds: []string{d.Id()},
-			}
-
-			if v, ok := d.GetOk("invitation_disable_email_notification"); ok {
-				inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
-			}
-			if v, ok := d.GetOk("invitation_message"); ok {
-				inputInvite.Message = aws.String(v.(string))
-			}
-
-			log.Printf("[INFO] Inviting Macie2 Member: %+v", inputInvite)
-			var output *macie2.CreateInvitationsOutput
-			var err error
-			err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-				output, err = conn.CreateInvitations(ctx, inputInvite)
-
-				if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-					return retry.RetryableError(err)
-				}
-
-				if err != nil {
-					return retry.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				output, err = conn.CreateInvitations(ctx, inputInvite)
-			}
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s", err)
-			}
-
-			if len(output.UnprocessedAccounts) != 0 {
-				return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s: %s", output.UnprocessedAccounts[0].ErrorCode, aws.ToString(output.UnprocessedAccounts[0].ErrorMessage))
-			}
-
-			if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for Macie Member (%s) invitation: %s", d.Id(), err)
+			if err := inviteMember(ctx, conn, d, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else {
-			input := &macie2.DisassociateMemberInput{
+			input := macie2.DisassociateMemberInput{
 				Id: aws.String(d.Id()),
 			}
 
-			_, err := conn.DisassociateMember(ctx, input)
+			_, err := conn.DisassociateMember(ctx, &input)
+
 			if err != nil {
-				if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-					errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
-					return diags
-				}
 				return sdkdiag.AppendErrorf(diags, "disassociating Macie Member invite (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	// End Invitation workflow
-
 	if d.HasChange(names.AttrStatus) {
-		input := &macie2.UpdateMemberSessionInput{
+		input := macie2.UpdateMemberSessionInput{
 			Id:     aws.String(d.Id()),
 			Status: awstypes.MacieStatus(d.Get(names.AttrStatus).(string)),
 		}
 
-		_, err := conn.UpdateMemberSession(ctx, input)
+		_, err := conn.UpdateMemberSession(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Macie Member (%s): %s", d.Id(), err)
 		}
@@ -328,7 +218,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
@@ -336,7 +226,7 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		Id: aws.String(d.Id()),
 	})
 
-	if memberNotFound(err) {
+	if isMemberNotFoundError(err) {
 		return diags
 	}
 
@@ -347,18 +237,48 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
+func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceData, timeout time.Duration) error {
+	input := macie2.CreateInvitationsInput{
+		AccountIds: []string{d.Id()},
+	}
+
+	if v, ok := d.GetOk("invitation_disable_email_notification"); ok {
+		input.DisableEmailNotification = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("invitation_message"); ok {
+		input.Message = aws.String(v.(string))
+	}
+
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+		return conn.CreateInvitations(ctx, &input)
+	}, errCodeClientError)
+
+	if err == nil {
+		if output := outputRaw.(*macie2.CreateInvitationsOutput); output != nil {
+			err = unprocessedAccountsError(output.UnprocessedAccounts)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("inviting Macie Member (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waitMemberInvited(ctx, conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for Macie Member (%s) invite: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
 func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie2.GetMemberOutput, error) {
-	input := &macie2.GetMemberInput{
+	input := macie2.GetMemberInput{
 		Id: aws.String(id),
 	}
 
-	return findMember(ctx, conn, input)
-}
+	output, err := conn.GetMember(ctx, &input)
 
-func findMember(ctx context.Context, conn *macie2.Client, input *macie2.GetMemberInput) (*macie2.GetMemberOutput, error) {
-	output, err := conn.GetMember(ctx, input)
-
-	if memberNotFound(err) {
+	if isMemberNotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -376,7 +296,84 @@ func findMember(ctx context.Context, conn *macie2.Client, input *macie2.GetMembe
 	return output, nil
 }
 
-func memberNotFound(err error) bool {
+func findMemberNotAssociated(ctx context.Context, conn *macie2.Client, accountID string) (*awstypes.Member, error) {
+	input := macie2.ListMembersInput{
+		OnlyAssociated: aws.String("false"),
+	}
+
+	return findMember(ctx, conn, &input, func(v *awstypes.Member) bool {
+		return aws.ToString(v.AccountId) == accountID
+	})
+}
+
+func findMember(ctx context.Context, conn *macie2.Client, input *macie2.ListMembersInput, filter tfslices.Predicate[*awstypes.Member]) (*awstypes.Member, error) {
+	output, err := findMembers(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findMembers(ctx context.Context, conn *macie2.Client, input *macie2.ListMembersInput, filter tfslices.Predicate[*awstypes.Member]) ([]awstypes.Member, error) {
+	var output []awstypes.Member
+
+	pages := macie2.NewListMembersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Members {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findMemberNotAssociated(ctx, conn, adminAccountID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.RelationshipStatus), nil
+	}
+}
+
+func waitMemberInvited(ctx context.Context, conn *macie2.Client, adminAccountID string) (*awstypes.Member, error) { //nolint:unparam
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEmailVerificationInProgress),
+		Target:  enum.Slice(awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusPaused),
+		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Member); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func isMemberNotFoundError(err error) bool {
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return true
 	}
@@ -394,4 +391,20 @@ func memberNotFound(err error) bool {
 	}
 
 	return false
+}
+
+func unprocessedAccountError(apiObject awstypes.UnprocessedAccount) error {
+	return fmt.Errorf("%s: %s", apiObject.ErrorCode, aws.ToString(apiObject.ErrorMessage))
+}
+
+func unprocessedAccountsError(apiObjects []awstypes.UnprocessedAccount) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := unprocessedAccountError(apiObject); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
+		}
+	}
+
+	return errors.Join(errs...)
 }

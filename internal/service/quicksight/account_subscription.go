@@ -138,7 +138,7 @@ func resourceAccountSubscription() *schema.Resource {
 	}
 }
 
-func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -159,16 +159,16 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		input.ActiveDirectoryName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("admin_group"); ok && len(v.([]interface{})) > 0 {
-		input.AdminGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("admin_group"); ok && len(v.([]any)) > 0 {
+		input.AdminGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("author_group"); ok && len(v.([]interface{})) > 0 {
-		input.AuthorGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("author_group"); ok && len(v.([]any)) > 0 {
+		input.AuthorGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("reader_group"); ok && len(v.([]interface{})) > 0 {
-		input.ReaderGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("reader_group"); ok && len(v.([]any)) > 0 {
+		input.ReaderGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("contact_number"); ok {
@@ -214,7 +214,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAccountSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -239,7 +239,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -307,7 +307,7 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 }
 
 func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccountSubscriptionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

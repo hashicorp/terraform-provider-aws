@@ -37,8 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required) ARN of the instance of IAM Identity Center.
 * `principal_id` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `principal_id` - An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
 
-<!-- cache-key: cdktf-0.20.8 input-8fe6a89790c8e0692a19ba5a2832b77c560e4200665127419c635936e29d0658 -->
+<!-- cache-key: cdktf-0.20.8 input-0da1c2ff8c99020d7365bec1793979f4084bb94bc310f825eec55d82529422d6 -->

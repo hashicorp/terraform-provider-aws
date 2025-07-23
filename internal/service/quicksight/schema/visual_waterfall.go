@@ -96,12 +96,12 @@ func waterfallVisualSchema() *schema.Schema {
 	}
 }
 
-func expandWaterfallVisual(tfList []interface{}) *awstypes.WaterfallVisual {
+func expandWaterfallVisual(tfList []any) *awstypes.WaterfallVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -111,143 +111,143 @@ func expandWaterfallVisual(tfList []interface{}) *awstypes.WaterfallVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandWaterfallChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandWaterfallChartConfiguration(tfList []interface{}) *awstypes.WaterfallChartConfiguration {
+func expandWaterfallChartConfiguration(tfList []any) *awstypes.WaterfallChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.WaterfallChartConfiguration{}
 
-	if v, ok := tfMap["category_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["category_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_labels"].([]any); ok && len(v) > 0 {
 		apiObject.DataLabels = expandDataLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandWaterfallChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_display_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_display_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisDisplayOptions = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["primary_y_axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["primary_y_axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.PrimaryYAxisLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandWaterfallChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
-	if v, ok := tfMap["waterfall_chart_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["waterfall_chart_options"].([]any); ok && len(v) > 0 {
 		apiObject.WaterfallChartOptions = expandWaterfallChartOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandWaterfallChartFieldWells(tfList []interface{}) *awstypes.WaterfallChartFieldWells {
+func expandWaterfallChartFieldWells(tfList []any) *awstypes.WaterfallChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.WaterfallChartFieldWells{}
 
-	if v, ok := tfMap["waterfall_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["waterfall_chart_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.WaterfallChartAggregatedFieldWells = expandWaterfallChartAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *awstypes.WaterfallChartAggregatedFieldWells {
+func expandWaterfallChartAggregatedFieldWells(tfList []any) *awstypes.WaterfallChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.WaterfallChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["breakdowns"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["breakdowns"].([]any); ok && len(v) > 0 {
 		apiObject.Breakdowns = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["categories"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["categories"].([]any); ok && len(v) > 0 {
 		apiObject.Categories = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandWaterfallChartSortConfiguration(tfList []interface{}) *awstypes.WaterfallChartSortConfiguration {
+func expandWaterfallChartSortConfiguration(tfList []any) *awstypes.WaterfallChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.WaterfallChartSortConfiguration{}
 
-	if v, ok := tfMap["breakdown_items_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["breakdown_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.BreakdownItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
 
 	return apiObject
 }
 
-func expandWaterfallChartOptions(tfList []interface{}) *awstypes.WaterfallChartOptions {
+func expandWaterfallChartOptions(tfList []any) *awstypes.WaterfallChartOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -261,12 +261,12 @@ func expandWaterfallChartOptions(tfList []interface{}) *awstypes.WaterfallChartO
 	return apiObject
 }
 
-func flattenWaterfallVisual(apiObject *awstypes.WaterfallVisual) []interface{} {
+func flattenWaterfallVisual(apiObject *awstypes.WaterfallVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 
@@ -286,15 +286,15 @@ func flattenWaterfallVisual(apiObject *awstypes.WaterfallVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWaterfallChartConfiguration(apiObject *awstypes.WaterfallChartConfiguration) []interface{} {
+func flattenWaterfallChartConfiguration(apiObject *awstypes.WaterfallChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryAxisDisplayOptions != nil {
 		tfMap["category_axis_display_options"] = flattenAxisDisplayOptions(apiObject.CategoryAxisDisplayOptions)
@@ -327,29 +327,29 @@ func flattenWaterfallChartConfiguration(apiObject *awstypes.WaterfallChartConfig
 		tfMap["waterfall_chart_options"] = flattenWaterfallChartOptions(apiObject.WaterfallChartOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWaterfallChartFieldWells(apiObject *awstypes.WaterfallChartFieldWells) []interface{} {
+func flattenWaterfallChartFieldWells(apiObject *awstypes.WaterfallChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.WaterfallChartAggregatedFieldWells != nil {
 		tfMap["waterfall_chart_aggregated_field_wells"] = flattenWaterfallChartAggregatedFieldWells(apiObject.WaterfallChartAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWaterfallChartAggregatedFieldWells(apiObject *awstypes.WaterfallChartAggregatedFieldWells) []interface{} {
+func flattenWaterfallChartAggregatedFieldWells(apiObject *awstypes.WaterfallChartAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Breakdowns != nil {
 		tfMap["breakdowns"] = flattenDimensionFields(apiObject.Breakdowns)
@@ -361,15 +361,15 @@ func flattenWaterfallChartAggregatedFieldWells(apiObject *awstypes.WaterfallChar
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWaterfallChartSortConfiguration(apiObject *awstypes.WaterfallChartSortConfiguration) []interface{} {
+func flattenWaterfallChartSortConfiguration(apiObject *awstypes.WaterfallChartSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BreakdownItemsLimit != nil {
 		tfMap["breakdown_items_limit"] = flattenItemsLimitConfiguration(apiObject.BreakdownItemsLimit)
@@ -378,19 +378,19 @@ func flattenWaterfallChartSortConfiguration(apiObject *awstypes.WaterfallChartSo
 		tfMap["category_sort"] = flattenFieldSortOptions(apiObject.CategorySort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWaterfallChartOptions(apiObject *awstypes.WaterfallChartOptions) []interface{} {
+func flattenWaterfallChartOptions(apiObject *awstypes.WaterfallChartOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.TotalBarLabel != nil {
 		tfMap["total_bar_label"] = aws.ToString(apiObject.TotalBarLabel)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

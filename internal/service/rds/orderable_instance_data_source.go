@@ -182,7 +182,7 @@ func dataSourceOrderableInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -305,9 +305,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching criteria; try different search")
 	}
 
-	if v, ok := d.GetOk("supported_engine_modes"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("supported_engine_modes"); ok && len(v.([]any)) > 0 {
 		var matches []awstypes.OrderableDBInstanceOption
-		search := flex.ExpandStringValueList(v.([]interface{}))
+		search := flex.ExpandStringValueList(v.([]any))
 
 		for _, ic := range instanceClassResults {
 		searchedModes:
@@ -328,9 +328,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		instanceClassResults = matches
 	}
 
-	if v, ok := d.GetOk("supported_network_types"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("supported_network_types"); ok && len(v.([]any)) > 0 {
 		var matches []awstypes.OrderableDBInstanceOption
-		search := flex.ExpandStringValueList(v.([]interface{}))
+		search := flex.ExpandStringValueList(v.([]any))
 
 		for _, ic := range instanceClassResults {
 		searchedNetworks:
@@ -353,9 +353,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	prefSearch := false
 
-	if v, ok := d.GetOk("preferred_engine_versions"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("preferred_engine_versions"); ok && len(v.([]any)) > 0 {
 		var matches []awstypes.OrderableDBInstanceOption
-		search := flex.ExpandStringValueList(v.([]interface{}))
+		search := flex.ExpandStringValueList(v.([]any))
 
 		for _, s := range search {
 			for _, ic := range instanceClassResults {
@@ -376,9 +376,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	latestVersion := d.Get("engine_latest_version").(bool)
 
-	if v, ok := d.GetOk("preferred_instance_classes"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("preferred_instance_classes"); ok && len(v.([]any)) > 0 {
 		var matches []awstypes.OrderableDBInstanceOption
-		search := flex.ExpandStringValueList(v.([]interface{}))
+		search := flex.ExpandStringValueList(v.([]any))
 
 		for _, s := range search {
 			for _, ic := range instanceClassResults {

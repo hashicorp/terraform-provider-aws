@@ -3,8 +3,8 @@ package s3control
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
@@ -28,10 +28,10 @@ func listTags(ctx context.Context, conn *s3control.Client, identifier, resourceT
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
 // ListTags lists s3control service tags and set them in Context.
@@ -40,7 +40,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).S3ControlClient(ctx), identifier, resourceType)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -52,8 +52,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 // []*SERVICE.Tag handling
 
-// Tags returns s3control service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns s3control service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -68,8 +68,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from s3control service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from s3control service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -83,7 +83,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -94,7 +94,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets s3control service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -119,7 +119,7 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -129,13 +129,13 @@ func updateTags(ctx context.Context, conn *s3control.Client, identifier, resourc
 		input := s3control.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			AccountId:   aws.String(resourceType),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

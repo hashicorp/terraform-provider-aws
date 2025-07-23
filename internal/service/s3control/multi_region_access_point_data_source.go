@@ -102,7 +102,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 	}
 }
 
-func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -134,7 +134,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
 	d.Set(names.AttrName, accessPoint.Name)
-	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(accessPoint.PublicAccessBlock)})
+	d.Set("public_access_block", []any{flattenPublicAccessBlockConfiguration(accessPoint.PublicAccessBlock)})
 	d.Set("regions", flattenRegionReports(accessPoint.Regions))
 	d.Set(names.AttrStatus, accessPoint.Status)
 

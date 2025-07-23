@@ -1732,7 +1732,10 @@ resource "aws_networkfirewall_rule_group" "test" {
 
 func testAccRuleGroupConfig_encryptionConfiguration(rName, generatedRulesType string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100
@@ -1764,7 +1767,10 @@ resource "aws_networkfirewall_rule_group" "test" {
 // InvalidRequestException: rule group has KMS key misconfigured
 func testAccRuleGroupConfig_encryptionConfigurationDisabled(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_rule_group" "test" {
   capacity = 100

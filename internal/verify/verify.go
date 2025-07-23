@@ -12,8 +12,8 @@ const UUIDRegexPattern = `[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[ab89][0-9a-f
 // Takes a value containing YAML string and passes it through
 // the YAML parser. Returns either a parsing
 // error or original YAML string.
-func checkYAMLString(yamlString interface{}) (string, error) {
-	var y interface{}
+func checkYAMLString(yamlString any) (string, error) {
+	var y any
 
 	if yamlString == nil || yamlString.(string) == "" {
 		return "", nil

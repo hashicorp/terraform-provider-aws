@@ -82,19 +82,19 @@ func resourceDevice() *schema.Resource {
 	}
 }
 
-func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("device_fleet_name").(string)
 	input := &sagemaker.RegisterDevicesInput{
 		DeviceFleetName: aws.String(name),
-		Devices:         expandDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]any)),
 	}
 
 	_, err := conn.RegisterDevices(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Device %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Device %s: %s", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", name, aws.ToString(input.Devices[0].DeviceName)))
@@ -102,23 +102,23 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deviceFleetName, deviceName, err := decodeDeviceId(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 	device, err := findDeviceByName(ctx, conn, deviceFleetName, deviceName)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Unable to find SageMaker Device (%s); removing from state", d.Id())
+		log.Printf("[WARN] Unable to find SageMaker AI Device (%s); removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_fleet_name", device.DeviceFleetName)
@@ -126,42 +126,42 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, device.DeviceArn)
 
 	if err := d.Set("device", flattenDevice(device)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting device for SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting device for SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deviceFleetName, _, err := decodeDeviceId(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	input := &sagemaker.UpdateDevicesInput{
 		DeviceFleetName: aws.String(deviceFleetName),
-		Devices:         expandDevice(d.Get("device").([]interface{})),
+		Devices:         expandDevice(d.Get("device").([]any)),
 	}
 
-	log.Printf("[DEBUG] SageMaker Device update config: %#v", input)
+	log.Printf("[DEBUG] SageMaker AI Device update config: %#v", input)
 	_, err = conn.UpdateDevices(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
-func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deviceFleetName, deviceName, err := decodeDeviceId(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	input := &sagemaker.DeregisterDevicesInput{
@@ -174,7 +174,7 @@ func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "No device fleet with name") {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Device (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -207,12 +207,12 @@ func findDeviceByName(ctx context.Context, conn *sagemaker.Client, deviceFleetNa
 	return output, nil
 }
 
-func expandDevice(l []interface{}) []awstypes.Device {
+func expandDevice(l []any) []awstypes.Device {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := awstypes.Device{
 		DeviceName: aws.String(m[names.AttrDeviceName].(string)),
@@ -229,12 +229,12 @@ func expandDevice(l []interface{}) []awstypes.Device {
 	return []awstypes.Device{config}
 }
 
-func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interface{} {
+func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDeviceName: aws.ToString(config.DeviceName),
 	}
 
@@ -246,7 +246,7 @@ func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interfac
 		m["iot_thing_name"] = aws.ToString(config.IotThingName)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
 func decodeDeviceId(id string) (string, string, error) {

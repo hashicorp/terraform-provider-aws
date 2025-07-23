@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the neptune cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the neptune cluster parameter group.
@@ -99,4 +100,4 @@ Using `terraform import`, import Neptune Cluster Parameter Groups using the `nam
 % terraform import aws_neptune_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c39999f95e5475d491571cada3c79f247de16c4aa849b9cba8ecd969f7df95d -->
+<!-- cache-key: cdktf-0.20.8 input-90984e9d62990c97c1e950f44ae50cdfb36263129273b8ecf234df3066367eb7 -->

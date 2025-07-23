@@ -43,13 +43,8 @@ func newIngestionResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type ingestionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[ingestionResourceModel]
+	framework.ResourceWithModel[ingestionResourceModel]
 	framework.WithImportByID
-}
-
-func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion"
 }
 
 func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -191,10 +186,11 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
+	input := appfabric.DeleteIngestionInput{
 		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
 		IngestionIdentifier: data.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -205,10 +201,6 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 		return
 	}
-}
-
-func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, arn string) (*awstypes.Ingestion, error) {
@@ -238,6 +230,7 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 }
 
 type ingestionResourceModel struct {
+	framework.WithRegionModel
 	App           types.String                               `tfsdk:"app"`
 	AppBundleARN  fwtypes.ARN                                `tfsdk:"app_bundle_arn"`
 	ARN           types.String                               `tfsdk:"arn"`

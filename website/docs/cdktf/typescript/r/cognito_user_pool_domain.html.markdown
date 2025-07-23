@@ -94,9 +94,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `userPoolId` - (Required) The user pool ID.
 * `certificateArn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+* `managedLoginVersion` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
 
 ## Attribute Reference
 
@@ -141,4 +143,4 @@ Using `terraform import`, import Cognito User Pool Domains using the `domain`. F
 % terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-daa2779d8867f347bab96c76ae17fcad9c9350846b68b324043fe7920b7f9666 -->
+<!-- cache-key: cdktf-0.20.8 input-1e2f05961159c89a97a1134a2ca27e5d3a840b2e2d98f56ba6ba61db0d56ee4d -->

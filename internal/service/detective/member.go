@@ -93,7 +93,7 @@ func ResourceMember() *schema.Resource {
 	}
 }
 
-func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -117,7 +117,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Message = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InternalServerException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateMembers(ctx, input)
 	})
 
@@ -134,7 +134,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
-func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -169,7 +169,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -180,10 +180,11 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Detective Member: %s", d.Id())
-	_, err = conn.DeleteMembers(ctx, &detective.DeleteMembersInput{
+	input := detective.DeleteMembersInput{
 		AccountIds: []string{accountID},
 		GraphArn:   aws.String(graphARN),
-	})
+	}
+	_, err = conn.DeleteMembers(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -265,7 +266,7 @@ func findMembers(ctx context.Context, conn *detective.Client, input *detective.L
 }
 
 func statusMember(ctx context.Context, conn *detective.Client, graphARN, adminAccountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, adminAccountID)
 
 		if tfresource.NotFound(err) {
@@ -286,7 +287,7 @@ func waitMemberInvited(ctx context.Context, conn *detective.Client, graphARN, ad
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemberStatusVerificationInProgress),
-		Target:  enum.Slice(awstypes.MemberStatusInvited),
+		Target:  enum.Slice(awstypes.MemberStatusInvited, awstypes.MemberStatusEnabled),
 		Refresh: statusMember(ctx, conn, graphARN, adminAccountID),
 		Timeout: timeout,
 	}

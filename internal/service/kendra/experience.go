@@ -170,7 +170,7 @@ func ResourceExperience() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta any) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -178,7 +178,7 @@ func ResourceExperience() *schema.Resource {
 	}
 }
 
-func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -194,8 +194,8 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Configuration = expandConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Configuration = expandConfiguration(v.([]any))
 	}
 
 	out, err := conn.CreateExperience(ctx, in)
@@ -219,7 +219,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -268,7 +268,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -284,7 +284,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange(names.AttrConfiguration) {
-		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
+		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]any))
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -312,7 +312,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -403,7 +403,7 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -444,12 +444,12 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	return out, nil
 }
 
-func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{} {
+func flattenConfiguration(apiObject *types.ExperienceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ContentSourceConfiguration; v != nil {
 		m["content_source_configuration"] = flattenContentSourceConfiguration(v)
@@ -459,15 +459,15 @@ func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{
 		m["user_identity_configuration"] = flattenUserIdentityConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []interface{} {
+func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"direct_put_content": apiObject.DirectPutContent,
 	}
 
@@ -478,18 +478,18 @@ func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfigurati
 	if v := apiObject.FaqIds; len(v) > 0 {
 		m["faq_ids"] = v
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
+func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	l := make([]interface{}, 0, len(apiObjects))
+	l := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if v := apiObject.Endpoint; v != nil {
 			m[names.AttrEndpoint] = aws.ToString(v)
@@ -505,44 +505,44 @@ func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
 	return l
 }
 
-func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []interface{} {
+func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if v := apiObject.IdentityAttributeName; v != nil {
 		m["identity_attribute_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandConfiguration(tfList []interface{}) *types.ExperienceConfiguration {
+func expandConfiguration(tfList []any) *types.ExperienceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.ExperienceConfiguration{}
 
-	if v, ok := tfMap["content_source_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_source_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["user_identity_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["user_identity_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]any))
 	}
 
 	return result
 }
 
-func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.ContentSourceConfiguration {
+func expandContentSourceConfiguration(tfMap map[string]any) *types.ContentSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -564,7 +564,7 @@ func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.Conte
 	return result
 }
 
-func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserIdentityConfiguration {
+func expandUserIdentityConfiguration(tfMap map[string]any) *types.UserIdentityConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -578,7 +578,7 @@ func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserId
 	return result
 }
 
-func expandStringList(tfList []interface{}) []string {
+func expandStringList(tfList []any) []string {
 	var result []string
 
 	for _, rawVal := range tfList {

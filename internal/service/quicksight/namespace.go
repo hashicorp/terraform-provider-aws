@@ -37,6 +37,7 @@ import (
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
+
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 	r.SetDefaultDeleteTimeout(2 * time.Minute)
 
@@ -48,14 +49,9 @@ const (
 )
 
 type namespaceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceNamespaceData]
 	framework.WithImportByID
-}
-
-func (r *namespaceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_quicksight_namespace"
 }
 
 func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -112,7 +108,7 @@ func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaReque
 func (r *namespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceNamespaceData
+	var plan namespaceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -166,7 +162,7 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,7 +203,7 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -246,10 +242,6 @@ func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		)
 		return
 	}
-}
-
-func (r *namespaceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
 }
 
 func findNamespaceByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) (*awstypes.NamespaceInfoV2, error) {
@@ -301,7 +293,8 @@ func namespaceParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-type resourceNamespaceData struct {
+type namespaceResourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String   `tfsdk:"arn"`
 	AWSAccountID   types.String   `tfsdk:"aws_account_id"`
 	CapacityRegion types.String   `tfsdk:"capacity_region"`
@@ -351,7 +344,7 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, awsAccou
 }
 
 func statusNamespace(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findNamespaceByTwoPartKey(ctx, conn, awsAccountID, namespace)
 
 		if tfresource.NotFound(err) {

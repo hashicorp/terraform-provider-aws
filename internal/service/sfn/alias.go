@@ -82,7 +82,7 @@ const (
 	ResNameAlias = "Alias"
 )
 
-func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -91,8 +91,8 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
-	if v, ok := d.GetOk("routing_configuration"); ok && len(v.([]interface{})) > 0 {
-		in.RoutingConfiguration = expandAliasRoutingConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("routing_configuration"); ok && len(v.([]any)) > 0 {
+		in.RoutingConfiguration = expandAliasRoutingConfiguration(v.([]any))
 	}
 
 	out, err := conn.CreateStateMachineAlias(ctx, in)
@@ -109,7 +109,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -137,7 +137,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -153,7 +153,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("routing_configuration") {
-		in.RoutingConfiguration = expandAliasRoutingConfiguration(d.Get("routing_configuration").([]interface{}))
+		in.RoutingConfiguration = expandAliasRoutingConfiguration(d.Get("routing_configuration").([]any))
 		update = true
 	}
 
@@ -170,7 +170,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -209,8 +209,8 @@ func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.Des
 	return out, nil
 }
 
-func flattenAliasRoutingConfigurationItem(apiObject awstypes.RoutingConfigurationListItem) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenAliasRoutingConfigurationItem(apiObject awstypes.RoutingConfigurationListItem) map[string]any {
+	tfMap := map[string]any{
 		names.AttrWeight: apiObject.Weight,
 	}
 
@@ -221,12 +221,12 @@ func flattenAliasRoutingConfigurationItem(apiObject awstypes.RoutingConfiguratio
 	return tfMap
 }
 
-func flattenAliasRoutingConfiguration(apiObjects []awstypes.RoutingConfigurationListItem) []interface{} {
+func flattenAliasRoutingConfiguration(apiObjects []awstypes.RoutingConfigurationListItem) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAliasRoutingConfigurationItem(apiObject))
@@ -235,14 +235,14 @@ func flattenAliasRoutingConfiguration(apiObjects []awstypes.RoutingConfiguration
 	return tfList
 }
 
-func expandAliasRoutingConfiguration(tfList []interface{}) []awstypes.RoutingConfigurationListItem {
+func expandAliasRoutingConfiguration(tfList []any) []awstypes.RoutingConfigurationListItem {
 	if len(tfList) == 0 {
 		return nil
 	}
 	var configurationListItems []awstypes.RoutingConfigurationListItem
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -260,7 +260,7 @@ func expandAliasRoutingConfiguration(tfList []interface{}) []awstypes.RoutingCon
 	return configurationListItems
 }
 
-func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) awstypes.RoutingConfigurationListItem {
+func expandAliasRoutingConfigurationItem(tfMap map[string]any) awstypes.RoutingConfigurationListItem {
 	apiObject := awstypes.RoutingConfigurationListItem{}
 
 	if v, ok := tfMap["state_machine_version_arn"].(string); ok && v != "" {

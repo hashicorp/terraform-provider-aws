@@ -28,6 +28,7 @@ func testAccDetectorDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDetectorDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
@@ -55,6 +56,7 @@ func testAccDetectorDataSource_ID(t *testing.T) {
 			{
 				Config: testAccDetectorDataSourceConfig_id,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "features.#", 0),
 					resource.TestCheckResourceAttrPair(datasourceName, "finding_publishing_frequency", resourceName, "finding_publishing_frequency"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),

@@ -41,6 +41,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 				Config: testAccOriginAccessControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-access-control/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrID, func(value string) error {

@@ -40,18 +40,21 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `name` - (Required) Desired name of the project
+* `name` - (Required) Desired name of the project.
 
 The following arguments are optional:
 
-* `autoUpdate` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`
-* `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `autoUpdate` - (Optional) Specify if automatic retraining should occur. Valid values are `ENABLED` or `DISABLED`. Defaults to `DISABLED`.
+* `feature` - (Optional) Specify the feature being customized. Valid values are `CONTENT_MODERATION` or `CUSTOM_LABELS`. Defaults to `CUSTOM_LABELS`.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Project.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -92,4 +95,4 @@ Using `terraform import`, import Rekognition Project using the `name`. For examp
 % terraform import aws_rekognition_project.example project-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0fa7b988bdeb66bc32a12a7cbbd2066aa8d91a04d6af41519857096637e28d9d -->
+<!-- cache-key: cdktf-0.20.8 input-f66df78d0d6846053af6874a794c937ddec44f1dad9ac18763555e8c3d26ce3f -->

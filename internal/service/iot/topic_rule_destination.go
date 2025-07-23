@@ -90,7 +90,7 @@ func resourceTopicRuleDestination() *schema.Resource {
 	}
 }
 
-func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -98,12 +98,12 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		DestinationConfiguration: &awstypes.TopicRuleDestinationConfiguration{},
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateTopicRuleDestination(ctx, input)
 		})
 
@@ -137,7 +137,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTopicRuleDestinationRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -156,7 +156,7 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrEnabled, (output.Status == awstypes.TopicRuleDestinationStatusEnabled))
 	if output.VpcProperties != nil {
-		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
+		if err := d.Set(names.AttrVPCConfiguration, []any{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 		}
 	} else {
@@ -166,7 +166,7 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -196,7 +196,7 @@ func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceTopicRuleDestinationRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -276,7 +276,7 @@ pageLoop:
 }
 
 func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTopicRuleDestinationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -367,7 +367,7 @@ func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.Client, arn 
 	return nil, err
 }
 
-func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *awstypes.VpcDestinationConfiguration {
+func expandVPCDestinationConfiguration(tfMap map[string]any) *awstypes.VpcDestinationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -393,12 +393,12 @@ func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *awstypes.V
 	return apiObject
 }
 
-func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationProperties) map[string]interface{} {
+func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationProperties) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RoleArn; v != nil {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)

@@ -40,7 +40,7 @@ func resourceDeploymentGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceDeploymentGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 
 				if len(idParts) != 2 {
@@ -450,12 +450,10 @@ func resourceDeploymentGroup() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -470,11 +468,11 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("alarm_configuration"); ok {
-		input.AlarmConfiguration = expandAlarmConfiguration(v.([]interface{}))
+		input.AlarmConfiguration = expandAlarmConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("auto_rollback_configuration"); ok {
-		input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(v.([]interface{}))
+		input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("autoscaling_groups"); ok {
@@ -482,11 +480,11 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("blue_green_deployment_config"); ok {
-		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(v.([]interface{}))
+		input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("deployment_style"); ok {
-		input.DeploymentStyle = expandDeploymentStyle(v.([]interface{}))
+		input.DeploymentStyle = expandDeploymentStyle(v.([]any))
 	}
 
 	if v, ok := d.GetOk("deployment_config_name"); ok {
@@ -502,11 +500,11 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("ecs_service"); ok {
-		input.EcsServices = expandECSServices(v.([]interface{}))
+		input.EcsServices = expandECSServices(v.([]any))
 	}
 
 	if v, ok := d.GetOk("load_balancer_info"); ok {
-		input.LoadBalancerInfo = expandLoadBalancerInfo(v.([]interface{}))
+		input.LoadBalancerInfo = expandLoadBalancerInfo(v.([]any))
 	}
 
 	if v, ok := d.GetOk("on_premises_instance_tag_filter"); ok {
@@ -526,7 +524,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateDeploymentGroup(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -551,7 +549,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -622,7 +620,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
@@ -642,7 +640,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("deployment_style") {
 			_, n := d.GetChange("deployment_style")
-			input.DeploymentStyle = expandDeploymentStyle(n.([]interface{}))
+			input.DeploymentStyle = expandDeploymentStyle(n.([]any))
 		}
 
 		if d.HasChange("deployment_config_name") {
@@ -676,7 +674,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("ecs_service") {
-			input.EcsServices = expandECSServices(d.Get("ecs_service").([]interface{}))
+			input.EcsServices = expandECSServices(d.Get("ecs_service").([]any))
 		}
 
 		if d.HasChange("trigger_configuration") {
@@ -687,22 +685,22 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("auto_rollback_configuration") {
 			_, n := d.GetChange("auto_rollback_configuration")
-			input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(n.([]interface{}))
+			input.AutoRollbackConfiguration = expandAutoRollbackConfiguration(n.([]any))
 		}
 
 		if d.HasChange("alarm_configuration") {
 			_, n := d.GetChange("alarm_configuration")
-			input.AlarmConfiguration = expandAlarmConfiguration(n.([]interface{}))
+			input.AlarmConfiguration = expandAlarmConfiguration(n.([]any))
 		}
 
 		if d.HasChange("load_balancer_info") {
 			_, n := d.GetChange("load_balancer_info")
-			input.LoadBalancerInfo = expandLoadBalancerInfo(n.([]interface{}))
+			input.LoadBalancerInfo = expandLoadBalancerInfo(n.([]any))
 		}
 
 		if d.HasChange("blue_green_deployment_config") {
 			_, n := d.GetChange("blue_green_deployment_config")
-			input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(n.([]interface{}))
+			input.BlueGreenDeploymentConfiguration = expandBlueGreenDeploymentConfiguration(n.([]any))
 		}
 
 		if d.HasChange("outdated_instances_strategy") {
@@ -720,7 +718,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateDeploymentGroup(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -744,15 +742,16 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceDeploymentGroupRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeploymentGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CodeDeploy Deployment Group: %s", d.Id())
-	_, err := conn.DeleteDeploymentGroup(ctx, &codedeploy.DeleteDeploymentGroupInput{
+	input := codedeploy.DeleteDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
 		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
-	})
+	}
+	_, err := conn.DeleteDeploymentGroup(ctx, &input)
 
 	if errs.IsA[*types.DeploymentGroupDoesNotExistException](err) {
 		return diags
@@ -791,11 +790,11 @@ func findDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.Clien
 	return output.DeploymentGroupInfo, nil
 }
 
-func expandTagFilters(configured []interface{}) []types.TagFilter {
+func expandTagFilters(configured []any) []types.TagFilter {
 	filters := make([]types.TagFilter, 0)
 	for _, raw := range configured {
 		var filter types.TagFilter
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 
 		if v, ok := m[names.AttrKey]; ok {
 			filter.Key = aws.String(v.(string))
@@ -813,11 +812,11 @@ func expandTagFilters(configured []interface{}) []types.TagFilter {
 	return filters
 }
 
-func expandEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
+func expandEC2TagFilters(configured []any) []types.EC2TagFilter {
 	filters := make([]types.EC2TagFilter, 0)
 	for _, raw := range configured {
 		var filter types.EC2TagFilter
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 
 		filter.Key = aws.String(m[names.AttrKey].(string))
 		filter.Type = types.EC2TagFilterType(m[names.AttrType].(string))
@@ -829,10 +828,10 @@ func expandEC2TagFilters(configured []interface{}) []types.EC2TagFilter {
 	return filters
 }
 
-func expandEC2TagSet(configured []interface{}) *types.EC2TagSet {
+func expandEC2TagSet(configured []any) *types.EC2TagSet {
 	filterSets := make([][]types.EC2TagFilter, 0)
 	for _, raw := range configured {
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 		rawFilters := m["ec2_tag_filter"].(*schema.Set)
 		filters := expandEC2TagFilters(rawFilters.List())
 		filterSets = append(filterSets, filters)
@@ -840,11 +839,11 @@ func expandEC2TagSet(configured []interface{}) *types.EC2TagSet {
 	return &types.EC2TagSet{Ec2TagSetList: filterSets}
 }
 
-func expandTriggerConfigs(configured []interface{}) []types.TriggerConfig {
+func expandTriggerConfigs(configured []any) []types.TriggerConfig {
 	configs := make([]types.TriggerConfig, 0, len(configured))
 	for _, raw := range configured {
 		var config types.TriggerConfig
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 
 		config.TriggerEvents = flex.ExpandStringyValueSet[types.TriggerEventType](m["trigger_events"].(*schema.Set))
 		config.TriggerName = aws.String(m["trigger_name"].(string))
@@ -855,11 +854,11 @@ func expandTriggerConfigs(configured []interface{}) []types.TriggerConfig {
 	return configs
 }
 
-func expandAutoRollbackConfiguration(configured []interface{}) *types.AutoRollbackConfiguration {
+func expandAutoRollbackConfiguration(configured []any) *types.AutoRollbackConfiguration {
 	result := &types.AutoRollbackConfiguration{}
 
 	if len(configured) == 1 {
-		config := configured[0].(map[string]interface{})
+		config := configured[0].(map[string]any)
 		result.Enabled = config[names.AttrEnabled].(bool)
 		result.Events = flex.ExpandStringyValueSet[types.AutoRollbackEvent](config["events"].(*schema.Set))
 	} else { // delete the configuration
@@ -870,11 +869,11 @@ func expandAutoRollbackConfiguration(configured []interface{}) *types.AutoRollba
 	return result
 }
 
-func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguration {
+func expandAlarmConfiguration(configured []any) *types.AlarmConfiguration {
 	result := &types.AlarmConfiguration{}
 
 	if len(configured) == 1 {
-		config := configured[0].(map[string]interface{})
+		config := configured[0].(map[string]any)
 		n := flex.ExpandStringSet(config["alarms"].(*schema.Set))
 		alarms := make([]types.Alarm, 0, len(n))
 
@@ -897,7 +896,7 @@ func expandAlarmConfiguration(configured []interface{}) *types.AlarmConfiguratio
 	return result
 }
 
-func expandECSServices(l []interface{}) []types.ECSService {
+func expandECSServices(l []any) []types.ECSService {
 	ecsServices := make([]types.ECSService, 0)
 
 	for _, mRaw := range l {
@@ -905,7 +904,7 @@ func expandECSServices(l []interface{}) []types.ECSService {
 			continue
 		}
 
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 
 		ecsService := types.ECSService{
 			ClusterName: aws.String(m[names.AttrClusterName].(string)),
@@ -918,7 +917,7 @@ func expandECSServices(l []interface{}) []types.ECSService {
 	return ecsServices
 }
 
-func expandELBInfos(l []interface{}) []types.ELBInfo {
+func expandELBInfos(l []any) []types.ELBInfo {
 	elbInfos := []types.ELBInfo{}
 
 	for _, mRaw := range l {
@@ -926,7 +925,7 @@ func expandELBInfos(l []interface{}) []types.ELBInfo {
 			continue
 		}
 
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 
 		elbInfo := types.ELBInfo{
 			Name: aws.String(m[names.AttrName].(string)),
@@ -938,7 +937,7 @@ func expandELBInfos(l []interface{}) []types.ELBInfo {
 	return elbInfos
 }
 
-func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
+func expandTargetGroupInfos(l []any) []types.TargetGroupInfo {
 	targetGroupInfos := []types.TargetGroupInfo{}
 
 	for _, mRaw := range l {
@@ -946,7 +945,7 @@ func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
 			continue
 		}
 
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 
 		targetGroupInfo := types.TargetGroupInfo{
 			Name: aws.String(m[names.AttrName].(string)),
@@ -958,7 +957,7 @@ func expandTargetGroupInfos(l []interface{}) []types.TargetGroupInfo {
 	return targetGroupInfos
 }
 
-func expandTargetGroupPairInfos(l []interface{}) []types.TargetGroupPairInfo {
+func expandTargetGroupPairInfos(l []any) []types.TargetGroupPairInfo {
 	targetGroupPairInfos := []types.TargetGroupPairInfo{}
 
 	for _, mRaw := range l {
@@ -966,12 +965,12 @@ func expandTargetGroupPairInfos(l []interface{}) []types.TargetGroupPairInfo {
 			continue
 		}
 
-		m := mRaw.(map[string]interface{})
+		m := mRaw.(map[string]any)
 
 		targetGroupPairInfo := types.TargetGroupPairInfo{
-			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]interface{})),
-			TargetGroups:     expandTargetGroupInfos(m["target_group"].([]interface{})),
-			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]interface{})),
+			ProdTrafficRoute: expandTrafficRoute(m["prod_traffic_route"].([]any)),
+			TargetGroups:     expandTargetGroupInfos(m["target_group"].([]any)),
+			TestTrafficRoute: expandTrafficRoute(m["test_traffic_route"].([]any)),
 		}
 
 		targetGroupPairInfos = append(targetGroupPairInfos, targetGroupPairInfo)
@@ -980,12 +979,12 @@ func expandTargetGroupPairInfos(l []interface{}) []types.TargetGroupPairInfo {
 	return targetGroupPairInfos
 }
 
-func expandTrafficRoute(l []interface{}) *types.TrafficRoute {
+func expandTrafficRoute(l []any) *types.TrafficRoute {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	trafficRoute := &types.TrafficRoute{
 		ListenerArns: flex.ExpandStringValueSet(m["listener_arns"].(*schema.Set)),
@@ -994,12 +993,12 @@ func expandTrafficRoute(l []interface{}) *types.TrafficRoute {
 	return trafficRoute
 }
 
-func expandDeploymentStyle(list []interface{}) *types.DeploymentStyle {
+func expandDeploymentStyle(list []any) *types.DeploymentStyle {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
 
-	style := list[0].(map[string]interface{})
+	style := list[0].(map[string]any)
 	result := &types.DeploymentStyle{}
 
 	if v, ok := style["deployment_option"]; ok {
@@ -1012,13 +1011,13 @@ func expandDeploymentStyle(list []interface{}) *types.DeploymentStyle {
 	return result
 }
 
-func expandLoadBalancerInfo(list []interface{}) *types.LoadBalancerInfo {
+func expandLoadBalancerInfo(list []any) *types.LoadBalancerInfo {
 	loadBalancerInfo := &types.LoadBalancerInfo{}
 	if len(list) == 0 || list[0] == nil {
 		return loadBalancerInfo
 	}
 
-	lbInfo := list[0].(map[string]interface{})
+	lbInfo := list[0].(map[string]any)
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
 		loadBalancerInfo.ElbInfoList = expandELBInfos(attr.(*schema.Set).List())
@@ -1028,26 +1027,26 @@ func expandLoadBalancerInfo(list []interface{}) *types.LoadBalancerInfo {
 		loadBalancerInfo.TargetGroupInfoList = expandTargetGroupInfos(attr.(*schema.Set).List())
 	}
 
-	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]interface{})) > 0 {
-		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfos(attr.([]interface{}))
+	if attr, ok := lbInfo["target_group_pair_info"]; ok && len(attr.([]any)) > 0 {
+		loadBalancerInfo.TargetGroupPairInfoList = expandTargetGroupPairInfos(attr.([]any))
 	}
 
 	return loadBalancerInfo
 }
 
-func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreenDeploymentConfiguration {
+func expandBlueGreenDeploymentConfiguration(list []any) *types.BlueGreenDeploymentConfiguration {
 	if len(list) == 0 || list[0] == nil {
 		return nil
 	}
 
-	config := list[0].(map[string]interface{})
+	config := list[0].(map[string]any)
 	blueGreenDeploymentConfig := &types.BlueGreenDeploymentConfiguration{}
 
 	if attr, ok := config["deployment_ready_option"]; ok {
-		a := attr.([]interface{})
+		a := attr.([]any)
 
 		if len(a) > 0 && a[0] != nil {
-			m := a[0].(map[string]interface{})
+			m := a[0].(map[string]any)
 
 			deploymentReadyOption := &types.DeploymentReadyOption{}
 			if v, ok := m["action_on_timeout"]; ok {
@@ -1061,10 +1060,10 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 	}
 
 	if attr, ok := config["green_fleet_provisioning_option"]; ok {
-		a := attr.([]interface{})
+		a := attr.([]any)
 
 		if len(a) > 0 && a[0] != nil {
-			m := a[0].(map[string]interface{})
+			m := a[0].(map[string]any)
 
 			greenFleetProvisioningOption := &types.GreenFleetProvisioningOption{}
 			if v, ok := m[names.AttrAction]; ok {
@@ -1075,10 +1074,10 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 	}
 
 	if attr, ok := config["terminate_blue_instances_on_deployment_success"]; ok {
-		a := attr.([]interface{})
+		a := attr.([]any)
 
 		if len(a) > 0 && a[0] != nil {
-			m := a[0].(map[string]interface{})
+			m := a[0].(map[string]any)
 
 			blueInstanceTerminationOption := &types.BlueInstanceTerminationOption{}
 			if v, ok := m[names.AttrAction]; ok {
@@ -1094,10 +1093,10 @@ func expandBlueGreenDeploymentConfiguration(list []interface{}) *types.BlueGreen
 	return blueGreenDeploymentConfig
 }
 
-func flattenEC2TagFilters(list []types.EC2TagFilter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenEC2TagFilters(list []types.EC2TagFilter) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 	for _, tf := range list {
-		l := make(map[string]interface{})
+		l := make(map[string]any)
 		if v := tf.Key; aws.ToString(v) != "" {
 			l[names.AttrKey] = aws.ToString(v)
 		}
@@ -1130,19 +1129,19 @@ func flattenTagFilters(list []types.TagFilter) []map[string]string {
 	return result
 }
 
-func flattenEC2TagSet(tagSet *types.EC2TagSet) []map[string]interface{} {
-	var result []map[string]interface{}
+func flattenEC2TagSet(tagSet *types.EC2TagSet) []map[string]any {
+	var result []map[string]any
 	if tagSet == nil {
-		result = make([]map[string]interface{}, 0)
+		result = make([]map[string]any, 0)
 	} else {
-		result = make([]map[string]interface{}, 0, len(tagSet.Ec2TagSetList))
+		result = make([]map[string]any, 0, len(tagSet.Ec2TagSetList))
 		for _, filterSet := range tagSet.Ec2TagSetList {
 			filters := flattenEC2TagFilters(filterSet)
-			filtersAsIntfSlice := make([]interface{}, 0, len(filters))
+			filtersAsIntfSlice := make([]any, 0, len(filters))
 			for _, item := range filters {
 				filtersAsIntfSlice = append(filtersAsIntfSlice, item)
 			}
-			tagFilters := map[string]interface{}{
+			tagFilters := map[string]any{
 				"ec2_tag_filter": filtersAsIntfSlice,
 			}
 			result = append(result, tagFilters)
@@ -1151,10 +1150,10 @@ func flattenEC2TagSet(tagSet *types.EC2TagSet) []map[string]interface{} {
 	return result
 }
 
-func flattenTriggerConfigs(list []types.TriggerConfig) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenTriggerConfigs(list []types.TriggerConfig) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 	for _, tc := range list {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["trigger_events"] = tc.TriggerEvents
 		item["trigger_name"] = aws.ToString(tc.TriggerName)
 		item["trigger_target_arn"] = aws.ToString(tc.TriggerTargetArn)
@@ -1163,13 +1162,13 @@ func flattenTriggerConfigs(list []types.TriggerConfig) []map[string]interface{} 
 	return result
 }
 
-func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
+func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) []map[string]any {
+	result := make([]map[string]any, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining events)
 	// otherwise empty configurations will be created
 	if config != nil && (config.Enabled || len(config.Events) > 0) {
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item[names.AttrEnabled] = config.Enabled
 		item["events"] = config.Events
 		result = append(result, item)
@@ -1178,8 +1177,8 @@ func flattenAutoRollbackConfiguration(config *types.AutoRollbackConfiguration) [
 	return result
 }
 
-func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, 1)
+func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]any {
+	result := make([]map[string]any, 0, 1)
 
 	// only create configurations that are enabled or temporarily disabled (retaining alarms)
 	// otherwise empty configurations will be created
@@ -1189,7 +1188,7 @@ func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]in
 			n = append(n, alarm.Name)
 		}
 
-		item := make(map[string]interface{})
+		item := make(map[string]any)
 		item["alarms"] = flex.FlattenStringSet(n)
 		item[names.AttrEnabled] = config.Enabled
 		item["ignore_poll_alarm_failure"] = config.IgnorePollAlarmFailure
@@ -1200,11 +1199,11 @@ func flattenAlarmConfiguration(config *types.AlarmConfiguration) []map[string]in
 	return result
 }
 
-func flattenECSServices(ecsServices []types.ECSService) []interface{} {
-	l := make([]interface{}, 0)
+func flattenECSServices(ecsServices []types.ECSService) []any {
+	l := make([]any, 0)
 
 	for _, ecsService := range ecsServices {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrClusterName: aws.ToString(ecsService.ClusterName),
 			names.AttrServiceName: aws.ToString(ecsService.ServiceName),
 		}
@@ -1215,11 +1214,11 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 	return l
 }
 
-func flattenELBInfos(elbInfos []types.ELBInfo) []interface{} {
-	l := make([]interface{}, 0)
+func flattenELBInfos(elbInfos []types.ELBInfo) []any {
+	l := make([]any, 0)
 
 	for _, elbInfo := range elbInfos {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName: aws.ToString(elbInfo.Name),
 		}
 
@@ -1229,11 +1228,11 @@ func flattenELBInfos(elbInfos []types.ELBInfo) []interface{} {
 	return l
 }
 
-func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []interface{} {
-	l := make([]interface{}, 0)
+func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []any {
+	l := make([]any, 0)
 
 	for _, targetGroupInfo := range targetGroupInfos {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName: aws.ToString(targetGroupInfo.Name),
 		}
 
@@ -1243,11 +1242,11 @@ func flattenTargetGroupInfos(targetGroupInfos []types.TargetGroupInfo) []interfa
 	return l
 }
 
-func flattenTargetGroupPairInfos(targetGroupPairInfos []types.TargetGroupPairInfo) []interface{} {
-	l := make([]interface{}, 0)
+func flattenTargetGroupPairInfos(targetGroupPairInfos []types.TargetGroupPairInfo) []any {
+	l := make([]any, 0)
 
 	for _, targetGroupPairInfo := range targetGroupPairInfos {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"prod_traffic_route": flattenTrafficRoute(targetGroupPairInfo.ProdTrafficRoute),
 			"target_group":       flattenTargetGroupInfos(targetGroupPairInfo.TargetGroups),
 			"test_traffic_route": flattenTrafficRoute(targetGroupPairInfo.TestTrafficRoute),
@@ -1259,24 +1258,24 @@ func flattenTargetGroupPairInfos(targetGroupPairInfos []types.TargetGroupPairInf
 	return l
 }
 
-func flattenTrafficRoute(trafficRoute *types.TrafficRoute) []interface{} {
+func flattenTrafficRoute(trafficRoute *types.TrafficRoute) []any {
 	if trafficRoute == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"listener_arns": flex.FlattenStringValueSet(trafficRoute.ListenerArns),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenDeploymentStyle(style *types.DeploymentStyle) []map[string]interface{} {
+func flattenDeploymentStyle(style *types.DeploymentStyle) []map[string]any {
 	if style == nil {
 		return nil
 	}
 
-	item := make(map[string]interface{})
+	item := make(map[string]any)
 	if v := string(style.DeploymentOption); v != "" {
 		item["deployment_option"] = v
 	}
@@ -1284,35 +1283,35 @@ func flattenDeploymentStyle(style *types.DeploymentStyle) []map[string]interface
 		item["deployment_type"] = v
 	}
 
-	result := make([]map[string]interface{}, 0, 1)
+	result := make([]map[string]any, 0, 1)
 	result = append(result, item)
 	return result
 }
 
-func flattenLoadBalancerInfo(loadBalancerInfo *types.LoadBalancerInfo) []interface{} {
+func flattenLoadBalancerInfo(loadBalancerInfo *types.LoadBalancerInfo) []any {
 	if loadBalancerInfo == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"elb_info":               flattenELBInfos(loadBalancerInfo.ElbInfoList),
 		"target_group_info":      flattenTargetGroupInfos(loadBalancerInfo.TargetGroupInfoList),
 		"target_group_pair_info": flattenTargetGroupPairInfos(loadBalancerInfo.TargetGroupPairInfoList),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentConfiguration) []map[string]interface{} {
+func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentConfiguration) []map[string]any {
 	if config == nil {
 		return nil
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if config.DeploymentReadyOption != nil {
-		a := make([]map[string]interface{}, 0)
-		deploymentReadyOption := make(map[string]interface{})
+		a := make([]map[string]any, 0)
+		deploymentReadyOption := make(map[string]any)
 
 		if v := string(config.DeploymentReadyOption.ActionOnTimeout); v != "" {
 			deploymentReadyOption["action_on_timeout"] = v
@@ -1325,8 +1324,8 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 	}
 
 	if config.GreenFleetProvisioningOption != nil {
-		b := make([]map[string]interface{}, 0)
-		greenFleetProvisioningOption := make(map[string]interface{})
+		b := make([]map[string]any, 0)
+		greenFleetProvisioningOption := make(map[string]any)
 
 		if v := string(config.GreenFleetProvisioningOption.Action); v != "" {
 			greenFleetProvisioningOption[names.AttrAction] = v
@@ -1336,8 +1335,8 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 	}
 
 	if config.TerminateBlueInstancesOnDeploymentSuccess != nil {
-		c := make([]map[string]interface{}, 0)
-		blueInstanceTerminationOption := make(map[string]interface{})
+		c := make([]map[string]any, 0)
+		blueInstanceTerminationOption := make(map[string]any)
 
 		if v := string(config.TerminateBlueInstancesOnDeploymentSuccess.Action); v != "" {
 			blueInstanceTerminationOption[names.AttrAction] = v
@@ -1349,7 +1348,7 @@ func flattenBlueGreenDeploymentConfiguration(config *types.BlueGreenDeploymentCo
 		m["terminate_blue_instances_on_deployment_success"] = append(c, blueInstanceTerminationOption)
 	}
 
-	list := make([]map[string]interface{}, 0)
+	list := make([]map[string]any, 0)
 	list = append(list, m)
 	return list
 }

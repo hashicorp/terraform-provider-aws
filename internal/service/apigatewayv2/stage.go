@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -184,12 +185,10 @@ func resourceStage() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -210,7 +209,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("access_log_settings"); ok {
-		input.AccessLogSettings = expandAccessLogSettings(v.([]interface{}))
+		input.AccessLogSettings = expandAccessLogSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk("client_certificate_id"); ok {
@@ -218,7 +217,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("default_route_settings"); ok {
-		input.DefaultRouteSettings = expandDefaultRouteSettings(v.([]interface{}), protocolType)
+		input.DefaultRouteSettings = expandDefaultRouteSettings(v.([]any), protocolType)
 	}
 
 	if v, ok := d.GetOk("deployment_id"); ok {
@@ -234,7 +233,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("stage_variables"); ok {
-		input.StageVariables = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.StageVariables = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	output, err := conn.CreateStage(ctx, input)
@@ -248,7 +247,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -297,7 +296,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -318,7 +317,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("access_log_settings") {
-			input.AccessLogSettings = expandAccessLogSettings(d.Get("access_log_settings").([]interface{}))
+			input.AccessLogSettings = expandAccessLogSettings(d.Get("access_log_settings").([]any))
 		}
 
 		if d.HasChange("auto_deploy") {
@@ -330,7 +329,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("default_route_settings") {
-			input.DefaultRouteSettings = expandDefaultRouteSettings(d.Get("default_route_settings").([]interface{}), protocolType)
+			input.DefaultRouteSettings = expandDefaultRouteSettings(d.Get("default_route_settings").([]any), protocolType)
 		}
 
 		if d.HasChange("deployment_id") {
@@ -347,7 +346,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			ns := n.(*schema.Set)
 
 			for _, vRouteSetting := range os.Difference(ns).List() {
-				routeKey := vRouteSetting.(map[string]interface{})["route_key"].(string)
+				routeKey := vRouteSetting.(map[string]any)["route_key"].(string)
 				input := &apigatewayv2.DeleteRouteSettingsInput{
 					ApiId:     aws.String(d.Get("api_id").(string)),
 					RouteKey:  aws.String(routeKey),
@@ -370,15 +369,13 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del, _ := flex.DiffStringValueMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := flex.DiffStringValueMaps(o.(map[string]any), n.(map[string]any))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = ""
 			}
 			variables := del
-			for k, v := range add {
-				variables[k] = v
-			}
+			maps.Copy(variables, add)
 			input.StageVariables = variables
 		}
 
@@ -392,15 +389,16 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStageRead(ctx, d, meta)...)
 }
 
-func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Stage: %s", d.Id())
-	_, err := conn.DeleteStage(ctx, &apigatewayv2.DeleteStageInput{
+	input := apigatewayv2.DeleteStageInput{
 		ApiId:     aws.String(d.Get("api_id").(string)),
 		StageName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStage(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -413,7 +411,7 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/stage-name'", d.Id())
@@ -497,13 +495,13 @@ func findStages(ctx context.Context, conn *apigatewayv2.Client, input *apigatewa
 	return output, nil
 }
 
-func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSettings {
+func expandAccessLogSettings(vSettings []any) *awstypes.AccessLogSettings {
 	settings := &awstypes.AccessLogSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return settings
 	}
-	mSettings := vSettings[0].(map[string]interface{})
+	mSettings := vSettings[0].(map[string]any)
 
 	if vDestinationArn, ok := mSettings[names.AttrDestinationARN].(string); ok && vDestinationArn != "" {
 		settings.DestinationArn = aws.String(vDestinationArn)
@@ -515,24 +513,24 @@ func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSetting
 	return settings
 }
 
-func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{} {
+func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []any {
 	if settings == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		names.AttrDestinationARN: aws.ToString(settings.DestinationArn),
 		names.AttrFormat:         aws.ToString(settings.Format),
 	}}
 }
 
-func expandDefaultRouteSettings(vSettings []interface{}, protocolType awstypes.ProtocolType) *awstypes.RouteSettings {
+func expandDefaultRouteSettings(vSettings []any, protocolType awstypes.ProtocolType) *awstypes.RouteSettings {
 	routeSettings := &awstypes.RouteSettings{}
 
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return routeSettings
 	}
-	mSettings := vSettings[0].(map[string]interface{})
+	mSettings := vSettings[0].(map[string]any)
 
 	if vDataTraceEnabled, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == awstypes.ProtocolTypeWebsocket {
 		routeSettings.DataTraceEnabled = aws.Bool(vDataTraceEnabled)
@@ -553,12 +551,12 @@ func expandDefaultRouteSettings(vSettings []interface{}, protocolType awstypes.P
 	return routeSettings
 }
 
-func flattenDefaultRouteSettings(routeSettings *awstypes.RouteSettings) []interface{} {
+func flattenDefaultRouteSettings(routeSettings *awstypes.RouteSettings) []any {
 	if routeSettings == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	return []interface{}{map[string]interface{}{
+	return []any{map[string]any{
 		"data_trace_enabled":       aws.ToBool(routeSettings.DataTraceEnabled),
 		"detailed_metrics_enabled": aws.ToBool(routeSettings.DetailedMetricsEnabled),
 		"logging_level":            string(routeSettings.LoggingLevel),
@@ -567,13 +565,13 @@ func flattenDefaultRouteSettings(routeSettings *awstypes.RouteSettings) []interf
 	}}
 }
 
-func expandRouteSettings(vSettings []interface{}, protocolType awstypes.ProtocolType) map[string]awstypes.RouteSettings {
+func expandRouteSettings(vSettings []any, protocolType awstypes.ProtocolType) map[string]awstypes.RouteSettings {
 	settings := map[string]awstypes.RouteSettings{}
 
 	for _, v := range vSettings {
 		routeSettings := awstypes.RouteSettings{}
 
-		mSettings := v.(map[string]interface{})
+		mSettings := v.(map[string]any)
 
 		if v, ok := mSettings["data_trace_enabled"].(bool); ok && protocolType == awstypes.ProtocolTypeWebsocket {
 			routeSettings.DataTraceEnabled = aws.Bool(v)
@@ -597,11 +595,11 @@ func expandRouteSettings(vSettings []interface{}, protocolType awstypes.Protocol
 	return settings
 }
 
-func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interface{} {
-	vSettings := []interface{}{}
+func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []any {
+	vSettings := []any{}
 
 	for k, routeSetting := range settings {
-		vSettings = append(vSettings, map[string]interface{}{
+		vSettings = append(vSettings, map[string]any{
 			"data_trace_enabled":       aws.ToBool(routeSetting.DataTraceEnabled),
 			"detailed_metrics_enabled": aws.ToBool(routeSetting.DetailedMetricsEnabled),
 			"logging_level":            routeSetting.LoggingLevel,

@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hierarchyGroupId` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific hierarchy group by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `hierarchyGroupId` is required.
 
 ## Attribute Reference
 
@@ -94,4 +95,4 @@ A level block supports the following attributes:
 * `id` -  The identifier of the hierarchy group.
 * `name` - Name of the hierarchy group.
 
-<!-- cache-key: cdktf-0.20.8 input-731f13300b2f618b2b18228c6f39f21b7d57257082d5a2e584e1a1158a58fd48 -->
+<!-- cache-key: cdktf-0.20.8 input-73c05636cb20e8f18c9d9be040dafd714956c64bc36b69e5acf4127b49638bb8 -->

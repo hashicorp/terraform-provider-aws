@@ -66,7 +66,7 @@ func resourceType() *schema.Resource {
 	}
 }
 
-func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
 
-func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -119,7 +119,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -144,7 +144,7 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
 
-func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -154,10 +154,11 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[INFO] Deleting Appsync Type: %s", d.Id())
-	_, err = conn.DeleteType(ctx, &appsync.DeleteTypeInput{
+	input := appsync.DeleteTypeInput{
 		ApiId:    aws.String(apiID),
 		TypeName: aws.String(name),
-	})
+	}
+	_, err = conn.DeleteType(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

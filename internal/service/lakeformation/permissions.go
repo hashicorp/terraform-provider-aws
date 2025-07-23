@@ -417,7 +417,7 @@ func ResourcePermissions() *schema.Resource {
 // For 2 & 3, some peeking at the config (i.e., d.Get()) is necessary to filter the permissions AWS
 // returns.
 
-func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -434,7 +434,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]any))
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
@@ -445,28 +445,28 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.Catalog = ExpandCatalogResource()
 	}
 
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Database = ExpandDatabaseResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
@@ -512,7 +512,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
 
-func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -532,35 +532,35 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if _, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]interface{}))
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]any))
 	}
 
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Database = ExpandDatabaseResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
 	tableType := ""
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
 		tableType = TableTypeTable
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// can't ListPermissions for TableWithColumns, so use Table instead
-		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]interface{})[0].(map[string]interface{}))
+		input.Resource.Table = ExpandTableWithColumnsResourceAsTable(v.([]any)[0].(map[string]any))
 		tableType = TableTypeTableWithColumns
 	}
 
@@ -644,7 +644,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
-		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
+		if err := d.Set("data_location", []any{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_location: %s", err)
 		}
 	} else {
@@ -652,7 +652,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set(names.AttrDatabase, []any{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
@@ -668,7 +668,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {
-		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+		if err := d.Set("lf_tag", []any{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
@@ -676,7 +676,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.LFTagPolicy != nil {
-		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+		if err := d.Set("lf_tag_policy", []any{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
@@ -685,7 +685,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	tableSet := false
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 {
 		// since perm list could include TableWithColumns, get the right one
 		for _, perm := range cleanPermissions {
 			if perm.Resource == nil {
@@ -693,7 +693,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table", []any{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -701,7 +701,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
+				if err := d.Set("table", []any{flattenTableResource(perm.Resource.Table)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
@@ -716,11 +716,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	twcSet := false
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 {
 		// since perm list could include Table, get the right one
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table_with_columns", []any{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
@@ -736,7 +736,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -758,31 +758,31 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]any))
 	}
 
-	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("data_location"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.DataLocation = ExpandDataLocationResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Database = ExpandDatabaseResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.Table = ExpandTableResource(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]any)[0].(map[string]any))
 	}
 
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &awstypes.Resource{}) {
@@ -868,12 +868,12 @@ func ExpandCatalogResource() *awstypes.CatalogResource {
 	return &awstypes.CatalogResource{}
 }
 
-func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
+func ExpandDataCellsFilter(in []any) *awstypes.DataCellsFilterResource {
 	if len(in) == 0 {
 		return nil
 	}
 
-	m := in[0].(map[string]interface{})
+	m := in[0].(map[string]any)
 	var out awstypes.DataCellsFilterResource
 
 	if v, ok := m[names.AttrDatabaseName].(string); ok && v != "" {
@@ -895,22 +895,22 @@ func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
 	return &out
 }
 
-func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []interface{} {
+func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []any {
 	if in == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDatabaseName: aws.ToString(in.DatabaseName),
 		names.AttrName:         aws.ToString(in.Name),
 		"table_catalog_id":     aws.ToString(in.TableCatalogId),
 		names.AttrTableName:    aws.ToString(in.TableName),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func ExpandDataLocationResource(tfMap map[string]interface{}) *awstypes.DataLocationResource {
+func ExpandDataLocationResource(tfMap map[string]any) *awstypes.DataLocationResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -928,12 +928,12 @@ func ExpandDataLocationResource(tfMap map[string]interface{}) *awstypes.DataLoca
 	return apiObject
 }
 
-func flattenDataLocationResource(apiObject *awstypes.DataLocationResource) map[string]interface{} {
+func flattenDataLocationResource(apiObject *awstypes.DataLocationResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -946,7 +946,7 @@ func flattenDataLocationResource(apiObject *awstypes.DataLocationResource) map[s
 	return tfMap
 }
 
-func ExpandDatabaseResource(tfMap map[string]interface{}) *awstypes.DatabaseResource {
+func ExpandDatabaseResource(tfMap map[string]any) *awstypes.DatabaseResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -964,12 +964,12 @@ func ExpandDatabaseResource(tfMap map[string]interface{}) *awstypes.DatabaseReso
 	return apiObject
 }
 
-func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]interface{} {
+func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -982,7 +982,7 @@ func flattenDatabaseResource(apiObject *awstypes.DatabaseResource) map[string]in
 	return tfMap
 }
 
-func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *awstypes.LFTagPolicyResource {
+func ExpandLFTagPolicyResource(tfMap map[string]any) *awstypes.LFTagPolicyResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1004,10 +1004,10 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *awstypes.LFTagPoli
 	return apiObject
 }
 
-func ExpandLFTagExpression(expression []interface{}) []awstypes.LFTag {
+func ExpandLFTagExpression(expression []any) []awstypes.LFTag {
 	tagSlice := []awstypes.LFTag{}
 	for _, element := range expression {
-		elementMap := element.(map[string]interface{})
+		elementMap := element.(map[string]any)
 
 		tag := awstypes.LFTag{
 			TagKey:    aws.String(elementMap[names.AttrKey].(string)),
@@ -1020,12 +1020,12 @@ func ExpandLFTagExpression(expression []interface{}) []awstypes.LFTag {
 	return tagSlice
 }
 
-func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[string]interface{} {
+func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -1042,11 +1042,11 @@ func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[str
 	return tfMap
 }
 
-func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]interface{} {
-	tagSlice := make([]map[string]interface{}, len(ts))
+func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]any {
+	tagSlice := make([]map[string]any, len(ts))
 	if len(ts) > 0 {
 		for i, t := range ts {
-			tag := make(map[string]interface{})
+			tag := make(map[string]any)
 
 			if v := aws.ToString(t.TagKey); v != "" {
 				tag[names.AttrKey] = v
@@ -1063,7 +1063,7 @@ func flattenLFTagExpression(ts []awstypes.LFTag) []map[string]interface{} {
 	return tagSlice
 }
 
-func ExpandLFTagKeyResource(tfMap map[string]interface{}) *awstypes.LFTagKeyResource {
+func ExpandLFTagKeyResource(tfMap map[string]any) *awstypes.LFTagKeyResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1085,12 +1085,12 @@ func ExpandLFTagKeyResource(tfMap map[string]interface{}) *awstypes.LFTagKeyReso
 	return apiObject
 }
 
-func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]interface{} {
+func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -1107,7 +1107,7 @@ func flattenLFTagKeyResource(apiObject *awstypes.LFTagKeyResource) map[string]in
 	return tfMap
 }
 
-func ExpandTableResource(tfMap map[string]interface{}) *awstypes.TableResource {
+func ExpandTableResource(tfMap map[string]any) *awstypes.TableResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1133,7 +1133,7 @@ func ExpandTableResource(tfMap map[string]interface{}) *awstypes.TableResource {
 	return apiObject
 }
 
-func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *awstypes.TableResource {
+func ExpandTableWithColumnsResourceAsTable(tfMap map[string]any) *awstypes.TableResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1155,12 +1155,12 @@ func ExpandTableWithColumnsResourceAsTable(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func flattenTableResource(apiObject *awstypes.TableResource) map[string]interface{} {
+func flattenTableResource(apiObject *awstypes.TableResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -1183,7 +1183,7 @@ func flattenTableResource(apiObject *awstypes.TableResource) map[string]interfac
 	return tfMap
 }
 
-func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWithColumnsResource {
+func expandTableColumnsResource(tfMap map[string]any) *awstypes.TableWithColumnsResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -1223,12 +1223,12 @@ func expandTableColumnsResource(tfMap map[string]interface{}) *awstypes.TableWit
 	return apiObject
 }
 
-func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)
@@ -1255,12 +1255,12 @@ func flattenTableColumnsResource(apiObject *awstypes.TableWithColumnsResource) m
 // This only happens in very specific situations:
 // (Select) TWC + ColumnWildcard              = (Select) Table
 // (Select) TWC + ColumnWildcard + ALL_TABLES = (Select) Table + TableWildcard
-func flattenTableColumnsResourceAsTable(apiObject *awstypes.TableWithColumnsResource) map[string]interface{} {
+func flattenTableColumnsResourceAsTable(apiObject *awstypes.TableWithColumnsResource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CatalogId; v != nil {
 		tfMap[names.AttrCatalogID] = aws.ToString(v)

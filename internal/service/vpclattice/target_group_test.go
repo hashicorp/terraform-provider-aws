@@ -5,21 +5,18 @@ package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +54,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
@@ -357,45 +354,39 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
-				TargetGroupIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindTargetGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameService, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Target Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTargetGroupExists(ctx context.Context, name string, targetGroup *vpclattice.GetTargetGroupOutput) resource.TestCheckFunc {
+func testAccCheckTargetGroupExists(ctx context.Context, n string, v *vpclattice.GetTargetGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
-			TargetGroupIdentifier: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfvpclattice.FindTargetGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, rs.Primary.ID, err)
+			return err
 		}
 
-		*targetGroup = *resp
+		*v = *output
 
 		return nil
 	}

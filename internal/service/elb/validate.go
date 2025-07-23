@@ -9,7 +9,7 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-func validName(v interface{}, k string) (ws []string, errors []error) {
+func validName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) == 0 {
 		return // short-circuit
@@ -34,7 +34,7 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

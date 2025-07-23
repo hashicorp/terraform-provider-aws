@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 )
 
-func describeAccountPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput, fn func(*cloudwatchlogs.DescribeAccountPoliciesOutput, bool) bool) error {
+func describeAccountPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeAccountPoliciesInput, fn func(*cloudwatchlogs.DescribeAccountPoliciesOutput, bool) bool, optFns ...func(*cloudwatchlogs.Options)) error {
 	for {
-		output, err := conn.DescribeAccountPolicies(ctx, input)
+		output, err := conn.DescribeAccountPolicies(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -25,9 +25,9 @@ func describeAccountPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Clie
 	}
 	return nil
 }
-func describeIndexPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeIndexPoliciesInput, fn func(*cloudwatchlogs.DescribeIndexPoliciesOutput, bool) bool) error {
+func describeIndexPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeIndexPoliciesInput, fn func(*cloudwatchlogs.DescribeIndexPoliciesOutput, bool) bool, optFns ...func(*cloudwatchlogs.Options)) error {
 	for {
-		output, err := conn.DescribeIndexPolicies(ctx, input)
+		output, err := conn.DescribeIndexPolicies(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -41,9 +41,9 @@ func describeIndexPoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client
 	}
 	return nil
 }
-func describeQueryDefinitionsPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool) error {
+func describeQueryDefinitionsPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, fn func(*cloudwatchlogs.DescribeQueryDefinitionsOutput, bool) bool, optFns ...func(*cloudwatchlogs.Options)) error {
 	for {
-		output, err := conn.DescribeQueryDefinitions(ctx, input)
+		output, err := conn.DescribeQueryDefinitions(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -57,9 +57,9 @@ func describeQueryDefinitionsPages(ctx context.Context, conn *cloudwatchlogs.Cli
 	}
 	return nil
 }
-func describeResourcePoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, fn func(*cloudwatchlogs.DescribeResourcePoliciesOutput, bool) bool) error {
+func describeResourcePoliciesPages(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeResourcePoliciesInput, fn func(*cloudwatchlogs.DescribeResourcePoliciesOutput, bool) bool, optFns ...func(*cloudwatchlogs.Options)) error {
 	for {
-		output, err := conn.DescribeResourcePolicies(ctx, input)
+		output, err := conn.DescribeResourcePolicies(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

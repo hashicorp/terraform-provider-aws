@@ -106,12 +106,10 @@ func resourceTemplate() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -128,16 +126,16 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		TemplateId:   aws.String(templateID),
 	}
 
-	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
+	if v, ok := d.GetOk("definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]interface{}))
+	if v, ok := d.GetOk("source_entity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]any))
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -159,7 +157,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
-func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -215,7 +213,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -234,9 +232,9 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		// One of source_entity or definition is required for update
 		if v, ok := d.GetOk("source_entity"); ok {
-			input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]interface{}))
+			input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]any))
 		} else {
-			input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
+			input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]any))
 		}
 
 		_, err := conn.UpdateTemplate(ctx, input)
@@ -278,7 +276,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
-func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -415,7 +413,7 @@ func findTemplatePermissions(ctx context.Context, conn *quicksight.Client, input
 }
 
 func statusTemplate(ctx context.Context, conn *quicksight.Client, awsAccountID, templateID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTemplateByTwoPartKey(ctx, conn, awsAccountID, templateID)
 
 		if tfresource.NotFound(err) {

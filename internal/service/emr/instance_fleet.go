@@ -34,7 +34,7 @@ func resourceInstanceFleet() *schema.Resource {
 		DeleteWithoutTimeout: resourceInstanceFleetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected cluster-id/fleet-id", d.Id())
@@ -224,11 +224,11 @@ func resourceInstanceFleet() *schema.Resource {
 	}
 }
 
-func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrName:              d.Get(names.AttrName),
 		"target_on_demand_capacity": d.Get("target_on_demand_capacity"),
 		"target_spot_capacity":      d.Get("target_spot_capacity"),
@@ -251,7 +251,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceFleetRead(ctx, d, meta)...)
 }
 
-func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -282,7 +282,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -312,7 +312,7 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceFleetRead(ctx, d, meta)...)
 }
 
-func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -391,7 +391,7 @@ func findInstanceFleets(ctx context.Context, conn *emr.Client, input *emr.ListIn
 }
 
 func statusInstanceFleet(ctx context.Context, conn *emr.Client, clusterID, fleetID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 
 		if tfresource.NotFound(err) {

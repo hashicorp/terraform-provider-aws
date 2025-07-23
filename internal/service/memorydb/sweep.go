@@ -4,6 +4,7 @@
 package memorydb
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,8 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -24,10 +29,11 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_memorydb_cluster", &resource.Sweeper{
-		Name: "aws_memorydb_cluster",
-		F:    sweepClusters,
-	})
+	awsv2.Register("aws_memorydb_cluster", sweepClusters)
+
+	awsv2.Register("aws_memorydb_multi_region_cluster", sweepMultiRegionClusters,
+		"aws_memorydb_cluster",
+	)
 
 	resource.AddTestSweepers("aws_memorydb_parameter_group", &resource.Sweeper{
 		Name: "aws_memorydb_parameter_group",
@@ -69,10 +75,10 @@ func sweepACLs(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeACLsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeACLsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeACLsPaginator(conn, input)
+	pages := memorydb.NewDescribeACLsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -110,45 +116,54 @@ func sweepACLs(region string) error {
 	return nil
 }
 
-func sweepClusters(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeClustersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := memorydb.NewDescribeClustersPaginator(conn, input)
+	var sweepResources []sweep.Sweepable
+	r := resourceCluster()
+
+	input := memorydb.DescribeClustersInput{}
+	pages := memorydb.NewDescribeClustersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Clusters {
-			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Name))
+			d.Set(names.AttrName, v.Name)
+			d.Set("multi_region_cluster_name", v.MultiRegionClusterName)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
+	return sweepResources, nil
+}
 
-	if err != nil {
-		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
+func sweepMultiRegionClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.MemoryDBClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	input := memorydb.DescribeMultiRegionClustersInput{}
+	pages := memorydb.NewDescribeMultiRegionClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, clusters := range page.MultiRegionClusters {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMultiRegionClusterResource, client,
+				framework.NewAttribute("multi_region_cluster_name", clusters.MultiRegionClusterName),
+			))
+		}
 	}
 
-	return nil
+	return sweepResources, nil
 }
 
 func sweepParameterGroups(region string) error {
@@ -158,10 +173,10 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeParameterGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeParameterGroupsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeParameterGroupsPaginator(conn, input)
+	pages := memorydb.NewDescribeParameterGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -206,10 +221,10 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeSnapshotsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeSnapshotsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeSnapshotsPaginator(conn, input)
+	pages := memorydb.NewDescribeSnapshotsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -247,10 +262,10 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeSubnetGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeSubnetGroupsInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeSubnetGroupsPaginator(conn, input)
+	pages := memorydb.NewDescribeSubnetGroupsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -295,10 +310,10 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.MemoryDBClient(ctx)
-	input := &memorydb.DescribeUsersInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	input := memorydb.DescribeUsersInput{}
+	var sweepResources []sweep.Sweepable
 
-	pages := memorydb.NewDescribeUsersPaginator(conn, input)
+	pages := memorydb.NewDescribeUsersPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

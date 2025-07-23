@@ -62,7 +62,7 @@ func resourceWorkspaceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -88,7 +88,7 @@ func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceWorkspaceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 

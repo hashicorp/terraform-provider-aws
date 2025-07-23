@@ -33,12 +33,8 @@ func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfi
 }
 
 type proactiveEngagementResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[proactiveEngagementResourceModel]
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -158,7 +154,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust[emergencyContactModel](ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
+	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
 		return emergencyContactModel{
 			ContactNotes: fwflex.StringToFramework(ctx, apiObject.ContactNotes),
 			EmailAddress: fwflex.StringToFramework(ctx, apiObject.EmailAddress),

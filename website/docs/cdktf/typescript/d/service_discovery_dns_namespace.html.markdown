@@ -37,6 +37,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the namespace.
 * `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
@@ -50,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `hostedZone` - ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-536486dabc04dbcda77c827f5666503eea5945a2c5257dff3f3c8c8d37db1b34 -->
+<!-- cache-key: cdktf-0.20.8 input-adff9443347be15de12eea44e44100beab3a07dbb872fde0c356a392f54cd427 -->

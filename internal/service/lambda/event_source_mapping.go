@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -415,14 +414,10 @@ func resourceEventSourceMapping() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -435,8 +430,8 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 
 	var target string
 
-	if v, ok := d.GetOk("amazon_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AmazonManagedKafkaEventSourceConfig = expandAmazonManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("amazon_managed_kafka_event_source_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AmazonManagedKafkaEventSourceConfig = expandAmazonManagedKafkaEventSourceConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
@@ -447,12 +442,12 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.BisectBatchOnFunctionError = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("destination_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DestinationConfig = expandDestinationConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("event_source_arn"); ok {
@@ -462,8 +457,8 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		target = v
 	}
 
-	if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.FilterCriteria = expandFilterCriteria(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -486,34 +481,34 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MetricsConfig = expandEventSourceMappingMetricsConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("metrics_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MetricsConfig = expandEventSourceMappingMetricsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("parallelization_factor"); ok {
 		input.ParallelizationFactor = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("queues"); ok && len(v.([]interface{})) > 0 {
-		input.Queues = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("queues"); ok && len(v.([]any)) > 0 {
+		input.Queues = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ScalingConfig = expandScalingConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SelfManagedEventSource = expandSelfManagedEventSource(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SelfManagedEventSource = expandSelfManagedEventSource(v.([]any)[0].(map[string]any))
 
 		target = "Self-Managed Apache Kafka"
 	}
 
-	if v, ok := d.GetOk("self_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SelfManagedKafkaEventSourceConfig = expandSelfManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("self_managed_kafka_event_source_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SelfManagedKafkaEventSourceConfig = expandSelfManagedKafkaEventSourceConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
@@ -570,7 +565,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
 }
 
-func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -587,7 +582,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if output.AmazonManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("amazon_managed_kafka_event_source_config", []interface{}{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {
+		if err := d.Set("amazon_managed_kafka_event_source_config", []any{flattenAmazonManagedKafkaEventSourceConfig(output.AmazonManagedKafkaEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting amazon_managed_kafka_event_source_config: %s", err)
 		}
 	} else {
@@ -597,14 +592,14 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("batch_size", output.BatchSize)
 	d.Set("bisect_batch_on_function_error", output.BisectBatchOnFunctionError)
 	if output.DestinationConfig != nil {
-		if err := d.Set("destination_config", []interface{}{flattenDestinationConfig(output.DestinationConfig)}); err != nil {
+		if err := d.Set("destination_config", []any{flattenDestinationConfig(output.DestinationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 		}
 	} else {
 		d.Set("destination_config", nil)
 	}
 	if output.DocumentDBEventSourceConfig != nil {
-		if err := d.Set("document_db_event_source_config", []interface{}{flattenDocumentDBEventSourceConfig(output.DocumentDBEventSourceConfig)}); err != nil {
+		if err := d.Set("document_db_event_source_config", []any{flattenDocumentDBEventSourceConfig(output.DocumentDBEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting document_db_event_source_config: %s", err)
 		}
 	} else {
@@ -612,7 +607,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("event_source_arn", output.EventSourceArn)
 	if v := output.FilterCriteria; v != nil {
-		if err := d.Set("filter_criteria", []interface{}{flattenFilterCriteria(v)}); err != nil {
+		if err := d.Set("filter_criteria", []any{flattenFilterCriteria(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter criteria: %s", err)
 		}
 	} else {
@@ -632,7 +627,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
 	if v := output.MetricsConfig; v != nil {
-		if err := d.Set("metrics_config", []interface{}{flattenEventSourceMappingMetricsConfig(v)}); err != nil {
+		if err := d.Set("metrics_config", []any{flattenEventSourceMappingMetricsConfig(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metrics_config: %s", err)
 		}
 	} else {
@@ -640,7 +635,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("parallelization_factor", output.ParallelizationFactor)
 	if v := output.ProvisionedPollerConfig; v != nil {
-		if err := d.Set("provisioned_poller_config", []interface{}{flattenProvisionedPollerConfig(v)}); err != nil {
+		if err := d.Set("provisioned_poller_config", []any{flattenProvisionedPollerConfig(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting provisioned_poller_config: %s", err)
 		}
 	} else {
@@ -648,21 +643,21 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set("queues", output.Queues)
 	if v := output.ScalingConfig; v != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenScalingConfig(v)}); err != nil {
+		if err := d.Set("scaling_config", []any{flattenScalingConfig(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
 	if output.SelfManagedEventSource != nil {
-		if err := d.Set("self_managed_event_source", []interface{}{flattenSelfManagedEventSource(output.SelfManagedEventSource)}); err != nil {
+		if err := d.Set("self_managed_event_source", []any{flattenSelfManagedEventSource(output.SelfManagedEventSource)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting self_managed_event_source: %s", err)
 		}
 	} else {
 		d.Set("self_managed_event_source", nil)
 	}
 	if output.SelfManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("self_managed_kafka_event_source_config", []interface{}{flattenSelfManagedKafkaEventSourceConfig(output.SelfManagedKafkaEventSourceConfig)}); err != nil {
+		if err := d.Set("self_managed_kafka_event_source_config", []any{flattenSelfManagedKafkaEventSourceConfig(output.SelfManagedKafkaEventSourceConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting self_managed_kafka_event_source_config: %s", err)
 		}
 	} else {
@@ -696,7 +691,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -714,14 +709,14 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("destination_config") {
-			if v, ok := d.GetOk("destination_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DestinationConfig = expandDestinationConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("destination_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.DestinationConfig = expandDestinationConfig(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("document_db_event_source_config") {
-			if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("document_db_event_source_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.DocumentDBEventSourceConfig = expandDocumentDBEventSourceConfig(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -730,8 +725,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("filter_criteria") {
-			if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.FilterCriteria = expandFilterCriteria(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("filter_criteria"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.FilterCriteria = expandFilterCriteria(v.([]any)[0].(map[string]any))
 			} else {
 				// AWS ignores the removal if this is left as nil.
 				input.FilterCriteria = &awstypes.FilterCriteria{}
@@ -763,8 +758,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("metrics_config") {
-			if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MetricsConfig = expandEventSourceMappingMetricsConfig((v.([]interface{})[0].(map[string]interface{})))
+			if v, ok := d.GetOk("metrics_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.MetricsConfig = expandEventSourceMappingMetricsConfig((v.([]any)[0].(map[string]any)))
 			} else {
 				input.MetricsConfig = &awstypes.EventSourceMappingMetricsConfig{}
 			}
@@ -775,8 +770,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("provisioned_poller_config") {
-			if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]any)[0].(map[string]any))
 			} else {
 				// AWS ignores the removal if this is left as nil.
 				input.ProvisionedPollerConfig = &awstypes.ProvisionedPollerConfig{}
@@ -784,8 +779,8 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("scaling_config") {
-			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ScalingConfig = expandScalingConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ScalingConfig = expandScalingConfig(v.([]any)[0].(map[string]any))
 			} else {
 				// AWS ignores the removal if this is left as nil.
 				input.ScalingConfig = &awstypes.ScalingConfig{}
@@ -818,7 +813,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceEventSourceMappingRead(ctx, d, meta)...)
 }
 
-func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -826,7 +821,7 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteEventSourceMapping(ctx, &lambda.DeleteEventSourceMappingInput{
 			UUID: aws.String(d.Id()),
 		})
@@ -853,7 +848,7 @@ type eventSourceMappingCU interface {
 
 func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -910,7 +905,7 @@ func findEventSourceMappingByID(ctx context.Context, conn *lambda.Client, uuid s
 }
 
 func statusEventSourceMapping(ctx context.Context, conn *lambda.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEventSourceMappingByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -991,21 +986,21 @@ func waitEventSourceMappingDeleted(ctx context.Context, conn *lambda.Client, id 
 	return nil, err
 }
 
-func expandDestinationConfig(tfMap map[string]interface{}) *awstypes.DestinationConfig {
+func expandDestinationConfig(tfMap map[string]any) *awstypes.DestinationConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.DestinationConfig{}
 
-	if v, ok := tfMap["on_failure"].([]interface{}); ok && len(v) > 0 {
-		apiObject.OnFailure = expandOnFailure(v[0].(map[string]interface{}))
+	if v, ok := tfMap["on_failure"].([]any); ok && len(v) > 0 {
+		apiObject.OnFailure = expandOnFailure(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *awstypes.DocumentDBEventSourceConfig {
+func expandDocumentDBEventSourceConfig(tfMap map[string]any) *awstypes.DocumentDBEventSourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1027,7 +1022,7 @@ func expandDocumentDBEventSourceConfig(tfMap map[string]interface{}) *awstypes.D
 	return apiObject
 }
 
-func expandOnFailure(tfMap map[string]interface{}) *awstypes.OnFailure {
+func expandOnFailure(tfMap map[string]any) *awstypes.OnFailure {
 	if tfMap == nil {
 		return nil
 	}
@@ -1041,26 +1036,26 @@ func expandOnFailure(tfMap map[string]interface{}) *awstypes.OnFailure {
 	return apiObject
 }
 
-func flattenDestinationConfig(apiObject *awstypes.DestinationConfig) map[string]interface{} {
+func flattenDestinationConfig(apiObject *awstypes.DestinationConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.OnFailure; v != nil {
-		tfMap["on_failure"] = []interface{}{flattenOnFailure(v)}
+		tfMap["on_failure"] = []any{flattenOnFailure(v)}
 	}
 
 	return tfMap
 }
 
-func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourceConfig) map[string]interface{} {
+func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourceConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"full_document": apiObject.FullDocument,
 	}
 
@@ -1075,12 +1070,12 @@ func flattenDocumentDBEventSourceConfig(apiObject *awstypes.DocumentDBEventSourc
 	return tfMap
 }
 
-func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]interface{} {
+func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Destination; v != nil {
 		tfMap[names.AttrDestinationARN] = aws.ToString(v)
@@ -1089,14 +1084,14 @@ func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]interface{} {
 	return tfMap
 }
 
-func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfManagedEventSource {
+func expandSelfManagedEventSource(tfMap map[string]any) *awstypes.SelfManagedEventSource {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SelfManagedEventSource{}
 
-	if v, ok := tfMap[names.AttrEndpoints].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEndpoints].(map[string]any); ok && len(v) > 0 {
 		m := map[string][]string{}
 
 		for k, v := range v {
@@ -1109,12 +1104,12 @@ func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfMa
 	return apiObject
 }
 
-func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) map[string]interface{} {
+func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Endpoints; v != nil {
 		m := map[string]string{}
@@ -1129,7 +1124,7 @@ func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) m
 	return tfMap
 }
 
-func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *awstypes.AmazonManagedKafkaEventSourceConfig {
+func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]any) *awstypes.AmazonManagedKafkaEventSourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1143,12 +1138,12 @@ func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func flattenAmazonManagedKafkaEventSourceConfig(apiObject *awstypes.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
+func flattenAmazonManagedKafkaEventSourceConfig(apiObject *awstypes.AmazonManagedKafkaEventSourceConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConsumerGroupId; v != nil {
 		tfMap["consumer_group_id"] = aws.ToString(v)
@@ -1157,7 +1152,7 @@ func flattenAmazonManagedKafkaEventSourceConfig(apiObject *awstypes.AmazonManage
 	return tfMap
 }
 
-func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *awstypes.SelfManagedKafkaEventSourceConfig {
+func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]any) *awstypes.SelfManagedKafkaEventSourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1171,12 +1166,12 @@ func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *awst
 	return apiObject
 }
 
-func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
+func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKafkaEventSourceConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConsumerGroupId; v != nil {
 		tfMap["consumer_group_id"] = aws.ToString(v)
@@ -1185,7 +1180,7 @@ func flattenSelfManagedKafkaEventSourceConfig(apiObject *awstypes.SelfManagedKaf
 	return tfMap
 }
 
-func expandProvisionedPollerConfig(tfMap map[string]interface{}) *awstypes.ProvisionedPollerConfig {
+func expandProvisionedPollerConfig(tfMap map[string]any) *awstypes.ProvisionedPollerConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1203,12 +1198,12 @@ func expandProvisionedPollerConfig(tfMap map[string]interface{}) *awstypes.Provi
 	return apiObject
 }
 
-func flattenProvisionedPollerConfig(apiObject *awstypes.ProvisionedPollerConfig) map[string]interface{} {
+func flattenProvisionedPollerConfig(apiObject *awstypes.ProvisionedPollerConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MaximumPollers; v != nil {
 		tfMap["maximum_pollers"] = aws.ToInt32(v)
@@ -1221,7 +1216,7 @@ func flattenProvisionedPollerConfig(apiObject *awstypes.ProvisionedPollerConfig)
 	return tfMap
 }
 
-func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.SourceAccessConfiguration {
+func expandSourceAccessConfiguration(tfMap map[string]any) *awstypes.SourceAccessConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -1239,7 +1234,7 @@ func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.Sou
 	return apiObject
 }
 
-func expandSourceAccessConfigurations(tfList []interface{}) []awstypes.SourceAccessConfiguration {
+func expandSourceAccessConfigurations(tfList []any) []awstypes.SourceAccessConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1247,7 +1242,7 @@ func expandSourceAccessConfigurations(tfList []interface{}) []awstypes.SourceAcc
 	var apiObjects []awstypes.SourceAccessConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1265,12 +1260,12 @@ func expandSourceAccessConfigurations(tfList []interface{}) []awstypes.SourceAcc
 	return apiObjects
 }
 
-func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfiguration) map[string]interface{} {
+func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -1281,12 +1276,12 @@ func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfigurat
 	return tfMap
 }
 
-func flattenSourceAccessConfigurations(apiObjects []awstypes.SourceAccessConfiguration) []interface{} {
+func flattenSourceAccessConfigurations(apiObjects []awstypes.SourceAccessConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenSourceAccessConfiguration(&apiObject))
@@ -1295,7 +1290,7 @@ func flattenSourceAccessConfigurations(apiObjects []awstypes.SourceAccessConfigu
 	return tfList
 }
 
-func expandFilterCriteria(tfMap map[string]interface{}) *awstypes.FilterCriteria {
+func expandFilterCriteria(tfMap map[string]any) *awstypes.FilterCriteria {
 	if tfMap == nil {
 		return nil
 	}
@@ -1309,12 +1304,12 @@ func expandFilterCriteria(tfMap map[string]interface{}) *awstypes.FilterCriteria
 	return apiObject
 }
 
-func flattenFilterCriteria(apiObject *awstypes.FilterCriteria) map[string]interface{} {
+func flattenFilterCriteria(apiObject *awstypes.FilterCriteria) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Filters; len(v) > 0 {
 		tfMap[names.AttrFilter] = flattenFilters(v)
@@ -1323,7 +1318,7 @@ func flattenFilterCriteria(apiObject *awstypes.FilterCriteria) map[string]interf
 	return tfMap
 }
 
-func expandFilters(tfList []interface{}) []awstypes.Filter {
+func expandFilters(tfList []any) []awstypes.Filter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1331,7 +1326,7 @@ func expandFilters(tfList []interface{}) []awstypes.Filter {
 	var apiObjects []awstypes.Filter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1349,12 +1344,12 @@ func expandFilters(tfList []interface{}) []awstypes.Filter {
 	return apiObjects
 }
 
-func flattenFilters(apiObjects []awstypes.Filter) []interface{} {
+func flattenFilters(apiObjects []awstypes.Filter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenFilter(&apiObject))
@@ -1363,7 +1358,7 @@ func flattenFilters(apiObjects []awstypes.Filter) []interface{} {
 	return tfList
 }
 
-func expandFilter(tfMap map[string]interface{}) *awstypes.Filter {
+func expandFilter(tfMap map[string]any) *awstypes.Filter {
 	if tfMap == nil {
 		return nil
 	}
@@ -1378,12 +1373,12 @@ func expandFilter(tfMap map[string]interface{}) *awstypes.Filter {
 	return apiObject
 }
 
-func flattenFilter(apiObject *awstypes.Filter) map[string]interface{} {
+func flattenFilter(apiObject *awstypes.Filter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Pattern; v != nil {
 		tfMap["pattern"] = aws.ToString(v)
@@ -1392,7 +1387,7 @@ func flattenFilter(apiObject *awstypes.Filter) map[string]interface{} {
 	return tfMap
 }
 
-func expandScalingConfig(tfMap map[string]interface{}) *awstypes.ScalingConfig {
+func expandScalingConfig(tfMap map[string]any) *awstypes.ScalingConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1406,12 +1401,12 @@ func expandScalingConfig(tfMap map[string]interface{}) *awstypes.ScalingConfig {
 	return apiObject
 }
 
-func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interface{} {
+func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MaximumConcurrency; v != nil {
 		tfMap["maximum_concurrency"] = aws.ToInt32(v)
@@ -1420,7 +1415,7 @@ func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interfac
 	return tfMap
 }
 
-func expandEventSourceMappingMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMappingMetricsConfig {
+func expandEventSourceMappingMetricsConfig(tfMap map[string]any) *awstypes.EventSourceMappingMetricsConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1434,12 +1429,12 @@ func expandEventSourceMappingMetricsConfig(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]interface{} {
+func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Metrics; v != nil {
 		tfMap["metrics"] = flex.FlattenStringyValueSet(v)

@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import QuickSight Template Alias using the AWS account
 % terraform import aws_quicksight_template_alias.example 123456789012,example-id,example-alias
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0ef4c7dd40f38e995959bc39fcd14ea01fdf8e036b7c872e0812d2486af788e0 -->
+<!-- cache-key: cdktf-0.20.8 input-7cdcb1c6f22e8f6794f4b8945992d3d651d81cc2d8a84ad332417598cc77b212 -->

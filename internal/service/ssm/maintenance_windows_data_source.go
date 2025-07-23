@@ -50,7 +50,7 @@ func dataSourceMaintenanceWindows() *schema.Resource {
 	}
 }
 
-func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -80,7 +80,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilters(tfList []any) []awstypes.MaintenanceWindowFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -88,7 +88,7 @@ func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.Maintenance
 	var apiObjects []awstypes.MaintenanceWindowFilter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -106,7 +106,7 @@ func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.Maintenance
 	return apiObjects
 }
 
-func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *awstypes.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilter(tfMap map[string]any) *awstypes.MaintenanceWindowFilter {
 	if tfMap == nil {
 		return nil
 	}
@@ -117,7 +117,7 @@ func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *awstypes.Maint
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 

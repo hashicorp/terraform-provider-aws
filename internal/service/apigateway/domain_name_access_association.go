@@ -30,7 +30,8 @@ import (
 
 // @FrameworkResource("aws_api_gateway_domain_name_access_association", name="Domain Name Access Association")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;types.DomainNameAccessAssociation")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway/types;awstypes;awstypes.DomainNameAccessAssociation")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
 func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
@@ -40,13 +41,8 @@ func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceW
 }
 
 type domainNameAccessAssociationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[domainNameAccessAssociationResourceModel]
-	framework.WithImportByID
-}
-
-func (*domainNameAccessAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_api_gateway_domain_name_access_association"
+	framework.ResourceWithModel[domainNameAccessAssociationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -171,10 +167,6 @@ func (r *domainNameAccessAssociationResource) Delete(ctx context.Context, reques
 	}
 }
 
-func (r *domainNameAccessAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDomainNameAccessAssociationByARN(ctx context.Context, conn *apigateway.Client, arn string) (*awstypes.DomainNameAccessAssociation, error) {
 	input := apigateway.GetDomainNameAccessAssociationsInput{
 		ResourceOwner: awstypes.ResourceOwnerSelf,
@@ -227,6 +219,7 @@ func findDomainNameAccessAssociations(ctx context.Context, conn *apigateway.Clie
 }
 
 type domainNameAccessAssociationResourceModel struct {
+	framework.WithRegionModel
 	AccessAssociationSource        types.String                                             `tfsdk:"access_association_source"`
 	AccessAssociationSourceType    fwtypes.StringEnum[awstypes.AccessAssociationSourceType] `tfsdk:"access_association_source_type"`
 	DomainNameAccessAssociationARN types.String                                             `tfsdk:"arn"`
@@ -234,10 +227,4 @@ type domainNameAccessAssociationResourceModel struct {
 	ID                             types.String                                             `tfsdk:"id"`
 	Tags                           tftags.Map                                               `tfsdk:"tags"`
 	TagsAll                        tftags.Map                                               `tfsdk:"tags_all"`
-}
-
-func (model *domainNameAccessAssociationResourceModel) InitFromID() error {
-	model.DomainNameAccessAssociationARN = model.ID
-
-	return nil
 }

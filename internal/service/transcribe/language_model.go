@@ -97,8 +97,6 @@ func ResourceLanguageModel() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -108,7 +106,7 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -119,12 +117,12 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {
-		in.InputDataConfig = expandInputDataConfig(v.([]interface{}))
+	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]any)) > 0 {
+		in.InputDataConfig = expandInputDataConfig(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -149,7 +147,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceLanguageModelRead(ctx, d, meta)...)
 }
 
-func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -185,20 +183,21 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceLanguageModelRead(ctx, d, meta)
 }
 
-func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 
-	_, err := conn.DeleteLanguageModel(ctx, &transcribe.DeleteLanguageModelInput{
+	input := transcribe.DeleteLanguageModelInput{
 		ModelName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLanguageModel(ctx, &input)
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {
@@ -231,7 +230,7 @@ func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id s
 }
 
 func statusLanguageModel(ctx context.Context, conn *transcribe.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindLanguageModelByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -271,12 +270,12 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 	return out.LanguageModel, nil
 }
 
-func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
+func flattenInputDataConfig(apiObjects *types.InputDataConfig) []any {
 	if apiObjects == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"data_access_role_arn": apiObjects.DataAccessRoleArn,
 		"s3_uri":               apiObjects.S3Uri,
 	}
@@ -285,17 +284,17 @@ func flattenInputDataConfig(apiObjects *types.InputDataConfig) []interface{} {
 		m["tuning_data_s3_uri"] = apiObjects.TuningDataS3Uri
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandInputDataConfig(tfList []interface{}) *types.InputDataConfig {
+func expandInputDataConfig(tfList []any) *types.InputDataConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	s := &types.InputDataConfig{}
 
-	i := tfList[0].(map[string]interface{})
+	i := tfList[0].(map[string]any)
 
 	if val, ok := i["data_access_role_arn"]; ok {
 		s.DataAccessRoleArn = aws.String(val.(string))

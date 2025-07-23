@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +35,7 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appflow", regexache.MustCompile(`connectorprofile/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "connectorprofile/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),
@@ -118,7 +117,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -128,7 +127,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			return fmt.Errorf("AppFlow Connector Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("AppFlow Connector Profile %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -144,7 +143,7 @@ func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-		output, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -235,9 +234,9 @@ resource "aws_redshift_cluster" "test" {
   master_password = %[2]q
   master_username = %[3]q
 
-  publicly_accessible = true
+  publicly_accessible = false
 
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
   encrypted           = true
 }

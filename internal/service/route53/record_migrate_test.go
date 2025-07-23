@@ -18,7 +18,7 @@ func TestRecordMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_0": {
 			StateVersion: 0,
@@ -71,7 +71,7 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1": {
 			StateVersion: 1,

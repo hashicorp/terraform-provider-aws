@@ -371,7 +371,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnNames = cols
@@ -383,7 +383,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
@@ -478,7 +478,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnNames = cols
@@ -490,7 +490,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{

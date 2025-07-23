@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data_deletion_policy` - (Optional) Data deletion policy for a data source. Valid values: `RETAIN`, `DELETE`.
 * `description` - (Optional) Description of the data source.
 * `server_side_encryption_configuration` - (Optional) Details about the configuration of the server-side encryption. See [`server_side_encryption_configuration` block](#server_side_encryption_configuration-block) for details.
@@ -61,11 +62,12 @@ The following arguments are optional:
 
 The `data_source_configuration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of storage for the data source. Valid values: `S3`.
+* `type` - (Required) Type of storage for the data source. Valid values: `S3`, `WEB`, `CONFLUENCE`, `SALESFORCE`, `SHAREPOINT`, `CUSTOM`, `REDSHIFT_METADATA`.
 * `confluence_configuration` - (Optional) Details about the configuration of the Confluence data source. See [`confluence_data_source_configuration` block](#confluence_data_source_configuration-block) for details.
 * `s3_configuration` - (Optional) Details about the configuration of the S3 object containing the data source. See [`s3_data_source_configuration` block](#s3_data_source_configuration-block) for details.
 * `salesforce_configuration` - (Optional) Details about the configuration of the Salesforce data source. See [`salesforce_data_source_configuration` block](#salesforce_data_source_configuration-block) for details.
 * `share_point_configuration` - (Optional) Details about the configuration of the SharePoint data source. See [`share_point_data_source_configuration` block](#share_point_data_source_configuration-block) for details.
+* `web_configuration` - (Optional) Details about the configuration of the web data source. See [`web_data_source_configuration` block](#web_data_source_configuration-block) for details.
 
 ### `confluence_data_source_configuration` block
 
@@ -154,6 +156,48 @@ The `source_configuration` configuration block supports the following arguments:
 * `host_type` - (Required) The supported host type, whether online/cloud or server/on-premises. Valid values: `ONLINE`.
 * `site_urls` - (Required) A list of one or more SharePoint site URLs.
 * `tenant_id` - (Optional) The identifier of your Microsoft 365 tenant.
+
+### `web_data_source_configuration` block
+
+The `web_data_source_configuration` configuration block supports the following arguments:
+
+* `source_configuration` - (Required) Endpoint information to connect to your web data source. See [`source_configuration` block](#web-source_configuration-block) for details.
+* `crawler_configuration` - (Optional) Configuration for web content. See [`crawler_configuration` block](#web-crawler_configuration-block) for details.
+
+### Web `source_configuration` block
+
+The `source_configuration` configuration block supports the following arguments:
+
+* `url_configuration` - (Required) The URL configuration of your web data source. See [`url_configuration` block](#url_configuration-block) for details.
+
+### `url_configuration` block
+
+The `url_configuration` configuration block supports the following arguments:
+
+* `seed_urls` - (Optional) List of one or more seed URLs to crawl. See [`seed_urls` block](#seed_urls-block) for details.
+
+### `seed_urls` block
+
+The `seed_urls` configuration block supports the following arguments:
+
+* `url` - (Optional) Seed or starting point URL. Must match the pattern `^https?://[A-Za-z0-9][^\s]*$`.
+
+### Web `crawler_configuration` block
+
+The `crawler_configuration` configuration block supports the following arguments:
+
+* `exclusion_filters` - (Optional) List of one or more exclusion regular expression patterns to exclude certain object types that adhere to the pattern.
+* `inclusion_filters` - (Optional) List of one or more inclusion regular expression patterns to include certain object types that adhere to the pattern.
+* `scope` - (Optional) Scope of what is crawled for your URLs.
+* `user_agent` - (Optional) String used for identifying the crawler or a bot when it accesses a web server. Default value is `bedrockbot_UUID`.
+* `crawler_limits` - (Optional) Configuration of crawl limits for the web URLs. See [`crawler_limits` block](#crawler_limits-block) for details.
+
+### `crawler_limits` block
+
+The `crawler_limits` configuration block supports the following arguments:
+
+* `max_pages` - (Optional) Max number of web pages crawled from your source URLs, up to 25,000 pages.
+* `rate_limit` - (Optional) Max rate at which pages are crawled, up to 300 per minute per host.
 
 ### `server_side_encryption_configuration` block
 
@@ -308,4 +352,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 [3]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_SharePointDataSourceConfiguration.html
 [4]: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_WebDataSourceConfiguration.html
 
-<!-- cache-key: cdktf-0.20.8 input-9c6dc29a10ac4e2bab6c8c940f06cf4814f71a791b299bba79c904345e097d05 -->
+<!-- cache-key: cdktf-0.20.8 input-6c5d65619f26f4664cb0988d2b1b6935663c952fb48ce89395b8908c00666e96 -->

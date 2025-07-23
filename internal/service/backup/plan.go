@@ -196,12 +196,10 @@ func resourcePlan() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -226,7 +224,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -257,7 +255,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -281,7 +279,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -289,7 +287,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
 		return conn.DeleteBackupPlan(ctx, &backup.DeleteBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 		})
@@ -335,11 +333,11 @@ func findPlan(ctx context.Context, conn *backup.Client, input *backup.GetBackupP
 	return output, nil
 }
 
-func expandBackupRuleInputs(ctx context.Context, tfList []interface{}) []awstypes.BackupRuleInput { // nosemgrep:ci.backup-in-func-name
+func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.BackupRuleInput { // nosemgrep:ci.backup-in-func-name
 	apiObjects := []awstypes.BackupRuleInput{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.BackupRuleInput{}
 
 		if v, ok := tfMap["completion_window"].(int); ok {
@@ -351,11 +349,11 @@ func expandBackupRuleInputs(ctx context.Context, tfList []interface{}) []awstype
 		if v, ok := tfMap["enable_continuous_backup"].(bool); ok {
 			apiObject.EnableContinuousBackup = aws.Bool(v)
 		}
-		if v, ok := tfMap["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]interface{}))
+		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
-		if v, ok := tfMap["recovery_point_tags"].(map[string]interface{}); ok && len(v) > 0 {
-			apiObject.RecoveryPointTags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		if v, ok := tfMap["recovery_point_tags"].(map[string]any); ok && len(v) > 0 {
+			apiObject.RecoveryPointTags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 		}
 		if v, ok := tfMap["rule_name"].(string); ok && v != "" {
 			apiObject.RuleName = aws.String(v)
@@ -381,7 +379,7 @@ func expandBackupRuleInputs(ctx context.Context, tfList []interface{}) []awstype
 	return apiObjects
 }
 
-func expandAdvancedBackupSetting(tfList []interface{}) []awstypes.AdvancedBackupSetting { // nosemgrep:ci.backup-in-func-name
+func expandAdvancedBackupSetting(tfList []any) []awstypes.AdvancedBackupSetting { // nosemgrep:ci.backup-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -389,10 +387,10 @@ func expandAdvancedBackupSetting(tfList []interface{}) []awstypes.AdvancedBackup
 	apiObjects := []awstypes.AdvancedBackupSetting{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.AdvancedBackupSetting{}
 
-		if v, ok := tfMap["backup_options"].(map[string]interface{}); ok && v != nil {
+		if v, ok := tfMap["backup_options"].(map[string]any); ok && v != nil {
 			apiObject.BackupOptions = flex.ExpandStringValueMap(v)
 		}
 		if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
@@ -411,17 +409,17 @@ func expandAdvancedBackupSetting(tfList []interface{}) []awstypes.AdvancedBackup
 	return apiObjects
 }
 
-func expandCopyActions(tfList []interface{}) []awstypes.CopyAction {
+func expandCopyActions(tfList []any) []awstypes.CopyAction {
 	apiObjects := []awstypes.CopyAction{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.CopyAction{}
 
 		apiObject.DestinationBackupVaultArn = aws.String(tfMap["destination_vault_arn"].(string))
 
-		if v, ok := tfMap["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]interface{}))
+		if v, ok := tfMap["lifecycle"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Lifecycle = expandLifecycle(v[0].(map[string]any))
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -430,7 +428,7 @@ func expandCopyActions(tfList []interface{}) []awstypes.CopyAction {
 	return apiObjects
 }
 
-func expandLifecycle(tfMap map[string]interface{}) *awstypes.Lifecycle {
+func expandLifecycle(tfMap map[string]any) *awstypes.Lifecycle {
 	if tfMap == nil {
 		return nil
 	}
@@ -452,11 +450,11 @@ func expandLifecycle(tfMap map[string]interface{}) *awstypes.Lifecycle {
 	return apiObject
 }
 
-func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) []interface{} { // nosemgrep:ci.backup-in-func-name
-	tfList := []interface{}{}
+func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) []any { // nosemgrep:ci.backup-in-func-name
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
 			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
 			"rule_name":                    aws.ToString(apiObject.RuleName),
@@ -474,7 +472,7 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 			tfMap["lifecycle"] = flattenLifecycle(v)
 		}
 
-		if v := KeyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
+		if v := keyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
 			tfMap["recovery_point_tags"] = v
 		}
 
@@ -484,11 +482,11 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 	return tfList
 }
 
-func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) []interface{} { // nosemgrep:ci.backup-in-func-name
-	tfList := []interface{}{}
+func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) []any { // nosemgrep:ci.backup-in-func-name
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"backup_options":       apiObject.BackupOptions,
 			names.AttrResourceType: aws.ToString(apiObject.ResourceType),
 		}
@@ -499,15 +497,15 @@ func flattenAdvancedBackupSettings(apiObjects []awstypes.AdvancedBackupSetting) 
 	return tfList
 }
 
-func flattenCopyActions(apiObjects []awstypes.CopyAction) []interface{} {
+func flattenCopyActions(apiObjects []awstypes.CopyAction) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, copyAction := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"destination_vault_arn": aws.ToString(copyAction.DestinationBackupVaultArn),
 		}
 
@@ -521,16 +519,16 @@ func flattenCopyActions(apiObjects []awstypes.CopyAction) []interface{} {
 	return tfList
 }
 
-func flattenLifecycle(apiObject *awstypes.Lifecycle) []interface{} {
+func flattenLifecycle(apiObject *awstypes.Lifecycle) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"delete_after":       aws.ToInt64(apiObject.DeleteAfterDays),
 		"cold_storage_after": aws.ToInt64(apiObject.MoveToColdStorageAfterDays),
 		"opt_in_to_archive_for_supported_resources": aws.ToBool(apiObject.OptInToArchiveForSupportedResources),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

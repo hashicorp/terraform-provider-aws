@@ -49,11 +49,11 @@ func resourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("client_side_timestamps", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("client_side_timestamps", func(_ context.Context, old, new, meta any) bool {
 				// Client-side timestamps cannot be disabled.
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
-			customdiff.ForceNewIfChange("schema_definition.0.column", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("schema_definition.0.column", func(_ context.Context, old, new, meta any) bool {
 				// Columns can only be added.
 				if os, ok := old.(*schema.Set); ok {
 					if ns, ok := new.(*schema.Set); ok {
@@ -65,7 +65,6 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -303,7 +302,7 @@ func resourceTable() *schema.Resource {
 	}
 }
 
-func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
@@ -316,36 +315,36 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CapacitySpecification = expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.CapacitySpecification = expandCapacitySpecification(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ClientSideTimestamps = expandClientSideTimestamps(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientSideTimestamps = expandClientSideTimestamps(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrComment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Comment = expandComment(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrComment); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Comment = expandComment(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("default_time_to_live"); ok {
 		input.DefaultTimeToLive = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionSpecification = expandEncryptionSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionSpecification = expandEncryptionSpecification(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PointInTimeRecovery = expandPointInTimeRecovery(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PointInTimeRecovery = expandPointInTimeRecovery(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("schema_definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SchemaDefinition = expandSchemaDefinition(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("schema_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SchemaDefinition = expandSchemaDefinition(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("ttl"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Ttl = expandTimeToLive(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("ttl"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Ttl = expandTimeToLive(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateTable(ctx, input)
@@ -363,7 +362,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
-func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
@@ -386,21 +385,21 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, table.ResourceArn)
 	if table.CapacitySpecification != nil {
-		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
+		if err := d.Set("capacity_specification", []any{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity_specification: %s", err)
 		}
 	} else {
 		d.Set("capacity_specification", nil)
 	}
 	if table.ClientSideTimestamps != nil {
-		if err := d.Set("client_side_timestamps", []interface{}{flattenClientSideTimestamps(table.ClientSideTimestamps)}); err != nil {
+		if err := d.Set("client_side_timestamps", []any{flattenClientSideTimestamps(table.ClientSideTimestamps)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_side_timestamps: %s", err)
 		}
 	} else {
 		d.Set("client_side_timestamps", nil)
 	}
 	if table.Comment != nil {
-		if err := d.Set(names.AttrComment, []interface{}{flattenComment(table.Comment)}); err != nil {
+		if err := d.Set(names.AttrComment, []any{flattenComment(table.Comment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting comment: %s", err)
 		}
 	} else {
@@ -408,7 +407,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("default_time_to_live", table.DefaultTimeToLive)
 	if table.EncryptionSpecification != nil {
-		if err := d.Set("encryption_specification", []interface{}{flattenEncryptionSpecification(table.EncryptionSpecification)}); err != nil {
+		if err := d.Set("encryption_specification", []any{flattenEncryptionSpecification(table.EncryptionSpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_specification: %s", err)
 		}
 	} else {
@@ -416,14 +415,14 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("keyspace_name", table.KeyspaceName)
 	if table.PointInTimeRecovery != nil {
-		if err := d.Set("point_in_time_recovery", []interface{}{flattenPointInTimeRecoverySummary(table.PointInTimeRecovery)}); err != nil {
+		if err := d.Set("point_in_time_recovery", []any{flattenPointInTimeRecoverySummary(table.PointInTimeRecovery)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 		}
 	} else {
 		d.Set("point_in_time_recovery", nil)
 	}
 	if table.SchemaDefinition != nil {
-		if err := d.Set("schema_definition", []interface{}{flattenSchemaDefinition(table.SchemaDefinition)}); err != nil {
+		if err := d.Set("schema_definition", []any{flattenSchemaDefinition(table.SchemaDefinition)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting schema_definition: %s", err)
 		}
 	} else {
@@ -431,7 +430,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set(names.AttrTableName, table.TableName)
 	if table.Ttl != nil {
-		if err := d.Set("ttl", []interface{}{flattenTimeToLive(table.Ttl)}); err != nil {
+		if err := d.Set("ttl", []any{flattenTimeToLive(table.Ttl)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 		}
 	} else {
@@ -441,7 +440,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
@@ -454,9 +453,9 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
 		// Note that you can only update one specific table setting per update operation.
 		if d.HasChange("capacity_specification") {
-			if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input := &keyspaces.UpdateTableInput{
-					CapacitySpecification: expandCapacitySpecification(v.([]interface{})[0].(map[string]interface{})),
+					CapacitySpecification: expandCapacitySpecification(v.([]any)[0].(map[string]any)),
 					KeyspaceName:          aws.String(keyspaceName),
 					TableName:             aws.String(tableName),
 				}
@@ -474,9 +473,9 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("client_side_timestamps") {
-			if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("client_side_timestamps"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input := &keyspaces.UpdateTableInput{
-					ClientSideTimestamps: expandClientSideTimestamps(v.([]interface{})[0].(map[string]interface{})),
+					ClientSideTimestamps: expandClientSideTimestamps(v.([]any)[0].(map[string]any)),
 					KeyspaceName:         aws.String(keyspaceName),
 					TableName:            aws.String(tableName),
 				}
@@ -512,9 +511,9 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("encryption_specification") {
-			if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("encryption_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input := &keyspaces.UpdateTableInput{
-					EncryptionSpecification: expandEncryptionSpecification(v.([]interface{})[0].(map[string]interface{})),
+					EncryptionSpecification: expandEncryptionSpecification(v.([]any)[0].(map[string]any)),
 					KeyspaceName:            aws.String(keyspaceName),
 					TableName:               aws.String(tableName),
 				}
@@ -532,10 +531,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("point_in_time_recovery") {
-			if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("point_in_time_recovery"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input := &keyspaces.UpdateTableInput{
 					KeyspaceName:        aws.String(keyspaceName),
-					PointInTimeRecovery: expandPointInTimeRecovery(v.([]interface{})[0].(map[string]interface{})),
+					PointInTimeRecovery: expandPointInTimeRecovery(v.([]any)[0].(map[string]any)),
 					TableName:           aws.String(tableName),
 				}
 
@@ -552,11 +551,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("ttl") {
-			if v, ok := d.GetOk("ttl"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("ttl"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input := &keyspaces.UpdateTableInput{
 					KeyspaceName: aws.String(keyspaceName),
 					TableName:    aws.String(tableName),
-					Ttl:          expandTimeToLive(v.([]interface{})[0].(map[string]interface{})),
+					Ttl:          expandTimeToLive(v.([]any)[0].(map[string]any)),
 				}
 
 				_, err := conn.UpdateTable(ctx, input)
@@ -575,13 +574,13 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			o, n := d.GetChange("schema_definition")
 			var os, ns *schema.Set
 
-			if v, ok := o.([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+			if v, ok := o.([]any); ok && len(v) > 0 && v[0] != nil {
+				if v, ok := v[0].(map[string]any)["column"].(*schema.Set); ok {
 					os = v
 				}
 			}
-			if v, ok := n.([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				if v, ok := v[0].(map[string]interface{})["column"].(*schema.Set); ok {
+			if v, ok := n.([]any); ok && len(v) > 0 && v[0] != nil {
+				if v, ok := v[0].(map[string]any)["column"].(*schema.Set); ok {
 					ns = v
 				}
 			}
@@ -611,7 +610,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
-func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
@@ -694,7 +693,7 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 }
 
 func statusTable(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
 		if tfresource.NotFound(err) {
@@ -761,7 +760,7 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	return nil, err
 }
 
-func expandCapacitySpecification(tfMap map[string]interface{}) *types.CapacitySpecification {
+func expandCapacitySpecification(tfMap map[string]any) *types.CapacitySpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -783,7 +782,7 @@ func expandCapacitySpecification(tfMap map[string]interface{}) *types.CapacitySp
 	return apiObject
 }
 
-func expandClientSideTimestamps(tfMap map[string]interface{}) *types.ClientSideTimestamps {
+func expandClientSideTimestamps(tfMap map[string]any) *types.ClientSideTimestamps {
 	if tfMap == nil {
 		return nil
 	}
@@ -797,7 +796,7 @@ func expandClientSideTimestamps(tfMap map[string]interface{}) *types.ClientSideT
 	return apiObject
 }
 
-func expandComment(tfMap map[string]interface{}) *types.Comment {
+func expandComment(tfMap map[string]any) *types.Comment {
 	if tfMap == nil {
 		return nil
 	}
@@ -811,7 +810,7 @@ func expandComment(tfMap map[string]interface{}) *types.Comment {
 	return apiObject
 }
 
-func expandEncryptionSpecification(tfMap map[string]interface{}) *types.EncryptionSpecification {
+func expandEncryptionSpecification(tfMap map[string]any) *types.EncryptionSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -829,7 +828,7 @@ func expandEncryptionSpecification(tfMap map[string]interface{}) *types.Encrypti
 	return apiObject
 }
 
-func expandPointInTimeRecovery(tfMap map[string]interface{}) *types.PointInTimeRecovery {
+func expandPointInTimeRecovery(tfMap map[string]any) *types.PointInTimeRecovery {
 	if tfMap == nil {
 		return nil
 	}
@@ -843,14 +842,14 @@ func expandPointInTimeRecovery(tfMap map[string]interface{}) *types.PointInTimeR
 	return apiObject
 }
 
-func expandSchemaDefinition(tfMap map[string]interface{}) *types.SchemaDefinition {
+func expandSchemaDefinition(tfMap map[string]any) *types.SchemaDefinition {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.SchemaDefinition{}
 
-	if v, ok := tfMap["clustering_key"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["clustering_key"].([]any); ok && len(v) > 0 {
 		apiObject.ClusteringKeys = expandClusteringKeys(v)
 	}
 
@@ -858,7 +857,7 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *types.SchemaDefinitio
 		apiObject.AllColumns = expandColumnDefinitions(v.List())
 	}
 
-	if v, ok := tfMap["partition_key"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["partition_key"].([]any); ok && len(v) > 0 {
 		apiObject.PartitionKeys = expandPartitionKeys(v)
 	}
 
@@ -869,7 +868,7 @@ func expandSchemaDefinition(tfMap map[string]interface{}) *types.SchemaDefinitio
 	return apiObject
 }
 
-func expandTimeToLive(tfMap map[string]interface{}) *types.TimeToLive {
+func expandTimeToLive(tfMap map[string]any) *types.TimeToLive {
 	if tfMap == nil {
 		return nil
 	}
@@ -883,7 +882,7 @@ func expandTimeToLive(tfMap map[string]interface{}) *types.TimeToLive {
 	return apiObject
 }
 
-func expandColumnDefinition(tfMap map[string]interface{}) *types.ColumnDefinition {
+func expandColumnDefinition(tfMap map[string]any) *types.ColumnDefinition {
 	if tfMap == nil {
 		return nil
 	}
@@ -901,7 +900,7 @@ func expandColumnDefinition(tfMap map[string]interface{}) *types.ColumnDefinitio
 	return apiObject
 }
 
-func expandColumnDefinitions(tfList []interface{}) []types.ColumnDefinition {
+func expandColumnDefinitions(tfList []any) []types.ColumnDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -909,7 +908,7 @@ func expandColumnDefinitions(tfList []interface{}) []types.ColumnDefinition {
 	var apiObjects []types.ColumnDefinition
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -927,7 +926,7 @@ func expandColumnDefinitions(tfList []interface{}) []types.ColumnDefinition {
 	return apiObjects
 }
 
-func expandClusteringKey(tfMap map[string]interface{}) *types.ClusteringKey {
+func expandClusteringKey(tfMap map[string]any) *types.ClusteringKey {
 	if tfMap == nil {
 		return nil
 	}
@@ -945,7 +944,7 @@ func expandClusteringKey(tfMap map[string]interface{}) *types.ClusteringKey {
 	return apiObject
 }
 
-func expandClusteringKeys(tfList []interface{}) []types.ClusteringKey {
+func expandClusteringKeys(tfList []any) []types.ClusteringKey {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -953,7 +952,7 @@ func expandClusteringKeys(tfList []interface{}) []types.ClusteringKey {
 	var apiObjects []types.ClusteringKey
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -971,7 +970,7 @@ func expandClusteringKeys(tfList []interface{}) []types.ClusteringKey {
 	return apiObjects
 }
 
-func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
+func expandPartitionKey(tfMap map[string]any) *types.PartitionKey {
 	if tfMap == nil {
 		return nil
 	}
@@ -985,7 +984,7 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 	return apiObject
 }
 
-func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
+func expandPartitionKeys(tfList []any) []types.PartitionKey {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -993,7 +992,7 @@ func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
 	var apiObjects []types.PartitionKey
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1011,7 +1010,7 @@ func expandPartitionKeys(tfList []interface{}) []types.PartitionKey {
 	return apiObjects
 }
 
-func expandStaticColumn(tfMap map[string]interface{}) *types.StaticColumn {
+func expandStaticColumn(tfMap map[string]any) *types.StaticColumn {
 	if tfMap == nil {
 		return nil
 	}
@@ -1025,7 +1024,7 @@ func expandStaticColumn(tfMap map[string]interface{}) *types.StaticColumn {
 	return apiObject
 }
 
-func expandStaticColumns(tfList []interface{}) []types.StaticColumn {
+func expandStaticColumns(tfList []any) []types.StaticColumn {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1033,7 +1032,7 @@ func expandStaticColumns(tfList []interface{}) []types.StaticColumn {
 	var apiObjects []types.StaticColumn
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -1051,12 +1050,12 @@ func expandStaticColumns(tfList []interface{}) []types.StaticColumn {
 	return apiObjects
 }
 
-func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationSummary) map[string]interface{} {
+func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"throughput_mode": apiObject.ThroughputMode,
 	}
 
@@ -1071,24 +1070,24 @@ func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationS
 	return tfMap
 }
 
-func flattenClientSideTimestamps(apiObject *types.ClientSideTimestamps) map[string]interface{} {
+func flattenClientSideTimestamps(apiObject *types.ClientSideTimestamps) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
 }
 
-func flattenComment(apiObject *types.Comment) map[string]interface{} {
+func flattenComment(apiObject *types.Comment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Message; v != nil {
 		tfMap[names.AttrMessage] = aws.ToString(v)
@@ -1097,12 +1096,12 @@ func flattenComment(apiObject *types.Comment) map[string]interface{} {
 	return tfMap
 }
 
-func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) map[string]interface{} {
+func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -1113,24 +1112,24 @@ func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) ma
 	return tfMap
 }
 
-func flattenPointInTimeRecoverySummary(apiObject *types.PointInTimeRecoverySummary) map[string]interface{} {
+func flattenPointInTimeRecoverySummary(apiObject *types.PointInTimeRecoverySummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
 }
 
-func flattenSchemaDefinition(apiObject *types.SchemaDefinition) map[string]interface{} {
+func flattenSchemaDefinition(apiObject *types.SchemaDefinition) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AllColumns; v != nil {
 		tfMap["column"] = flattenColumnDefinitions(v)
@@ -1151,24 +1150,24 @@ func flattenSchemaDefinition(apiObject *types.SchemaDefinition) map[string]inter
 	return tfMap
 }
 
-func flattenTimeToLive(apiObject *types.TimeToLive) map[string]interface{} {
+func flattenTimeToLive(apiObject *types.TimeToLive) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
 }
 
-func flattenColumnDefinition(apiObject *types.ColumnDefinition) map[string]interface{} {
+func flattenColumnDefinition(apiObject *types.ColumnDefinition) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1181,12 +1180,12 @@ func flattenColumnDefinition(apiObject *types.ColumnDefinition) map[string]inter
 	return tfMap
 }
 
-func flattenColumnDefinitions(apiObjects []types.ColumnDefinition) []interface{} {
+func flattenColumnDefinitions(apiObjects []types.ColumnDefinition) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenColumnDefinition(&apiObject))
@@ -1195,12 +1194,12 @@ func flattenColumnDefinitions(apiObjects []types.ColumnDefinition) []interface{}
 	return tfList
 }
 
-func flattenClusteringKey(apiObject *types.ClusteringKey) map[string]interface{} {
+func flattenClusteringKey(apiObject *types.ClusteringKey) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"order_by": apiObject.OrderBy,
 	}
 
@@ -1211,12 +1210,12 @@ func flattenClusteringKey(apiObject *types.ClusteringKey) map[string]interface{}
 	return tfMap
 }
 
-func flattenClusteringKeys(apiObjects []types.ClusteringKey) []interface{} {
+func flattenClusteringKeys(apiObjects []types.ClusteringKey) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenClusteringKey(&apiObject))
@@ -1225,12 +1224,12 @@ func flattenClusteringKeys(apiObjects []types.ClusteringKey) []interface{} {
 	return tfList
 }
 
-func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
+func flattenPartitionKey(apiObject *types.PartitionKey) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1239,12 +1238,12 @@ func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
 	return tfMap
 }
 
-func flattenPartitionKeys(apiObjects []types.PartitionKey) []interface{} {
+func flattenPartitionKeys(apiObjects []types.PartitionKey) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPartitionKey(&apiObject))
@@ -1253,12 +1252,12 @@ func flattenPartitionKeys(apiObjects []types.PartitionKey) []interface{} {
 	return tfList
 }
 
-func flattenStaticColumn(apiObject *types.StaticColumn) map[string]interface{} {
+func flattenStaticColumn(apiObject *types.StaticColumn) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -1267,12 +1266,12 @@ func flattenStaticColumn(apiObject *types.StaticColumn) map[string]interface{} {
 	return tfMap
 }
 
-func flattenStaticColumns(apiObjects []types.StaticColumn) []interface{} {
+func flattenStaticColumns(apiObjects []types.StaticColumn) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenStaticColumn(&apiObject))

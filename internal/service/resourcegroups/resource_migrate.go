@@ -33,9 +33,9 @@ func resourceResourceConfigV0() *schema.Resource {
 	}
 }
 
-func resourceStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// Convert id to comma-delimited string combining group_arn and resource_arn

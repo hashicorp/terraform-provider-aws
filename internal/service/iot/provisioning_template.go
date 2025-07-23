@@ -121,12 +121,10 @@ func resourceProvisioningTemplate() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.TemplateType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -141,8 +139,8 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("pre_provisioning_hook"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.PreProvisioningHook = expandProvisioningHook(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("pre_provisioning_hook"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.PreProvisioningHook = expandProvisioningHook(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("provisioning_role_arn"); ok {
@@ -158,7 +156,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateProvisioningTemplate(ctx, input)
 		})
 
@@ -171,7 +169,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningTemplateRead(ctx, d, meta)...)
 }
 
-func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -193,7 +191,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set(names.AttrName, output.TemplateName)
 	if output.PreProvisioningHook != nil {
-		if err := d.Set("pre_provisioning_hook", []interface{}{flattenProvisioningHook(output.PreProvisioningHook)}); err != nil {
+		if err := d.Set("pre_provisioning_hook", []any{flattenProvisioningHook(output.PreProvisioningHook)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting pre_provisioning_hook: %s", err)
 		}
 	} else {
@@ -206,7 +204,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -232,12 +230,12 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			TemplateName:        aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("pre_provisioning_hook"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.PreProvisioningHook = expandProvisioningHook(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("pre_provisioning_hook"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.PreProvisioningHook = expandProvisioningHook(v.([]any)[0].(map[string]any))
 		}
 
 		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateProvisioningTemplate(ctx, input)
 			})
 
@@ -249,7 +247,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceProvisioningTemplateRead(ctx, d, meta)...)
 }
 
-func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
@@ -270,12 +268,12 @@ func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenProvisioningHook(apiObject *awstypes.ProvisioningHook) map[string]interface{} {
+func flattenProvisioningHook(apiObject *awstypes.ProvisioningHook) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.PayloadVersion; v != nil {
 		tfMap["payload_version"] = aws.ToString(v)
@@ -288,7 +286,7 @@ func flattenProvisioningHook(apiObject *awstypes.ProvisioningHook) map[string]in
 	return tfMap
 }
 
-func expandProvisioningHook(tfMap map[string]interface{}) *awstypes.ProvisioningHook {
+func expandProvisioningHook(tfMap map[string]any) *awstypes.ProvisioningHook {
 	if tfMap == nil {
 		return nil
 	}

@@ -33,13 +33,9 @@ func newSingleSCRAMSecretAssociationResource(context.Context) (resource.Resource
 }
 
 type singleSCRAMSecretAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[singleSCRAMSecretAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*singleSCRAMSecretAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_msk_single_scram_secret_association"
 }
 
 func (r *singleSCRAMSecretAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -152,6 +148,7 @@ func (r *singleSCRAMSecretAssociationResource) Delete(ctx context.Context, reque
 }
 
 type singleSCRAMSecretAssociationResourceModel struct {
+	framework.WithRegionModel
 	ClusterARN fwtypes.ARN  `tfsdk:"cluster_arn"`
 	ID         types.String `tfsdk:"id"`
 	SecretARN  fwtypes.ARN  `tfsdk:"secret_arn"`

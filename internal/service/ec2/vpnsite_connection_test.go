@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -179,6 +180,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "outside_ip_address_type", "PublicIpv4"),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, "routes.#", "0"),
@@ -206,6 +208,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase2_integrity_algorithms"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_phase2_lifetime_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_preshared_key"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_fuzz_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_rekey_margin_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_replay_window_size", "0"),
@@ -232,6 +235,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase2_integrity_algorithms"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_phase2_lifetime_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_preshared_key"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_fuzz_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_rekey_margin_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_replay_window_size", "0"),
@@ -1703,6 +1707,68 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccSiteVPNConnection_preSharedKeyStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn awstypes.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "Standard"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "Standard"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					testAccCheckResourceAttrNotContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName, rBgpAsn, "SecretsManager"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "preshared_key_storage", "SecretsManager"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "preshared_key_arn", "secretsmanager", regexache.MustCompile(`secret:s2svpn!vpn-*`)),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel1_preshared_key", "REDACTED"),
+					acctest.CheckResourceAttrContains(resourceName, "tunnel2_preshared_key", "REDACTED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -1762,6 +1828,15 @@ func testAccCheckVPNConnectionNotRecreated(before, after *awstypes.VpnConnection
 
 		return nil
 	}
+}
+
+func testAccCheckResourceAttrNotContains(name, key, substr string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if !strings.Contains(value, substr) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected not contains %#v, got %#v", name, key, substr, value)
+	})
 }
 
 func testAccSiteVPNConnectionConfig_basic(rName string, rBgpAsn int) string {
@@ -2677,6 +2752,33 @@ resource "aws_vpn_connection" "test" {
   }
 }
 `, rName, rBgpAsn, useTransitGateway)
+}
+
+func testAccSiteVPNConnectionConfig_preSharedKeyStorage(rName string, rBgpAsn int, preSharedKeyStorage string) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id        = aws_vpn_gateway.test.id
+  customer_gateway_id   = aws_customer_gateway.test.id
+  type                  = "ipsec.1"
+  preshared_key_storage = %[3]q
+}
+`, rName, rBgpAsn, preSharedKeyStorage)
 }
 
 // Test our VPN tunnel config XML parsing

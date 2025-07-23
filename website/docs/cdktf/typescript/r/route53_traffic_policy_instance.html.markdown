@@ -52,6 +52,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - Amazon Resource Name (ARN) of the traffic policy instance.
 * `id` - ID of traffic policy instance.
 
 ## Import
@@ -86,4 +87,4 @@ Using `terraform import`, import Route53 traffic policy instance using its id. F
 % terraform import aws_route53_traffic_policy_instance.test df579d9a-6396-410e-ac22-e7ad60cf9e7e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d3c778104dc6693266cba8a3fa2a37e8caea6700bf6cf446a41a6e4012311f41 -->
+<!-- cache-key: cdktf-0.20.8 input-a6dc009212ef5da124a33afccd6e02dda782e55c1b22c481258e293e89c24f80 -->

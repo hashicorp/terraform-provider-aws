@@ -52,12 +52,12 @@ func dataSourceSpotPrice() *schema.Resource {
 	}
 }
 
-func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	now := time.Now()
-	input := &ec2.DescribeSpotPriceHistoryInput{
+	input := ec2.DescribeSpotPriceHistoryInput{
 		StartTime: &now,
 	}
 
@@ -73,7 +73,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	resultSpotPrice, err := findSpotPrice(ctx, conn, input)
+	resultSpotPrice, err := findSpotPrice(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Spot Price", err))

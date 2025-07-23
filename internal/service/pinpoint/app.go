@@ -139,12 +139,10 @@ func resourceApp() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -167,7 +165,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
-func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -206,7 +204,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -214,7 +212,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		appSettings := &awstypes.WriteApplicationSettingsRequest{}
 
 		if d.HasChange("campaign_hook") {
-			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]interface{}))
+			appSettings.CampaignHook = expandCampaignHook(d.Get("campaign_hook").([]any))
 		}
 
 		//if d.HasChange("cloudwatch_metrics_enabled") {
@@ -222,11 +220,11 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		//}
 
 		if d.HasChange("limits") {
-			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]interface{}))
+			appSettings.Limits = expandCampaignLimits(d.Get("limits").([]any))
 		}
 
 		if d.HasChange("quiet_time") {
-			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]interface{}))
+			appSettings.QuietTime = expandQuietTime(d.Get("quiet_time").([]any))
 		}
 
 		input := &pinpoint.UpdateApplicationSettingsInput{
@@ -244,7 +242,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -314,12 +312,12 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) 
 	return output.ApplicationSettingsResource, nil
 }
 
-func expandCampaignHook(configs []interface{}) *awstypes.CampaignHook {
+func expandCampaignHook(configs []any) *awstypes.CampaignHook {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	ch := &awstypes.CampaignHook{}
 
@@ -338,10 +336,10 @@ func expandCampaignHook(configs []interface{}) *awstypes.CampaignHook {
 	return ch
 }
 
-func flattenCampaignHook(ch *awstypes.CampaignHook) []interface{} {
-	l := make([]interface{}, 0)
+func flattenCampaignHook(ch *awstypes.CampaignHook) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["lambda_function_name"] = aws.ToString(ch.LambdaFunctionName)
 	m[names.AttrMode] = ch.Mode
@@ -352,12 +350,12 @@ func flattenCampaignHook(ch *awstypes.CampaignHook) []interface{} {
 	return l
 }
 
-func expandCampaignLimits(configs []interface{}) *awstypes.CampaignLimits {
+func expandCampaignLimits(configs []any) *awstypes.CampaignLimits {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	cl := awstypes.CampaignLimits{}
 
@@ -380,10 +378,10 @@ func expandCampaignLimits(configs []interface{}) *awstypes.CampaignLimits {
 	return &cl
 }
 
-func flattenCampaignLimits(cl *awstypes.CampaignLimits) []interface{} {
-	l := make([]interface{}, 0)
+func flattenCampaignLimits(cl *awstypes.CampaignLimits) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["daily"] = aws.ToInt32(cl.Daily)
 	m["maximum_duration"] = aws.ToInt32(cl.MaximumDuration)
@@ -395,12 +393,12 @@ func flattenCampaignLimits(cl *awstypes.CampaignLimits) []interface{} {
 	return l
 }
 
-func expandQuietTime(configs []interface{}) *awstypes.QuietTime {
+func expandQuietTime(configs []any) *awstypes.QuietTime {
 	if len(configs) == 0 || configs[0] == nil {
 		return nil
 	}
 
-	m := configs[0].(map[string]interface{})
+	m := configs[0].(map[string]any)
 
 	qt := awstypes.QuietTime{}
 
@@ -415,10 +413,10 @@ func expandQuietTime(configs []interface{}) *awstypes.QuietTime {
 	return &qt
 }
 
-func flattenQuietTime(qt *awstypes.QuietTime) []interface{} {
-	l := make([]interface{}, 0)
+func flattenQuietTime(qt *awstypes.QuietTime) []any {
+	l := make([]any, 0)
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	m["end"] = aws.ToString(qt.End)
 	m["start"] = aws.ToString(qt.Start)

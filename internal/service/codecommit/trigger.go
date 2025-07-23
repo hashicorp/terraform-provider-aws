@@ -85,7 +85,7 @@ func resourceTrigger() *schema.Resource {
 	}
 }
 
-func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTriggerRead(ctx, d, meta)...)
 }
 
-func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -179,7 +179,7 @@ func findRepositoryTriggersByName(ctx context.Context, conn *codecommit.Client, 
 	return output, nil
 }
 
-func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
+func expandRepositoryTriggers(tfList []any) []types.RepositoryTrigger {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -187,7 +187,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 	apiObjects := make([]types.RepositoryTrigger, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -195,7 +195,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 		apiObject := types.RepositoryTrigger{}
 
 		// "RepositoryTriggerBranchNameListRequiredException: Repository trigger branch name list cannot be null".
-		if v, ok := tfMap["branches"].([]interface{}); ok {
+		if v, ok := tfMap["branches"].([]any); ok {
 			apiObject.Branches = flex.ExpandStringValueList(v)
 		}
 
@@ -207,7 +207,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 			apiObject.DestinationArn = aws.String(v)
 		}
 
-		if v, ok := tfMap["events"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["events"].([]any); ok && len(v) > 0 {
 			apiObject.Events = flex.ExpandStringyValueList[types.RepositoryTriggerEventEnum](v)
 		}
 
@@ -221,15 +221,15 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 	return apiObjects
 }
 
-func flattenRepositoryTriggers(apiObjects []types.RepositoryTrigger) []interface{} {
+func flattenRepositoryTriggers(apiObjects []types.RepositoryTrigger) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if v := apiObject.Branches; v != nil {
 			tfMap["branches"] = v

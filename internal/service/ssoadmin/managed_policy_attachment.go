@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_managed_policy_attachment", name="Managed Policy Attachment")
-func ResourceManagedPolicyAttachment() *schema.Resource {
+func resourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceManagedPolicyAttachmentRead,
@@ -67,7 +67,7 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	permissionSetARN := d.Get("permission_set_arn").(string)
 
 	// Check for duplicates.
-	_, err := FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+	_, err := findManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): already attached", managedPolicyARN, permissionSetARN)
@@ -106,7 +106,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -115,7 +115,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+	policy, err := findManagedPolicyByThreePartKey(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Managed Policy Attachment (%s) not found, removing from state", d.Id())
@@ -135,7 +135,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -176,7 +176,7 @@ func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func FindManagedPolicy(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {
+func findManagedPolicyByThreePartKey(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {
 	input := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),

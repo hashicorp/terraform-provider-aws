@@ -25,7 +25,7 @@ func createTags(ctx context.Context, conn *ec2.Client, identifier string, tags [
 
 	newTagsMap := keyValueTags(ctx, tags)
 
-	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (any, error) {
 		return nil, updateTags(ctx, conn, identifier, nil, newTagsMap, optFns...)
 	}, ".NotFound")
 
@@ -54,7 +54,7 @@ func getTagSpecificationsIn(ctx context.Context, resourceType awstypes.ResourceT
 }
 
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t awstypes.ResourceType) []awstypes.TagSpecification {
+func tagSpecificationsFromMap(ctx context.Context, m map[string]any, t awstypes.ResourceType) []awstypes.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}
@@ -62,7 +62,7 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t a
 	return []awstypes.TagSpecification{
 		{
 			ResourceType: t,
-			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
+			Tags:         svcTags(tftags.New(ctx, m).IgnoreAWS()),
 		},
 	}
 }
@@ -76,7 +76,7 @@ func tagSpecificationsFromKeyValue(tags tftags.KeyValueTags, resourceType string
 	return []awstypes.TagSpecification{
 		{
 			ResourceType: awstypes.ResourceType(resourceType),
-			Tags:         Tags(tags.IgnoreAWS()),
+			Tags:         svcTags(tags.IgnoreAWS()),
 		},
 	}
 }

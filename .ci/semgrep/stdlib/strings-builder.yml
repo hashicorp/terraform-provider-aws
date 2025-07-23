@@ -1,0 +1,8 @@
+rules:
+  - id: strings-builder-writestring-sprintf
+    languages: [go]
+    message: Prefer "fmt.Fprintf(&builder, ...)" to "builder.WriteString(fmt.Sprintf(...))"
+    pattern: |
+      ($BUILDER : strings.Builder).WriteString(fmt.Sprintf($...ARGS))
+    fix: fmt.Fprintf(&$BUILDER, $...ARGS)
+    severity: WARNING

@@ -195,10 +195,11 @@ func testAccCheckGlossaryTermDestroy(ctx context.Context) resource.TestCheckFunc
 			if rs.Type != "aws_datazone_glossary_term" {
 				continue
 			}
-			_, err := conn.GetGlossaryTerm(ctx, &datazone.GetGlossaryTermInput{
+			input := datazone.GetGlossaryTermInput{
 				Identifier:       aws.String(rs.Primary.ID),
 				DomainIdentifier: aws.String(rs.Primary.Attributes["domain_identifier"]),
-			})
+			}
+			_, err := conn.GetGlossaryTerm(ctx, &input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsA[*types.AccessDeniedException](err) {
 				continue

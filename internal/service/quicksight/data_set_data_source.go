@@ -57,19 +57,12 @@ func dataSourceDataSet() *schema.Resource {
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchemaDataSourceSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema(),
 				names.AttrTags:                           tftags.TagsSchemaComputed(),
-				names.AttrTagsAll: {
-					Type:       schema.TypeMap,
-					Optional:   true,
-					Computed:   true,
-					Elem:       &schema.Schema{Type: schema.TypeString},
-					Deprecated: `this attribute has been deprecated`,
-				},
 			}
 		},
 	}
 }
 
-func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -130,10 +123,6 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	permissions, err := findDataSetPermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSetID)

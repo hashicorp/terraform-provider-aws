@@ -80,7 +80,7 @@ class MyConvertedCode(TerraformStack):
             multi_az=False,
             preferred_maintenance_window="sun:10:30-sun:14:30",
             publicly_accessible=True,
-            replication_instance_class="dms.t2.micro",
+            replication_instance_class="dms.t3.micro",
             replication_instance_id="test-dms-replication-instance-tf",
             replication_subnet_group_id=test_dms_replication_subnet_group_tf.id,
             tags={
@@ -94,6 +94,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
 * `apply_immediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
@@ -104,21 +105,9 @@ This resource supports the following arguments:
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
 * `network_type` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
-
-    - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
-    - Format: `ddd:hh24:mi-ddd:hh24:mi`
-    - Valid Days: `mon, tue, wed, thu, fri, sat, sun`
-    - Constraints: Minimum 30-minute window.
-
 * `publicly_accessible` - (Optional, Default: false) Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
 * `replication_instance_class` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for available instance sizes and advice on which one to choose.
 * `replication_instance_id` - (Required) The replication instance identifier. This parameter is stored as a lowercase string.
-
-    - Must contain from 1 to 63 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen
-    - Cannot contain two consecutive hyphens.
-
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
@@ -165,4 +154,4 @@ Using `terraform import`, import replication instances using the `replication_in
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2a8ab503ceaef9d74fa0c9b95408ac59f3a841f451a3553fdde42db11c32ef45 -->
+<!-- cache-key: cdktf-0.20.8 input-980cea1eec8028df85f5922f0c90a3ca62c51561b52fddb1794c6043c7d3916d -->

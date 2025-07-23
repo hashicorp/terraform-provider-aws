@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -59,8 +60,8 @@ func RegisterSweepers() {
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	return []sweep.Sweepable{
-		framework.NewSweepResource(newResourceAccount, client,
-			framework.NewAttribute("reset_on_delete", true),
+		framework.NewSweepResource(newAccountResource, client,
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		),
 	}, nil
 }

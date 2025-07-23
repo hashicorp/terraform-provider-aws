@@ -26,7 +26,7 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
@@ -66,7 +66,7 @@ func testAccCheckServicecatalogPortfolioStatusExists(ctx context.Context, n stri
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
+			return fmt.Errorf("No SageMaker AI Studio Lifecycle Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

@@ -96,7 +96,7 @@ func resourceProxyTarget() *schema.Resource {
 	}
 }
 
-func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -119,7 +119,7 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		timeout = 5 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBInstanceStateFault](ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.RegisterDBProxyTargets(ctx, input)
 		},
 		"CREATING")
@@ -134,7 +134,7 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceProxyTargetRead(ctx, d, meta)...)
 }
 
-func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -173,7 +173,7 @@ func resourceProxyTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 

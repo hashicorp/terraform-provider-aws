@@ -30,7 +30,7 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rootDomain := testAccDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
-	resourceName := "aws_ses_domain_identity.test"
+	resourceName := "aws_ses_domain_identity_verification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -40,8 +40,11 @@ func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityVerificationConfig_basic(rootDomain, domain),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ses", "identity/{domain}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ses_domain_identity.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrDomain),
 				),
 			},
 		},
@@ -97,14 +100,14 @@ resource "aws_ses_domain_identity" "test" {
 
 resource "aws_route53_record" "domain_identity_verification" {
   zone_id = data.aws_route53_zone.test.id
-  name    = "_amazonses.${aws_ses_domain_identity.test.id}"
+  name    = "_amazonses.${aws_ses_domain_identity.test.domain}"
   type    = "TXT"
   ttl     = "600"
   records = [aws_ses_domain_identity.test.verification_token]
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = aws_ses_domain_identity.test.id
+  domain = aws_ses_domain_identity.test.domain
 
   depends_on = [aws_route53_record.domain_identity_verification]
 }
@@ -118,7 +121,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = aws_ses_domain_identity.test.id
+  domain = aws_ses_domain_identity.test.domain
 
   timeouts {
     create = "5s"

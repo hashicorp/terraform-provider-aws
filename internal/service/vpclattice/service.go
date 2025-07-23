@@ -99,8 +99,6 @@ func resourceService() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -108,7 +106,7 @@ const (
 	ResNameService = "Service"
 )
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -145,7 +143,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -166,7 +164,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
-		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
+		if err := d.Set("dns_entry", []any{flattenDNSEntry(out.DnsEntry)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
@@ -178,7 +176,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
@@ -205,14 +203,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
-func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service: %s", d.Id())
-	_, err := conn.DeleteService(ctx, &vpclattice.DeleteServiceInput{
+	input := vpclattice.DeleteServiceInput{
 		ServiceIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteService(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -264,7 +263,7 @@ func waitServiceDeleted(ctx context.Context, conn *vpclattice.Client, id string,
 }
 
 func statusService(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findServiceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -337,12 +336,12 @@ func findServices(ctx context.Context, conn *vpclattice.Client, filter tfslices.
 	return output, nil
 }
 
-func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
+func flattenDNSEntry(apiObject *types.DnsEntry) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DomainName; v != nil {
 		tfMap[names.AttrDomainName] = aws.ToString(v)

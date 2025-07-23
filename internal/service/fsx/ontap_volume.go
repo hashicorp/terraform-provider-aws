@@ -42,7 +42,7 @@ func resourceONTAPVolume() *schema.Resource {
 		DeleteWithoutTimeout: resourceONTAPVolumeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("bypass_snaplock_enterprise_retention", false)
 				d.Set("skip_final_backup", false)
 
@@ -341,11 +341,10 @@ func resourceONTAPVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -353,8 +352,8 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
 	}
 
-	if v, ok := d.GetOk("aggregate_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		ontapConfig.AggregateConfiguration = expandAggregateConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("aggregate_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		ontapConfig.AggregateConfiguration = expandAggregateConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
@@ -381,8 +380,8 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.SizeInMegabytes = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		ontapConfig.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		ontapConfig.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("snapshot_policy"); ok {
@@ -393,8 +392,8 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.StorageEfficiencyEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		ontapConfig.TieringPolicy = expandTieringPolicy(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("volume_style"); ok {
@@ -424,7 +423,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceONTAPVolumeRead(ctx, d, meta)...)
 }
 
-func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -443,7 +442,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	ontapConfig := volume.OntapConfiguration
 
 	if ontapConfig.AggregateConfiguration != nil {
-		if err := d.Set("aggregate_configuration", []interface{}{flattenAggregateConfiguration(ontapConfig.AggregateConfiguration)}); err != nil {
+		if err := d.Set("aggregate_configuration", []any{flattenAggregateConfiguration(ontapConfig.AggregateConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aggregate_configuration: %s", err)
 		}
 	} else {
@@ -459,7 +458,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("size_in_bytes", flex.Int64ToStringValue(ontapConfig.SizeInBytes))
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
 	if ontapConfig.SnaplockConfiguration != nil {
-		if err := d.Set("snaplock_configuration", []interface{}{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
+		if err := d.Set("snaplock_configuration", []any{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting snaplock_configuration: %s", err)
 		}
 	} else {
@@ -469,7 +468,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("storage_efficiency_enabled", ontapConfig.StorageEfficiencyEnabled)
 	d.Set("storage_virtual_machine_id", ontapConfig.StorageVirtualMachineId)
 	if ontapConfig.TieringPolicy != nil {
-		if err := d.Set("tiering_policy", []interface{}{flattenTieringPolicy(ontapConfig.TieringPolicy)}); err != nil {
+		if err := d.Set("tiering_policy", []any{flattenTieringPolicy(ontapConfig.TieringPolicy)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tiering_policy: %s", err)
 		}
 	} else {
@@ -485,7 +484,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -520,8 +519,8 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("snaplock_configuration") {
-			if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				ontapConfig.SnaplockConfiguration = expandUpdateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				ontapConfig.SnaplockConfiguration = expandUpdateSnaplockConfiguration(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -534,8 +533,8 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("tiering_policy") {
-			if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				ontapConfig.TieringPolicy = expandTieringPolicy(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -564,7 +563,7 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceONTAPVolumeRead(ctx, d, meta)...)
 }
 
-func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -576,8 +575,8 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 		VolumeId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.OntapConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]any)) > 0 {
+		input.OntapConfiguration.FinalBackupTags = svcTags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())
@@ -670,7 +669,7 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 }
 
 func statusVolume(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVolumeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -788,7 +787,7 @@ func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID
 }
 
 func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
 		if tfresource.NotFound(err) {
@@ -825,14 +824,14 @@ func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Clie
 	return nil, err
 }
 
-func expandAggregateConfiguration(tfMap map[string]interface{}) *awstypes.CreateAggregateConfiguration {
+func expandAggregateConfiguration(tfMap map[string]any) *awstypes.CreateAggregateConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.CreateAggregateConfiguration{}
 
-	if v, ok := tfMap["aggregates"].([]interface{}); ok && v != nil {
+	if v, ok := tfMap["aggregates"].([]any); ok && v != nil {
 		apiObject.Aggregates = flex.ExpandStringValueList(v)
 	}
 
@@ -843,12 +842,12 @@ func expandAggregateConfiguration(tfMap map[string]interface{}) *awstypes.Create
 	return apiObject
 }
 
-func flattenAggregateConfiguration(apiObject *awstypes.AggregateConfiguration) map[string]interface{} {
+func flattenAggregateConfiguration(apiObject *awstypes.AggregateConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	var aggregates int32
 
@@ -873,7 +872,7 @@ func flattenAggregateConfiguration(apiObject *awstypes.AggregateConfiguration) m
 
 const minTieringPolicyCoolingPeriod = 2
 
-func expandTieringPolicy(tfMap map[string]interface{}) *awstypes.TieringPolicy {
+func expandTieringPolicy(tfMap map[string]any) *awstypes.TieringPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -895,12 +894,12 @@ func expandTieringPolicy(tfMap map[string]interface{}) *awstypes.TieringPolicy {
 	return apiObject
 }
 
-func flattenTieringPolicy(apiObject *awstypes.TieringPolicy) map[string]interface{} {
+func flattenTieringPolicy(apiObject *awstypes.TieringPolicy) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CoolingPeriod; v != nil {
 		if v := aws.ToInt32(v); v >= minTieringPolicyCoolingPeriod {
@@ -913,7 +912,7 @@ func flattenTieringPolicy(apiObject *awstypes.TieringPolicy) map[string]interfac
 	return tfMap
 }
 
-func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.CreateSnaplockConfiguration {
+func expandCreateSnaplockConfiguration(tfMap map[string]any) *awstypes.CreateSnaplockConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -924,16 +923,16 @@ func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.C
 		apiObject.AuditLogVolume = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["autocommit_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AutocommitPeriod = expandAutocommitPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap["autocommit_period"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AutocommitPeriod = expandAutocommitPeriod(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["privileged_delete"].(string); ok && v != "" {
 		apiObject.PrivilegedDelete = awstypes.PrivilegedDelete(v)
 	}
 
-	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["snaplock_type"].(string); ok && v != "" {
@@ -947,7 +946,7 @@ func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.C
 	return apiObject
 }
 
-func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.UpdateSnaplockConfiguration {
+func expandUpdateSnaplockConfiguration(tfMap map[string]any) *awstypes.UpdateSnaplockConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -958,16 +957,16 @@ func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.U
 		apiObject.AuditLogVolume = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["autocommit_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AutocommitPeriod = expandAutocommitPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap["autocommit_period"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AutocommitPeriod = expandAutocommitPeriod(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["privileged_delete"].(string); ok && v != "" {
 		apiObject.PrivilegedDelete = awstypes.PrivilegedDelete(v)
 	}
 
-	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["volume_append_mode_enabled"].(bool); ok && v {
@@ -977,7 +976,7 @@ func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *awstypes.U
 	return apiObject
 }
 
-func expandAutocommitPeriod(tfMap map[string]interface{}) *awstypes.AutocommitPeriod {
+func expandAutocommitPeriod(tfMap map[string]any) *awstypes.AutocommitPeriod {
 	if tfMap == nil {
 		return nil
 	}
@@ -995,29 +994,29 @@ func expandAutocommitPeriod(tfMap map[string]interface{}) *awstypes.AutocommitPe
 	return apiObject
 }
 
-func expandSnaplockRetentionPeriod(tfMap map[string]interface{}) *awstypes.SnaplockRetentionPeriod {
+func expandSnaplockRetentionPeriod(tfMap map[string]any) *awstypes.SnaplockRetentionPeriod {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SnaplockRetentionPeriod{}
 
-	if v, ok := tfMap["default_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DefaultRetention = expandRetentionPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap["default_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DefaultRetention = expandRetentionPeriod(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["maximum_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.MaximumRetention = expandRetentionPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap["maximum_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.MaximumRetention = expandRetentionPeriod(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["minimum_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.MinimumRetention = expandRetentionPeriod(v[0].(map[string]interface{}))
+	if v, ok := tfMap["minimum_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.MinimumRetention = expandRetentionPeriod(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandRetentionPeriod(tfMap map[string]interface{}) *awstypes.RetentionPeriod {
+func expandRetentionPeriod(tfMap map[string]any) *awstypes.RetentionPeriod {
 	if tfMap == nil {
 		return nil
 	}
@@ -1035,25 +1034,25 @@ func expandRetentionPeriod(tfMap map[string]interface{}) *awstypes.RetentionPeri
 	return apiObject
 }
 
-func flattenSnaplockConfiguration(apiObject *awstypes.SnaplockConfiguration) map[string]interface{} {
+func flattenSnaplockConfiguration(apiObject *awstypes.SnaplockConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AuditLogVolume; v != nil {
 		tfMap["audit_log_volume"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.AutocommitPeriod; v != nil {
-		tfMap["autocommit_period"] = []interface{}{flattenAutocommitPeriod(v)}
+		tfMap["autocommit_period"] = []any{flattenAutocommitPeriod(v)}
 	}
 
 	tfMap["privileged_delete"] = string(apiObject.PrivilegedDelete)
 
 	if v := apiObject.RetentionPeriod; v != nil {
-		tfMap[names.AttrRetentionPeriod] = []interface{}{flattenSnaplockRetentionPeriod(v)}
+		tfMap[names.AttrRetentionPeriod] = []any{flattenSnaplockRetentionPeriod(v)}
 	}
 
 	tfMap["snaplock_type"] = string(apiObject.SnaplockType)
@@ -1065,12 +1064,12 @@ func flattenSnaplockConfiguration(apiObject *awstypes.SnaplockConfiguration) map
 	return tfMap
 }
 
-func flattenAutocommitPeriod(apiObject *awstypes.AutocommitPeriod) map[string]interface{} {
+func flattenAutocommitPeriod(apiObject *awstypes.AutocommitPeriod) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrType] = string(apiObject.Type)
 
@@ -1081,34 +1080,34 @@ func flattenAutocommitPeriod(apiObject *awstypes.AutocommitPeriod) map[string]in
 	return tfMap
 }
 
-func flattenSnaplockRetentionPeriod(apiObject *awstypes.SnaplockRetentionPeriod) map[string]interface{} {
+func flattenSnaplockRetentionPeriod(apiObject *awstypes.SnaplockRetentionPeriod) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DefaultRetention; v != nil {
-		tfMap["default_retention"] = []interface{}{flattenRetentionPeriod(v)}
+		tfMap["default_retention"] = []any{flattenRetentionPeriod(v)}
 	}
 
 	if v := apiObject.MaximumRetention; v != nil {
-		tfMap["maximum_retention"] = []interface{}{flattenRetentionPeriod(v)}
+		tfMap["maximum_retention"] = []any{flattenRetentionPeriod(v)}
 	}
 
 	if v := apiObject.MinimumRetention; v != nil {
-		tfMap["minimum_retention"] = []interface{}{flattenRetentionPeriod(v)}
+		tfMap["minimum_retention"] = []any{flattenRetentionPeriod(v)}
 	}
 
 	return tfMap
 }
 
-func flattenRetentionPeriod(apiObject *awstypes.RetentionPeriod) map[string]interface{} {
+func flattenRetentionPeriod(apiObject *awstypes.RetentionPeriod) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrType] = string(apiObject.Type)
 

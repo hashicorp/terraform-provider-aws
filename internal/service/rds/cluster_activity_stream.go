@@ -66,7 +66,7 @@ func resourceClusterActivityStream() *schema.Resource {
 	}
 }
 
-func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceClusterActivityStreamRead(ctx, d, meta)...)
 }
 
-func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -160,7 +160,7 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 }
 
 func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterWithActivityStream(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

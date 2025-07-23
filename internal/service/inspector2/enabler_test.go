@@ -524,7 +524,6 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
-				// PlanOnly: true,
 			},
 		},
 	})

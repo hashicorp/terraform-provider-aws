@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -21,15 +22,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
+// @Testing(importIgnore="has_value_wo")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -38,7 +40,10 @@ func resourceParameter() *schema.Resource {
 		DeleteWithoutTimeout: resourceParameterDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("has_value_wo", false)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,11 +73,15 @@ func resourceParameter() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
+			"has_value_wo": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"insecure_value": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
 			},
 			names.AttrKeyID: {
 				Type:     schema.TypeString,
@@ -86,9 +95,8 @@ func resourceParameter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"overwrite": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "this attribute has been deprecated",
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -114,7 +122,20 @@ func resourceParameter() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+			},
+			"value_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				WriteOnly:    true,
+				ExactlyOneOf: []string{"value_wo", "insecure_value", names.AttrValue},
+				RequiredWith: []string{"value_wo_version"},
+			},
+			"value_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"value_wo"},
 			},
 			names.AttrVersion: {
 				Type:     schema.TypeInt,
@@ -125,25 +146,26 @@ func resourceParameter() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta any) bool {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
-			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange(names.AttrValue)
 			}),
-			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
 			}),
-			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange(names.AttrValue)
 			}),
-
-			verify.SetTagsDiff,
+			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("value_wo_version")
+			}),
 		),
 	}
 }
 
-func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -153,6 +175,17 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 		value = v
 	}
+
+	valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if valueWO != "" {
+		value = valueWO
+	}
+
 	input := &ssm.PutParameterInput{
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		Name:           aws.String(name),
@@ -178,7 +211,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// AWS SSM Service only supports PutParameter requests with Tags
-	// iff Overwrite is not provided or is false; in this resource's case,
+	// if Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	tags := getTagsIn(ctx)
 	if !aws.ToBool(input.Overwrite) {
@@ -211,7 +244,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -220,7 +253,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
@@ -248,10 +281,29 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrType, param.Type)
 	d.Set(names.AttrVersion, param.Version)
 
+	hasWriteOnly := d.Get("has_value_wo").(bool)
+	rawConfig := d.GetRawConfig()
+	if !rawConfig.IsNull() {
+		valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+
+		if valueWO != "" {
+			hasWriteOnly = true
+		}
+	}
+
 	if _, ok := d.GetOk("insecure_value"); ok && param.Type != awstypes.ParameterTypeSecureString {
 		d.Set("insecure_value", param.Value)
 	} else {
 		d.Set(names.AttrValue, param.Value)
+	}
+
+	if hasWriteOnly {
+		d.Set("has_value_wo", true)
+		d.Set(names.AttrValue, nil)
 	}
 
 	if param.Type == awstypes.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
@@ -279,7 +331,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -289,6 +341,19 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
 			value = v
 		}
+
+		if d.HasChanges("value_wo_version") {
+			valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			if valueWO != "" {
+				value = valueWO
+			}
+		}
+
 		input := &ssm.PutParameterInput{
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 			Name:           aws.String(d.Id()),
@@ -331,7 +396,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

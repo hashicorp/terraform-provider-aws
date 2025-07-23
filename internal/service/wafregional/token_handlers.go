@@ -19,9 +19,9 @@ type retryer struct {
 	region     string
 }
 
-type withTokenFunc func(token *string) (interface{}, error)
+type withTokenFunc func(token *string) (any, error)
 
-func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interface{}, error) {
+func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (any, error) {
 	key := "WafRetryer-" + t.region
 	conns.GlobalMutexKV.Lock(key)
 	defer conns.GlobalMutexKV.Unlock(key)
@@ -29,7 +29,7 @@ func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interfac
 	const (
 		timeout = 15 * time.Minute
 	)
-	return tfresource.RetryWhenIsA[*awstypes.WAFStaleDataException](ctx, timeout, func() (interface{}, error) {
+	return tfresource.RetryWhenIsA[*awstypes.WAFStaleDataException](ctx, timeout, func() (any, error) {
 		input := &wafregional.GetChangeTokenInput{}
 		output, err := t.connection.GetChangeToken(ctx, input)
 

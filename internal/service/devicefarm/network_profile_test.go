@@ -196,10 +196,6 @@ func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *awstypes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindNetworkProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
