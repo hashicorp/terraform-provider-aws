@@ -25,7 +25,7 @@ resource "aws_bedrock_guardrail" "example" {
     # All Guardrail profiles listed here:
     # https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html
     # NOTE: this is only available in certain regions!
-    guardrail_profile = "US Guardrail v1:0"
+    guardrail_profile = "us.guardrail.v1:0"
   }
 
   content_policy_config {
@@ -34,6 +34,9 @@ resource "aws_bedrock_guardrail" "example" {
       output_strength = "MEDIUM"
       type            = "HATE"
     }
+    tier_config {
+		  name = "STANDARD"
+	  }
   }
 
   sensitive_information_policy_config {
@@ -57,6 +60,9 @@ resource "aws_bedrock_guardrail" "example" {
       type       = "DENY"
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
+    tier_config {
+		  name = "CLASSIC"
+	  }
   }
 
   word_policy_config {
@@ -97,6 +103,8 @@ The `content_policy_config` configuration block supports the following arguments
 * `filters_config` - (Optional) Set of content filter configs in content policy.
   See [Filters Config](#content-filters-config) for more information.
 
+* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#tier-config) for more information.
+
 #### Content Filters Config
 
 The `filters_config` configuration block supports the following arguments:
@@ -104,6 +112,11 @@ The `filters_config` configuration block supports the following arguments:
 * `input_strength` - (Optional) Strength for filters.
 * `output_strength` - (Optional) Strength for filters.
 * `type` - (Optional) Type of filter in content policy.
+
+#### Tier Config
+The tier_config configuration block supports the following arguments:
+
+* `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Contextual Grounding Policy Config
 
