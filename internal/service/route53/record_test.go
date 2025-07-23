@@ -1929,12 +1929,12 @@ func testAccCheckRecordDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			parts := tfroute53.RecordParseResourceID(rs.Primary.ID)
-			zone := parts[0]
-			recordName := parts[1]
-			recordType := parts[2]
-
-			_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, tfroute53.CleanZoneID(zone), recordName, recordType, rs.Primary.Attributes["set_identifier"])
+			_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+				tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
+				rs.Primary.Attributes[names.AttrName],
+				rs.Primary.Attributes[names.AttrType],
+				rs.Primary.Attributes["set_identifier"],
+			)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1960,12 +1960,12 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *awstypes.Resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		parts := tfroute53.RecordParseResourceID(rs.Primary.ID)
-		zone := parts[0]
-		recordName := parts[1]
-		recordType := parts[2]
-
-		output, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, tfroute53.CleanZoneID(zone), recordName, recordType, rs.Primary.Attributes["set_identifier"])
+		output, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+			tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
+			rs.Primary.Attributes[names.AttrName],
+			rs.Primary.Attributes[names.AttrType],
+			rs.Primary.Attributes["set_identifier"],
+		)
 
 		if err != nil {
 			return err
