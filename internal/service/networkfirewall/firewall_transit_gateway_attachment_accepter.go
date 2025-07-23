@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -101,7 +102,11 @@ func (r *firewallTransitGatewayAttachmentAccepterResource) Read(ctx context.Cont
 	}
 
 	tgwAttachmentID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayAttachmentID)
-	_, err := tfec2.FindTransitGatewayAttachmentByID(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID)
+	output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, r.Meta().EC2Client(ctx), tgwAttachmentID)
+
+	if err == nil && output.State == ec2types.TransitGatewayAttachmentStateDeleted {
+		err = tfresource.NewEmptyResultError(tgwAttachmentID)
+	}
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
