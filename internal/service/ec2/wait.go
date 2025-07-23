@@ -1291,7 +1291,7 @@ func waitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.Client, natG
 	return nil, err
 }
 
-func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) error {
+func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.NatGatewayAddressStatusSucceeded, awstypes.NatGatewayAddressStatusDisassociating),
 		Target:                    []string{},
@@ -1307,10 +1307,10 @@ func waitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.Client, n
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 		}
 
-		return err
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
 func waitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string, timeout time.Duration) (*awstypes.NatGatewayAddress, error) {
