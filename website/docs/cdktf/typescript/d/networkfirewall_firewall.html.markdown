@@ -83,10 +83,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-One or more of the following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the firewall.
 * `name` - Descriptive name of the firewall.
+
+One or more of these arguments is required.
 
 ## Attribute Reference
 
@@ -123,4 +126,4 @@ This data source exports the following attributes in addition to the arguments a
 * `updateToken` - String token used when updating a firewall.
 * `vpcId` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
-<!-- cache-key: cdktf-0.20.8 input-ced26c2a2730ee97c9f042e83fccca3f30054d717c0bb794507acd3bcd6f82fd -->
+<!-- cache-key: cdktf-0.20.8 input-d470293123556dbb4cc4704ef10318cce6b5b88890279b0d1d157693192e24ce -->

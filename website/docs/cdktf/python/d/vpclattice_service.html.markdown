@@ -35,9 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC lattice services.
-The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Service name.
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
 
@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.20.8 input-68e1bd88b311a92f192e4d7d4dd976040fc3dfc123cef0756b78975644405561 -->
+<!-- cache-key: cdktf-0.20.8 input-9dd29653e174d1bdcad2a4963b25093f92ad3be59f18581e697066625145f8c8 -->

@@ -343,6 +343,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alpn_policy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
 * `certificate_arn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
 * `mutual_authentication` - (Optional) The mutual authentication configuration information. See below.
@@ -381,6 +382,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticate_cognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. See below.
 * `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. See below.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
@@ -399,6 +401,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. See below.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values are `deny`, `allow` and `authenticate`.
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
@@ -423,6 +426,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values: `deny`, `allow` and `authenticate`
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
@@ -437,6 +441,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `message_body` - (Optional) Message body.
 * `status_code` - (Optional) HTTP response code. Valid values are `2XX`, `4XX`, or `5XX`.
 
@@ -448,6 +453,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `stickiness` - (Optional) Configuration block for target group stickiness for the rule. See below.
 
 ##### target_group
@@ -458,6 +464,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `weight` - (Optional) Weight. The range is 0 to 999.
 
 ##### stickiness
@@ -468,6 +475,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether target group stickiness is enabled. Default is `false`.
 
 #### redirect
@@ -480,6 +488,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `host` - (Optional) Hostname. This component is not percent-encoded. The hostname can contain `#{host}`. Defaults to `#{host}`.
 * `path` - (Optional) Absolute path, starting with the leading "/". This component is not percent-encoded. The path can contain #{host}, #{path}, and #{port}. Defaults to `/#{path}`.
 * `port` - (Optional) Port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
@@ -488,17 +497,17 @@ The following arguments are optional:
 
 ### mutual_authentication
 
-* `advertise_trust_store_ca_names` - (Optional) Valid values are `off` and `on`.
-* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
-* `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
-* `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
+* `advertise_trust_store_ca_names` - (Optional when `mode` is `verify`, invalid otherwise) Valid values are `off` and `on`.
+* `ignore_client_certificate_expiry` - (Optional when `mode` is `verify`, invalid otherwise) Whether client certificate expiry is ignored.
+  Default is `false`.
+* `mode` - (Required) Valid values are `off`, `passthrough`, and `verify`.
+* `trust_store_arn` - (Required when `mode` is `verify`, invalid otherwise) ARN of the elbv2 Trust Store.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the listener (matches `id`).
-* `id` - ARN of the listener (matches `arn`).
+* `arn` - ARN of the listener.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.
@@ -528,4 +537,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c2250758493b5ed609658689aa3135572f1a227d5a24eadc8bbe2b8749bed8ad -->
+<!-- cache-key: cdktf-0.20.8 input-ba3fb0df3adb42dc9aa18dbeb7fc692b13b34c9b46e62d62236f6939de93da3f -->

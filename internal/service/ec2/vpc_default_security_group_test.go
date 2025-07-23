@@ -59,10 +59,6 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccVPCDefaultSecurityGroupConfig_basic(rName),
-				PlanOnly: true,
-			},
-			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

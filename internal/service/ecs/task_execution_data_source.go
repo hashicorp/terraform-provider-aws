@@ -180,23 +180,6 @@ func dataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"inference_accelerator_overrides": {
-							Deprecated: "inference_accelerator_overrides is deprecated. AWS no longer supports the Elastic Inference service.",
-							Type:       schema.TypeSet,
-							Optional:   true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDeviceName: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"device_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
 						"memory": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -382,29 +365,8 @@ func expandTaskOverride(tfList []any) *awstypes.TaskOverride {
 	if v, ok := tfMap["task_role_arn"]; ok {
 		apiObject.TaskRoleArn = aws.String(v.(string))
 	}
-	if v, ok := tfMap["inference_accelerator_overrides"]; ok {
-		apiObject.InferenceAcceleratorOverrides = expandInferenceAcceleratorOverrides(v.(*schema.Set))
-	}
 	if v, ok := tfMap["container_overrides"]; ok {
 		apiObject.ContainerOverrides = expandContainerOverride(v.([]any))
-	}
-
-	return apiObject
-}
-
-func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []awstypes.InferenceAcceleratorOverride {
-	if tfSet.Len() == 0 {
-		return nil
-	}
-	apiObject := make([]awstypes.InferenceAcceleratorOverride, 0)
-
-	for _, item := range tfSet.List() {
-		tfMap := item.(map[string]any)
-		iao := awstypes.InferenceAcceleratorOverride{
-			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
-			DeviceType: aws.String(tfMap["device_type"].(string)),
-		}
-		apiObject = append(apiObject, iao)
 	}
 
 	return apiObject

@@ -37,6 +37,7 @@ import (
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
+
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 	r.SetDefaultDeleteTimeout(2 * time.Minute)
 
@@ -48,9 +49,8 @@ const (
 )
 
 type namespaceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithTimeouts
-	framework.WithNoOpUpdate[resourceNamespaceData]
 	framework.WithImportByID
 }
 
@@ -108,7 +108,7 @@ func (r *namespaceResource) Schema(ctx context.Context, req resource.SchemaReque
 func (r *namespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceNamespaceData
+	var plan namespaceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -162,7 +162,7 @@ func (r *namespaceResource) Create(ctx context.Context, req resource.CreateReque
 func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -203,7 +203,7 @@ func (r *namespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *namespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceNamespaceData
+	var state namespaceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -293,7 +293,8 @@ func namespaceParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-type resourceNamespaceData struct {
+type namespaceResourceModel struct {
+	framework.WithRegionModel
 	ARN            types.String   `tfsdk:"arn"`
 	AWSAccountID   types.String   `tfsdk:"aws_account_id"`
 	CapacityRegion types.String   `tfsdk:"capacity_region"`

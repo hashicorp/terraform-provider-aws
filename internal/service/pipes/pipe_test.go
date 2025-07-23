@@ -2114,8 +2114,15 @@ func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
 		testAccPipeConfig_baseSQSSource(rName),
 		testAccPipeConfig_baseSQSTarget(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test_1" {}
-resource "aws_kms_key" "test_2" {}
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_pipes_pipe" "test" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
@@ -3174,18 +3181,15 @@ func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "target" {
-  cluster_identifier                  = "%[1]s-target"
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = "%[1]s-target"
+  database_name         = "test"
+  master_username       = "tfacctest"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 
 resource "aws_pipes_pipe" "test" {
@@ -3315,9 +3319,9 @@ resource "aws_security_group" "target" {
 }
 
 resource "aws_batch_compute_environment" "target" {
-  compute_environment_name = "%[1]s-target"
-  service_role             = aws_iam_role.target.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-target"
+  service_role = aws_iam_role.target.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -3333,10 +3337,14 @@ resource "aws_batch_compute_environment" "target" {
 }
 
 resource "aws_batch_job_queue" "target" {
-  compute_environments = [aws_batch_compute_environment.target.arn]
-  name                 = "%[1]s-target"
-  priority             = 1
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.target.arn
+    order               = 1
+  }
+
+  name     = "%[1]s-target"
+  priority = 1
+  state    = "ENABLED"
 }
 
 resource "aws_batch_job_definition" "target" {

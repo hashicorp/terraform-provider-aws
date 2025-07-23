@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -562,12 +563,23 @@ func TestAccKendraExperience_Configuration_UserIdentityConfigurationWithContentS
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.0.identity_attribute_name", userId),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				// Since configuration.content_source_configuration is Optional+Computed, removal in the test config should not trigger changes
-				PlanOnly:           true,
-				Config:             testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId),
-				ExpectNonEmptyPlan: false,
+				Config: testAccExperienceConfig_configuration_userIdentityConfiguration(rName, userId),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -680,7 +692,7 @@ data "aws_iam_policy_document" "test" {
       "logs:CreateLogGroup"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*"
     ]
   }
   statement {
@@ -691,7 +703,7 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
+      "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kendra/*:log-stream:*"
     ]
   }
 }
@@ -716,7 +728,7 @@ data "aws_iam_policy_document" "experience" {
       "kendra:DescribeFaq"
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
+      "arn:${data.aws_partition.current.partition}:kendra:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:index/${aws_kendra_index.test.id}"
     ]
   }
 }

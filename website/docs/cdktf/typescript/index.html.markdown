@@ -13,12 +13,14 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1499 resources and 606 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1507 resources and 607 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
+hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
 including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+
+Some AWS services do not support IPv6. As a result, the provider may not be able to interact with AWS APIs using IPv6 addresses.
 
 ## Example Usage
 
@@ -479,17 +481,19 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the Region can also be retrieved from the metadata.
+  Most Regional resources, data sources and ephemeral resources support an optional top-level `region` argument which can be used to override the provider configuration value. See the individual resource's documentation for details.
 * `retryMode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retryMode`.
 * `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
   By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
   Specific to the Amazon S3 service.
-* `s3UsEast1RegionalEndpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
+* `s3UsEast1RegionalEndpoint` - (Optional, **Deprecated**) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
   Valid values are `legacy` or `regional`.
   If omitted, the default behavior in the `us-east-1` Region is to use the global endpoint for general purpose buckets and the regional endpoint for directory buckets.
   Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3UsEast1RegionalEndpoint` shared config file parameter.
   Specific to the Amazon S3 service.
+  This argument and the ability to use the global S3 endpoint are deprecated and will be removed in `v7.0.0`.
 * `secretKey` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `accessKey`.
 * `sharedConfigFiles` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `sharedCredentialsFiles` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
@@ -949,4 +953,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.20.8 input-7446f6db9546e98e2a6c76cf56a29f51c082b06531694db976cc6b98e536a0b5 -->
+<!-- cache-key: cdktf-0.20.8 input-1e4588031e703ec355cfba31a1e932600b2dfed5d8af29a63f3b151f74b17e3a -->

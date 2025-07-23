@@ -158,6 +158,10 @@ func (v Map) MapSemanticEquals(ctx context.Context, oValuable basetypes.MapValua
 	for k, v := range elements {
 		ov := oElements[k]
 
+		if ov == nil {
+			return false, diags
+		}
+
 		if v.IsNull() {
 			if !ov.IsUnknown() && !ov.IsNull() {
 				sv := ov.(types.String)

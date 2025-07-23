@@ -260,13 +260,22 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 	return matches[1], matches[2], nil
 }
 
-func virtualMFADeviceTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListMFADeviceTags(ctx, &iam.ListMFADeviceTagsInput{
+func virtualMFADeviceTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListMFADeviceTagsInput{
 		SerialNumber: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListMFADeviceTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

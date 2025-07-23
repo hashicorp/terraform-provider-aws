@@ -73,17 +73,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applyImmediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `autoMinorVersionUpgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `availabilityZone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.
 * `caCertIdentifier` - (Optional) Identifier of the CA certificate for the DB instance.
 * `clusterIdentifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
-* `copyTagsToSnapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `copyTagsToSnapshot` - (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `customIamInstanceProfile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbParameterGroupName` - (Optional) Name of the DB parameter group to associate with this instance.
 * `dbSubnetGroupName` - (Optional, Forces new resource) Specifies the DB subnet group to associate with this DB instance. The default behavior varies depending on whether `dbSubnetGroupName` is specified. Please refer to official [AWS documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html) to understand how `dbSubnetGroupName` and `publiclyAccessible` parameters affect DB instance behaviour. **NOTE:** This must match the `dbSubnetGroupName` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
@@ -105,6 +103,9 @@ This resource supports the following arguments:
 * `publiclyAccessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -113,7 +114,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusterIdentifier` - RDS Cluster Identifier
 * `identifier` - Instance identifier
 * `id` - Instance identifier
-* `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
+* `writer` - Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 * `availabilityZone` - Availability zone of the instance
 * `endpoint` - DNS address for this instance. May not be writable
 * `engine` - Database engine
@@ -174,4 +175,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-182283cd4262760bcebe5a1b637ff0de68541f8bb581a26a44529df723991211 -->
+<!-- cache-key: cdktf-0.20.8 input-223f0a9689db0f38f53061d2dfae4872603736c4a7fdd6e2671fbe523abce2a6 -->

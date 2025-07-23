@@ -56,6 +56,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `description` - (Optional) Description of the product.
 * `distributor` - (Optional) Distributor (i.e., vendor) of the product.
@@ -120,4 +121,4 @@ Using `terraform import`, import `aws_servicecatalog_product` using the product 
 % terraform import aws_servicecatalog_product.example prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-555bf936590705c11ffd58506686ab02acd4f1e772862100e0dcf4858b9f8b7f -->
+<!-- cache-key: cdktf-0.20.8 input-92a94ae42971d75cee00eb9e26546970a733f937c5b2b552966c062d143ab213 -->

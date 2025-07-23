@@ -58,6 +58,10 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.role_name", resourceName, "distribution.0.s3_export_configuration.0.role_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.s3_bucket", resourceName, "distribution.0.s3_export_configuration.0.s3_bucket"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.s3_export_configuration.0.s3_prefix", resourceName, "distribution.0.s3_export_configuration.0.s3_prefix"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.#", resourceName, "distribution.0.ssm_parameter_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.parameter_name", resourceName, "distribution.0.ssm_parameter_configuration.0.parameter_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.ami_account_id", resourceName, "distribution.0.ssm_parameter_configuration.0.ami_account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.ssm_parameter_configuration.0.data_type", resourceName, "distribution.0.ssm_parameter_configuration.0.data_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
@@ -125,7 +129,13 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       s3_prefix         = "prefix/"
     }
 
-    region = data.aws_region.current.name
+    ssm_parameter_configuration {
+      parameter_name = "/test/ami-id"
+      ami_account_id = data.aws_caller_identity.current.account_id
+      data_type      = "aws:ec2:image"
+    }
+
+    region = data.aws_region.current.region
   }
 }
 

@@ -53,7 +53,7 @@ class MyConvertedCode extends TerraformStack {
               "arn:${" +
                 dataAwsPartitionCurrent.partition +
                 "}:bedrock:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
             ],
           },
@@ -63,14 +63,14 @@ class MyConvertedCode extends TerraformStack {
               "arn:${" +
                 currentAgent.partition +
                 "}:bedrock:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}:${" +
                 current.accountId +
                 "}:agent/*",
               "arn:${" +
                 currentAgent.partition +
                 "}:bedrock:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}:${" +
                 current.accountId +
                 "}:agent-alias/*",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:bedrock:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:agent/*",
@@ -192,6 +192,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prepareAgent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `relayConversationHistory` - (Optional) Configure relaying the history to the collaborator.
 
@@ -247,4 +248,4 @@ Using `terraform import`, import Bedrock Agents Agent Collaborator using a comma
 % terraform import aws_bedrockagent_agent_collaborator.example 9LSJO0BFI8,DRAFT,AG3TN4RQIY
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-57b5c6c247e36a0f4260a7906aa72d93e72a760ebb81f8f6f75a7cd3ed0e6c52 -->
+<!-- cache-key: cdktf-0.20.8 input-a6e5d8ef0f73cbf19f7f8e59472af2f54c598e9109b075c768d19998717d3181 -->

@@ -58,6 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `loadBalancer` - (Required) The load balancer to which the policy
   should be attached.
 * `instancePorts` - (Required) List of instance ports to which the policy
@@ -70,4 +71,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the policy.
 * `loadBalancer` - The load balancer to which the policy is attached.
 
-<!-- cache-key: cdktf-0.20.8 input-09e9cd566d935abe3b4ff77b122a6204ff1a06eaa08a5a2dd8ec25b2cb1a5e20 -->
+<!-- cache-key: cdktf-0.20.8 input-ecdafa257aed3bc9b260e521a89c6ebe540af9a75403879caf365ba6b406e907 -->

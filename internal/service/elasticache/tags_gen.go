@@ -3,9 +3,9 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -34,7 +34,7 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 	)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.TagList), nil
@@ -46,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -138,7 +138,7 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 		)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -158,7 +158,7 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 		)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

@@ -400,7 +400,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -420,7 +420,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   data_share_arn = local.data_share_arn
   consumer_arn = format("arn:%s:glue:%s:%s:catalog",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
   )
 }
