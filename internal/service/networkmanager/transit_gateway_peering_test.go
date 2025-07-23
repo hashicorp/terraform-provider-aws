@@ -20,16 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.NetworkManagerServiceID, testAccErrorCheckSkip)
-}
-
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesMatches(t,
-		regexache.MustCompile(`Core Network edge location \([0-9a-z-]+\) not available`),
-	)
-}
-
 func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
