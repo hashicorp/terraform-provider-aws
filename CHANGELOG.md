@@ -6,16 +6,20 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_networkfirewall_firewall_transit_gateway_attachment_accepter` ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
 * **New Resource:** `aws_s3_bucket_metadata_configuration` ([#41364](https://github.com/hashicorp/terraform-provider-aws/issues/41364))
 
 ENHANCEMENTS:
 
 * data-source/aws_dms_endpoint: Add `postgres_settings.authentication_method` and `postgres_settings.service_access_role_arn` attributes ([#43440](https://github.com/hashicorp/terraform-provider-aws/issues/43440))
+* data-source/aws_networkfirewall_firewall: Add `availability_zone_change_protection`, `availability_zone_mapping`, `firewall_status.sync_states.attachment.status_message`, `firewall_status.transit_gateway_attachment_sync_states`, `transit_gateway_id`, and `transit_gateway_owner_account_id` attributes ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
 * resource/aws_alb_listener: Add resource identity support ([#43161](https://github.com/hashicorp/terraform-provider-aws/issues/43161))
 * resource/aws_alb_listener_rule: Add resource identity support ([#43155](https://github.com/hashicorp/terraform-provider-aws/issues/43155))
 * resource/aws_alb_target_group: Add resource identity support ([#43171](https://github.com/hashicorp/terraform-provider-aws/issues/43171))
+* resource/aws_dms_endpoint: Add `oracle_settings` configuration block for authentication method ([#43125](https://github.com/hashicorp/terraform-provider-aws/issues/43125))
 * resource/aws_dms_endpoint: Add `postgres_settings.authentication_method` and `postgres_settings.service_access_role_arn` arguments ([#43440](https://github.com/hashicorp/terraform-provider-aws/issues/43440))
 * resource/aws_dms_endpoint: Add plan-time validation of `postgres_settings.database_mode`, `postgres_settings.map_long_varchar_as`, and `postgres_settings.plugin_name` arguments ([#43440](https://github.com/hashicorp/terraform-provider-aws/issues/43440))
+* resource/aws_dms_replication_instance: Add `dns_name_servers` attribute and `kerberos_authentication_settings` configuration block for Kerberos authentication settings ([#43125](https://github.com/hashicorp/terraform-provider-aws/issues/43125))
 * resource/aws_dx_gateway_association: Add `transit_gateway_attachment_id` attribute. This functionality requires the `ec2:DescribeTransitGatewayAttachments` IAM permission ([#43436](https://github.com/hashicorp/terraform-provider-aws/issues/43436))
 * resource/aws_globalaccelerator_accelerator: Add resource identity support ([#43200](https://github.com/hashicorp/terraform-provider-aws/issues/43200))
 * resource/aws_globalaccelerator_custom_routing_accelerator: Add resource identity support ([#43423](https://github.com/hashicorp/terraform-provider-aws/issues/43423))
@@ -25,11 +29,15 @@ ENHANCEMENTS:
 * resource/aws_lb_listener_rule: Add resource identity support ([#43155](https://github.com/hashicorp/terraform-provider-aws/issues/43155))
 * resource/aws_lb_target_group: Add resource identity support ([#43171](https://github.com/hashicorp/terraform-provider-aws/issues/43171))
 * resource/aws_lb_trust_store: Add resource identity support ([#43186](https://github.com/hashicorp/terraform-provider-aws/issues/43186))
+* resource/aws_networkfirewall_firewall: Add `availability_zone_change_protection`, `availability_zone_mapping`, and `transit_gateway_id` arguments and `firewall_status.transit_gateway_attachment_sync_states` and `transit_gateway_owner_account_id` attributes ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
+* resource/aws_networkfirewall_firewall: Mark `subnet_mapping` and `vpc_id` as Optional ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
 * resource/aws_sns_topic: Add resource identity support ([#43202](https://github.com/hashicorp/terraform-provider-aws/issues/43202))
 * resource/aws_wafv2_rule_group: Add `rules_json` argument ([#433245](https://github.com/hashicorp/terraform-provider-aws/issues/433245))
+* resource/aws_wafv2_web_acl: Add `statement.rate_based_statement.custom_key.asn` argument ([#43506](https://github.com/hashicorp/terraform-provider-aws/issues/43506))
 
 BUG FIXES:
 
+* provider: Prevent planned `forces replacement` on `region` when upgrading from a pre-v6.0.0 provider version and `-refresh=false` is in effect ([#43516](https://github.com/hashicorp/terraform-provider-aws/issues/43516))
 * resource/aws_api_gateway_resource: Recompute `path` when `path_part` is updated ([#43215](https://github.com/hashicorp/terraform-provider-aws/issues/43215))
 * resource/aws_bedrockagent_flow: Remove `definition.connection` and `definition.node` list length limits ([#43471](https://github.com/hashicorp/terraform-provider-aws/issues/43471))
 * resource/aws_instance: Recompute `ipv6_addresses` when `ipv6_address_count` is updated ([#43158](https://github.com/hashicorp/terraform-provider-aws/issues/43158))
