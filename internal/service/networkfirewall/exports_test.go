@@ -5,13 +5,13 @@ package networkfirewall
 
 // Exports for use in tests only.
 var (
-	ResourceFirewall                                        = resourceFirewall
-	ResourceFirewallPolicy                                  = resourceFirewallPolicy
-	ResourceLoggingConfiguration                            = resourceLoggingConfiguration
-	ResourceResourcePolicy                                  = resourceResourcePolicy
-	ResourceRuleGroup                                       = resourceRuleGroup
-	ResourceTLSInspectionConfiguration                      = newTLSInspectionConfigurationResource
-	ResourceNetworkFirewallTransitGatewayAttachmentAccepter = newResourceNetworkFirewallTransitGatewayAttachmentAccepter
+	ResourceFirewall                                 = resourceFirewall
+	ResourceFirewallPolicy                           = resourceFirewallPolicy
+	ResourceFirewallTransitGatewayAttachmentAccepter = newFirewallTransitGatewayAttachmentAccepterResource
+	ResourceLoggingConfiguration                     = resourceLoggingConfiguration
+	ResourceResourcePolicy                           = resourceResourcePolicy
+	ResourceRuleGroup                                = resourceRuleGroup
+	ResourceTLSInspectionConfiguration               = newTLSInspectionConfigurationResource
 
 	FindFirewallByARN                   = findFirewallByARN
 	FindFirewallPolicyByARN             = findFirewallPolicyByARN

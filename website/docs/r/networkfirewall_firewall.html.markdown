@@ -111,14 +111,10 @@ This resource exports the following attributes in addition to the arguments abov
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
             * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
-            * `status` - The current status of the firewall endpoint instantiation in the subnet.
-            * `status_message` - It populates this with the reason for the error or failure and how to resolve it.  A FAILED status indicates a non-recoverable state, and a ERROR status indicates an issue that you can fix.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
-    * `transit_gateway_attachment_sync_state` - Set of transit gateway configured for use by the firewall.
+    * `transit_gateway_attachment_sync_states` - Set of transit gateway configured for use by the firewall.
         * `attachment_id` - The unique identifier of the transit gateway attachment.
-        * `status_message` - A message providing additional information about the current status.
-        * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_owner_account_id` - The AWS account ID that owns the transit gateway.
 * `update_token` - A string token used when updating a firewall.

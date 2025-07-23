@@ -122,14 +122,6 @@ func resourceFirewall() *schema.Resource {
 														Type:     schema.TypeString,
 														Computed: true,
 													},
-													names.AttrStatus: {
-														Type:     schema.TypeString,
-														Computed: true,
-													},
-													names.AttrStatusMessage: {
-														Type:     schema.TypeString,
-														Computed: true,
-													},
 													names.AttrSubnetID: {
 														Type:     schema.TypeString,
 														Computed: true,
@@ -144,20 +136,12 @@ func resourceFirewall() *schema.Resource {
 									},
 								},
 							},
-							"transit_gateway_attachment_sync_state": {
+							"transit_gateway_attachment_sync_states": {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"attachment_id": {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
-										names.AttrStatusMessage: {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
-										"transit_gateway_attachment_status": {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
@@ -285,7 +269,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 	d.SetId(aws.ToString(output.Firewall.FirewallArn))
 
 	if output.Firewall.TransitGatewayId != nil {
-		if _, err := waitFirewallTransitGatewayAttachment(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		if _, err := waitFirewallTransitGatewayAttachmentCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) create: %s", d.Id(), err)
 		}
 	} else {
@@ -332,10 +316,10 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
-	d.Set("update_token", output.UpdateToken)
-	d.Set(names.AttrVPCID, firewall.VpcId)
 	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
 	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
+	d.Set("update_token", output.UpdateToken)
+	d.Set(names.AttrVPCID, firewall.VpcId)
 
 	setTagsOut(ctx, firewall.Tags)
 
@@ -464,13 +448,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			_, err := conn.DisassociateAvailabilityZones(ctx, &input)
 
 			if err == nil {
-				/*output*/ _, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
+				output, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 				}
 
-				// updateToken = aws.ToString(output.UpdateToken)
+				updateToken = aws.ToString(output.UpdateToken)
 			} else if !errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "inaccessible") {
 				return sdkdiag.AppendErrorf(diags, "disassociating NetworkFirewall Firewall (%s) availability zones: %s", d.Id(), err)
 			}
@@ -659,6 +643,10 @@ func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfi
 			return nil, "", err
 		}
 
+		if output.FirewallStatus.TransitGatewayAttachmentSyncState == nil {
+			return nil, "", nil
+		}
+
 		return output, string(output.FirewallStatus.TransitGatewayAttachmentSyncState.TransitGatewayAttachmentStatus), nil
 	}
 }
@@ -680,7 +668,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, time
 	return nil, err
 }
 
-func waitFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
+func waitFirewallTransitGatewayAttachmentCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatusCreating),
 		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStatusPendingAcceptance, awstypes.TransitGatewayAttachmentStatusReady),
@@ -781,8 +769,8 @@ func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 	}
 
 	tfMap := map[string]any{
-		"sync_states":                           flattenSyncStates(apiObject.SyncStates),
-		"transit_gateway_attachment_sync_state": flattenTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState),
+		"sync_states":                            flattenSyncStates(apiObject.SyncStates),
+		"transit_gateway_attachment_sync_states": flattenTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState),
 	}
 
 	return []any{tfMap}
@@ -813,10 +801,8 @@ func flattenAttachment(apiObject *awstypes.Attachment) []any {
 	}
 
 	tfMap := map[string]any{
-		"endpoint_id":           aws.ToString(apiObject.EndpointId),
-		names.AttrStatus:        apiObject.Status,
-		names.AttrStatusMessage: aws.ToString(apiObject.StatusMessage),
-		names.AttrSubnetID:      aws.ToString(apiObject.SubnetId),
+		"endpoint_id":      aws.ToString(apiObject.EndpointId),
+		names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 	}
 
 	return []any{tfMap}
@@ -901,9 +887,7 @@ func flattenTransitGatewayAttachmentSyncState(apiObject *awstypes.TransitGateway
 	}
 
 	tfMap := map[string]any{
-		"attachment_id":                     apiObject.AttachmentId,
-		names.AttrStatusMessage:             apiObject.StatusMessage,
-		"transit_gateway_attachment_status": apiObject.TransitGatewayAttachmentStatus,
+		"attachment_id": apiObject.AttachmentId,
 	}
 
 	return []any{tfMap}

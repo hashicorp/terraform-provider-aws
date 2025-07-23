@@ -4561,6 +4561,9 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 		return nil, err
 	}
 
+	// Explictly don't check for awstypes.TransitGatewayAttachmentStateDeleted.
+	// Caller must handle all states.
+
 	// Eventual consistency check.
 	if aws.ToString(output.TransitGatewayAttachmentId) != id {
 		return nil, &retry.NotFoundError{

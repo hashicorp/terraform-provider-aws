@@ -31,6 +31,8 @@ var (
 	ResourceTransitGatewayConnectPeer                              = resourceTransitGatewayConnectPeer
 	ResourceVPC                                                    = resourceVPC
 	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
+	WaitTransitGatewayAttachmentAccepted                           = waitTransitGatewayAttachmentAccepted
+	WaitTransitGatewayAttachmentDeleted                            = waitTransitGatewayAttachmentDeleted
 	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )
 
