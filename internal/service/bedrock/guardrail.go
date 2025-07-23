@@ -24,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -154,13 +156,23 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 								},
 							},
 						},
-					},
-					Attributes: map[string]schema.Attribute{
-						"tier_name": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFiltersTierName](),
-							Required:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+						"tier_config": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[contentPolicyTiersConfig](ctx),
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFiltersTierName](),
+										Optional:   true,
+										Computed:   true,
+										Default:    stringdefault.StaticString(string(awstypes.GuardrailContentFiltersTierNameClassic)),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -194,7 +206,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"cross_region_inference": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[crossRegionInference](ctx),
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[crossRegionConfig](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeAtMost(1),
 				},
@@ -202,7 +214,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 					Attributes: map[string]schema.Attribute{
 						"guardrail_profile": schema.StringAttribute{
 							Required:    true,
-							Description: "Name of the guardrail profile, e.g. \"US Guardrail v1:0\"",
+							Description: "Name of the guardrail profile, e.g. \"us.guardrail.v1:0\"",
 						},
 					},
 				},
@@ -313,13 +325,23 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 								},
 							},
 						},
-					},
-					Attributes: map[string]schema.Attribute{
-						"tier_name": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicsTierName](),
-							Required:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
+						"tier_config": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[topicPolicyTiersConfig](ctx),
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"name": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicsTierName](),
+										Optional:   true,
+										Computed:   true,
+										Default:    stringdefault.StaticString(string(awstypes.GuardrailTopicsTierNameClassic)),
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -680,7 +702,7 @@ type guardrailResourceModel struct {
 	ContentPolicy              fwtypes.ListNestedObjectValueOf[contentPolicyConfig]              `tfsdk:"content_policy_config"`
 	ContextualGroundingPolicy  fwtypes.ListNestedObjectValueOf[contextualGroundingPolicyConfig]  `tfsdk:"contextual_grounding_policy_config"`
 	CreatedAt                  timetypes.RFC3339                                                 `tfsdk:"created_at"`
-	CrossRegionInference       fwtypes.SetNestedObjectValueOf[crossRegionInference]              `tfsdk:"cross_region_inference"`
+	CrossRegionConfig          fwtypes.SetNestedObjectValueOf[crossRegionConfig]                 `tfsdk:"cross_region_inference"`
 	Description                types.String                                                      `tfsdk:"description"`
 	GuardrailArn               types.String                                                      `tfsdk:"guardrail_arn"`
 	GuardrailID                types.String                                                      `tfsdk:"guardrail_id"`
@@ -697,14 +719,18 @@ type guardrailResourceModel struct {
 }
 
 type contentPolicyConfig struct {
-	Filters  fwtypes.SetNestedObjectValueOf[filtersConfig]                `tfsdk:"filters_config"`
-	TierName fwtypes.StringEnum[awstypes.GuardrailContentFiltersTierName] `tfsdk:"tier_name"`
+	Filters    fwtypes.SetNestedObjectValueOf[filtersConfig]            `tfsdk:"filters_config"`
+	TierConfig fwtypes.SetNestedObjectValueOf[contentPolicyTiersConfig] `tfsdk:"tier_config"`
 }
 
 type filtersConfig struct {
 	InputStrength  fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
 	OutputStrength fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
 	Type           fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
+}
+
+type contentPolicyTiersConfig struct {
+	TierName fwtypes.StringEnum[awstypes.GuardrailContentFiltersTierName] `tfsdk:"name"`
 }
 
 type contextualGroundingPolicyConfig struct {
@@ -716,8 +742,8 @@ type contextualGroundingFiltersConfig struct {
 	Type      fwtypes.StringEnum[awstypes.GuardrailContextualGroundingFilterType] `tfsdk:"type"`
 }
 
-type crossRegionInference struct {
-	GuardrailProfile types.String `tfsdk:"guardrail_profile"`
+type crossRegionConfig struct {
+	GuardrailProfileIdentifier types.String `tfsdk:"guardrail_profile"`
 }
 
 type sensitiveInformationPolicyConfig struct {
@@ -738,8 +764,8 @@ type regexesConfig struct {
 }
 
 type topicPolicyConfig struct {
-	Topics   fwtypes.ListNestedObjectValueOf[topicsConfig]        `tfsdk:"topics_config"`
-	TierName fwtypes.StringEnum[awstypes.GuardrailTopicsTierName] `tfsdk:"tier_name"`
+	Topics     fwtypes.ListNestedObjectValueOf[topicsConfig]          `tfsdk:"topics_config"`
+	TierConfig fwtypes.SetNestedObjectValueOf[topicPolicyTiersConfig] `tfsdk:"tier_config"`
 }
 
 type topicsConfig struct {
@@ -747,6 +773,10 @@ type topicsConfig struct {
 	Examples   fwtypes.ListValueOf[types.String]               `tfsdk:"examples"`
 	Name       types.String                                    `tfsdk:"name"`
 	Type       fwtypes.StringEnum[awstypes.GuardrailTopicType] `tfsdk:"type"`
+}
+
+type topicPolicyTiersConfig struct {
+	TierName fwtypes.StringEnum[awstypes.GuardrailTopicsTierName] `tfsdk:"name"`
 }
 
 type wordPolicyConfig struct {

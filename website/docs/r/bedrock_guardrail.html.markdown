@@ -21,6 +21,13 @@ resource "aws_bedrock_guardrail" "example" {
   blocked_outputs_messaging = "example"
   description               = "example"
 
+  cross_region_inference {
+    # All Guardrail profiles listed here:
+    # https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html
+    # NOTE: this is only available in certain regions!
+    guardrail_profile = "US Guardrail v1:0"
+  }
+
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -108,6 +115,14 @@ The `filters_config` configuration block supports the following arguments:
 
 * `threshold` - (Required) The threshold for this filter.
 * `type` - (Required) Type of contextual grounding filter.
+
+### Cross Region Inference
+
+* `cross_region_inference` (Optional) configuration block to enable cross region routing for bedrock guardrails. See [Guardrail Profile](#guardrail-profile) for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+
+#### Guardrail Profile
+
+* `guardrail_profile` (Required) defines the destination regions where guardrail inference requests can be automatically routed.
 
 ### Topic Policy Config
 
