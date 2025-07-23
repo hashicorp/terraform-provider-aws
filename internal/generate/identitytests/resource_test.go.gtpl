@@ -356,12 +356,12 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 						// Resource Identity not supported for Mutable Identity
 					{{ else -}}
 						{{ if .ArnIdentity -}}
-							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-									{{ .ARNAttribute }}: knownvalue.NotNull(),
-								}),
-							{{ end -}}
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+									names.AttrRegion: knownvalue.StringExact(acctest.Region()),
+								{{ end -}}
+								{{ .ARNAttribute }}: knownvalue.NotNull(),
+							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 						{{ else if .IsRegionalSingleton -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -483,12 +483,12 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						// Resource Identity not supported for Mutable Identity
 					{{ else -}}
 						{{ if .ArnIdentity -}}
-							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-								statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
 									names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-									{{ .ARNAttribute }}: knownvalue.NotNull(),
-								}),
-							{{ end -}}
+								{{ end -}}
+								{{ .ARNAttribute }}: knownvalue.NotNull(),
+							}),
 							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
 						{{ else if .IsRegionalSingleton -}}
 							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
