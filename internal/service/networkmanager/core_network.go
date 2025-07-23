@@ -436,7 +436,7 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id
 		Pending:    enum.Slice(awstypes.CoreNetworkStateDeleting),
 		Target:     []string{},
 		Timeout:    timeout,
-		Delay:      5 * time.Minute,
+		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
