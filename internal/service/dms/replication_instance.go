@@ -12,13 +12,13 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -263,7 +263,9 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("dns_name_servers", instance.DnsNameServers)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
-	d.Set("kerberos_authentication_settings", flattenKerberosAuthenticationSettings(instance.KerberosAuthenticationSettings))
+	if err := d.Set("kerberos_authentication_settings", flattenKerberosAuthenticationSettings(instance.KerberosAuthenticationSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kerberos_authentication_settings: %s", err)
+	}
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
@@ -371,6 +373,48 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
+func expandKerberosAuthenticationSettings(tfList []any) *awstypes.KerberosAuthenticationSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.KerberosAuthenticationSettings
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["key_cache_secret_iam_arn"].(string); ok && v != "" {
+			apiObject.KeyCacheSecretIamArn = aws.String(v)
+		}
+		if v, ok := tfMap["key_cache_secret_id"].(string); ok && v != "" {
+			apiObject.KeyCacheSecretId = aws.String(v)
+		}
+		if v, ok := tfMap["krb5_file_contents"].(string); ok && v != "" {
+			apiObject.Krb5FileContents = aws.String(v)
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenKerberosAuthenticationSettings(apiObject *awstypes.KerberosAuthenticationSettings) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"key_cache_secret_iam_arn": aws.ToString(apiObject.KeyCacheSecretIamArn),
+		"key_cache_secret_id":      aws.ToString(apiObject.KeyCacheSecretId),
+		"krb5_file_contents":       aws.ToString(apiObject.Krb5FileContents),
+	}
+
+	return []any{tfMap}
+}
+
 func findReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
 	input := &dms.DescribeReplicationInstancesInput{
 		Filters: []awstypes.Filter{
@@ -403,8 +447,7 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -418,8 +461,8 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 	return output, nil
 }
 
-func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationInstance(conn *dms.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -438,7 +481,7 @@ func waitReplicationInstanceCreated(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
 		Target:     []string{replicationInstanceStatusAvailable},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -457,7 +500,7 @@ func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusModifying, replicationInstanceStatusUpgrading},
 		Target:     []string{replicationInstanceStatusAvailable},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -476,7 +519,7 @@ func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -489,46 +532,4 @@ func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.Client, id st
 	}
 
 	return nil, err
-}
-
-func expandKerberosAuthenticationSettings(tfList []any) *awstypes.KerberosAuthenticationSettings {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObject awstypes.KerberosAuthenticationSettings
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-
-		if !ok {
-			continue
-		}
-
-		if v, ok := tfMap["key_cache_secret_iam_arn"].(string); ok && v != "" {
-			apiObject.KeyCacheSecretIamArn = aws.String(v)
-		}
-		if v, ok := tfMap["key_cache_secret_id"].(string); ok && v != "" {
-			apiObject.KeyCacheSecretId = aws.String(v)
-		}
-		if v, ok := tfMap["krb5_file_contents"].(string); ok && v != "" {
-			apiObject.Krb5FileContents = aws.String(v)
-		}
-	}
-
-	return &apiObject
-}
-
-func flattenKerberosAuthenticationSettings(kerberos *awstypes.KerberosAuthenticationSettings) []any {
-	if kerberos == nil {
-		return nil
-	}
-
-	tfMap := map[string]any{
-		"key_cache_secret_iam_arn": kerberos.KeyCacheSecretIamArn,
-		"key_cache_secret_id":      kerberos.KeyCacheSecretId,
-		"krb5_file_contents":       kerberos.Krb5FileContents,
-	}
-
-	return []any{tfMap}
 }
