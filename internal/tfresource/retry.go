@@ -118,8 +118,8 @@ func RetryGWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duratio
 }
 
 // RetryWhenAWSErrCodeContains retries the specified function when it returns an AWS error containing the specified code.
-func RetryWhenAWSErrCodeContains(ctx context.Context, timeout time.Duration, f func() (any, error), code string) (any, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenAWSErrCodeContains[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), code string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeContains(err, code) {
 			return true, err
 		}
