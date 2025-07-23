@@ -2139,6 +2139,8 @@ func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string,
 		Target:         []string{},
 		Refresh:        statusTransitGateway(ctx, conn, id),
 		Timeout:        timeout,
+		Delay:          2 * time.Minute,
+		MinTimeout:     10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
