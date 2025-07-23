@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -23,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -149,18 +150,12 @@ func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateReque
 
 	out, err := conn.CreateAssetType(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -169,10 +164,7 @@ func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateReque
 		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameAssetType, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -200,10 +192,7 @@ func (r *assetTypeResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameAssetType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 
@@ -235,10 +224,7 @@ func (r *assetTypeResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameAssetType, state.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
 }
@@ -270,11 +256,11 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil

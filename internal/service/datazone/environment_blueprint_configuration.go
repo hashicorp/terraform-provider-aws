@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -222,11 +223,11 @@ func findEnvironmentBlueprintConfigurationByTwoPartKey(ctx context.Context, conn
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output, nil

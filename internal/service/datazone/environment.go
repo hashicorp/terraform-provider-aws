@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -167,14 +169,14 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	conn := r.Meta().DataZoneClient(ctx)
 
 	var plan environmentResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &datazone.CreateEnvironmentInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, &plan, in, fwflex.WithFieldNamePrefix("Environment"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, &plan, in, fwflex.WithFieldNamePrefix("Environment")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -182,18 +184,12 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	out, err := conn.CreateEnvironment(ctx, in)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
@@ -201,8 +197,8 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	state.Id = fwflex.StringToFramework(ctx, out.Id)
 
 	// set partial state
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_identifier"), out.DomainId)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root("domain_identifier"), out.DomainId))
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -212,19 +208,16 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	output, err := waitEnvironmentCreated(ctx, conn, state.DomainIdentifier.ValueString(), state.Id.ValueString(), createTimeout)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNames([]string{"UserParameters"}))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state, fwflex.WithIgnoredFieldNames([]string{"UserParameters"})))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *environmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -388,10 +381,10 @@ func waitEnvironmentCreated(ctx context.Context, conn *datazone.Client, domainId
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusCreateFailed && deployment != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
@@ -409,10 +402,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *datazone.Client, domainId
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusUpdateFailed && deployment != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId string, id string, timeout time.Duration) (*datazone.GetEnvironmentOutput, error) {
@@ -428,10 +421,10 @@ func waitEnvironmentDeleted(ctx context.Context, conn *datazone.Client, domainId
 		if status, deployment := out.Status, out.LastDeployment; status == awstypes.EnvironmentStatusDeleteFailed && deployment != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status, aws.ToString(deployment.FailureReason.Message)))
 		}
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id string) retry.StateRefreshFunc {
@@ -442,7 +435,7 @@ func statusEnvironment(ctx context.Context, conn *datazone.Client, domainId, id 
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, string(out.Status), nil
@@ -465,11 +458,11 @@ func findEnvironmentByID(ctx context.Context, conn *datazone.Client, domainId, i
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil

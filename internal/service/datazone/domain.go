@@ -5,9 +5,9 @@ package datazone
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -156,7 +157,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}, errCodeAccessDenied)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
@@ -169,12 +170,12 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 
 	if _, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) create", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -196,7 +197,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
@@ -244,7 +245,7 @@ func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequ
 		_, err := conn.UpdateDomain(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating DataZone Domain (%s)", new.ID.ValueString()), err.Error())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.ValueString())
 
 			return
 		}
@@ -276,13 +277,13 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
 
 	if _, err := waitDomainDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) delete", data.ID.ValueString()), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 
 		return
 	}
@@ -302,11 +303,11 @@ func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*dat
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output, nil
@@ -321,7 +322,7 @@ func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.S
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.Status), nil
@@ -339,10 +340,10 @@ func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*datazone.GetDomainOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {
@@ -356,10 +357,10 @@ func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*datazone.GetDomainOutput); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 type domainResourceModel struct {
