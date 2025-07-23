@@ -140,7 +140,7 @@ The `filters_config` configuration block supports the following arguments:
 ### Topic Policy Config
 
 * `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
-* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#topics-tier-config) for more information.
+* `tier_config` - (Optional) configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
 
 #### Topics Config
 
