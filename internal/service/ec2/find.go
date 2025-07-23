@@ -4574,6 +4574,27 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 	return output, nil
 }
 
+func findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx context.Context, conn *ec2.Client, tgwID, dxGatewayID string) (*awstypes.TransitGatewayAttachment, error) {
+	input := ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-type"),
+				Values: enum.Slice(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+			},
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{dxGatewayID},
+			},
+			{
+				Name:   aws.String("transit-gateway-id"),
+				Values: []string{tgwID},
+			},
+		},
+	}
+
+	return findTransitGatewayAttachment(ctx, conn, &input)
+}
+
 func findTransitGatewayConnect(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) (*awstypes.TransitGatewayConnect, error) {
 	output, err := findTransitGatewayConnects(ctx, conn, input)
 
