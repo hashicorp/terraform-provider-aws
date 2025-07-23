@@ -662,8 +662,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 	var record1 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
-	rs := sdkacctest.RandString(10)
-	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELB, rs)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
@@ -671,7 +670,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_config,
+				Config: testAccRecordConfig_aliasELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -751,8 +750,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 	var record1 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
-	rs := sdkacctest.RandString(10)
-	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELBUppercase, rs)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
@@ -760,7 +758,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_config,
+				Config: testAccRecordConfig_aliasELBUppercase(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -779,6 +777,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2, record3, record4, record5, record6 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.elb_weighted_alias_live"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -787,7 +786,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_weightedELBAlias,
+				Config: testAccRecordConfig_weightedELBAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.elb_weighted_alias_dev", &record2),
@@ -2561,16 +2560,10 @@ resource "aws_route53_record" "third_region" {
 `, firstRegion, secondRegion, thirdRegion)
 }
 
-const testAccRecordConfig_aliasELB = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccRecordConfig_aliasELB(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2588,8 +2581,10 @@ resource "aws_route53_record" "alias" {
 }
 
 resource "aws_elb" "main" {
-  name               = "foobar-terraform-elb-%s"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2598,18 +2593,13 @@ resource "aws_elb" "main" {
     lb_protocol       = "http"
   }
 }
-`
-
-const testAccRecordConfig_aliasELBUppercase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`, rName))
 }
 
+func testAccRecordConfig_aliasELBUppercase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2627,8 +2617,10 @@ resource "aws_route53_record" "alias" {
 }
 
 resource "aws_elb" "main" {
-  name               = "FOOBAR-TERRAFORM-ELB-%s"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2637,7 +2629,8 @@ resource "aws_elb" "main" {
     lb_protocol       = "http"
   }
 }
-`
+`, rName))
+}
 
 func testAccRecordConfig_aliasS3(rName string) string {
 	return fmt.Sprintf(`
@@ -2848,23 +2841,18 @@ resource "aws_route53_record" "test" {
 `)
 }
 
-const testAccRecordConfig_weightedELBAlias = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccRecordConfig_weightedELBAlias(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2), `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
 resource "aws_elb" "live" {
-  name               = "foobar-terraform-elb-live"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = "foobar-terraform-elb-live"
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2893,8 +2881,10 @@ resource "aws_route53_record" "elb_weighted_alias_live" {
 }
 
 resource "aws_elb" "dev" {
-  name               = "foobar-terraform-elb-dev"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = "foobar-terraform-elb-dev"
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2921,7 +2911,8 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
     evaluate_target_health = true
   }
 }
-`
+`)
+}
 
 const testAccRecordConfig_weightedAlias = `
 resource "aws_route53_zone" "main" {
@@ -3305,23 +3296,18 @@ resource "aws_route53_record" "test" {
 }
 
 func testAccRecordConfig_aliasChangePre(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3342,7 +3328,7 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccRecordConfig_aliasChangePost() string {
@@ -3376,23 +3362,18 @@ resource "aws_route53_record" "empty" {
 `
 
 func testAccRecordConfig_aliasChangeDualstackPre(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3413,27 +3394,22 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
- `, rName)
+ `, rName))
 }
 
 func testAccRecordConfig_aliasChangeDualstackPost(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3454,7 +3430,7 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
- `, rName)
+ `, rName))
 }
 
 const testAccRecordConfig_longTxt = `
