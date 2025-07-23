@@ -42,7 +42,7 @@ const (
 )
 
 type resourceNATGatewayEIPAssociation struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceVPCNATGatewayEIPAssociationModel]
 	framework.WithTimeouts
 }
 

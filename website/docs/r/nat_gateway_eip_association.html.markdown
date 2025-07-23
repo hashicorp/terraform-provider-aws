@@ -29,6 +29,10 @@ The following arguments are required:
 * `allocation_id` - (Required) The ID of the Elastic IP Allocation to associate with the NAT Gateway.
 * `nat_gateway_id` - (Required) The ID of the NAT Gateway to associate the Elastic IP Allocation to.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -45,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC NAT Gateway EIP Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC NAT Gateway EIP Association using the `nat_gateway_id,allocation_id`. For example:
 
 ```terraform
 import {
@@ -54,7 +58,7 @@ import {
 }
 ```
 
-Using `terraform import`, import VPC NAT Gateway EIP Association using the `example_id_arg`. For example:
+Using `terraform import`, import VPC NAT Gateway EIP Association using the `nat_gateway_id,allocation_id`. For example:
 
 ```console
 % terraform import aws_nat_gateway_eip_association.example nat-1234567890abcdef1,eipalloc-1234567890abcdef1
