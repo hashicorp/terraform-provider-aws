@@ -106,5 +106,5 @@ resource "aws_networkfirewall_firewall" "example" {
 resource "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" "example" {
   provider = aws.first
 
-  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_state[0].attachment_id
+  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_states[0].attachment_id
 }
