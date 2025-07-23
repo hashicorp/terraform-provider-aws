@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,7 +50,13 @@ func resourceJobDefinition() *schema.Resource {
 		// TODO: handle default values on Import
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, names.AttrARN, []string{names.AttrID}); err != nil {
+				// The identitySpec can be retrieved from the context when Mutable Identity is supported
+				// identitySpec := importer.IdentitySpec(ctx)
+				identity := inttypes.RegionalARNIdentity(
+					inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+				)
+
+				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
 					return nil, err
 				}
 

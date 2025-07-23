@@ -96,11 +96,10 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 
 func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
-		attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -110,7 +109,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalSingleParameterized(ctx, rd, attr, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -122,7 +121,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.GlobalMultipleParameterized(ctx, rd, identitySpec.Attributes, importSpec, meta.(importer.AWSClient)); err != nil {
+					if err := importer.GlobalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -132,7 +131,7 @@ func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec
 		} else {
 			return &schema.ResourceImporter{
 				StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-					if err := importer.RegionalMultipleParameterized(ctx, rd, identitySpec.Attributes, importSpec, meta.(importer.AWSClient)); err != nil {
+					if err := importer.RegionalMultipleParameterized(ctx, rd, identitySpec, importSpec, meta.(importer.AWSClient)); err != nil {
 						return nil, err
 					}
 
@@ -147,7 +146,7 @@ func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImp
 	if identity.IsGlobalResource {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
+				if err := importer.GlobalARN(ctx, rd, identity); err != nil {
 					return nil, err
 				}
 
@@ -157,7 +156,7 @@ func arnIdentityResourceImporter(identity inttypes.Identity) *schema.ResourceImp
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalARN(ctx, rd, identity.IdentityAttribute, identity.IdentityDuplicateAttrs); err != nil {
+				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
 					return nil, err
 				}
 
@@ -189,5 +188,17 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 				return []*schema.ResourceData{rd}, nil
 			},
 		}
+	}
+}
+
+func customResourceImporter(r *schema.Resource, identity *inttypes.Identity, importSpec *inttypes.SDKv2Import) {
+	importF := r.Importer.StateContext
+
+	r.Importer = &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			ctx = importer.Context(ctx, identity, importSpec)
+
+			return importF(ctx, rd, meta)
+		},
 	}
 }

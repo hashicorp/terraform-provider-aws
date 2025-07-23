@@ -948,6 +948,34 @@ func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Oracle_kerberos(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_kerberos(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "oracle_settings.0.authentication_method", "kerberos"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -3025,6 +3053,33 @@ resource "aws_dms_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccEndpointConfig_kerberos(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  oracle_settings {
+    authentication_method = "kerberos"
+  }
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
 }
 
 func testAccEndpointConfig_postgreSQL(rName string) string {

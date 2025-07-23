@@ -72,8 +72,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.42.3
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.5
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.8
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.4
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.9
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1
@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.3
@@ -114,7 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.28.5
-	github.com/aws/aws-sdk-go-v2/service/emr v1.49.4
+	github.com/aws/aws-sdk-go-v2/service/emr v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.41.1
@@ -154,7 +154,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.9
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.52.2

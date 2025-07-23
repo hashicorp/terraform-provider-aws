@@ -2049,6 +2049,45 @@ func waitSubnetPrivateDNSHostnameTypeOnLaunchUpdated(ctx context.Context, conn *
 	return nil, err
 }
 
+func waitTransitGatewayAttachmentAccepted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatePending, awstypes.TransitGatewayAttachmentStatePendingAcceptance),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStateAvailable),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayAttachment(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TransitGatewayAttachmentStateAvailable,
+			awstypes.TransitGatewayAttachmentStateDeleting,
+			awstypes.TransitGatewayAttachmentStatePendingAcceptance,
+			awstypes.TransitGatewayAttachmentStateRejecting,
+		),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStateDeleted),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayAttachment(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayConnectCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayConnect, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatePending),
@@ -2263,7 +2302,7 @@ func waitTransitGatewayPeeringAttachmentCreated(ctx context.Context, conn *ec2.C
 	return nil, err
 }
 
-func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string) error {
+func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.TransitGatewayAttachmentStateAvailable,
@@ -2282,9 +2321,11 @@ func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.C
 		if status := output.Status; status != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(status.Code), aws.ToString(status.Message)))
 		}
+
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
 func waitTransitGatewayPrefixListReferenceStateCreated(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) (*awstypes.TransitGatewayPrefixListReference, error) {
