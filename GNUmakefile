@@ -501,8 +501,7 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-test-constants-temp.yml
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -750,6 +749,12 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
+
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
@@ -963,6 +968,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
+	vcr-enable \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \

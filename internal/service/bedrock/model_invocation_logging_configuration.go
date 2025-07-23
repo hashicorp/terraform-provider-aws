@@ -33,7 +33,7 @@ func newModelInvocationLoggingConfigurationResource(context.Context) (resource.R
 
 type modelInvocationLoggingConfigurationResource struct {
 	framework.ResourceWithModel[modelInvocationLoggingConfigurationResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

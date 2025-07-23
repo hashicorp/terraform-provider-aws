@@ -14,7 +14,7 @@
 {{ end }}
 
 {{ define "Test" -}}
-resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
 {{- end }}
 
 {{ define "TestCaseSetup" -}}
@@ -193,7 +193,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -416,7 +416,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -492,8 +492,14 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},
@@ -503,7 +509,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -567,8 +573,14 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},
@@ -578,7 +590,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -672,7 +684,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -780,7 +792,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -941,7 +953,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1042,7 +1054,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1270,7 +1282,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1461,7 +1473,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1662,7 +1674,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1762,7 +1774,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1864,7 +1876,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -1943,7 +1955,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2014,7 +2026,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2102,7 +2114,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2189,7 +2201,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2249,7 +2261,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2356,7 +2368,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -2453,7 +2465,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create
@@ -2625,7 +2637,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create

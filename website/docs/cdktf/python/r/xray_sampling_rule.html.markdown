@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule_name` - (Required) The name of the sampling rule.
 * `resource_arn` - (Required) Matches the ARN of the AWS resource on which the service runs.
 * `priority` - (Required) The priority of the sampling rule.
@@ -95,4 +96,4 @@ Using `terraform import`, import XRay Sampling Rules using the name. For example
 % terraform import aws_xray_sampling_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7221290c8d35ced135b0938fa4968ccc53459fc34a2439bf697749fca293fdbe -->
+<!-- cache-key: cdktf-0.20.8 input-1d351f5ba040b26a215b2d3ffd8db57fec33147bb671ed76ea6394f9f285ee81 -->

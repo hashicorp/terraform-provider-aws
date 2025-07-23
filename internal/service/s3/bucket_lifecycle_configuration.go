@@ -596,7 +596,7 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 	if err != nil {
@@ -1038,7 +1038,7 @@ func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, 
 
 	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
 
-	if tags := Tags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
+	if tags := svcTags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
 		r.Tags = tags
 	}
 

@@ -173,8 +173,13 @@ func sweepApplications(region string) error {
 
 			for _, application := range page.Applications {
 				applicationARN := aws.ToString(application.ApplicationArn)
-				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 
+				if applicationProviderARN := aws.ToString(application.ApplicationProviderArn); applicationProviderARN != "" {
+					log.Printf("[INFO] Skipping SSO Application %s: ApplicationProviderArn=%s", applicationARN, applicationProviderARN)
+					continue
+				}
+
+				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
 				sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client, framework.NewAttribute("application_arn", applicationARN)))
 			}
 		}

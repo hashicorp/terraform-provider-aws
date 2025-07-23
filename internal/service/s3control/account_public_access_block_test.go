@@ -11,14 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,7 +31,6 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
 			"BlockPublicPolicy":     testAccAccountPublicAccessBlock_BlockPublicPolicy,
-			"Identity_Basic":        testAccAccountPublicAccessBlock_Identity_Basic,
 			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
 			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
 			"DataSourceBasic":       testAccAccountPublicAccessBlockDataSource_basic,
@@ -75,64 +68,6 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.PublicAccessBlockConfiguration
-	resourceName := "aws_s3_account_public_access_block.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccountPublicAccessBlockConfig_basic(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-					}),
-				},
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateVerify: true,
-			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), tfknownvalue.AccountID()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
-					},
-				},
-			},
-			{
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithResourceIdentity,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAccountID), tfknownvalue.AccountID()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
-					},
-				},
 			},
 		},
 	})

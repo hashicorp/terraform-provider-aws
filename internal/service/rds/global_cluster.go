@@ -529,7 +529,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
-	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
 

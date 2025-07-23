@@ -46,6 +46,8 @@ data "aws_iam_policy_document" "allow_access_from_another_account" {
 }
 ```
 
+-> Only one `aws_s3_bucket_policy` resource should be defined per S3 bucket. Defining multiple `aws_s3_bucket_policy` resources with different Terraform names but the same `bucket` value may result in unexpected policy overwrites. Each resource uses the `PutBucketPolicy` API, which replaces the entire existing policy without error or warning. Because Terraform treats each resource independently, the policy applied last will silently override any previously applied policy.
+
 ## Argument Reference
 
 This resource supports the following arguments:

@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `adminGroup` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
 * `authorGroup` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
@@ -80,4 +81,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-99689028c9b906c6231226548c162e0e18f2aedaf2122f918bf3e09d8b560624 -->
+<!-- cache-key: cdktf-0.20.8 input-afd29cab2960aa5f6d69fbc8947e4dfb339245c589e3b6699a65a28dd7ccfb8d -->

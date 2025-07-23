@@ -1078,6 +1078,41 @@ func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
 	return rules, nil
 }
 
+func expandRuleGroupRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	// Backwards compatibility.
+	if rawRules == "" {
+		return nil, errors.New("decoding JSON: unexpected end of JSON input")
+	}
+
+	var temp []any
+	err := tfjson.DecodeFromBytes([]byte(rawRules), &temp)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %w", err)
+	}
+
+	for _, v := range temp {
+		walkRulesGroupJSON(reflect.ValueOf(v))
+	}
+
+	out, err := tfjson.EncodeToBytes(temp)
+	if err != nil {
+		return nil, err
+	}
+
+	var rules []awstypes.Rule
+	err = tfjson.DecodeFromBytes(out, &rules)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, r := range rules {
+		if reflect.ValueOf(r).IsZero() {
+			return nil, fmt.Errorf("invalid Rule Group Rule supplied at index (%d)", i)
+		}
+	}
+	return rules, nil
+}
+
 func walkWebACLJSON(v reflect.Value) {
 	m := map[string][]struct {
 		key        string
@@ -1120,6 +1155,53 @@ func walkWebACLJSON(v reflect.Value) {
 	case reflect.Array, reflect.Slice:
 		for i := range v.Len() {
 			walkWebACLJSON(v.Index(i))
+		}
+	default:
+	}
+}
+
+func walkRulesGroupJSON(v reflect.Value) {
+	m := map[string][]struct {
+		key        string
+		outputType any
+	}{
+		"ByteMatchStatement": {
+			{key: "SearchString", outputType: []byte{}},
+		},
+	}
+
+	for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Map:
+		for _, k := range v.MapKeys() {
+			if val, ok := m[k.String()]; ok {
+				st := v.MapIndex(k).Interface().(map[string]any)
+				for _, va := range val {
+					if st[va.key] == nil {
+						continue
+					}
+					str := st[va.key]
+					switch reflect.ValueOf(va.outputType).Kind() {
+					case reflect.Slice, reflect.Array:
+						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
+						case reflect.Uint8:
+							base64String := itypes.Base64Encode([]byte(str.(string)))
+							st[va.key] = base64String
+						default:
+						}
+					default:
+					}
+				}
+			} else {
+				walkRulesGroupJSON(v.MapIndex(k))
+			}
+		}
+	case reflect.Array, reflect.Slice:
+		for i := range v.Len() {
+			walkRulesGroupJSON(v.Index(i))
 		}
 	default:
 	}
@@ -1328,6 +1410,9 @@ func expandManagedRuleGroupConfigs(tfList []any) []awstypes.ManagedRuleGroupConf
 		if v, ok := m["aws_managed_rules_acfp_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesACFPRuleSet = expandManagedRulesACFPRuleSet(v)
 		}
+		if v, ok := m["aws_managed_rules_anti_ddos_rule_set"].([]any); ok && len(v) > 0 {
+			r.AWSManagedRulesAntiDDoSRuleSet = expandManagedRulesAntiDDoSRuleSet(v)
+		}
 		if v, ok := m["aws_managed_rules_atp_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesATPRuleSet = expandManagedRulesATPRuleSet(v)
 		}
@@ -1461,6 +1546,82 @@ func expandManagedRulesACFPRuleSet(tfList []any) *awstypes.AWSManagedRulesACFPRu
 	}
 
 	return &out
+}
+
+func expandManagedRulesAntiDDoSRuleSet(tfList []any) *awstypes.AWSManagedRulesAntiDDoSRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := awstypes.AWSManagedRulesAntiDDoSRuleSet{
+		ClientSideActionConfig: expandClientSideActionConfig(m["client_side_action_config"].([]any)),
+	}
+
+	if v, ok := m["sensitivity_to_block"].(string); ok && v != "" {
+		out.SensitivityToBlock = awstypes.SensitivityToAct(v)
+	}
+
+	return &out
+}
+
+func expandClientSideActionConfig(tfList []any) *awstypes.ClientSideActionConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := &awstypes.ClientSideActionConfig{
+		Challenge: expandClientSideAction(m["challenge"].([]any)),
+	}
+
+	return out
+}
+
+func expandClientSideAction(tfList []any) *awstypes.ClientSideAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := &awstypes.ClientSideAction{
+		UsageOfAction: awstypes.UsageOfAction(m["usage_of_action"].(string)),
+	}
+
+	if v, ok := m["exempt_uri_regular_expression"].([]any); ok && len(v) > 0 {
+		out.ExemptUriRegularExpressions = expandClientSideActionExemptURIRegularExpression(v)
+	}
+	if v, ok := m["sensitivity"].(string); ok && v != "" {
+		out.Sensitivity = awstypes.SensitivityToAct(v)
+	}
+
+	return out
+}
+
+func expandClientSideActionExemptURIRegularExpression(tfList []any) []awstypes.Regex {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []awstypes.Regex
+	for _, item := range tfList {
+		if item == nil {
+			continue
+		}
+		m, ok := item.(map[string]any)
+		if !ok || m == nil {
+			continue
+		}
+
+		if v, ok := m["regex_string"].(string); ok && v != "" {
+			r := awstypes.Regex{
+				RegexString: aws.String(v),
+			}
+			out = append(out, r)
+		}
+	}
+
+	return out
 }
 
 func expandManagedRulesATPRuleSet(tfList []any) *awstypes.AWSManagedRulesATPRuleSet {
@@ -2879,6 +3040,10 @@ func flattenManagedRuleGroupConfigs(c []awstypes.ManagedRuleGroupConfig) []any {
 		if config.AWSManagedRulesACFPRuleSet != nil {
 			m["aws_managed_rules_acfp_rule_set"] = flattenManagedRulesACFPRuleSet(config.AWSManagedRulesACFPRuleSet)
 		}
+		if config.AWSManagedRulesAntiDDoSRuleSet != nil {
+			m["aws_managed_rules_anti_ddos_rule_set"] = flattenManagedRulesAntiDDoSRuleSet(config.AWSManagedRulesAntiDDoSRuleSet)
+		}
+
 		if config.AWSManagedRulesBotControlRuleSet != nil {
 			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
 		}
@@ -3005,6 +3170,70 @@ func flattenManagedRulesACFPRuleSet(apiObject *awstypes.AWSManagedRulesACFPRuleS
 	}
 
 	return []any{m}
+}
+
+func flattenManagedRulesAntiDDoSRuleSet(apiObject *awstypes.AWSManagedRulesAntiDDoSRuleSet) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"client_side_action_config": flattenClientSideActionConfig(apiObject.ClientSideActionConfig),
+	}
+
+	if apiObject.SensitivityToBlock != "" {
+		m["sensitivity_to_block"] = apiObject.SensitivityToBlock
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideActionConfig(apiObject *awstypes.ClientSideActionConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"challenge": flattenClientSideAction(apiObject.Challenge),
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideAction(apiObject *awstypes.ClientSideAction) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"usage_of_action": apiObject.UsageOfAction,
+	}
+
+	if apiObject.ExemptUriRegularExpressions != nil {
+		m["exempt_uri_regular_expression"] = flattenClientSideActionExemptURIRegularExpression(apiObject.ExemptUriRegularExpressions)
+	}
+
+	if apiObject.Sensitivity != "" {
+		m["sensitivity"] = apiObject.Sensitivity
+	}
+
+	return []any{m}
+}
+
+func flattenClientSideActionExemptURIRegularExpression(apiObject []awstypes.Regex) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	var out []any
+	for _, regex := range apiObject {
+		item := map[string]any{
+			"regex_string": aws.ToString(regex.RegexString),
+		}
+		out = append(out, item)
+	}
+
+	return out
 }
 
 func flattenManagedRulesATPRuleSet(apiObject *awstypes.AWSManagedRulesATPRuleSet) []any {

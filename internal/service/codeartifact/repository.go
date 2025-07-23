@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_codeartifact_repository", name="Repository")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("repository/{domain}/{repository}")
 // @Testing(serialize=true)
 func resourceRepository() *schema.Resource {

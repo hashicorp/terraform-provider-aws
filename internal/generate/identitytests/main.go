@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/dlclark/regexp2"
+	"github.com/hashicorp/go-version"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
@@ -133,6 +134,7 @@ func main() {
 			"inc": func(i int) int {
 				return i + 1
 			},
+			"NewVersion": version.NewVersion,
 		}
 		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
 		if err != nil {
@@ -147,34 +149,38 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		basicConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
+		basicConfigTmplFile := fmt.Sprintf("%s_basic.gtpl", sourceName)
+		basicConfigTmplPath := path.Join("testdata", "tmpl", basicConfigTmplFile)
 		var configTmplFile string
-		var configTmpl string
-		if _, err := os.Stat(basicConfigTmplFile); err == nil {
+		var configTmplPath string
+		if _, err := os.Stat(basicConfigTmplPath); err == nil {
 			configTmplFile = basicConfigTmplFile
+			configTmplPath = basicConfigTmplPath
 		} else if !errors.Is(err, os.ErrNotExist) {
-			g.Fatalf("accessing config template %q: %w", basicConfigTmplFile, err)
+			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
 		}
 
-		tagsConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
-		if configTmplFile == "" {
-			if _, err := os.Stat(tagsConfigTmplFile); err == nil {
+		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
+		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
+		if configTmplPath == "" {
+			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
 				configTmplFile = tagsConfigTmplFile
+				configTmplPath = tagsConfigTmplPath
 			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplFile, err)
+				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
 			}
 		}
 
-		if configTmplFile == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplFile, tagsConfigTmplFile)
+		if configTmplPath == "" {
+			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
 			continue
 		}
 
-		b, err := os.ReadFile(configTmplFile)
+		b, err := os.ReadFile(configTmplPath)
 		if err != nil {
-			g.Fatalf("reading config template %q: %w", configTmplFile, err)
+			g.Fatalf("reading config template %q: %w", configTmplPath, err)
 		}
-		configTmpl = string(b)
+		configTmpl := string(b)
 		resource.GenerateConfig = true
 
 		if resource.GenerateConfig {
@@ -194,7 +200,7 @@ func main() {
 
 			_, err = tfTemplates.New("body").Parse(configTmpl)
 			if err != nil {
-				g.Fatalf("parsing config template %q: %s", tagsConfigTmplFile, err)
+				g.Fatalf("parsing config template %q: %s", configTmplPath, err)
 			}
 
 			_, err = tfTemplates.New("region").Parse("")
@@ -204,10 +210,62 @@ func main() {
 
 			common := commonConfig{
 				AdditionalTfVars: additionalTfVars,
+				RequiredEnvVars:  resource.RequiredEnvVars,
 				WithRName:        (resource.Generator != ""),
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+
+			// if resource.HasV6_0SDKv2Fix {
+			if !resource.MutableIdentity {
+				if resource.PreIdentityVersion.Equal(v5_100_0) {
+					tfTemplatesV5, err := tfTemplates.Clone()
+					if err != nil {
+						g.Fatalf("cloning Terraform config template: %s", err)
+					}
+					ext := filepath.Ext(configTmplFile)
+					name := strings.TrimSuffix(configTmplFile, ext)
+					configTmplV5File := name + "_v5.100.0" + ext
+					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+					if _, err := os.Stat(configTmplV5Path); err == nil {
+						b, err := os.ReadFile(configTmplV5Path)
+						if err != nil {
+							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+						}
+						configTmplV5 := string(b)
+						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+						if err != nil {
+							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+						}
+					}
+					commonV5 := common
+					commonV5.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "5.100.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+
+					commonV6 := common
+					commonV6.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: "6.0.0",
+						},
+					}
+					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+				} else {
+					commonPreIdentity := common
+					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
+						"aws": {
+							Source:  "hashicorp/aws",
+							Version: resource.PreIdentityVersion.String(),
+						},
+					}
+					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+				}
+			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
 			if err != nil {
@@ -226,6 +284,10 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
 
 type serviceRecords struct {
 	primary    data.ServiceRecord
@@ -378,6 +440,11 @@ type ResourceDatum struct {
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
+	IDAttrFormat                string
+	HasV6_0NullValuesError      bool
+	HasV6_0RefreshError         bool
+	RequiredEnvVars             []string
+	PreIdentityVersion          *version.Version
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -426,6 +493,10 @@ func (d ResourceDatum) IsRegionalSingleton() bool {
 	return d.isSingleton && !d.IsGlobal
 }
 
+func (d ResourceDatum) IsSingleton() bool {
+	return d.isSingleton
+}
+
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
 }
@@ -470,9 +541,16 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
-	WithRegion       bool
+	AdditionalTfVars  []string
+	WithRName         bool
+	WithRegion        bool
+	ExternalProviders map[string]requiredProvider
+	RequiredEnvVars   []string
+}
+
+type requiredProvider struct {
+	Source  string
+	Version string
 }
 
 type ConfigDatum struct {
@@ -551,6 +629,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
 		plannableImportAction: importActionNoop,
+		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
 	}
 	hasIdentity := false
 	skip := false
@@ -659,6 +738,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+			case "IdAttrFormat":
+				args := common.ParseArgs(m[3])
+				if len(args.Positional) > 0 {
+					d.IDAttrFormat = args.Positional[0]
+				}
+
 			case "MutableIdentity":
 				d.MutableIdentity = true
 
@@ -674,6 +759,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "NoImport":
 				d.NoImport = true
+
+			// TODO: allow underscore?
+			case "V60SDKv2Fix":
+				d.HasV6_0NullValuesError = true
+
+				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0RefreshError = b
+					}
+				}
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
@@ -698,6 +796,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							},
 						)
 					}
+				}
+				if attr, ok := args.Keyword["emailAddress"]; ok {
+					varName := "address"
+					if len(attr) > 0 {
+						varName = attr
+					}
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(
+							`domain := acctest.RandomDomainName()
+%s := acctest.RandomEmailAddress(domain)`, varName),
+					})
+					d.additionalTfVars[varName] = varName
 				}
 				if attr, ok := args.Keyword["domainTfVar"]; ok {
 					varName := "domain"
@@ -901,7 +1016,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
 					} else {
 						d.SerializeDelay = b
@@ -929,6 +1044,28 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.HasRegionOverrideTest = b
 					}
 				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60NullValuesError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0NullValuesError = b
+					}
+				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.HasV6_0RefreshError = b
+					}
+				}
+				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
+					version, err := version.NewVersion(attr)
+					if err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preIdentityVersion value: %q at %s. Should be version value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.PreIdentityVersion = version
+				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -939,6 +1076,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
+				}
+
+				if attr, ok := args.Keyword["requireEnvVar"]; ok {
+					d.RequiredEnvVars = append(d.RequiredEnvVars, attr)
 				}
 			}
 		}
@@ -1018,7 +1159,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, common commonConfig) {
+func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *template.Template, config commonConfig) {
 	testName := test
 	dirPath = path.Join(dirPath, testName)
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
@@ -1026,10 +1167,18 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	}
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
-	tf := g.NewUnformattedFileDestination(mainPath)
+	var tf common.Destination
+	if test == "basic_v5.100.0" {
+		tf = g.NewFileDestinationWithFormatter(mainPath, func(b []byte) ([]byte, error) {
+			re := regexp.MustCompile(`(data\.aws_region\.\w+)\.region`) // nosemgrep:ci.calling-regexp.MustCompile-directly
+			return re.ReplaceAll(b, []byte("$1.name")), nil
+		})
+	} else {
+		tf = g.NewUnformattedFileDestination(mainPath)
+	}
 
 	configData := ConfigDatum{
-		commonConfig: common,
+		commonConfig: config,
 	}
 	if err := tf.BufferTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

@@ -18,6 +18,7 @@ var (
 	FindSecurityGroupByNameAndVPCIDAndOwnerID                      = findSecurityGroupByNameAndVPCIDAndOwnerID
 	FindSecurityGroups                                             = findSecurityGroups
 	FindSubnetByID                                                 = findSubnetByID
+	FindTransitGatewayAttachment                                   = findTransitGatewayAttachment
 	FindVPCByID                                                    = findVPCByID
 	FindVPCEndpointByID                                            = findVPCEndpointByID
 	NetworkInterfaceDetachedTimeout                                = networkInterfaceDetachedTimeout

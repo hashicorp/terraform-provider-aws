@@ -67,22 +67,23 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directoryId` - (Required) The ID of the directory for the WorkSpace.
 * `bundleId` - (Required) The ID of the bundle for the WorkSpace.
-* `userName` – (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.
+* `userName` - (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.
 * `rootVolumeEncryptionEnabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
-* `userVolumeEncryptionEnabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
-* `volumeEncryptionKey` – (Optional) The ARN of a symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
+* `userVolumeEncryptionEnabled` - (Optional) Indicates whether the data stored on the user volume is encrypted.
+* `volumeEncryptionKey` - (Optional) The ARN of a symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
 * `tags` - (Optional) The tags for the WorkSpace. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `workspaceProperties` – (Optional) The WorkSpace properties.
+* `workspaceProperties` - (Optional) The WorkSpace properties.
 
 `workspaceProperties` supports the following:
 
-* `computeTypeName` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
-* `rootVolumeSizeGib` – (Optional) The size of the root volume.
-* `runningMode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
-* `runningModeAutoStopTimeoutInMinutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
-* `userVolumeSizeGib` – (Optional) The size of the user storage.
+* `computeTypeName` - (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
+* `rootVolumeSizeGib` - (Optional) The size of the root volume.
+* `runningMode` - (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
+* `runningModeAutoStopTimeoutInMinutes` - (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
+* `userVolumeSizeGib` - (Optional) The size of the user storage.
 
 ## Attribute Reference
 
@@ -134,4 +135,4 @@ Using `terraform import`, import Workspaces using their ID. For example:
 % terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5d3b14ab533dbbfb49b079db145d3d7cd623cbd43efb18f5f11b0a2debdc876c -->
+<!-- cache-key: cdktf-0.20.8 input-05f0cf9c25d811468de02289c29cb691ed2a953b366e6ce0167d6960201b6dbb -->

@@ -31,9 +31,11 @@ import (
 // @SDKResource("aws_codebuild_project", name="Project")
 // @Tags
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("project/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
-// @Testing(identityTest=false)
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
@@ -250,6 +252,26 @@ func resourceProject() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
+						},
+						"docker_server": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"compute_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.ComputeType](),
+									},
+									names.AttrSecurityGroupIDs: {
+										Type:     schema.TypeList,
+										MaxItems: 5,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
 						},
 						"fleet": {
 							Type:     schema.TypeList,
@@ -1392,6 +1414,21 @@ func expandProjectEnvironment(tfMap map[string]any) *types.ProjectEnvironment {
 		apiObject.ComputeType = types.ComputeType(v)
 	}
 
+	if v, ok := tfMap["docker_server"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+
+		dockerServer := &types.DockerServer{}
+
+		if v, ok := tfMap["compute_type"]; ok && v.(string) != "" {
+			dockerServer.ComputeType = types.ComputeType(v.(string))
+		}
+		if v, ok := tfMap[names.AttrSecurityGroupIDs].([]any); ok && len(v) > 0 {
+			dockerServer.SecurityGroupIds = flex.ExpandStringyValueList[string](v)
+		}
+
+		apiObject.DockerServer = dockerServer
+	}
+
 	if v, ok := tfMap["fleet"].([]any); ok && len(v) > 0 && v[0] != nil {
 		tfMap := v[0].(map[string]any)
 
@@ -1886,6 +1923,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 		names.AttrType:                apiObject.Type,
 	}
 
+	tfMap["docker_server"] = flattenDockerServer(apiObject.DockerServer)
 	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
@@ -1894,6 +1932,22 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []any {
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDockerServer(apiObject *types.DockerServer) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"compute_type": apiObject.ComputeType,
+	}
+
+	if apiObject.SecurityGroupIds != nil {
+		tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	}
 
 	return []any{tfMap}

@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.
 * `creatorMemberAbilities` - (Required - Forces new resource) - The list of member abilities for the creator of the collaboration.  Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbilities).
@@ -135,4 +136,4 @@ Using `terraform import`, import `aws_cleanrooms_collaboration` using the `id`. 
 % terraform import aws_cleanrooms_collaboration.collaboration 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-395ee6487e82b1be6f52fee6f12058bc05b7b0fad6b5632c7701a3893516718e -->
+<!-- cache-key: cdktf-0.20.8 input-6748f71550d429a2fb88816c035cd98206ea59e12db12ce2e850c739fb127d37 -->

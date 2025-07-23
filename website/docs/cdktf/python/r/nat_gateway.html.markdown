@@ -105,6 +105,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Optional) The Allocation ID of the Elastic IP address for the NAT Gateway. Required for `connectivity_type` of `public`.
 * `connectivity_type` - (Optional) Connectivity type for the NAT Gateway. Valid values are `private` and `public`. Defaults to `public`.
 * `private_ip` - (Optional) The private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
@@ -157,4 +158,4 @@ Using `terraform import`, import NAT Gateways using the `id`. For example:
 % terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->
+<!-- cache-key: cdktf-0.20.8 input-e391fd81df03faee14fb7de1e8d58e80342f86ed01eafedd93aa02eea1c2f4c8 -->

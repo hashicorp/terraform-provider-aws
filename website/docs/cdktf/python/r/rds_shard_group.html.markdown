@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_redundancy` - (Optional) Specifies whether to create standby DB shard groups for the DB shard group. Valid values are:
     * `0` - Creates a DB shard group without a standby DB shard group. This is the default value.
     * `1` - Creates a DB shard group with a standby DB shard group in a different Availability Zone (AZ).
@@ -112,4 +113,4 @@ Using `terraform import`, import shard group using the `db_shard_group_identifie
 % terraform import aws_rds_shard_group.example example-shard-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3b96cb5032f85e91bef4ce29ed2334ad2f96c12437907cd429c7ed6ccd5e21cb -->
+<!-- cache-key: cdktf-0.20.8 input-d4dfc65d95607238fcd423a8c3ed4efdd2c90b0790275d911bca8a18814fca2d -->

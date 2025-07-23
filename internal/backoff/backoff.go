@@ -31,6 +31,13 @@ func FixedDelay(delay time.Duration) DelayFunc {
 	}
 }
 
+// ZeroDelay returns 0 for all attempts.
+//
+// This DelayFunc should only be used for testing.
+var ZeroDelay = func(n uint) time.Duration {
+	return 0
+}
+
 type sdkv2HelperRetryCompatibleDelay struct {
 	minTimeout   time.Duration
 	pollInterval time.Duration
@@ -141,10 +148,10 @@ func defaultLoopConfig() LoopConfig {
 
 // Loop holds state for managing loops with a timeout.
 type Loop struct {
-	attempt  uint
-	config   LoopConfig
-	deadline inttypes.Deadline
-	timedOut bool
+	attempt     uint
+	config      LoopConfig
+	deadline    inttypes.Deadline
+	gracePeriod time.Duration
 }
 
 // NewLoopWithOptions returns a new loop configured with the provided options.
@@ -155,8 +162,9 @@ func NewLoopWithOptions(timeout time.Duration, opts ...Option) *Loop {
 	}
 
 	return &Loop{
-		config:   config,
-		deadline: inttypes.NewDeadline(timeout + config.gracePeriod),
+		config:      config,
+		deadline:    inttypes.NewDeadline(timeout),
+		gracePeriod: config.gracePeriod,
 	}
 }
 
@@ -169,10 +177,13 @@ func NewLoop(timeout time.Duration) *Loop {
 // It returns false if the timeout has been exceeded.
 // The deadline is not checked on the first call to Continue.
 func (r *Loop) Continue(ctx context.Context) bool {
-	if r.attempt != 0 && r.deadline.Remaining() == 0 {
-		r.timedOut = true
+	if r.attempt != 0 && r.Remaining() == 0 {
+		// Any non-zero grace period allows one more attempt.
+		if r.gracePeriod == 0 {
+			return false
+		}
 
-		return false
+		r.gracePeriod = 0
 	}
 
 	r.sleep(ctx, r.config.delay(r.attempt))
@@ -186,9 +197,9 @@ func (r *Loop) Reset() {
 	r.attempt = 0
 }
 
-// TimedOut return whether the loop timed out.
-func (r *Loop) TimedOut() bool {
-	return r.timedOut
+// Remaining returns how long the duration has remaining.
+func (r *Loop) Remaining() time.Duration {
+	return r.deadline.Remaining()
 }
 
 // sleep sleeps for the specified duration or until the context is canceled, whichever occurs first.

@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `securityGroupRuleId` - (Optional) ID of the security group rule to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags assigned to the resource.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
-<!-- cache-key: cdktf-0.20.8 input-03c0f569557b041eb6528b7f8ba4b1ba2ac114b3f2b14271fa0f9d1d84cb1239 -->
+<!-- cache-key: cdktf-0.20.8 input-e5953bc20eff0351cd3be843927cea722baa74a938c2ea00db4dd58b639610e8 -->

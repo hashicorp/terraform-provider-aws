@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the source API being merged.
 * `merged_api_arn` - (Optional) ARN of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
 * `merged_api_id` - (Optional) ID of the merged API. One of `merged_api_arn` or `merged_api_id` must be specified.
@@ -91,4 +92,4 @@ Using `terraform import`, import AppSync Source Api Association using the `gzos6
 % terraform import aws_appsync_source_api_association.example gzos6bteufdunffzzifiowisoe,243685a0-9347-4a1a-89c1-9b57dea01e31
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-107a291a19a94995b013e95a47962ce3158b55b5d3ef4d940540187e7245a03d -->
+<!-- cache-key: cdktf-0.20.8 input-70fb179633d2b97b2237f11b716115a26fe0e85b9acbf5ffe5e52ec983ca0ef4 -->

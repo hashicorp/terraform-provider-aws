@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resolverEndpointId` - (Optional) ID of the Route53 Resolver Endpoint.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
@@ -84,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html
 
-<!-- cache-key: cdktf-0.20.8 input-6e64697ba182d25c46d1defda9939a08a59f7366aba152d49f2eff05e7f356f6 -->
+<!-- cache-key: cdktf-0.20.8 input-24a314d2a96be3408d96ad3ceb80bcd44ce41d7d59384382a7b8b1d89c4d68e6 -->

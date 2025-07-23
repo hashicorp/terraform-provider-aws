@@ -29,7 +29,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
 // @Testing(generator=false)
-func ResourceInputSecurityGroup() *schema.Resource {
+func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceInputSecurityGroupRead,
@@ -113,7 +113,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
+	out, err := findInputSecurityGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive InputSecurityGroup (%s) not found, removing from state", d.Id())
@@ -241,7 +241,7 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 
 func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindInputSecurityGroupByID(ctx, conn, id)
+		out, err := findInputSecurityGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -254,7 +254,7 @@ func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id st
 	}
 }
 
-func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
+func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
 	in := &medialive.DescribeInputSecurityGroupInput{
 		InputSecurityGroupId: aws.String(id),
 	}

@@ -70,7 +70,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
@@ -104,7 +104,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Model Invocation Logging Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingletonIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},
@@ -117,7 +117,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-			Import: inttypes.Import{
+			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
 		},

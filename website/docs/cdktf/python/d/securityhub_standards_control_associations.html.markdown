@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_control_id` - (Required) The identifier of the control (identified with `SecurityControlId`, `SecurityControlArn`, or a mix of both parameters).
 
 ## Attribute Reference
@@ -64,4 +65,4 @@ See [`standards_control_associations`](#standards_control_associations-attribute
 * `updated_at` - Last time that a control's enablement status in a specified standard was updated.
 * `updated_reason` - Reason for updating a control's enablement status in a specified standard.
 
-<!-- cache-key: cdktf-0.20.8 input-485827313a723854cd37b4be694aeb17c90ad59eb685ef4ec7ba37de74762d8c -->
+<!-- cache-key: cdktf-0.20.8 input-3a4355f1490f91ee53fea7ed87ba3f7e6af78bdbe7edee766b15368043825bd9 -->

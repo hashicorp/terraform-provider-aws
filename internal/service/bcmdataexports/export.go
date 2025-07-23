@@ -37,8 +37,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
-// @Testing(preCheckRegion="us-east-1")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(v60RefreshError=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
 
@@ -55,117 +55,12 @@ const (
 type exportResource struct {
 	framework.ResourceWithModel[exportResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dataQueryLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"query_statement": schema.StringAttribute{
-					Required: true,
-				},
-				"table_configurations": schema.MapAttribute{
-					// map[string]map[string]string
-					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
-					Optional:   true,
-					PlanModifiers: []planmodifier.Map{
-						mapplanmodifier.UseStateForUnknown(),
-						mapplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
-	s3OutputConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"compression": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				names.AttrFormat: schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"output_type": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"overwrite": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
-				},
-			},
-		},
-	}
-
-	s3DestinationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				names.AttrS3Bucket: schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_prefix": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-				"s3_region": schema.StringAttribute{
-					Required: true,
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-			Blocks: map[string]schema.Block{
-				"s3_output_configurations": s3OutputConfigurationsLNB,
-			},
-		},
-	}
-
-	destinationConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"s3_destination": s3DestinationLNB,
-			},
-		},
-	}
-
-	refreshCadenceLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
-		NestedObject: schema.NestedBlockObject{
-			Attributes: map[string]schema.Attribute{
-				"frequency": schema.StringAttribute{
-					Required:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-		},
-	}
-
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrID:      framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
@@ -200,9 +95,9 @@ func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"data_query":                 dataQueryLNB,
-						"destination_configurations": destinationConfigurationsLNB,
-						"refresh_cadence":            refreshCadenceLNB,
+						"data_query":                 exportDataQuerySchema(ctx),
+						"destination_configurations": exportDestinationConfigurationsSchema(ctx),
+						"refresh_cadence":            exportRefreshCadenceSchema(ctx),
 					},
 				},
 			},
@@ -210,6 +105,121 @@ func (r *exportResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Create: true,
 				Update: true,
 			}),
+		},
+	}
+}
+
+func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"query_statement": schema.StringAttribute{
+					Required: true,
+				},
+				"table_configurations": schema.MapAttribute{
+					CustomType: fwtypes.MapOfMapOfStringType,
+					Optional:   true,
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.UseStateForUnknown(),
+						mapplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func exportS3OutputConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"compression": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				names.AttrFormat: schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"output_type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.S3OutputType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"overwrite": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.OverwriteOption](),
+				},
+			},
+		},
+	}
+}
+
+func exportS3DestinationSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrS3Bucket: schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_prefix": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_region": schema.StringAttribute{
+					Required: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"s3_output_configurations": exportS3OutputConfigurationsSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportDestinationConfigurationsSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"s3_destination": exportS3DestinationSchema(ctx),
+			},
+		},
+	}
+}
+
+func exportRefreshCadenceSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"frequency": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.FrequencyOption](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
 		},
 	}
 }
@@ -223,15 +233,15 @@ func (r *exportResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	in := &bcmdataexports.CreateExportInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	in := bcmdataexports.CreateExportInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.ResourceTags = getTagsIn(ctx)
 
-	out, err := conn.CreateExport(ctx, in)
+	out, err := conn.CreateExport(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionCreating, ResNameExport, "", err),
@@ -286,7 +296,7 @@ func (r *exportResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionSetting, ResNameExport, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionReading, ResNameExport, state.ARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -314,15 +324,15 @@ func (r *exportResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		in := bcmdataexports.UpdateExportInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		in.ExportArn = plan.ARN.ValueStringPointer()
 
-		out, err := conn.UpdateExport(ctx, in)
+		out, err := conn.UpdateExport(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionUpdating, ResNameExport, plan.ARN.String(), err),
@@ -363,11 +373,11 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	in := &bcmdataexports.DeleteExportInput{
+	in := bcmdataexports.DeleteExportInput{
 		ExportArn: state.ARN.ValueStringPointer(),
 	}
 
-	_, err := conn.DeleteExport(ctx, in)
+	_, err := conn.DeleteExport(ctx, &in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -379,6 +389,17 @@ func (r *exportResource) Delete(ctx context.Context, req resource.DeleteRequest,
 			err.Error(),
 		)
 		return
+	}
+}
+
+func (r *exportResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := exportSchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeExportResourceStateFromV0,
+		},
 	}
 }
 
@@ -434,15 +455,14 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 }
 
 func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
-	in := &bcmdataexports.GetExportInput{
+	in := bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
 
-	out, err := conn.GetExport(ctx, in)
+	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -476,8 +496,8 @@ type exportData struct {
 }
 
 type dataQueryData struct {
-	QueryStatement      types.String                                         `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
+	QueryStatement      types.String             `tfsdk:"query_statement"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {

@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of window IDs of the matched SSM maintenance windows.
 
-<!-- cache-key: cdktf-0.20.8 input-e0c5a7cd39a32e901bdbb5d4fa7bfc9af2e1620dda21dd1cc4f1c5351afcdade -->
+<!-- cache-key: cdktf-0.20.8 input-3e3e64b0c4080be2e35e90ac838f928a91aa167c6e246b244cea91909482bea6 -->

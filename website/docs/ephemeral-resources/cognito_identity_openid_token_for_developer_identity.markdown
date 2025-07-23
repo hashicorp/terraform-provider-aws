@@ -11,7 +11,7 @@ description: |-
 
 Terraform ephemeral resource for managing an AWS Cognito Identity Open ID Token for Developer Identity.
 
-~> Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 

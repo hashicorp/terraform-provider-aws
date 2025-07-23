@@ -21,7 +21,7 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -194,7 +194,7 @@ func TestAccAPIGatewayClientCertificate_tags_null(t *testing.T) {
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -239,8 +239,14 @@ func TestAccAPIGatewayClientCertificate_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -251,7 +257,7 @@ func TestAccAPIGatewayClientCertificate_tags_EmptyMap(t *testing.T) {
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -292,8 +298,14 @@ func TestAccAPIGatewayClientCertificate_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -304,7 +316,7 @@ func TestAccAPIGatewayClientCertificate_tags_AddOnUpdate(t *testing.T) {
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -381,7 +393,7 @@ func TestAccAPIGatewayClientCertificate_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -465,7 +477,7 @@ func TestAccAPIGatewayClientCertificate_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -596,7 +608,7 @@ func TestAccAPIGatewayClientCertificate_tags_EmptyTag_OnUpdate_Replace(t *testin
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
@@ -681,7 +693,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_providerOnly(t *testing
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -853,7 +865,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_nonOverlapping(t *testi
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1006,7 +1018,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_overlapping(t *testing.
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1175,7 +1187,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_updateToProviderOnly(t 
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1261,7 +1273,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_updateToResourceOnly(t 
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1346,7 +1358,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_emptyResourceTag(t *tes
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1408,7 +1420,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_emptyProviderOnlyTag(t 
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1462,7 +1474,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_nullOverlappingResource
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1521,7 +1533,7 @@ func TestAccAPIGatewayClientCertificate_tags_DefaultTags_nullNonOverlappingResou
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1580,7 +1592,7 @@ func TestAccAPIGatewayClientCertificate_tags_ComputedTag_OnCreate(t *testing.T) 
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1632,7 +1644,7 @@ func TestAccAPIGatewayClientCertificate_tags_ComputedTag_OnUpdate_Add(t *testing
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1725,7 +1737,7 @@ func TestAccAPIGatewayClientCertificate_tags_ComputedTag_OnUpdate_Replace(t *tes
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1808,7 +1820,7 @@ func TestAccAPIGatewayClientCertificate_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),
@@ -1966,7 +1978,7 @@ func TestAccAPIGatewayClientCertificate_tags_IgnoreTags_Overlap_ResourceTag(t *t
 	var v apigateway.GetClientCertificateOutput
 	resourceName := "aws_api_gateway_client_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckClientCertificateDestroy(ctx),

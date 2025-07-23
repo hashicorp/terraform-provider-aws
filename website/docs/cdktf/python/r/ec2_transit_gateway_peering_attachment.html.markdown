@@ -72,6 +72,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
@@ -120,4 +121,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.8 input-5ea2b00ac9f0c8180ca8c5b14ac19cf1fc94238faacfe4cfb97c37d1d32b4db9 -->
+<!-- cache-key: cdktf-0.20.8 input-c5deb60526d8d758bef702f0e609bbc1bc899f449b792b59e6c3ac2fad85e480 -->

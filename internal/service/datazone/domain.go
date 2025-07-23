@@ -153,7 +153,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	)
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func() (any, error) {
 		return conn.CreateDomain(ctx, &input)
-	}, ErrorCodeAccessDenied)
+	}, errCodeAccessDenied)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())

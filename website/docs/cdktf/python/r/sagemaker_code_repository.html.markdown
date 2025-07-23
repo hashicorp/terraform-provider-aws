@@ -82,6 +82,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `code_repository_name` - (Required) The name of the Code Repository (must be unique).
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -125,4 +126,4 @@ Using `terraform import`, import SageMaker AI Code Repositories using the `name`
 % terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bb52bb3b7283cf3601dcdca3fcd8b8c2e2166c7fc0019f2f18810394cad8ff25 -->
+<!-- cache-key: cdktf-0.20.8 input-e0bf8098af90cc3cc72ba60a46a7be3dcd2a59c44baca2669780b1ba02fbf4f9 -->

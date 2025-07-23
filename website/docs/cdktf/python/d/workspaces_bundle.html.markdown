@@ -57,21 +57,22 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `bundle_id` – (Optional) ID of the bundle.
-* `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
-* `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `bundle_id` - (Optional) ID of the bundle.
+* `owner` - (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
+* `name` - (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `description` – The description of the bundle.
-* `bundle_id` – The ID of the bundle.
-* `name` – The name of the bundle.
-* `owner` – The owner of the bundle.
-* `compute_type` – The compute type. See supported fields below.
-* `root_storage` – The root volume. See supported fields below.
-* `user_storage` – The user storage. See supported fields below.
+* `description` - The description of the bundle.
+* `bundle_id` - The ID of the bundle.
+* `name` - The name of the bundle.
+* `owner` - The owner of the bundle.
+* `compute_type` - The compute type. See supported fields below.
+* `root_storage` - The root volume. See supported fields below.
+* `user_storage` - The user storage. See supported fields below.
 
 ### `compute_type`
 
@@ -85,4 +86,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `capacity` - Size of the user storage.
 
-<!-- cache-key: cdktf-0.20.8 input-fa51236e05e24e0256f2207788b1148c2c3ccab79c92b51106d255e1b69a9e3d -->
+<!-- cache-key: cdktf-0.20.8 input-075831baa70d3a3679f32b4ddb01a57ce29d13c451e0f58f02d960cc950ba156 -->

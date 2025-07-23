@@ -53,7 +53,7 @@ func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
 	domainName := d.Get(names.AttrDomain).(string)
-	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func() (awstypes.VerificationStatus, error) {
+	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func(ctx context.Context) (awstypes.VerificationStatus, error) {
 		att, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
 		if err != nil {

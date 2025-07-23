@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine` - (Optional) DB engine. Default: `docdb`
 * `engine_version` - (Optional) Version of the DB engine.
 * `instance_class` - (Optional) DB instance class. Examples of classes are `db.r5.12xlarge`, `db.r5.24xlarge`, `db.r5.2xlarge`, `db.r5.4xlarge`, `db.r5.large`, `db.r5.xlarge`, and `db.t3.medium`. (Conflicts with `preferred_instance_classes`.)
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availability_zones` - Availability zones where the instance is available.
 
-<!-- cache-key: cdktf-0.20.8 input-e0d401d073f27bb9d79b27ff7639257efd1b7f3f54817d94de7fdf271020db6f -->
+<!-- cache-key: cdktf-0.20.8 input-290904cc8a40704b832a7c27048240d52b95a7189ab6d04cc55d799a806f1c00 -->

@@ -42,6 +42,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `force_delete` - (Optional) Whether to force delete non-empty buckets using `terraform destroy`. AWS by default will not delete a bucket which is not empty, to prevent losing bucket data and affecting other resources in Lightsail. If `force_delete` is set to `true` the bucket will be deleted even when not empty.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -52,7 +53,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `availability_zone` - Availability Zone. Follows the format us-east-2a (case-sensitive).
 * `created_at` - Date and time when the bucket was created.
 * `id` - Name used for this bucket (matches `name`).
-* `region` - AWS Region name.
 * `support_code` - Support code for the resource. Include this code in your email to support when you have questions about a resource in Lightsail. This code enables our support team to look up your Lightsail information more easily.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider `default_tags` configuration block.
 * `url` - URL of the bucket.
@@ -82,4 +82,4 @@ Using `terraform import`, import `aws_lightsail_bucket` using the `name` attribu
 % terraform import aws_lightsail_bucket.example example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d7a9e5f7abb7db791fe761bbd55a51d87bd307b974c536f2bf9b172de26762c6 -->
+<!-- cache-key: cdktf-0.20.8 input-9a7eb00f97353764149d147f1a09d11a3eee0acdc3104df23a3fe38ac89001ac -->
