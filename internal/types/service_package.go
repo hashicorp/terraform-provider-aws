@@ -100,7 +100,7 @@ type Identity struct {
 	IsSingleton            bool   // Singleton
 	IsARN                  bool   // ARN
 	IsGlobalARNFormat      bool   // ARN
-	IdentityAttribute      string // ARN, Framework Single-Parameter
+	IdentityAttribute      string // ARN
 	IDAttrShadowsAttr      string
 	Attributes             []IdentityAttribute
 	IdentityDuplicateAttrs []string
@@ -228,7 +228,6 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 
 func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
-		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
@@ -246,7 +245,6 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 
 func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
-		IdentityAttribute: name,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
@@ -264,11 +262,27 @@ func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttribut
 
 func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: name,
+		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute(name, true),
+		},
+		IsSingleParameter: true,
+	}
+
+	for _, opt := range opts {
+		opt(&identity)
+	}
+
+	return identity
+}
+
+func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
+	identity := Identity{
+		IsGlobalResource: true,
+		Attributes: []IdentityAttribute{
+			StringIdentityAttribute("account_id", false),
+			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
 		},
 		IsSingleParameter: true,
 	}
