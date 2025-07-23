@@ -57,6 +57,7 @@ func TestAccInspector2_serial(t *testing.T) {
 			"ec2ECR":             testAccOrganizationConfiguration_ec2ECR,
 			"lambda":             testAccOrganizationConfiguration_lambda,
 			"lambdaCode":         testAccOrganizationConfiguration_lambdaCode,
+			"codeRepository":     testAccOrganizationConfiguration_codeRepository,
 		},
 	}
 
