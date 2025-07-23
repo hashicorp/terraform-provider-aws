@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_networkmanager_site", name="Site")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceSite() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteCreate,

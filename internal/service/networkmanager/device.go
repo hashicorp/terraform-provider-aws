@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_networkmanager_device", name="Device")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceDevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceCreate,

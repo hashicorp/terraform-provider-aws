@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_networkmanager_site_to_site_vpn_attachment", name="Site To Site VPN Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,
