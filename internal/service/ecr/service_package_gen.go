@@ -24,6 +24,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newImagesDataSource,
 			TypeName: "aws_ecr_images",
 			Name:     "Images",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newLifecyclePolicyDocumentDataSource,

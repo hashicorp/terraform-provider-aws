@@ -26,18 +26,18 @@ func TestAccECRImagesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccImagesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, rName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "image_ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccECRImagesDataSource_publicRepo(t *testing.T) {
+func TestAccECRImagesDataSource_registryID(t *testing.T) {
 	ctx := acctest.Context(t)
-	registry, repo := "137112412989", "amazonlinux"
+	registryID := "137112412989"
+	repositoryName := "amazonlinux"
 	dataSourceName := "data.aws_ecr_images.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,11 +46,10 @@ func TestAccECRImagesDataSource_publicRepo(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagesDataSourceConfig_publicRepo(registry, repo),
+				Config: testAccImagesDataSourceConfig_registryID(registryID, repositoryName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, repo),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_id", registry),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRepositoryName, repositoryName),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_id", registryID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "image_ids.#"),
 					// Check that we have at least one image with the "latest" tag
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "image_ids.*", map[string]string{
@@ -103,11 +102,11 @@ data "aws_ecr_images" "test" {
 `, rName)
 }
 
-func testAccImagesDataSourceConfig_publicRepo(registry, repo string) string {
+func testAccImagesDataSourceConfig_registryID(registryID, repositoryName string) string {
 	return fmt.Sprintf(`
 data "aws_ecr_images" "test" {
   registry_id     = %[1]q
   repository_name = %[2]q
 }
-`, registry, repo)
+`, registryID, repositoryName)
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,30 +25,20 @@ func newImagesDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type imagesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[imagesDataSourceModel]
 }
 
 func (d *imagesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrRepositoryName: schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the repository",
-			},
+			"image_ids": framework.DataSourceComputedListOfObjectAttribute[imagesIDsModel](ctx),
 			"registry_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "ID of the registry (AWS account ID)",
 			},
-			"image_ids": schema.ListAttribute{
-				Computed:    true,
-				Description: "List of image IDs in the repository",
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"image_digest": types.StringType,
-						"image_tag":    types.StringType,
-					},
-				},
+			names.AttrRepositoryName: schema.StringAttribute{
+				Required:    true,
+				Description: "Name of the repository",
 			},
 		},
 	}
@@ -63,68 +53,22 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	conn := d.Meta().ECRClient(ctx)
 
-	input := &ecr.ListImagesInput{
-		RepositoryName: data.RepositoryName.ValueStringPointer(),
+	var input ecr.ListImagesInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, &data, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !data.RegistryID.IsNull() && !data.RegistryID.IsUnknown() {
-		input.RegistryId = data.RegistryID.ValueStringPointer()
-	}
-
-	output, err := findImages(ctx, conn, input)
-
+	output, err := findImages(ctx, conn, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("reading ECR Images", err.Error())
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, data.RepositoryName.ValueString())
-
-	imageIDs := make([]attr.Value, 0, len(output))
-	for _, imageID := range output {
-		imageIDAttrs := map[string]attr.Value{
-			"image_digest": types.StringNull(),
-			"image_tag":    types.StringNull(),
-		}
-
-		if imageID.ImageDigest != nil {
-			imageIDAttrs["image_digest"] = fwflex.StringValueToFramework(ctx, *imageID.ImageDigest)
-		}
-
-		if imageID.ImageTag != nil {
-			imageIDAttrs["image_tag"] = fwflex.StringValueToFramework(ctx, *imageID.ImageTag)
-		}
-
-		imageIDObj, diags := types.ObjectValue(
-			map[string]attr.Type{
-				"image_digest": types.StringType,
-				"image_tag":    types.StringType,
-			},
-			imageIDAttrs,
-		)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		imageIDs = append(imageIDs, imageIDObj)
-	}
-
-	imageIDsList, diags := types.ListValue(
-		types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"image_digest": types.StringType,
-				"image_tag":    types.StringType,
-			},
-		},
-		imageIDs,
-	)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.ImageIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	data.ImageIDs = imageIDsList
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -132,9 +76,9 @@ func (d *imagesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInput) ([]awstypes.ImageIdentifier, error) {
 	var output []awstypes.ImageIdentifier
 
-	pages := ecr.NewListImagesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	paginator := ecr.NewListImagesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 
 		if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 			return nil, &retry.NotFoundError{
@@ -154,8 +98,13 @@ func findImages(ctx context.Context, conn *ecr.Client, input *ecr.ListImagesInpu
 }
 
 type imagesDataSourceModel struct {
-	ID             types.String `tfsdk:"id"`
-	RepositoryName types.String `tfsdk:"repository_name"`
-	RegistryID     types.String `tfsdk:"registry_id"`
-	ImageIDs       types.List   `tfsdk:"image_ids"`
+	framework.WithRegionModel
+	ImageIDs       fwtypes.ListNestedObjectValueOf[imagesIDsModel] `tfsdk:"image_ids"`
+	RegistryID     types.String                                    `tfsdk:"registry_id"`
+	RepositoryName types.String                                    `tfsdk:"repository_name"`
+}
+
+type imagesIDsModel struct {
+	ImageDigest types.String `tfsdk:"image_digest"`
+	ImageTag    types.String `tfsdk:"image_tag"`
 }

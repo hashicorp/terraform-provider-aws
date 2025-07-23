@@ -30,14 +30,14 @@ output "image_tags" {
 
 This data source supports the following arguments:
 
-* `repository_name` - (Required) Name of the ECR Repository.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_id` - (Optional) ID of the Registry where the repository resides.
+* `repository_name` - (Required) Name of the ECR Repository.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The name of the repository.
 * `image_ids` - List of image objects containing image digest and tags. Each object has the following attributes:
     * `image_digest` - The sha256 digest of the image manifest.
     * `image_tag` - The tag associated with the image.
