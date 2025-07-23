@@ -273,6 +273,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName,
 				inttypes.WithV6_0SDKv2Fix(),
 			),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceRolePolicy,

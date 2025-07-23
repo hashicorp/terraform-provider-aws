@@ -715,6 +715,14 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
 			}
 
+			if resource.Import.CustomImport {
+				if r.Importer == nil || r.Importer.StateContext == nil {
+					errs = append(errs, fmt.Errorf("resource type %s: uses CustomImport but does not define an import function", typeName))
+					continue
+				}
+
+				customResourceImporter(r, &resource.Identity, &resource.Import)
+			}
 			if resource.Import.WrappedImport {
 				if r.Importer != nil && r.Importer.StateContext != nil {
 					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))

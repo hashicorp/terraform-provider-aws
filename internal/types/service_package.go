@@ -390,5 +390,6 @@ type SDKv2ImportID interface {
 
 type SDKv2Import struct {
 	WrappedImport bool
+	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
 }

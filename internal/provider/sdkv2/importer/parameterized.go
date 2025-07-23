@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attr inttypes.IdentityAttribute, client AWSClient) error {
+func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+
 	if rd.Id() != "" {
 		importID := rd.Id()
 		if attr.ResourceAttributeName() != names.AttrID {
@@ -52,7 +54,9 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, a
 	return nil
 }
 
-func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attr inttypes.IdentityAttribute, client AWSClient) error {
+func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+
 	if rd.Id() != "" {
 		importID := rd.Id()
 		if attr.ResourceAttributeName() != names.AttrID {
@@ -88,7 +92,7 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 	return nil
 }
 
-func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -113,7 +117,7 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 			return err
 		}
 
-		for _, attr := range attrs {
+		for _, attr := range identitySpec.Attributes {
 			switch attr.Name() {
 			case names.AttrAccountID, names.AttrRegion:
 				// Do nothing
@@ -137,7 +141,7 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 	return nil
 }
 
-func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -158,7 +162,7 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, a
 			return err
 		}
 
-		for _, attr := range attrs {
+		for _, attr := range identitySpec.Attributes {
 			switch attr.Name() {
 			case names.AttrAccountID:
 				// Do nothing

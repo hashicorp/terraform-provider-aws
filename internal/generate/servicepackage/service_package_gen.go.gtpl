@@ -224,7 +224,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				{{- end }}
 				{{- if $value.WrappedImport }}
 					Import: inttypes.FrameworkImport{
-						WrappedImport: true,
+						{{- if $value.CustomImport }}
+							CustomImport: true,
+						{{- else }}
+							WrappedImport: true,
+						{{- end }}
 						{{- if ne $value.ImportIDHandler "" }}
 							ImportID: {{ $value.ImportIDHandler }}{},
 						{{- end }}
@@ -424,7 +428,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				{{- end }}
 				{{- if $value.WrappedImport }}
 					Import: inttypes.SDKv2Import{
-						WrappedImport: true,
+						{{- if $value.CustomImport }}
+							CustomImport: true,
+						{{- else }}
+							WrappedImport: true,
+						{{- end }}
 						{{- if ne $value.ImportIDHandler "" }}
 							ImportID: {{ $value.ImportIDHandler }}{},
 						{{- end }}

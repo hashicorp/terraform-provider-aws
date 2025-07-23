@@ -181,6 +181,7 @@ type ResourceDatum struct {
 	SingletonIdentity                 bool
 	MutableIdentity                   bool
 	WrappedImport                     bool
+	CustomImport                      bool
 	goImports                         []goImport
 	IdentityDuplicateAttrs            []string
 	ImportIDHandler                   string
@@ -411,6 +412,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.WrappedImport = b
 					}
 				}
+
+			case "CustomImport":
+				d.CustomImport = true
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
@@ -644,7 +648,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.
