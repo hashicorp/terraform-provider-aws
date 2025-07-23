@@ -45,7 +45,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName, dName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
@@ -86,7 +86,7 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName, dName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceProject, resourceName),
 				),
@@ -195,7 +195,7 @@ func TestAccDataZoneProject_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(pName, dName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
@@ -216,7 +216,7 @@ func TestAccDataZoneProject_update(t *testing.T) {
 			},
 			{
 				Config: testAccProjectConfigBasicUpdate(pName, dName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v2),
 					testAccCheckProjectNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),

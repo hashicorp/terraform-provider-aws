@@ -78,7 +78,6 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"glossary_terms": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
-
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 20),
 					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
