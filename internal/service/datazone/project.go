@@ -168,8 +168,8 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	if !(out.FailureReasons == nil) && len(out.FailureReasons) > 0 {
-		for _, x := range out.FailureReasons {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("error message: "+*x.Message+" error code: "+*x.Code), smerr.ID, plan.Name.String())
+		for _, reason := range out.FailureReasons {
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("error message: "+*reason.Message+" error code: "+*reason.Code), smerr.ID, plan.Name.String())
 		}
 		return
 	}
