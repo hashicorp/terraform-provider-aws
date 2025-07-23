@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +22,10 @@ import (
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-	replicationInstanceClass := "dms.c4.large"
+	replicationInstanceClass := "dms.t3.micro"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		replicationInstanceClass = "dms.c4.large"
+	}
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -67,7 +71,10 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 func TestAccDMSReplicationInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-	replicationInstanceClass := "dms.c4.large"
+	replicationInstanceClass := "dms.t3.micro"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		replicationInstanceClass = "dms.c4.large"
+	}
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
