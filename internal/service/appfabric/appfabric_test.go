@@ -29,8 +29,10 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"regionCreateNonNull":           testAccAppBundle_regionCreateNonNull,
 			"upgradeFromV5":                 testAccAppBundle_upgradeFromV5,
 			"upgradeFromV5PlanRefreshFalse": testAccAppBundle_upgradeFromV5PlanRefreshFalse,
-			"upgradeFromV5WithUpdatePlanRefreshFalse": testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse,
-			"Identity": testAccAppFabricAppBundle_IdentitySerial,
+			"upgradeFromV5WithUpdatePlanRefreshFalse":    testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse,
+			"upgradeFromV5WithDefaultRegionRefreshFalse": testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse,
+			"upgradeFromV5WithNewRegionRefreshFalse":     testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse,
+			"Identity":                                   testAccAppFabricAppBundle_IdentitySerial,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,
