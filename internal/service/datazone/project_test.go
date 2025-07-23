@@ -253,10 +253,6 @@ func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStat
 
 func testAccProjectConfig_basic(pName, dName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_basic(dName), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
@@ -266,12 +262,9 @@ resource "aws_datazone_project" "test" {
 }
 `, pName))
 }
+
 func testAccProjectConfigBasicUpdate(pName, dName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_basic(dName), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   glossary_terms      = ["2N8w6XJCwZf"]
