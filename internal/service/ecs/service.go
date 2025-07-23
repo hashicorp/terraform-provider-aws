@@ -2234,7 +2234,7 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
