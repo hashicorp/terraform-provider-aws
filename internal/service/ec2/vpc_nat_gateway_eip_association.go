@@ -206,6 +206,7 @@ func (r *resourceNATGatewayEIPAssociation) ImportState(ctx context.Context, req 
 }
 
 type resourceVPCNATGatewayEIPAssociationModel struct {
+	framework.WithRegionModel
 	AllocationID  types.String   `tfsdk:"allocation_id"`
 	AssociationID types.String   `tfsdk:"association_id"`
 	ID            types.String   `tfsdk:"id"`
