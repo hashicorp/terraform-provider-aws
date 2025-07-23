@@ -19,6 +19,7 @@ func TestAccInspector2_serial(t *testing.T) {
 			acctest.CtDisappears:                 testAccEnabler_disappears,
 			"lambda":                             testAccEnabler_lambda,
 			"lambdaCode":                         testAccEnabler_lambdaCode,
+			"codeRepository":                     testAccEnabler_codeRepository,
 			"updateResourceTypes":                testAccEnabler_updateResourceTypes,
 			"updateResourceTypes_disjoint":       testAccEnabler_updateResourceTypes_disjoint,
 			"memberAccount_basic":                testAccEnabler_memberAccount_basic,
