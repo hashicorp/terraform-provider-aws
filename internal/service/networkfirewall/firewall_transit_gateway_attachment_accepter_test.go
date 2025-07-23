@@ -49,9 +49,11 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_basic(t *tes
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrTransitGatewayAttachmentID),
+				ImportStateVerifyIdentifierAttribute: names.AttrTransitGatewayAttachmentID,
 			},
 		},
 	})
@@ -85,7 +87,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 			},
@@ -145,18 +147,7 @@ func testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx context.Cont
 }
 
 func testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountProvider(),
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -215,7 +206,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 resource "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" "test" {
-  transit_gateway_attachment_id = aws_networkfirewall_firewall.test.firewall_status[0].transit_gateway_attachment_sync_state[0].attachment_id
+  transit_gateway_attachment_id = aws_networkfirewall_firewall.test.firewall_status[0].transit_gateway_attachment_sync_states[0].attachment_id
 }
 `, rName))
 }
