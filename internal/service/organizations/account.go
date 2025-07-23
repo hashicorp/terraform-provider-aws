@@ -35,7 +35,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @Tags(identifierAttribute="id")
 // @IdentityAttribute("id")
 // @WrappedImport(false)
-// @Testing(identityTest=false)
+// @Testing(tagsTest=false, identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Account")
 // @Testing(serialize=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsEnabled")
