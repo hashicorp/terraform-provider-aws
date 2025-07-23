@@ -354,7 +354,7 @@ func resourceEndpoint() *schema.Resource {
 						"authentication_method": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          awstypes.OracleAuthenticationMethodPassword,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OracleAuthenticationMethod](),
 							ConflictsWith:    []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 						},
