@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -43,6 +42,7 @@ const (
 
 type resourceNATGatewayEIPAssociation struct {
 	framework.ResourceWithModel[resourceVPCNATGatewayEIPAssociationModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -199,10 +199,6 @@ func (r *resourceNATGatewayEIPAssociation) Delete(ctx context.Context, req resou
 		)
 		return
 	}
-}
-
-func (r *resourceNATGatewayEIPAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceVPCNATGatewayEIPAssociationModel struct {
