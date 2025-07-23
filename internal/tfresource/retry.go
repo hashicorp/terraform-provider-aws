@@ -149,8 +149,8 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 	})
 }
 
-func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsOneOf2[T any, T1, T2 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) {
 			return true, err
 		}
