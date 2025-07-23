@@ -248,7 +248,10 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
   core_network_id     = aws_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [
+    aws_ec2_transit_gateway_policy_table.test,
+    aws_networkmanager_core_network_policy_attachment.test,
+  ]
 }
 `)
 }
@@ -263,7 +266,10 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
     %[1]q = %[2]q
   }
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [
+    aws_ec2_transit_gateway_policy_table.test,
+    aws_networkmanager_core_network_policy_attachment.test,
+  ]
 }
 `, tagKey1, tagValue1))
 }
@@ -279,7 +285,10 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
     %[3]q = %[4]q
   }
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [
+    aws_ec2_transit_gateway_policy_table.test,
+    aws_networkmanager_core_network_policy_attachment.test,
+  ]
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
