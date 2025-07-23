@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_networkmanager_vpc_attachment", name="VPC Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,

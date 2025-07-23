@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_networkmanager_transit_gateway_peering", name="Transit Gateway Peering")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,

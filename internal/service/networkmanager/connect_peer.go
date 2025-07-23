@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_networkmanager_connect_peer", name="Connect Peer")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
