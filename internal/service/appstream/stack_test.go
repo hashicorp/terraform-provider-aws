@@ -117,7 +117,16 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
-					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.0.connector_type", "GOOGLE_DRIVE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.0.domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.0.domains.*", "subdomain.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.1.connector_type", "HOMEFOLDERS"),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.2.connector_type", "ONE_DRIVE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.2.domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.2.domains.*", "subdomain.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.2.domains_require_admin_consent.*", "consent.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "storage_connectors.2.domains_require_admin_consent.*", "consent.subdomain.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
@@ -430,7 +439,16 @@ resource "aws_appstream_stack" "test" {
   embed_host_domains = ["example.com", "subdomain.example.com"]
 
   storage_connectors {
+    connector_type = "GOOGLE_DRIVE"
+	domains = ["example.com", "subdomain.example.com"]
+  }
+  storage_connectors {
     connector_type = "HOMEFOLDERS"
+  }
+  storage_connectors {
+    connector_type = "ONE_DRIVE"
+	domains = ["example.com", "subdomain.example.com"]
+    domains_require_admin_consent = ["consent.example.com", "consent.subdomain.example.com"]
   }
 
   user_settings {
