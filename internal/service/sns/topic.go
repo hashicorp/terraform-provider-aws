@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
-	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -269,7 +268,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	name := topicName(d)
-	input := sns.CreateTopicInput{
+	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
@@ -292,13 +291,13 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		delete(attributes, topicAttributeNameFIFOThroughputScope)
 	}
 
-	output, err := conn.CreateTopic(ctx, &input)
+	output, err := conn.CreateTopic(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		output, err = conn.CreateTopic(ctx, &input)
+		output, err = conn.CreateTopic(ctx, input)
 	}
 
 	if err != nil {
@@ -395,10 +394,9 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
-	input := sns.DeleteTopicInput{
+	_, err := conn.DeleteTopic(ctx, &sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteTopic(ctx, &input)
+	})
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -469,14 +467,14 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	input := sns.SetTopicAttributesInput{
+	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),
 		TopicArn:       aws.String(arn),
 	}
 
 	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (any, error) {
-		return conn.SetTopicAttributes(ctx, &input)
+		return conn.SetTopicAttributes(ctx, input)
 	})
 
 	if err != nil {
@@ -498,32 +496,34 @@ func topicName(d sdkv2.ResourceDiffer) string {
 // is populated with valid AWS principals, i.e. the principal is either an AWS Account ID or an ARN.
 // nosemgrep:ci.aws-in-func-name
 func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
-	var (
-		attributes map[string]string
-		err        error
-	)
-	for l := backoff.NewLoop(propagationTimeout); l.Continue(ctx); {
+	var attributes map[string]string
+	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+		var err error
 		attributes, err = findTopicAttributesByARN(ctx, conn, arn)
 		if err != nil {
-			break
+			return retry.NonRetryableError(err)
 		}
 
-		var valid bool
-		valid, err = tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
-		if err != nil || valid {
-			break
+		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
+		if err != nil {
+			return retry.NonRetryableError(err)
 		}
-	}
+		if !valid {
+			return retry.RetryableError(errors.New("contains invalid principals"))
+		}
+
+		return nil
+	})
 
 	return attributes, err
 }
 
 func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
-	input := sns.GetTopicAttributesInput{
+	input := &sns.GetTopicAttributesInput{
 		TopicArn: aws.String(arn),
 	}
 
-	output, err := conn.GetTopicAttributes(ctx, &input)
+	output, err := conn.GetTopicAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
