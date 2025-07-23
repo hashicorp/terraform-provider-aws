@@ -2088,6 +2088,44 @@ func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Clie
 	return findSecurityGroupRules(ctx, conn, &input)
 }
 
+func findSecurityGroupVPCAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, groupID, vpcID string) (*awstypes.SecurityGroupVpcAssociation, error) {
+	input := ec2.DescribeSecurityGroupVpcAssociationsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"group-id": groupID,
+			"vpc-id":   vpcID,
+		}),
+	}
+
+	return findSecurityGroupVPCAssociation(ctx, conn, &input)
+}
+
+func findSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) (*awstypes.SecurityGroupVpcAssociation, error) {
+	output, err := findSecurityGroupVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecurityGroupVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) ([]awstypes.SecurityGroupVpcAssociation, error) {
+	var output []awstypes.SecurityGroupVpcAssociation
+
+	pages := ec2.NewDescribeSecurityGroupVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroupVpcAssociations...)
+	}
+
+	return output, nil
+}
+
 func findNetworkInterfacePermissions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) ([]awstypes.NetworkInterfacePermission, error) {
 	var output []awstypes.NetworkInterfacePermission
 
@@ -3223,7 +3261,9 @@ func findVPCPeeringConnection(ctx context.Context, conn *ec2.Client, input *ec2.
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool { return v.Status != nil })
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool {
+		return v.AccepterVpcInfo != nil && v.RequesterVpcInfo != nil && v.Status != nil
+	})
 }
 
 func findVPCPeeringConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) ([]awstypes.VpcPeeringConnection, error) {
@@ -6758,4 +6798,258 @@ func findVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client
 	}
 
 	return output, nil
+}
+
+func findRouteServer(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServersInput) (*awstypes.RouteServer, error) {
+	output, err := findRouteServers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServers(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServersInput) ([]awstypes.RouteServer, error) {
+	var output []awstypes.RouteServer
+
+	pages := ec2.NewDescribeRouteServersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServers...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServer, error) {
+	input := ec2.DescribeRouteServersInput{
+		RouteServerIds: []string{id},
+	}
+
+	output, err := findRouteServer(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findRouteServerAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) (*awstypes.RouteServerAssociation, error) {
+	input := ec2.GetRouteServerAssociationsInput{
+		RouteServerId: aws.String(routeServerID),
+	}
+	output, err := findRouteServerAssociations(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.RouteServerAssociation) bool {
+		return aws.ToString(v.VpcId) == vpcID
+	}))
+}
+
+func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerAssociationsInput) ([]awstypes.RouteServerAssociation, error) {
+	output, err := conn.GetRouteServerAssociations(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotAssociated, errCodeInvalidRouteServerIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RouteServerAssociations, nil
+}
+
+func findRouteServerEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerEndpointsInput) (*awstypes.RouteServerEndpoint, error) {
+	output, err := findRouteServerEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServerEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerEndpointsInput) ([]awstypes.RouteServerEndpoint, error) {
+	var output []awstypes.RouteServerEndpoint
+
+	pages := ec2.NewDescribeRouteServerEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServerEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServerEndpoint, error) {
+	input := ec2.DescribeRouteServerEndpointsInput{
+		RouteServerEndpointIds: []string{id},
+	}
+
+	output, err := findRouteServerEndpoint(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerEndpointStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findRouteServerPeer(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerPeersInput) (*awstypes.RouteServerPeer, error) {
+	output, err := findRouteServerPeers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServerPeers(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteServerPeersInput) ([]awstypes.RouteServerPeer, error) {
+	var output []awstypes.RouteServerPeer
+
+	pages := ec2.NewDescribeRouteServerPeersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerPeerIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RouteServerPeers...)
+	}
+
+	return output, nil
+}
+
+func findRouteServerPeerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteServerPeer, error) {
+	input := ec2.DescribeRouteServerPeersInput{
+		RouteServerPeerIds: []string{id},
+	}
+
+	output, err := findRouteServerPeer(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.RouteServerPeerStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.RouteServerPeerId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findRouteServerPropagation(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerPropagationsInput) (*awstypes.RouteServerPropagation, error) {
+	output, err := findRouteServerPropagations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRouteServerPropagations(ctx context.Context, conn *ec2.Client, input *ec2.GetRouteServerPropagationsInput) ([]awstypes.RouteServerPropagation, error) {
+	output, err := conn.GetRouteServerPropagations(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteServerIdNotPropagated, errCodeInvalidRouteServerIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RouteServerPropagations, nil
+}
+
+func findRouteServerPropagationByTwoPartKey(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) (*awstypes.RouteServerPropagation, error) {
+	input := ec2.GetRouteServerPropagationsInput{
+		RouteServerId: aws.String(routeServerID),
+		RouteTableId:  aws.String(routeTableID),
+	}
+
+	return findRouteServerPropagation(ctx, conn, &input)
 }

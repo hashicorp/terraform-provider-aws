@@ -38,7 +38,7 @@ const (
 )
 
 type ingestionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ingestionResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -89,7 +89,7 @@ func (r *ingestionResource) Schema(ctx context.Context, req resource.SchemaReque
 func (r *ingestionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan resourceIngestionData
+	var plan ingestionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,7 +132,7 @@ func (r *ingestionResource) Create(ctx context.Context, req resource.CreateReque
 func (r *ingestionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceIngestionData
+	var state ingestionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -172,7 +172,7 @@ func (r *ingestionResource) Read(ctx context.Context, req resource.ReadRequest, 
 func (r *ingestionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var state resourceIngestionData
+	var state ingestionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -255,7 +255,8 @@ func ingestionParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-type resourceIngestionData struct {
+type ingestionResourceModel struct {
+	framework.WithRegionModel
 	ARN             types.String `tfsdk:"arn"`
 	AWSAccountID    types.String `tfsdk:"aws_account_id"`
 	DataSetID       types.String `tfsdk:"data_set_id"`

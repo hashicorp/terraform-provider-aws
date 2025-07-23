@@ -537,6 +537,52 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_metadata(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var table s3tables.GetTableOutput
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_metadata(rName, namespace, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.name", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.type", "int"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.name", acctest.CtName),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.1.required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.name", names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.type", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.2.required", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"metadata"},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
@@ -748,5 +794,50 @@ resource "aws_kms_key" "test2" {
 }
 
 
+`, rName, namespace, bucketName)
+}
+
+func testAccTableConfig_metadata(rName, namespace, bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name = "name"
+          type = "string"
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = true
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[2]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[3]q
+}
 `, rName, namespace, bucketName)
 }

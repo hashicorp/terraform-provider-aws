@@ -3252,7 +3252,7 @@ resource "aws_codepipeline" "test" {
           configuration   = {}
           commands        = ["exit 0"]
           input_artifacts = ["test"]
-          region          = data.aws_region.current.name
+          region          = data.aws_region.current.region
           role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
 
@@ -3531,7 +3531,7 @@ resource "aws_codepipeline" "test" {
           configuration   = {}
           commands        = ["exit 1"]
           input_artifacts = ["test"]
-          region          = data.aws_region.current.name
+          region          = data.aws_region.current.region
           role_arn        = aws_iam_role.codepipeline_role.arn
           name            = "CheckByCommandsRule"
 

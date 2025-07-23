@@ -26,6 +26,7 @@ data "aws_route53_resolver_firewall_domain_list" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_domain_list_id` - (Required) The ID of the domain list.
 
 ## Attribute Reference

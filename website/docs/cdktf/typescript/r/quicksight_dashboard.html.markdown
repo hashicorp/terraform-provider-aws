@@ -138,6 +138,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `dashboardPublishOptions` - (Optional) Options for publishing the dashboard. See [dashboard_publish_options](#dashboard_publish_options).
 * `definition` - (Optional) A detailed dashboard definition. Only one of `definition` or `sourceEntity` should be configured. See [definition](#definition).
@@ -289,4 +290,4 @@ Using `terraform import`, import a QuickSight Dashboard using the AWS account ID
 % terraform import aws_quicksight_dashboard.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9f686a697583cc68bcdda01d77c43a8c130a26f2d273f19d6b15acb81c7b6b53 -->
+<!-- cache-key: cdktf-0.20.8 input-0dde427a0ea9320283cfea5d88db74f856433081838c7dfd8d83488fb5d678d1 -->

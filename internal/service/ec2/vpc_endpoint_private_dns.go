@@ -27,7 +27,7 @@ func newVPCEndpointPrivateDNSResource(_ context.Context) (resource.ResourceWithC
 }
 
 type vpcEndpointPrivateDNSResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointPrivateDNSResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -131,6 +131,7 @@ func (r *vpcEndpointPrivateDNSResource) ImportState(ctx context.Context, request
 }
 
 type vpcEndpointPrivateDNSResourceModel struct {
+	framework.WithRegionModel
 	PrivateDNSEnabled types.Bool   `tfsdk:"private_dns_enabled"`
 	VPCEndpointID     types.String `tfsdk:"vpc_endpoint_id"`
 }

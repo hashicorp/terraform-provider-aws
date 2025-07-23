@@ -20,7 +20,6 @@ import (
 
 func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var rgn types.RuleGroupsNamespaceDescription
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 
@@ -65,7 +64,6 @@ func TestAccAMPRuleGroupNamespace_basic(t *testing.T) {
 
 func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceName := "aws_prometheus_rule_group_namespace.test"
 	var rgn types.RuleGroupsNamespaceDescription
 

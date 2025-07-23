@@ -208,6 +208,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * Creating an Amazon issued certificate
     * `domainName` - (Required) Domain name for which the certificate should be issued
     * `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
@@ -235,6 +236,7 @@ This resource supports the following arguments:
 Supported nested arguments for the `options` configuration block:
 
 * `certificateTransparencyLoggingPreference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `export` - (Optional) Whether the certificate can be exported. Valid values are `ENABLED` or `DISABLED` (default). **Note** Issuing an exportable certificate is subject to additional charges. See [AWS Certificate Manager pricing](https://aws.amazon.com/certificate-manager/pricing/) for more details.
 
 ## validation_option Configuration Block
 
@@ -309,4 +311,4 @@ Using `terraform import`, import certificates using their ARN. For example:
 % terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b0184e44a610d694fba3952a6de11a4086e481248f8db1399c06aaf61e3615fa -->
+<!-- cache-key: cdktf-0.20.8 input-9a6fd091472593088561e31e86c28b6be4d53d3c8d31a44951c17011183a31aa -->

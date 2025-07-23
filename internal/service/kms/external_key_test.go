@@ -502,7 +502,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, n string, v *awstypes.Ke
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (any, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func(ctx context.Context) (*awstypes.KeyMetadata, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 
@@ -510,7 +510,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, n string, v *awstypes.Ke
 			return err
 		}
 
-		*v = *(outputRaw.(*awstypes.KeyMetadata))
+		*v = *output
 
 		return nil
 	}

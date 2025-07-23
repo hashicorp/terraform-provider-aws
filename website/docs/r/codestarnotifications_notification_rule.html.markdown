@@ -56,6 +56,7 @@ resource "aws_codestarnotifications_notification_rule" "commits" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detail_type` - (Required) The level of detail to include in the notifications for this resource. Possible values are `BASIC` and `FULL`.
 * `event_type_ids` - (Required) A list of event types associated with this notification rule.
   For list of allowed events see [here](https://docs.aws.amazon.com/codestar-notifications/latest/userguide/concepts.html#concepts-api).

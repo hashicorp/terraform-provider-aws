@@ -142,7 +142,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(createResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 

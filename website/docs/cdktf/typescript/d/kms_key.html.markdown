@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `keyId` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`
     * Key ARN. E.g.: `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
@@ -68,7 +69,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloudHsmClusterId`: The cluster ID of the AWS CloudHSM cluster that contains the key material for the KMS key.
 * `creationDate`: The date and time when the key was created
 * `customKeyStoreId`: A unique identifier for the custom key store that contains the KMS key.
-* `customerMasterKeySpec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
+* `customerMasterKeySpec`: See `keySpec`.
 * `deletionDate`: The date and time after which AWS KMS deletes the key. This value is present only when `keyState` is `PendingDeletion`, otherwise this value is 0
 * `description`: The description of the key.
 * `enabled`: Specifies whether the key is enabled. When `keyState` is `Enabled` this value is true, otherwise it is false
@@ -95,4 +96,4 @@ The `primary_key` and `replica_keys` objects support the following:
 * `arn`: The key ARN of a primary or replica key of a multi-Region key.
 * `region`: The AWS Region of a primary or replica key in a multi-Region key.
 
-<!-- cache-key: cdktf-0.20.8 input-ec307af213652faa5ab9e6aabfb1a2aa478f96ed587bbed7c8f8bc1348278da0 -->
+<!-- cache-key: cdktf-0.20.8 input-e6b46dfc89647ed934401da02c472144b8cdf3e1a7f3b42fe9dbbef582cffaf9 -->

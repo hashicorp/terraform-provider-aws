@@ -88,7 +88,7 @@ locals {
 
   workspaces_az_id_strings = lookup(
     local.region_workspaces_az_id_strings,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     join(",", data.aws_availability_zones.available.zone_ids),
   )
   workspaces_az_ids = split(",", local.workspaces_az_id_strings)

@@ -32,7 +32,7 @@ func newOrganizationsFeaturesResource(context.Context) (resource.ResourceWithCon
 }
 
 type organizationsFeaturesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationsFeaturesResourceModel]
 	framework.WithImportByID
 }
 

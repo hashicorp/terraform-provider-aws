@@ -3,8 +3,8 @@ package elasticbeanstalk
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
@@ -27,7 +27,7 @@ func listTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier str
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.ResourceTags), nil
@@ -39,7 +39,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -131,7 +131,7 @@ func updateTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier s
 	_, err := conn.UpdateTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil

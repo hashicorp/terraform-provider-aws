@@ -81,6 +81,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `assignIpv6AddressOnCreation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
@@ -149,4 +150,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-800b4894a44d3fb10c7ed4e02828a98cc6bb1ba25ee4607e803d5cddf8afc2ed -->
+<!-- cache-key: cdktf-0.20.8 input-b4187716de12839afdd7a583f39ecff749d095c972888903402ed7a78d349457 -->

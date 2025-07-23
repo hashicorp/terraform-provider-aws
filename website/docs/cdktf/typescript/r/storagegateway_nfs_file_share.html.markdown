@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientList` - (Required) The list of clients that are allowed to access the file gateway. The list must contain either valid IP addresses or valid CIDR blocks. Set to `["0.0.0.0/0"]` to not limit access. Minimum 1 item. Maximum 100 items.
 * `gatewayArn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `locationArn` - (Required) The ARN of the backed storage used for storing file data.
@@ -127,4 +128,4 @@ Using `terraform import`, import `aws_storagegateway_nfs_file_share` using the N
 % terraform import aws_storagegateway_nfs_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37dcb9904d5b8589febdac999a43883747910390dad15f3d634a4d7806b3b88b -->
+<!-- cache-key: cdktf-0.20.8 input-b22acab40a7d06f5cb9e80ef5e2c3cf1307ba6734cea6cb3ac0bd602eb959b48 -->

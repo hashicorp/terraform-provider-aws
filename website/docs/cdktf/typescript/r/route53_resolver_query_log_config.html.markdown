@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinationArn` - (Required) The ARN of the resource that you want Route 53 Resolver to send query logs.
 You can send query logs to an [S3 bucket](s3_bucket.html), a [CloudWatch Logs log group](cloudwatch_log_group.html), or a [Kinesis Data Firehose delivery stream](kinesis_firehose_delivery_stream.html).
 * `name` - (Required) The name of the Route 53 Resolver query logging configuration.
@@ -91,4 +92,4 @@ Using `terraform import`, import  Route 53 Resolver query logging configurations
 % terraform import aws_route53_resolver_query_log_config.example rqlc-92edc3b1838248bf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5223f85f64c286cf17d4b87baa9cc06e62338ab91d82d959ba69e32ab94b1a4d -->
+<!-- cache-key: cdktf-0.20.8 input-0cd252ec9743a2042a718602c5541274d5bab720c63ae60abc748776b59fc56e -->

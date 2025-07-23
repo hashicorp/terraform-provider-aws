@@ -55,6 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_role_values` - (Optional) The admin role values.
 * `allowed_organizations` - (Optional) The allowed organizations.
 * `email_assertion` - (Optional) The email assertion.

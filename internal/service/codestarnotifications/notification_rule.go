@@ -30,17 +30,15 @@ import (
 )
 
 // @SDKResource("aws_codestarnotifications_notification_rule", name="Notification Rule")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 func resourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,
 		ReadWithoutTimeout:   resourceNotificationRuleRead,
 		UpdateWithoutTimeout: resourceNotificationRuleUpdate,
 		DeleteWithoutTimeout: resourceNotificationRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

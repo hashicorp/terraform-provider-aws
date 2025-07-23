@@ -51,14 +51,18 @@ func resourceDistribution() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"aliases": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"anycast_ip_list_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"caller_reference": {
 				Type:     schema.TypeString,
@@ -954,6 +958,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 		}
 	}
+	d.Set("anycast_ip_list_id", distributionConfig.AnycastIpListId)
 	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
@@ -1344,6 +1349,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.Aliases = expandAliases(v.(*schema.Set).List())
 	} else {
 		apiObject.Aliases = expandAliases([]any{})
+	}
+
+	if v, ok := d.GetOk("anycast_ip_list_id"); ok {
+		apiObject.AnycastIpListId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("caller_reference"); ok {

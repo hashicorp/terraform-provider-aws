@@ -36,6 +36,7 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_options` - (Required) Information about the authentication method(s) to be used to authenticate clients.  If using a combination of mutual authentication and federated or Active Directory authentication, create an `authentication_options` block for each authentication type.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `client_connect_options` - (Optional) The options for managing connection authorization for new client connections.

@@ -22,7 +22,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -216,7 +216,7 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -267,8 +267,14 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -280,7 +286,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -327,8 +333,14 @@ func TestAccACMPCACertificateAuthority_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -340,7 +352,7 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -424,7 +436,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -519,7 +531,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -662,7 +674,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
@@ -754,7 +766,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -947,7 +959,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1116,7 +1128,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1301,7 +1313,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1394,7 +1406,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1486,7 +1498,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1554,7 +1566,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyProviderOnlyTag(t *
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1614,7 +1626,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1679,7 +1691,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1744,7 +1756,7 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnCreate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1802,7 +1814,7 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Add(t *testing.
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1902,7 +1914,7 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Replace(t *test
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -1992,7 +2004,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -2023,7 +2035,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2072,7 +2084,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2121,7 +2133,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2154,7 +2166,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_ResourceTag(t *te
 	resourceName := "aws_acmpca_certificate_authority.test"
 	rName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		CheckDestroy: testAccCheckCertificateAuthorityDestroy(ctx),
@@ -2183,7 +2195,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2246,7 +2258,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2309,7 +2321,7 @@ func TestAccACMPCACertificateAuthority_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

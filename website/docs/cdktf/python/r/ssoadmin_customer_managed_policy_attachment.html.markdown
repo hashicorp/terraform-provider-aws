@@ -73,6 +73,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
 * `customer_managed_policy_reference` - (Required, Forces new resource) Specifies the name and path of a customer managed policy. See below.
@@ -122,4 +123,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `name`
 % terraform import aws_ssoadmin_customer_managed_policy_attachment.example TestPolicy,/,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a04c10d6fcfe1554e5e21b7e379b1eef18d14ec57155c17e159d69d18e318c3e -->
+<!-- cache-key: cdktf-0.20.8 input-ea3dc813ce604de7d98733bbd3b35183185302cd6adb2bfaeed7ad11cd44785f -->

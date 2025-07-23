@@ -501,8 +501,7 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-test-constants-temp.yml
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -573,6 +572,14 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
+
+semgrep-vcr: ## Enable VCR support with Semgrep --autofix
+	@echo "make: Enable VCR support with Semgrep --autofix"
+	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
+	@echo "this target may need to be run twice."
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config internal/vcr/.semgrep-vcr.yml
 
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
@@ -698,7 +705,11 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
+		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
@@ -737,6 +748,12 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -925,6 +942,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-naming \
 	semgrep-service-naming \
 	semgrep-validate \
+	semgrep-vcr \
 	semgrep \
 	skaff-check-compile \
 	skaff \
@@ -950,6 +968,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tools \
 	ts \
 	update \
+	vcr-enable \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \

@@ -151,7 +151,7 @@ resource "aws_media_store_container_policy" "test" {
         AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Effect   = "Allow"
-      Resource = "arn:${data.aws_partition.current.partition}:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*"
+      Resource = "arn:${data.aws_partition.current.partition}:mediastore:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*"
       Condition = {
         Bool = {
           "aws:SecureTransport" = "true"

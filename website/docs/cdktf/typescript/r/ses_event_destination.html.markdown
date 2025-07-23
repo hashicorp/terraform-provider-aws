@@ -107,6 +107,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the event destination
 * `configurationSetName` - (Required) The name of the configuration set
 * `enabled` - (Optional) If true, the event destination will be enabled
@@ -171,4 +172,4 @@ Using `terraform import`, import SES event destinations using `configurationSetN
 % terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-03d0657b4ec477015386f442c464924c2a2cf73364ec9a281d1dab9658fde299 -->
+<!-- cache-key: cdktf-0.20.8 input-6888e5354788c8ff01a09c0b6f4a02808a6255c10702f3136da71d14250d7683 -->
