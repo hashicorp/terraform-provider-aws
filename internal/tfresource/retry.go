@@ -159,8 +159,8 @@ func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration,
 	})
 }
 
-func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsOneOf3[T any, T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
 			return true, err
 		}
@@ -170,7 +170,7 @@ func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Durat
 }
 
 func RetryWhenIsOneOf4[T any, T1, T2, T3, T4 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
-	return reetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) || errs.IsA[T4](err) {
 			return true, err
 		}
@@ -366,8 +366,7 @@ func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, opt
 
 type retryable func(error) (bool, error)
 
-// TODO Rename to `retryWhen` after refactoring complete.
-func reetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
+func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
 		return retryable(err)
 	})(ctx, timeout, opts...)
