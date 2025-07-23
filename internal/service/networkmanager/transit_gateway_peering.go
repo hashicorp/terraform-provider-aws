@@ -224,6 +224,8 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 		Pending: enum.Slice(awstypes.PeeringStateCreating),
 		Target:  enum.Slice(awstypes.PeeringStateAvailable),
 		Timeout: timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
 		Refresh: statusTransitGatewayPeeringState(ctx, conn, id),
 	}
 
@@ -243,6 +245,8 @@ func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.
 		Pending: enum.Slice(awstypes.PeeringStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
+		Delay:      3 * time.Minute,
+		MinTimeout: 10 * time.Second,
 		Refresh: statusTransitGatewayPeeringState(ctx, conn, id),
 	}
 
