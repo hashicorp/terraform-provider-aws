@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
@@ -9,14 +12,12 @@ import (
 	"strings"
 )
 
-// FileResult holds the analysis results for a single file
 type FileResult struct {
 	FilePath   string
 	IsResource bool
 	Errors     []ErrorMatch
 }
 
-// ErrorMatch represents a found non-smarterr error pattern
 type ErrorMatch struct {
 	LineNumber int
 	Line       string
@@ -59,7 +60,6 @@ func analyzeFolder(folderPath string) ([]FileResult, error) {
 			return err
 		}
 
-		// Only process .go files
 		if !strings.HasSuffix(path, ".go") {
 			return nil
 		}
@@ -67,10 +67,9 @@ func analyzeFolder(folderPath string) ([]FileResult, error) {
 		result, err := analyzeFile(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: Error analyzing file %s: %v\n", path, err)
-			return nil // Continue processing other files
+			return nil
 		}
 
-		// Only include files that are resources/datasources and have errors
 		if result.IsResource && len(result.Errors) > 0 {
 			results = append(results, result)
 		}
@@ -81,7 +80,6 @@ func analyzeFolder(folderPath string) ([]FileResult, error) {
 	return results, err
 }
 
-// analyzeFile analyzes a single Go file for resource/datasource annotations and non-smarterr patterns
 func analyzeFile(filePath string) (FileResult, error) {
 	result := FileResult{
 		FilePath: filePath,
@@ -92,12 +90,13 @@ func analyzeFile(filePath string) (FileResult, error) {
 	if err != nil {
 		return result, err
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	scanner := bufio.NewScanner(file)
 	lineNumber := 0
 
-	// Check if this is a resource/datasource file
 	for scanner.Scan() {
 		lineNumber++
 		line := scanner.Text()
@@ -108,13 +107,11 @@ func analyzeFile(filePath string) (FileResult, error) {
 		}
 	}
 
-	// If not a resource/datasource, return early
 	if !result.IsResource {
 		return result, nil
 	}
 
-	// Reset file pointer and scan again for error patterns
-	file.Seek(0, 0)
+	_, _ = file.Seek(0, 0)
 	scanner = bufio.NewScanner(file)
 	lineNumber = 0
 
@@ -134,7 +131,6 @@ func analyzeFile(filePath string) (FileResult, error) {
 	return result, scanner.Err()
 }
 
-// isResourceOrDataSource checks if the line contains resource/datasource annotations
 func isResourceOrDataSource(line string) bool {
 	annotations := []string{
 		"// @SDKResource",
@@ -151,9 +147,7 @@ func isResourceOrDataSource(line string) bool {
 	return false
 }
 
-// findNonSmarterrPattern checks if the line contains non-smarterr error patterns
 func findNonSmarterrPattern(line string) string {
-	// Define patterns for non-smarterr error handling based on the documentation
 	patterns := map[string]*regexp.Regexp{
 		"sdkdiag.AppendFromErr":                     regexp.MustCompile(`sdkdiag\.AppendFromErr\s*\(`),
 		"sdkdiag.AppendErrorf":                      regexp.MustCompile(`sdkdiag\.AppendErrorf\s*\(`),
@@ -180,7 +174,6 @@ func findNonSmarterrPattern(line string) string {
 	return ""
 }
 
-// printResults outputs the analysis results
 func printResults(results []FileResult) {
 	if len(results) == 0 {
 		fmt.Println("No non-smarterr error patterns found in resource/datasource files.")
@@ -195,7 +188,6 @@ func printResults(results []FileResult) {
 		}
 	}
 
-	// Summary
 	totalErrors := 0
 	for _, result := range results {
 		totalErrors += len(result.Errors)
@@ -203,7 +195,6 @@ func printResults(results []FileResult) {
 	fmt.Printf("\nTotal: %d non-smarterr error patterns found across %d files.\n", totalErrors, len(results))
 }
 
-// fixFiles automatically fixes bare return statements in the given files
 func fixFiles(results []FileResult) error {
 	for _, result := range results {
 		hasBareReturns := false
@@ -226,7 +217,6 @@ func fixFiles(results []FileResult) error {
 	return nil
 }
 
-// fixBareReturnsInFile fixes bare return statements in a single file
 func fixBareReturnsInFile(filePath string) error {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
@@ -237,7 +227,6 @@ func fixBareReturnsInFile(filePath string) error {
 	modified := false
 	needsSmarterrImport := false
 
-	// Check if smarterr is already imported
 	hasSmarterrImport := false
 	for _, line := range lines {
 		if strings.Contains(line, `"github.com/YakDriver/smarterr"`) {
@@ -246,11 +235,9 @@ func fixBareReturnsInFile(filePath string) error {
 		}
 	}
 
-	// Fix bare return statements
 	bareReturnRegex := regexp.MustCompile(`^(\s*)return\s+nil\s*,\s*err\s*$`)
 	for i, line := range lines {
 		if bareReturnRegex.MatchString(line) {
-			// Extract the indentation
 			matches := bareReturnRegex.FindStringSubmatch(line)
 			if len(matches) > 1 {
 				indent := matches[1]
@@ -261,7 +248,6 @@ func fixBareReturnsInFile(filePath string) error {
 		}
 	}
 
-	// Add smarterr import if needed and not already present
 	if needsSmarterrImport && !hasSmarterrImport {
 		lines = addSmarterrImport(lines)
 		modified = true
@@ -278,15 +264,12 @@ func fixBareReturnsInFile(filePath string) error {
 	return nil
 }
 
-// addSmarterrImport adds the smarterr import to the file
 func addSmarterrImport(lines []string) []string {
 	for i, line := range lines {
 		if strings.HasPrefix(strings.TrimSpace(line), "import (") {
-			// Multi-line import - add to the import block
 			lines = append(lines[:i+1], append([]string{"\t\"github.com/YakDriver/smarterr\""}, lines[i+1:]...)...)
 			return lines
 		} else if strings.HasPrefix(strings.TrimSpace(line), "import ") && strings.Contains(line, "\"") {
-			// Single import - convert to multi-line and add smarterr
 			importLine := strings.TrimSpace(line)
 			existingImport := strings.TrimPrefix(importLine, "import ")
 
@@ -302,7 +285,6 @@ func addSmarterrImport(lines []string) []string {
 	return lines
 }
 
-// countFilesWithBareReturns counts how many files have bare return statements
 func countFilesWithBareReturns(results []FileResult) int {
 	count := 0
 	for _, result := range results {
