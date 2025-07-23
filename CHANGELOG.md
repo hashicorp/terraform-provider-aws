@@ -26,6 +26,7 @@ ENHANCEMENTS:
 * resource/aws_lb_target_group: Add resource identity support ([#43171](https://github.com/hashicorp/terraform-provider-aws/issues/43171))
 * resource/aws_lb_trust_store: Add resource identity support ([#43186](https://github.com/hashicorp/terraform-provider-aws/issues/43186))
 * resource/aws_sns_topic: Add resource identity support ([#43202](https://github.com/hashicorp/terraform-provider-aws/issues/43202))
+* resource/aws_wafv2_rule_group: Add `rules_json` argument ([#433245](https://github.com/hashicorp/terraform-provider-aws/issues/433245))
 
 BUG FIXES:
 
