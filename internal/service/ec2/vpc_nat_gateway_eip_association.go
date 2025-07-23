@@ -191,7 +191,7 @@ func (r *resourceNATGatewayEIPAssociation) Delete(ctx context.Context, req resou
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitNATGatewayAddressDisassociated(ctx, conn, state.NATGatewayID.ValueString(), state.AllocationID.ValueString(), deleteTimeout)
+	err = waitNATGatewayAddressDisassociated(ctx, conn, state.NATGatewayID.ValueString(), state.AllocationID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCNATGatewayEIPAssociation, state.ID.String(), err),
