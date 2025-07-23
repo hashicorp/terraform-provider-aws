@@ -39,7 +39,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
