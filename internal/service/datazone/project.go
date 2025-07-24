@@ -367,7 +367,7 @@ func statusProject(ctx context.Context, conn *datazone.Client, domain string, id
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.ProjectStatus)), nil
+		return out, string(out.ProjectStatus), nil
 	}
 }
 
