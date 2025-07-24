@@ -9,8 +9,11 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -19,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -1099,6 +1103,11 @@ func resourceService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"sigint_cancellation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"task_definition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1430,7 +1439,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
 	if d.Get("wait_for_steady_state").(bool) {
-		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Get("sigint_cancellation").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 		}
 	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -1501,6 +1510,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		} else {
 			d.Set("deployment_circuit_breaker", nil)
 		}
+<<<<<<< HEAD
+=======
+
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(ctx, service.DeploymentConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
+		}
+>>>>>>> 3a4db3db6c (WIP: Enable B/G graceful termination with SIGINT)
 	}
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
@@ -1793,7 +1809,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.Get("wait_for_steady_state").(bool) {
-			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Get("sigint_cancellation").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 			}
 		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -2083,6 +2099,13 @@ const (
 	serviceStatusStable  = "tfSTABLE"
 )
 
+var deploymentTerminalStates = []string{
+	string(awstypes.ServiceDeploymentStatusSuccessful),
+	string(awstypes.ServiceDeploymentStatusStopped),
+	string(awstypes.ServiceDeploymentStatusRollbackFailed),
+	string(awstypes.ServiceDeploymentStatusRollbackSuccessful),
+}
+
 func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceNoTagsByTwoPartKey(ctx, conn, serviceName, clusterNameOrARN)
@@ -2099,8 +2122,7 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time) retry.StateRefreshFunc {
-	var primaryTaskSet *awstypes.Deployment
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, primaryTaskSet **awstypes.Deployment, operationTime time.Time) retry.StateRefreshFunc {
 	var primaryDeploymentArn *string
 	var isNewPrimaryDeployment bool
 
@@ -2116,11 +2138,19 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 		output := outputRaw.(*awstypes.Service)
 
-		if primaryTaskSet == nil {
-			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+		if *primaryTaskSet == nil {
+			tflog.Info(ctx, "UPDATING_PTS", map[string]interface{}{
+				"before": fmt.Sprintf("%p", *primaryTaskSet),
+			})
+			*primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+			tflog.Info(ctx, "UPDATED_PTS", map[string]interface{}{
+				"after":            fmt.Sprintf("%p", *primaryTaskSet),
+				"deployment_count": len(output.Deployments),
+				"deployments":      output.Deployments,
+			})
 
-			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
-				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
+			if *primaryTaskSet != nil && (*primaryTaskSet).CreatedAt != nil {
+				createdAtUTC := (*primaryTaskSet).CreatedAt.UTC()
 				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
 			}
 		}
@@ -2131,11 +2161,12 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 		// For new deployments with ECS deployment controller, check the deployment status
 		if isNewECSDeployment {
+			tflog.Info(ctx, "ISNEWECSDEPLOYMENT", map[string]interface{}{})
 			if primaryDeploymentArn == nil {
 				serviceArn := aws.ToString(output.ServiceArn)
 
 				var err error
-				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
+				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, *primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
 
 				if err != nil {
 					return nil, "", err
@@ -2152,6 +2183,13 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 		}
 
 		// For other deployment controllers or in-place updates, check based on desired count
+		tflog.Info(ctx, "STABILITY_CHECK", map[string]interface{}{
+			"deployment_count":      len(output.Deployments),
+			"desired_count":         output.DesiredCount,
+			"running_count":         output.RunningCount,
+			"primary_task_set":      *primaryTaskSet,
+			"is_new_ecs_deployment": isNewECSDeployment,
+		})
 		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
 			serviceStatus = serviceStatusStable
 		} else {
@@ -2164,14 +2202,14 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 func findPrimaryTaskSet(deployments []awstypes.Deployment) *awstypes.Deployment {
 	for _, deployment := range deployments {
-		if aws.ToString(deployment.Status) == "PRIMARY" {
+		if aws.ToString(deployment.Status) == taskSetStatusPrimary {
 			return &deployment
 		}
 	}
 	return nil
 }
 
-func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceArn, clusterNameOrARN string, operationTime time.Time) (*string, error) {
+func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceNameOrARN, clusterNameOrARN string, operationTime time.Time) (*string, error) {
 	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
@@ -2180,7 +2218,7 @@ func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTask
 
 	input := &ecs.ListServiceDeploymentsInput{
 		Cluster: aws.String(clusterNameOrARN),
-		Service: aws.String(serviceNameFromARN(serviceArn)),
+		Service: aws.String(serviceNameFromARN(serviceNameOrARN)),
 		CreatedAt: &awstypes.CreatedAt{
 			After: &operationTime,
 		},
@@ -2216,6 +2254,10 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 	}
 
 	deployment := output.ServiceDeployments[0]
+	tflog.Info(ctx, "DEPLOYMENT_STATUS_CHECK", map[string]interface{}{
+		"status":     deployment.Status,
+		"deployment": deployment,
+	})
 
 	switch deployment.Status {
 	case awstypes.ServiceDeploymentStatusSuccessful:
@@ -2235,17 +2277,147 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 	}
 }
 
+func waitForCancellation(ctx context.Context, conn *ecs.Client, clusterName, serviceName string, primaryTaskSet **awstypes.Deployment, wg *sync.WaitGroup, operationTime time.Time) {
+	tflog.Info(ctx, "ENTERED WAIT FOR CANCEL", map[string]interface{}{})
+	defer wg.Done()
+	select {
+	case <-ctx.Done():
+		tflog.Info(ctx, "CANCELLATION TRIGGERED", map[string]interface{}{"PTS: ": *primaryTaskSet})
+
+		if *primaryTaskSet != nil {
+			fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment in progress (RolloutState: %s). Initiating rollback...\n",
+				string((*primaryTaskSet).RolloutState))
+		} else {
+			fmt.Fprintf(os.Stderr, "[INFO] Detected cancellation, initiating rollback for deployment\n")
+		}
+
+		newContext := context.Background()
+		err := rollbackBlueGreenDeployment(newContext, conn, clusterName, serviceName, *primaryTaskSet, operationTime)
+		if err != nil {
+			// Check if this is actually a successful rollback
+			if strings.Contains(err.Error(), "rolled back by user") || strings.Contains(err.Error(), "ROLLBACK_SUCCESSFUL") {
+				fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment cancelled and rolled back successfully.\n")
+			} else {
+				fmt.Fprintf(os.Stderr, "[ERROR] Failed to rollback deployment: %s\n", err)
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment cancelled and rolled back successfully.\n")
+		}
+	}
+}
+
+func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterName, serviceName string, primaryTaskSet *awstypes.Deployment, operationTime time.Time) error {
+	if primaryTaskSet == nil {
+		tflog.Info(ctx, "DESCRIBESERVICES IN ROLLBACK", map[string]interface{}{})
+		service, err := conn.DescribeServices(ctx, &ecs.DescribeServicesInput{
+			Cluster:  aws.String(clusterName),
+			Services: []string{serviceName},
+		})
+		if err != nil {
+			return err
+		}
+		if len(service.Services) > 0 {
+			primaryTaskSet = findPrimaryTaskSet(service.Services[0].Deployments)
+		}
+		if primaryTaskSet == nil {
+			return fmt.Errorf("no PRIMARY deployment found for service %s", serviceName)
+		}
+	}
+
+	// Check if deployment is already in terminal state, meaning rollback is not needed
+	if slices.Contains(deploymentTerminalStates, aws.ToString(primaryTaskSet.Status)) {
+		return nil
+	}
+
+	serviceDeploymentARN, err := findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceName, clusterName, operationTime)
+	if err != nil {
+		return err
+	}
+	if serviceDeploymentARN == nil {
+		return fmt.Errorf("no PRIMARY deployment found for service %s", serviceName)
+	}
+
+	tflog.Info(ctx, "PRIMARY DEPLOYMENT FOR ROLLBACK", map[string]interface{}{"PDARN": serviceDeploymentARN})
+	fmt.Fprintf(os.Stderr, "[INFO] Rolling back blue/green deployment. This may take a few minutes...\n")
+
+	input := &ecs.StopServiceDeploymentInput{
+		ServiceDeploymentArn: serviceDeploymentARN,
+		StopType:             awstypes.StopServiceDeploymentStopTypeRollback,
+	}
+
+	_, err = conn.StopServiceDeployment(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	tflog.Info(ctx, "STOP TRIGGERED", map[string]interface{}{})
+	err = waitForDeploymentTerminalStatus(ctx, conn, *serviceDeploymentARN)
+
+	// Handle successful rollback cases
+	if err != nil && (strings.Contains(err.Error(), "rolled back by user") ||
+		strings.Contains(err.Error(), "ROLLBACK_SUCCESSFUL")) {
+		return nil // Treat successful rollback as success, not error
+	}
+
+	return err
+}
+
+func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, serviceDeploymentARN string) error {
+	stateConf := &retry.StateChangeConf{
+		// NOTE: SHOULD BELOW BE OF THE NON-STANDARD serviceStatusPending (i.e. "tfPENDING") values?
+		Pending: []string{string(awstypes.ServiceDeploymentStatusInProgress), string(awstypes.ServiceDeploymentStatusPending)},
+		Target:  deploymentTerminalStates,
+		Refresh: func() (interface{}, string, error) {
+			status, err := findDeploymentStatus(ctx, conn, serviceDeploymentARN)
+
+			tflog.Info(ctx, "WAIT STATUS", map[string]interface{}{"status": status})
+
+			return nil, status, err
+		},
+		Timeout: 1 * time.Hour, // Maximum time before SIGKILL
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
+func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, sigintCancellation bool, timeout time.Duration) (*awstypes.Service, error) {
+	tflog.Info(ctx, "SIGINT CANCELLATION VALUE", map[string]interface{}{
+		"SIGINT_CANCELLATION_VALUE": sigintCancellation,
+	})
+	wg := &sync.WaitGroup{}
+
+	var primaryTaskSet **awstypes.Deployment = new(*awstypes.Deployment)
+	tflog.Info(ctx, "INIT_PTS", map[string]interface{}{
+		"primaryTaskSet_ptr": fmt.Sprintf("%p", primaryTaskSet),
+		"primaryTaskSet_val": fmt.Sprintf("%p", *primaryTaskSet),
+	})
+
+	var cancelFunc context.CancelFunc
+	if sigintCancellation {
+		var cancelCtx context.Context
+		cancelCtx, cancelFunc = context.WithCancel(ctx)
+		wg.Add(1)
+		tflog.Info(ctx, "GO ROUTINE STARTING", map[string]interface{}{})
+		go waitForCancellation(cancelCtx, conn, clusterNameOrARN, serviceName, primaryTaskSet, wg, operationTime)
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, operationTime),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, primaryTaskSet, operationTime),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if sigintCancellation {
+		// Signal the goroutine to complete by canceling its context
+		cancelFunc()
+		wg.Wait()
+	}
 
 	if output, ok := outputRaw.(*awstypes.Service); ok {
 		return output, err
