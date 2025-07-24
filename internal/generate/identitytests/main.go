@@ -216,55 +216,52 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
 
-			// if resource.HasV6_0SDKv2Fix {
-			if !resource.MutableIdentity {
-				if resource.PreIdentityVersion.Equal(v5_100_0) {
-					tfTemplatesV5, err := tfTemplates.Clone()
-					if err != nil {
-						g.Fatalf("cloning Terraform config template: %s", err)
-					}
-					ext := filepath.Ext(configTmplFile)
-					name := strings.TrimSuffix(configTmplFile, ext)
-					configTmplV5File := name + "_v5.100.0" + ext
-					configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
-					if _, err := os.Stat(configTmplV5Path); err == nil {
-						b, err := os.ReadFile(configTmplV5Path)
-						if err != nil {
-							g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
-						}
-						configTmplV5 := string(b)
-						_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
-						if err != nil {
-							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
-						}
-					}
-					commonV5 := common
-					commonV5.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "5.100.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
-
-					commonV6 := common
-					commonV6.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "6.0.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
-				} else {
-					commonPreIdentity := common
-					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: resource.PreIdentityVersion.String(),
-						},
-					}
-					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+			if resource.PreIdentityVersion.Equal(v5_100_0) {
+				tfTemplatesV5, err := tfTemplates.Clone()
+				if err != nil {
+					g.Fatalf("cloning Terraform config template: %s", err)
 				}
+				ext := filepath.Ext(configTmplFile)
+				name := strings.TrimSuffix(configTmplFile, ext)
+				configTmplV5File := name + "_v5.100.0" + ext
+				configTmplV5Path := path.Join("testdata", "tmpl", configTmplV5File)
+				if _, err := os.Stat(configTmplV5Path); err == nil {
+					b, err := os.ReadFile(configTmplV5Path)
+					if err != nil {
+						g.Fatalf("reading config template %q: %s", configTmplV5Path, err)
+					}
+					configTmplV5 := string(b)
+					_, err = tfTemplatesV5.New("body").Parse(configTmplV5)
+					if err != nil {
+						g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
+					}
+				}
+				commonV5 := common
+				commonV5.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "5.100.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+
+				commonV6 := common
+				commonV6.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: "6.0.0",
+					},
+				}
+				generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+			} else {
+				commonPreIdentity := common
+				commonPreIdentity.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: resource.PreIdentityVersion.String(),
+					},
+				}
+				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
@@ -436,7 +433,7 @@ type ResourceDatum struct {
 	isSingleton                 bool
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
-	identityAttributes          []string
+	identityAttributes          []identityAttribute
 	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
@@ -525,10 +522,17 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 	return r.isARNFormatGlobal == triBooleanTrue
 }
 
-func (r ResourceDatum) IdentityAttributes() []string {
-	return tfslices.ApplyToAll(r.identityAttributes, func(s string) string {
-		return namesgen.ConstOrQuote(s)
-	})
+func (r ResourceDatum) IdentityAttributes() []identityAttribute {
+	return r.identityAttributes
+}
+
+type identityAttribute struct {
+	name     string
+	Optional bool
+}
+
+func (i identityAttribute) Name() string {
+	return namesgen.ConstOrQuote(i.name)
 }
 
 type goImport struct {
@@ -708,7 +712,21 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
-				d.identityAttributes = append(d.identityAttributes, args.Positional[0])
+
+				identityAttribute := identityAttribute{
+					name: args.Positional[0],
+				}
+
+				if attr, ok := args.Keyword["optional"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityAttribute.Optional = b
+					}
+				}
+
+				d.identityAttributes = append(d.identityAttributes, identityAttribute)
 
 			case "SingletonIdentity":
 				hasIdentity = true
@@ -1111,7 +1129,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if len(d.identityAttributes) == 1 {
-		d.identityAttribute = d.identityAttributes[0]
+		d.identityAttribute = d.identityAttributes[0].name
 	}
 
 	if hasIdentity {
