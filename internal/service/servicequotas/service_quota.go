@@ -146,7 +146,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas default Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	}
@@ -172,12 +171,13 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", id, err)
 		}
 
 		d.Set("request_id", output.RequestedQuota.Id)
+	} else if value < quotaValue {
+		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas with value less than current: %s", err)
 	}
 
 	d.SetId(id)
@@ -275,7 +275,6 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", d.Id(), err)
 	}
