@@ -85,8 +85,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.42.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.27.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.29.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.53.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1 // indirect
@@ -115,8 +115,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.45.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.36.3 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.28.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emr v1.49.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emr v1.50.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.35.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.41.1 // indirect
@@ -141,7 +141,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.42.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.118.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.119.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.33.3 // indirect
@@ -172,7 +172,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.41.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.72.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.9.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.29.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.52.2 // indirect
