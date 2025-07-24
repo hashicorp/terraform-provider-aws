@@ -566,7 +566,7 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						"Name": knownvalue.StringExact(rName + "-updated"),
 					})),

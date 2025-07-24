@@ -501,6 +501,8 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 
 		plan.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	} else {
+		plan.NetworkType = state.NetworkType
+		plan.Port = state.Port
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
