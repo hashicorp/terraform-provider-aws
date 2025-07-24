@@ -590,6 +590,10 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
+smarterr-parser: prereq-go ## Install smarterr-parser
+	@echo "make: Installing smarterr-parser..."
+	cd skaff && $(GO_VER) build github.com/hashicorp/terraform-provider-aws/skaff/cmd/smarterr-parser
+
 smoke: sane ## Smoke tests (alias of sane)
 
 sweep: prereq-go ## Run sweepers

@@ -24,30 +24,89 @@ type ErrorMatch struct {
 	Pattern    string
 }
 
-func main() {
+func handleArgs() ([]string, error) {
+	usage := "Usage: smarterr-parser --help | --directory <folder_path> [--fix] | --file <file_path> [--fix]"
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: %s <folder_path> [--fix]\n", os.Args[0])
-		os.Exit(1)
+		return nil, fmt.Errorf("not enough arguments provided\n%s", usage)
 	}
 
-	folderPath := os.Args[1]
-	autoFix := len(os.Args) > 2 && os.Args[2] == "--fix"
-
-	results, err := analyzeFolder(folderPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error analyzing folder: %v\n", err)
-		os.Exit(1)
-	}
-
-	if autoFix {
-		err = fixFiles(results)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error fixing files: %v\n", err)
-			os.Exit(1)
+	results := []FileResult{}
+	mode := os.Args[1]
+	switch mode {
+	case "--help", "-h":
+		return nil, fmt.Errorf("%s", usage)
+	case "--directory", "-d":
+		if len(os.Args) < 3 {
+			return nil, fmt.Errorf("usage: smarterr-parser --directory <folder_path> [--fix]")
 		}
-		fmt.Printf("Fixed %d files with bare return statements\n", countFilesWithBareReturns(results))
-	} else {
-		printResults(results)
+		dir := os.Args[2]
+		if stat, err := os.Stat(dir); os.IsNotExist(err) || !stat.IsDir() {
+			return nil, fmt.Errorf("directory %s does not exist", dir)
+		}
+		results, err := analyzeFolder(dir)
+		if err != nil {
+			return nil, fmt.Errorf("error analyzing folder: %v", err)
+		}
+		if len(os.Args) > 3 && os.Args[3] == "--fix" {
+			err = fixFiles(results)
+			if err != nil {
+				return nil, fmt.Errorf("error fixing files: %v", err)
+			}
+			// Inform about fixed files.
+			fmt.Printf("Fixed %d files with bare return statements\n", countFilesWithBareReturns(results))
+			results, err = analyzeFolder(dir)
+			if err != nil {
+				return nil, fmt.Errorf("error re-analyzing folder: %v", err)
+			}
+		}
+	case "--file", "-f":
+		if len(os.Args) < 3 {
+			return nil, fmt.Errorf("usage: smarterr-parser --file <file_path> [--fix]")
+		}
+		filePath := os.Args[2]
+		if stat, err := os.Stat(filePath); os.IsNotExist(err) || stat.IsDir() {
+			return nil, fmt.Errorf("file %s does not exist", filePath)
+		}
+		r, err := analyzeFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("error analyzing file: %v", err)
+		}
+		if len(os.Args) > 3 && os.Args[3] == "--fix" {
+			for _, errorMatch := range r.Errors {
+				if errorMatch.Pattern == "bare_return_nil_err" {
+					err = fixBareReturnsInFile(filePath)
+					if err != nil {
+						return nil, fmt.Errorf("error fixing file: %v", err)
+					}
+					fmt.Printf("Fixed bare return in file %s\n", filePath)
+					break
+				}
+			}
+			r, err = analyzeFile(filePath)
+			if err != nil {
+				return nil, err
+			}
+		}
+		results = []FileResult{r}
+	default:
+		return nil, fmt.Errorf("%s", usage)
+	}
+	return combineResults(results), nil
+}
+func main() {
+	resultStrings, err := handleArgs()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	if len(resultStrings) == 0 {
+		fmt.Println("No non-smarterr error patterns found.")
+		return
+	}
+
+	for _, result := range resultStrings {
+		fmt.Println(result)
 	}
 }
 
@@ -174,25 +233,26 @@ func findNonSmarterrPattern(line string) string {
 	return ""
 }
 
-func printResults(results []FileResult) {
+func combineResults(results []FileResult) []string {
 	if len(results) == 0 {
 		fmt.Println("No non-smarterr error patterns found in resource/datasource files.")
-		return
+		return []string{}
 	}
+	resultStrings := []string{}
 
 	fmt.Printf("Found non-smarterr error patterns in %d files:\n\n", len(results))
-
 	for _, result := range results {
 		for _, errorMatch := range result.Errors {
-			fmt.Printf("%s:%d\n", result.FilePath, errorMatch.LineNumber)
+			resultStrings = append(resultStrings, fmt.Sprintf("%s:%d", result.FilePath, errorMatch.LineNumber))
 		}
 	}
-
 	totalErrors := 0
 	for _, result := range results {
 		totalErrors += len(result.Errors)
 	}
 	fmt.Printf("\nTotal: %d non-smarterr error patterns found across %d files.\n", totalErrors, len(results))
+
+	return resultStrings
 }
 
 func fixFiles(results []FileResult) error {
