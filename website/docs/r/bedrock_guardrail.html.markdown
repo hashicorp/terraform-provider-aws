@@ -114,6 +114,7 @@ The `filters_config` configuration block supports the following arguments:
 * `type` - (Optional) Type of filter in content policy.
 
 #### Content Tier Config
+
 The tier_config configuration block supports the following arguments:
 
 * `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
@@ -150,6 +151,7 @@ The `filters_config` configuration block supports the following arguments:
 * `examples` (Optional) List of text examples.
 
 #### Topics Tier Config
+
 The tier_config configuration block supports the following arguments:
 
 * `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.

@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -158,16 +159,17 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 						},
 						"tier_config": schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[contentPolicyTiersConfig](ctx),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.UseStateForUnknown(),
+							},
 							Validators: []validator.Set{
 								setvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFiltersTierName](),
 										Optional:   true,
-										Computed:   true,
-										Default:    stringdefault.StaticString(string(awstypes.GuardrailContentFiltersTierNameClassic)),
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.UseStateForUnknown(),
 										},
@@ -332,7 +334,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
+									names.AttrName: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicsTierName](),
 										Optional:   true,
 										Computed:   true,
