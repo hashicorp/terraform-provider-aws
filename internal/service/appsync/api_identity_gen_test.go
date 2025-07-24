@@ -196,6 +196,7 @@ func TestAccAppSyncAPI_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
+// Resource Identity was added after v6.3.0
 func TestAccAppSyncAPI_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -213,7 +214,7 @@ func TestAccAppSyncAPI_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/API/basic_v5.100.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/API/basic_v6.3.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -225,34 +226,7 @@ func TestAccAppSyncAPI_Identity_ExistingResource(t *testing.T) {
 				},
 			},
 
-			// Step 2: v6.0 Identity set on refresh
-			{
-				ConfigDirectory: config.StaticDirectory("testdata/API/basic_v6.0.0/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrID)),
-				},
-			},
-
-			// Step 3: Current version
+			// Step 2: Current version
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/API/basic/"),
