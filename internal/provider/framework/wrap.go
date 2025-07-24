@@ -11,13 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -26,34 +31,83 @@ type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 // contextFunc augments Context.
 type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
-type wrappedDataSourceOptions struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorInvocations
-	typeName         string
-}
-
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
-	inner datasource.DataSourceWithConfigure
-	meta  *conns.AWSClient
-	opts  wrappedDataSourceOptions
+	inner              datasource.DataSourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageFrameworkDataSource
+	interceptors       interceptorInvocations
 }
 
-func newWrappedDataSource(inner datasource.DataSourceWithConfigure, opts wrappedDataSourceOptions) datasource.DataSourceWithConfigure {
-	return &wrappedDataSource{
-		inner: inner,
-		opts:  opts,
+func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, servicePackageName string) datasource.DataSourceWithConfigure {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
 	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, dataSourceValidateRegion())
+		}
+		interceptors = append(interceptors, dataSourceSetRegionInState())
+	}
+
+	if !tfunique.IsHandleNil(spec.Tags) {
+		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
+	}
+
+	inner, _ := spec.Factory(nil)
+	return &wrappedDataSource{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// bootstrapContext is run on all wrapped methods before any interceptors.
+func (w *wrappedDataSource) bootstrapContext(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		overrideRegion = target.ValueString()
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
 }
 
 func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	// This method does not call down to the inner data source.
-	response.TypeName = w.opts.typeName
+	response.TypeName = w.spec.TypeName
 }
 
 func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -63,7 +117,7 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 		w.inner.Schema(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceSchema(), f, w.meta)(ctx, &request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.interceptors.dataSourceSchema(), f, w.meta)(ctx, &request, response)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -72,16 +126,16 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if v, ok := w.inner.(framework.DataSourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("data source model validation error", w.opts.typeName)
+			response.Diagnostics.AddError("data source model validation error", w.spec.TypeName)
 			return
 		}
 	} else {
-		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.opts.typeName)
+		response.Diagnostics.AddError("missing framework.DataSourceValidateModel", w.spec.TypeName)
 	}
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -91,7 +145,7 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 		w.inner.Read(ctx, *request, response)
 		return response.Diagnostics
 	}
-	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.dataSourceRead(), f, w.meta)(ctx, &request, response)...)
+	response.Diagnostics.Append(interceptedHandler(w.interceptors.dataSourceRead(), f, w.meta)(ctx, &request, response)...)
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
@@ -99,7 +153,7 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 		w.meta = v
 	}
 
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -110,10 +164,10 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 
 func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"data source":            w.opts.typeName,
+				"data source":            w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -128,7 +182,7 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 
 func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasource.ValidateConfigRequest, response *datasource.ValidateConfigResponse) {
 	if v, ok := w.inner.(datasource.DataSourceWithValidateConfig); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -284,7 +338,7 @@ type wrappedResourceOptions struct {
 	bootstrapContext contextFunc
 	interceptors     interceptorInvocations
 	typeName         string
-	identity         types.Identity
+	identity         inttypes.Identity
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.

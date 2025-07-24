@@ -10,6 +10,7 @@ import (
 	"iter"
 	"log"
 	"slices"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -35,7 +36,7 @@ import (
 )
 
 var (
-	resourceSchemasValidated bool
+	resourceSchemasValidated sync.Once
 )
 
 var (
@@ -65,22 +66,14 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 		servicePackages:    primary.Meta().(*conns.AWSClient).ServicePackages(ctx),
 	}
 
-	// Acceptance tests call this function multiple times, potentially in parallel.
-	// To avoid "fatal error: concurrent map writes", take a lock.
-	const (
-		mutexKVKey = "provider.New"
-	)
-	conns.GlobalMutexKV.Lock(mutexKVKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKVKey)
-
 	// Because we try and share resource schemas as much as possible,
 	// we need to ensure that we only validate the resource schemas once.
-	if !resourceSchemasValidated {
-		if err := provider.validateResourceSchemas(ctx); err != nil {
-			return nil, err
-		}
-
-		resourceSchemasValidated = true
+	var err error
+	resourceSchemasValidated.Do(func() {
+		err = provider.validateResourceSchemas(ctx)
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if err := provider.initialize(ctx); err != nil {
@@ -400,66 +393,9 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 	for sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
 
-		for _, v := range sp.FrameworkDataSources(ctx) {
-			typeName := v.TypeName
-			inner, err := v.Factory(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
-				continue
-			}
-
-			var isRegionOverrideEnabled bool
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				isRegionOverrideEnabled = true
-			}
-
-			var interceptors interceptorInvocations
-
-			if isRegionOverrideEnabled {
-				v := v.Region.Value()
-
-				interceptors = append(interceptors, dataSourceInjectRegionAttribute())
-				if v.IsValidateOverrideInPartition {
-					interceptors = append(interceptors, dataSourceValidateRegion())
-				}
-				interceptors = append(interceptors, dataSourceSetRegionInState())
-			}
-
-			if !tfunique.IsHandleNil(v.Tags) {
-				interceptors = append(interceptors, dataSourceTransparentTagging(v.Tags))
-			}
-
-			opts := wrappedDataSourceOptions{
-				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-					var diags diag.Diagnostics
-					var overrideRegion string
-
-					if isRegionOverrideEnabled && getAttribute != nil {
-						var target types.String
-						diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-						if diags.HasError() {
-							return ctx, diags
-						}
-
-						overrideRegion = target.ValueString()
-					}
-
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-					if c != nil {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
-						ctx = c.RegisterLogger(ctx)
-						ctx = fwflex.RegisterLogger(ctx)
-					}
-
-					return ctx, diags
-				},
-				interceptors: interceptors,
-				typeName:     typeName,
-			}
-			p.dataSources = append(p.dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(inner, opts)
+		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
+			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
+				return newWrappedDataSource(dataSourceSpec, servicePackageName)
 			})
 		}
 
