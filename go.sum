@@ -215,8 +215,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3 h1:9Gbovj4JEBh7mJLuklQd6vC99hBu
 github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3/go.mod h1:lvCLAW4tB0TN7OMWJvvFQoNjI2gkvwdifzFUaCbWnZI=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1 h1:UoEWyfuQ/yNOuDENk5nn+AgNCH2Y5yzQEv6YbTyhIV8=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1/go.mod h1:K1I47BjiTRX00pBxfJLYK80QFRcf6blev2wbjgC5Cyc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0 h1:CwPCXL7/lBUFtgm+8P3V/eRi25Gu8UuvCrevjxJJrNI=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0/go.mod h1:K7qdQFo+lbGM48aPEyoPfy/VN/xNOA4o8GGczfSXNcQ=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0 h1:TE8LEu5sTuH2fR9Buv8BNXafOSm+CDrQA3DmYSaWX00=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0/go.mod h1:K7qdQFo+lbGM48aPEyoPfy/VN/xNOA4o8GGczfSXNcQ=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0 h1:oyXvdONSO/VmFwEupTO+P5AFFghpNyM2MeYi7FARciM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0/go.mod h1:uDcrAwhZkHtPAFst5Wx7WSAhMi8BvVegEkc0Kg16vUM=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3 h1:LMfbTe/cLbps56wpZdx2PqZE246xHCX46vVkKJqao98=
@@ -267,8 +267,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.27.6 h1:linjfBQbHT9B1UT63U8Q8Joq
 github.com/aws/aws-sdk-go-v2/service/glacier v1.27.6/go.mod h1:dZJbhYcBa2m4YgoPGQcevq4wTauJoC1lyV8eZDCEe0c=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.5 h1:it5qK8ut/7DhDD+UjWKSpjD8hmonNVgdFY906n/blg8=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.5/go.mod h1:05gI6wa++oe3EaT3YCrUQwzwLGUtQxxzq0zzzezncdI=
-github.com/aws/aws-sdk-go-v2/service/glue v1.118.1 h1:DM3nFW5JM/YR209vGYAmSUSnX+BbElNVElfY7bYAM6M=
-github.com/aws/aws-sdk-go-v2/service/glue v1.118.1/go.mod h1:XMqU7KUflLYypjseaTOkO3dPX+GDfzRRK8nLS7FOcGU=
+github.com/aws/aws-sdk-go-v2/service/glue v1.119.0 h1:/Oe+UPgu7TO3mN8AU7s7+T7TMKkE5UqNnmkPZd8kvik=
+github.com/aws/aws-sdk-go-v2/service/glue v1.119.0/go.mod h1:XMqU7KUflLYypjseaTOkO3dPX+GDfzRRK8nLS7FOcGU=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.27.5 h1:pdj1VVxPgy1AFnTFYJ+Q7NFlQIT1Th4P+LfHfQH6HzE=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.27.5/go.mod h1:Xkas+n2i0y14LzAflZeyTvj5VxWN/MMdrX5jvCH1DDI=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.5 h1:mMNcthkjK3JOyC++TzMgczfOQu+FOZnnLmoIbmjsAbI=

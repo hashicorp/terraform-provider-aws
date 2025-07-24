@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.234.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.60.1
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/glue v1.118.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.119.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.33.3
