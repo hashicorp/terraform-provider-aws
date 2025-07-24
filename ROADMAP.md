@@ -55,7 +55,6 @@ Issue: [#36941](https://github.com/hashicorp/terraform-provider-aws/issues/36941
 
 [WAFv2 update rules shared with Firewall Manager](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-rule-groups) The Terraform AWS provider does use the UpdateWebACL API, but only for updating WAF ACLs that it manages and not quite in the way we need for dynamically managing shared Web ACLs within organizations using AWS Firewall Manager (FMS). This functionality is key as it allows different accounts to add their own rules to a shared Web ACL, promoting a flexible approach to security management.
 
-
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
