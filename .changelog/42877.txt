@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_parameter: fix `Error: Provider produced inconsistent final plan and produced an invalid new value.`
+```
