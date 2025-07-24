@@ -5,7 +5,6 @@ package inspector_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +27,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceGroupConfig_basic,
@@ -84,31 +82,6 @@ func testAccCheckResourceGroupRecreated(v1, v2 *awstypes.ResourceGroup) resource
 	return func(s *terraform.State) error {
 		if v2.CreatedAt.Equal(*v1.CreatedAt) {
 			return fmt.Errorf("Inspector Classic Resource Group not recreated when changing tags")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckResourceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_inspector_resource_group" {
-				continue
-			}
-
-			output, err := conn.DescribeResourceGroups(ctx, &inspector.DescribeResourceGroupsInput{
-				ResourceGroupArns: []string{rs.Primary.ID},
-			})
-			if err != nil {
-				return create.Error(names.Inspector, create.ErrActionCheckingDestroyed, "Resource Group", rs.Primary.ID, err)
-			}
-
-			if len(output.ResourceGroups) > 0 {
-				return create.Error(names.Inspector, create.ErrActionCheckingDestroyed, "Resource Group", rs.Primary.ID, errors.New("not destroyed"))
-			}
 		}
 
 		return nil

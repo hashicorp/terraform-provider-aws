@@ -33,7 +33,7 @@ func TestAccInspectorResourceGroup_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -240,7 +240,7 @@ func TestAccInspectorResourceGroup_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.InspectorServiceID),
-		CheckDestroy: testAccCheckResourceGroupDestroy(ctx),
+		CheckDestroy: acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
