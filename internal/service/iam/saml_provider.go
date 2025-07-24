@@ -29,16 +29,14 @@ import (
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
 // @Tags(identifierAttribute="arn", resourceType="SAMLProvider")
 // @Testing(tagsTest=false)
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
 		ReadWithoutTimeout:   resourceSAMLProviderRead,
 		UpdateWithoutTimeout: resourceSAMLProviderUpdate,
 		DeleteWithoutTimeout: resourceSAMLProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

@@ -244,6 +244,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "OIDCProvider",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourcePolicy,
@@ -254,6 +260,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "Policy",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourcePolicyAttachment,
@@ -314,6 +326,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "SAMLProvider",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceSecurityTokenServicePreferences,
@@ -340,6 +358,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				ResourceType:        "ServiceLinkedRole",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceServiceSpecificCredential,
