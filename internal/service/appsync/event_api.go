@@ -307,6 +307,7 @@ func (r *resourceEventAPI) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	apiId := state.ApiId.ValueString()
+	fmt.Println("hello", apiId)
 
 	out, err := findEventAPIByID(ctx, conn, apiId)
 	if tfresource.NotFound(err) {

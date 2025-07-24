@@ -22,48 +22,6 @@ import (
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 )
 
-func TestAccAppSyncEventAPI_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var eventapi awstypes.Api
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appsync_event_api.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEventAPIConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.0.auth_type", "API_KEY"),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceEventAPI, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccAppSyncEventAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -185,7 +143,47 @@ func TestAccAppSyncEventAPI_update(t *testing.T) {
 		},
 	})
 }
+func TestAccAppSyncEventAPI_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
+	var eventapi awstypes.Api
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_event_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventAPIConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventAPIExists(ctx, resourceName, &eventapi),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.0.auth_type", "API_KEY"),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceEventAPI, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 func testAccCheckEventAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
