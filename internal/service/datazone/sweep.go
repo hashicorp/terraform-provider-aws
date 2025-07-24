@@ -16,15 +16,19 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_datazone_domain", sweepDomains)
+	awsv2.Register("aws_datazone_domain", sweepDomains,
+		"aws_datazone_project",
+	)
+
+	awsv2.Register("aws_datazone_project", sweepProjects)
 }
 
 func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.DataZoneClient(ctx)
-	input := &datazone.ListDomainsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := datazone.NewListDomainsPaginator(conn, input)
+	input := datazone.ListDomainsInput{}
+	pages := datazone.NewListDomainsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
@@ -37,6 +41,43 @@ func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepProjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.DataZoneClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	domainsInput := datazone.ListDomainsInput{}
+	pages := datazone.NewListDomainsPaginator(conn, &domainsInput)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, domain := range page.Items {
+			projectsInput := datazone.ListProjectsInput{
+				DomainIdentifier: domain.Id,
+			}
+			pages := datazone.NewListProjectsPaginator(conn, &projectsInput)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, project := range page.Items {
+					sweepResources = append(sweepResources, framework.NewSweepResource(newProjectResource, client,
+						framework.NewAttribute(names.AttrID, project.Id),
+						framework.NewAttribute("domain_identifier", domain.Id),
+						framework.NewAttribute("skip_deletion_check", true),
+					))
+				}
+			}
 		}
 	}
 
