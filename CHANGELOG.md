@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_ecr_images` ([#42577](https://github.com/hashicorp/terraform-provider-aws/issues/42577))
 * **New Resource:** `aws_networkfirewall_firewall_transit_gateway_attachment_accepter` ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
 * **New Resource:** `aws_s3_bucket_metadata_configuration` ([#41364](https://github.com/hashicorp/terraform-provider-aws/issues/41364))
 
@@ -25,12 +26,17 @@ ENHANCEMENTS:
 * resource/aws_globalaccelerator_custom_routing_accelerator: Add resource identity support ([#43423](https://github.com/hashicorp/terraform-provider-aws/issues/43423))
 * resource/aws_glue_registry: Add resource identity support ([#43450](https://github.com/hashicorp/terraform-provider-aws/issues/43450))
 * resource/aws_glue_schema: Add resource identity support ([#43450](https://github.com/hashicorp/terraform-provider-aws/issues/43450))
+* resource/aws_iam_openid_connect_provider: Add resource identity support ([#43503](https://github.com/hashicorp/terraform-provider-aws/issues/43503))
+* resource/aws_iam_policy: Add resource identity support ([#43503](https://github.com/hashicorp/terraform-provider-aws/issues/43503))
+* resource/aws_iam_saml_provider: Add resource identity support ([#43503](https://github.com/hashicorp/terraform-provider-aws/issues/43503))
+* resource/aws_iam_service_linked_role: Add resource identity support ([#43503](https://github.com/hashicorp/terraform-provider-aws/issues/43503))
 * resource/aws_lb_listener: Add resource identity support ([#43161](https://github.com/hashicorp/terraform-provider-aws/issues/43161))
 * resource/aws_lb_listener_rule: Add resource identity support ([#43155](https://github.com/hashicorp/terraform-provider-aws/issues/43155))
 * resource/aws_lb_target_group: Add resource identity support ([#43171](https://github.com/hashicorp/terraform-provider-aws/issues/43171))
 * resource/aws_lb_trust_store: Add resource identity support ([#43186](https://github.com/hashicorp/terraform-provider-aws/issues/43186))
 * resource/aws_networkfirewall_firewall: Add `availability_zone_change_protection`, `availability_zone_mapping`, and `transit_gateway_id` arguments and `firewall_status.transit_gateway_attachment_sync_states` and `transit_gateway_owner_account_id` attributes ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
 * resource/aws_networkfirewall_firewall: Mark `subnet_mapping` and `vpc_id` as Optional ([#43430](https://github.com/hashicorp/terraform-provider-aws/issues/43430))
+* resource/aws_quicksight_account_subscription: Add import support. This resource can now be imported via the `aws_account_id` argument. ([#43501](https://github.com/hashicorp/terraform-provider-aws/issues/43501))
 * resource/aws_sns_topic: Add resource identity support ([#43202](https://github.com/hashicorp/terraform-provider-aws/issues/43202))
 * resource/aws_wafv2_rule_group: Add `rules_json` argument ([#433245](https://github.com/hashicorp/terraform-provider-aws/issues/433245))
 * resource/aws_wafv2_web_acl: Add `statement.rate_based_statement.custom_key.asn` argument ([#43506](https://github.com/hashicorp/terraform-provider-aws/issues/43506))
