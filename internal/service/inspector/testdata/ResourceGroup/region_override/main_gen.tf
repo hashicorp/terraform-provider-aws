@@ -5,7 +5,7 @@ resource "aws_inspector_resource_group" "test" {
   region = var.region
 
   tags = {
-    Name = "foo"
+    Name = var.rName
   }
 }
 

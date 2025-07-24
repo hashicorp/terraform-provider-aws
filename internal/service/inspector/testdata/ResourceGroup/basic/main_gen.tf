@@ -3,7 +3,7 @@
 
 resource "aws_inspector_resource_group" "test" {
   tags = {
-    Name = "foo"
+    Name = var.rName
   }
 }
 
