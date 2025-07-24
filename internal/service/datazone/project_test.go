@@ -31,7 +31,6 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 
 	var project datazone.GetProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
 
@@ -44,7 +43,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName, dName),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
@@ -57,7 +56,7 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
 					// resource.TestCheckResourceAttr(resourceName, "project_status", string(types.ProjectStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "skip_deletion_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_deletion_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -78,7 +77,6 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 
 	var project datazone.GetProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +86,7 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName, dName),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceProject, resourceName),
@@ -183,8 +181,7 @@ func TestAccDataZoneProject_update(t *testing.T) {
 	}
 
 	var v1, v2 datazone.GetProjectOutput
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
 
@@ -197,17 +194,17 @@ func TestAccDataZoneProject_update(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(pName, dName),
+				Config: testAccProjectConfig_description(rName, "desc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
+					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, pName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -218,18 +215,18 @@ func TestAccDataZoneProject_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_deletion_check", "project_status"},
 			},
 			{
-				Config: testAccProjectConfigBasicUpdate(pName, dName),
+				Config: testAccProjectConfig_description(rName, "updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &v2),
 					testAccCheckProjectNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "glossary_terms.#"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, pName),
+					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
 				),
 			},
 			{
@@ -254,24 +251,23 @@ func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccProjectConfig_basic(pName, dName string) string {
-	return acctest.ConfigCompose(testAccDomainConfig_basic(dName), fmt.Sprintf(`
+func testAccProjectConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
   name                = %[1]q
   skip_deletion_check = true
 }
-`, pName))
+`, rName))
 }
 
-func testAccProjectConfigBasicUpdate(pName, dName string) string {
-	return acctest.ConfigCompose(testAccDomainConfig_basic(dName), fmt.Sprintf(`
+func testAccProjectConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
-  glossary_terms      = ["2N8w6XJCwZf"]
   name                = %[1]q
-  description         = "description"
+  description         = %[2]q
   skip_deletion_check = true
 }
-`, pName))
+`, rName, description))
 }
