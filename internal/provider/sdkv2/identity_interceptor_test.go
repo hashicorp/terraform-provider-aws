@@ -165,7 +165,7 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 	t.Parallel()
 
 	accountID := "123456789012"
-	region := "us-west-2"
+	region := "us-west-2" //lintignore:AWSAT003
 	name := "a_name"
 
 	resourceSchema := map[string]*schema.Schema{
