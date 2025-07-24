@@ -24,7 +24,7 @@ Issue: [#40141](https://github.com/hashicorp/terraform-provider-aws/issues/40141
 
 [DynamoDB Warm Throughput](https://aws.amazon.com/blogs/database/pre-warming-amazon-dynamodb-tables-with-warm-throughput/) Amazon DynamoDB now supports a new warm throughput value and the ability to easily pre-warm DynamoDB tables and indexes. The warm throughput value provides visibility into the number of read and write operations your DynamoDB tables can readily handle, while pre-warming lets you proactively increase the value to meet future traffic demands.
 
-Support for DyanamoDB Warm Throughput may include:
+Support for DynamoDB Warm Throughput may include:
 
 Affected Resource(s):
 
