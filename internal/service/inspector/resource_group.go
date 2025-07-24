@@ -18,6 +18,9 @@ import (
 )
 
 // @SDKResource("aws_inspector_resource_group", name="Resource Group")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.ResourceGroup")
+// @Testing(preIdentityVersion="v6.4.0")
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,
