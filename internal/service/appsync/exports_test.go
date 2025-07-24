@@ -10,7 +10,7 @@ var (
 	ResourceDataSource               = resourceDataSource
 	ResourceDomainName               = resourceDomainName
 	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
-	ResourceEventAPI                 = newEventAPIResource
+	ResourceAPI                      = newAPIResource
 	ResourceFunction                 = resourceFunction
 	ResourceGraphQLAPI               = resourceGraphQLAPI
 	ResourceResolver                 = resourceResolver
@@ -23,7 +23,7 @@ var (
 	FindDataSourceByTwoPartKey           = findDataSourceByTwoPartKey
 	FindDomainNameAPIAssociationByID     = findDomainNameAPIAssociationByID
 	FindDomainNameByID                   = findDomainNameByID
-	FindEventAPIByID                     = findEventAPIByID
+	FindAPIByID                          = findAPIByID
 	FindFunctionByTwoPartKey             = findFunctionByTwoPartKey
 	FindGraphQLAPIByID                   = findGraphQLAPIByID
 	FindResolverByThreePartKey           = findResolverByThreePartKey
