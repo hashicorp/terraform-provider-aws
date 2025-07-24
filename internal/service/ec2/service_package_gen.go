@@ -123,7 +123,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceNATGatewayEIPAssociation,
+			Factory:  newNATGatewayEIPAssociationResource,
 			TypeName: "aws_nat_gateway_eip_association",
 			Name:     "VPC NAT Gateway EIP Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

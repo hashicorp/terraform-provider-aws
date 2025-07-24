@@ -35,16 +35,13 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - ID of the VPC NAT Gateway EIP Association.
+This resource exports no additional attributes.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
-* `update` - (Default `10m`)
 * `delete` - (Default `30m`)
 
 ## Import

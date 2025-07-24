@@ -5,19 +5,21 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,8 +28,7 @@ func TestAccVPCNATGatewayEIPAssociation_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	var vpcnatgatewayeipassociation types.NatGatewayAddress
+	var v types.NatGatewayAddress
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_nat_gateway_eip_association.test"
 
@@ -40,15 +41,23 @@ func TestAccVPCNATGatewayEIPAssociation_basic(t *testing.T) {
 			{
 				Config: testAccVPCNATGatewayEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &vpcnatgatewayeipassociation),
-					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.secondary", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", "aws_nat_gateway.test", names.AttrID),
+					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAssociationID), knownvalue.NotNull()),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "nat_gateway_id",
+				ImportStateIdFunc:                    testAccVPCNATGatewayEIPAssociationImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -59,8 +68,7 @@ func TestAccVPCNATGatewayEIPAssociation_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	var vpcnatgatewayeipassociation types.NatGatewayAddress
+	var v types.NatGatewayAddress
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_nat_gateway_eip_association.test"
 
@@ -73,7 +81,7 @@ func TestAccVPCNATGatewayEIPAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccVPCNATGatewayEIPAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &vpcnatgatewayeipassociation),
+					testAccCheckVPCNATGatewayEIPAssociationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNATGatewayEIPAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,47 +100,56 @@ func testAccCheckVPCNATGatewayEIPAssociationDestroy(ctx context.Context) resourc
 			}
 
 			_, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
-			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCNATGatewayEIPAssociation, rs.Primary.ID, err)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCNATGatewayEIPAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC NAT Gateway %s EIP %s Association still exists", rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCNATGatewayEIPAssociationExists(ctx context.Context, name string, vpcnatgatewayeipassociation *types.NatGatewayAddress) resource.TestCheckFunc {
+func testAccCheckVPCNATGatewayEIPAssociationExists(ctx context.Context, n string, v *types.NatGatewayAddress) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCNATGatewayEIPAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCNATGatewayEIPAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
+		output, err := tfec2.FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx, conn, rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"])
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCNATGatewayEIPAssociation, rs.Primary.ID, err)
+			return err
 		}
 
-		*vpcnatgatewayeipassociation = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
+func testAccVPCNATGatewayEIPAssociationImportStateIDFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", n)
+		}
+
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["nat_gateway_id"], rs.Primary.Attributes["allocation_id"]), nil
+	}
+}
+
 func testAccVPCNATGatewayEIPAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccVPCNATGatewayConfig_basic(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCNATGatewayConfig_basic(rName), fmt.Sprintf(`
 resource "aws_eip" "secondary" {
   domain = "vpc"
 

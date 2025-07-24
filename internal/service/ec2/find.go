@@ -1711,9 +1711,9 @@ func findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx context.Con
 		return nil, err
 	}
 
-	if output.Status != awstypes.NatGatewayAddressStatusSucceeded {
+	if v := output.Status; v != awstypes.NatGatewayAddressStatusSucceeded {
 		return nil, &retry.NotFoundError{
-			Message: string(output.Status),
+			Message: string(v),
 		}
 	}
 

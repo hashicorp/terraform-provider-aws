@@ -55,7 +55,7 @@ var (
 	ResourceManagedPrefixList                             = resourceManagedPrefixList
 	ResourceManagedPrefixListEntry                        = resourceManagedPrefixListEntry
 	ResourceNATGateway                                    = resourceNATGateway
-	ResourceNATGatewayEIPAssociation                      = newResourceNATGatewayEIPAssociation
+	ResourceNATGatewayEIPAssociation                      = newNATGatewayEIPAssociationResource
 	ResourceNetworkACL                                    = resourceNetworkACL
 	ResourceNetworkACLAssociation                         = resourceNetworkACLAssociation
 	ResourceNetworkACLRule                                = resourceNetworkACLRule
