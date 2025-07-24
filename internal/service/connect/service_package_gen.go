@@ -109,7 +109,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceUser,
+			Factory:  dataSourceUser,
 			TypeName: "aws_connect_user",
 			Name:     "User",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
