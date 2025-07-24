@@ -1157,6 +1157,38 @@ func TestAccECSService_BlueGreenDeployment_updateFailure(t *testing.T) {
 	})
 }
 
+func TestAccECSService_BlueGreenDeployment_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_BlueGreenDeployment_waitServiceActive(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -3402,7 +3434,7 @@ resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
+  desired_count   = 2
   launch_type     = "FARGATE"
 
   deployment_configuration {
