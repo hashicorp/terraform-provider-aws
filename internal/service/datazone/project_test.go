@@ -64,11 +64,12 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"skip_deletion_check", "project_status"},
+				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
 			},
 		},
 	})
 }
+
 func TestAccDataZoneProject_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -96,6 +97,73 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDataZoneProject_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 datazone.GetProjectOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_project.test"
+	domainName := "aws_datazone_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_description(rName, "desc"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
+			},
+			{
+				Config: testAccProjectConfig_description(rName, "updated"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &v2),
+					testAccCheckProjectNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
+				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
+			},
+		},
+	})
+}
+
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
@@ -173,71 +241,6 @@ func testAccCheckProjectNotRecreated(before, after *datazone.GetProjectOutput) r
 
 		return nil
 	}
-}
-func TestAccDataZoneProject_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v1, v2 datazone.GetProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_datazone_project.test"
-	domainName := "aws_datazone_domain.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProjectConfig_description(rName, "desc"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"skip_deletion_check", "project_status"},
-			},
-			{
-				Config: testAccProjectConfig_description(rName, "updated"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v2),
-					testAccCheckProjectNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_at"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccAuthorizerImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"project_status", "skip_deletion_check"},
-			},
-		},
-	})
 }
 
 func testAccAuthorizerImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
