@@ -31,16 +31,14 @@ import (
 
 // @SDKResource("aws_iam_service_linked_role", name="Service Linked Role")
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
+// @ArnIdentity(arnAttribute="id")
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
 		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
 		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
 		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

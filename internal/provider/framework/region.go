@@ -15,12 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func validateInContextRegionInPartition(ctx context.Context, c *conns.AWSClient) diag.Diagnostics {
+func validateInContextRegionInPartition(ctx context.Context, c awsClient) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if err := c.ValidateInContextRegionInPartition(ctx); err != nil {
@@ -281,6 +280,12 @@ func (r resourceForceNewIfRegionChangesInterceptor) modifyPlan(ctx context.Conte
 			return diags
 		}
 
+		var configRegion types.String
+		diags.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrRegion), &configRegion)...)
+		if diags.HasError() {
+			return diags
+		}
+
 		var planRegion types.String
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrRegion), &planRegion)...)
 		if diags.HasError() {
@@ -293,9 +298,15 @@ func (r resourceForceNewIfRegionChangesInterceptor) modifyPlan(ctx context.Conte
 			return diags
 		}
 
-		providerRegion := c.AwsConfig(ctx).Region
-		if stateRegion.IsNull() && planRegion.ValueString() == providerRegion {
-			return diags
+		if stateRegion.IsNull() {
+			// Upgrade from pre-v6.0.0 provider and '-refresh=false' in effect.
+			if configRegion.IsNull() {
+				return diags
+			}
+
+			if providerRegion := c.AwsConfig(ctx).Region; planRegion.ValueString() == providerRegion {
+				return diags
+			}
 		}
 
 		if !planRegion.Equal(stateRegion) {

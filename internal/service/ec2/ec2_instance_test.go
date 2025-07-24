@@ -1228,7 +1228,7 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
+func TestAccEC2Instance_IPv6AddressCountAndSingleAddressCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1370,6 +1370,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(originalCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(originalCount)),
 				),
 			},
 			{
@@ -1378,6 +1379,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(updatedCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(updatedCount)),
 				),
 			},
 			{
@@ -1386,7 +1388,56 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(shrunkenCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", strconv.Itoa(shrunkenCount)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_IPv6AddressesExplicit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "3"),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressesExplicit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
@@ -7190,6 +7241,24 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, ipv6AddressCount))
+}
+
+func testAccInstance_ipv6AddressesExplicit(rName string, addressCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcIPv6Base(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami            = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type  = "t2.medium"
+  subnet_id      = aws_subnet.test.id
+  ipv6_addresses = [for i in range(%[2]d) : cidrhost(aws_subnet.test.ipv6_cidr_block, i + 10)]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, addressCount))
 }
 
 func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {

@@ -51,7 +51,7 @@ const (
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
-// @WrappedImport(false)
+// @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
@@ -63,7 +63,9 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleParameterized(ctx, rd, names.AttrBucket, meta.(importer.AWSClient)); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 

@@ -31,6 +31,10 @@ func resourceAccountSubscription() *schema.Resource {
 		ReadWithoutTimeout:   resourceAccountSubscriptionRead,
 		DeleteWithoutTimeout: resourceAccountSubscriptionDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Read:   schema.DefaultTimeout(10 * time.Minute),

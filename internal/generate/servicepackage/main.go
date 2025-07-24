@@ -181,6 +181,7 @@ type ResourceDatum struct {
 	SingletonIdentity                 bool
 	MutableIdentity                   bool
 	WrappedImport                     bool
+	CustomImport                      bool
 	goImports                         []goImport
 	IdentityDuplicateAttrs            []string
 	ImportIDHandler                   string
@@ -194,8 +195,9 @@ func (r ResourceDatum) IsARNFormatGlobal() bool {
 }
 
 type identityAttribute struct {
-	Name     string
-	Optional bool
+	Name                  string
+	Optional              bool
+	ResourceAttributeName string
 }
 
 type goImport struct {
@@ -392,6 +394,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
+				if attr, ok := args.Keyword["resourceAttributeName"]; ok {
+					identityAttribute.ResourceAttributeName = namesgen.ConstOrQuote(attr)
+				}
+
 				d.IdentityAttributes = append(d.IdentityAttributes, identityAttribute)
 
 			case "WrappedImport":
@@ -406,6 +412,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.WrappedImport = b
 					}
 				}
+
+			case "CustomImport":
+				d.CustomImport = true
 
 			case "ArnIdentity":
 				d.ARNIdentity = true
@@ -639,7 +648,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport":
 				// Handled above.
 			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
 				// Ignored.

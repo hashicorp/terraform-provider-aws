@@ -43,7 +43,7 @@ const (
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="name", resourceType="Role")
 // @IdentityAttribute("name")
-// @WrappedImport(false)
+// @CustomImport
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 // @Testing(idAttrDuplicates="name")
@@ -56,7 +56,9 @@ func resourceRole() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleParameterized(ctx, rd, names.AttrName, meta.(importer.AWSClient)); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
