@@ -37,3 +37,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Event bus description.
 * `id` - Name of the event bus.
 * `kms_key_identifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
+* `log_config` - Block for logging configuration settings for the event bus.
+    * `include_detail` - Whether EventBridge include detailed event information in the records it generates.
+    * `level` - Level of logging detail to include.
