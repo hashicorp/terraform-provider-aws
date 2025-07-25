@@ -3,5 +3,5 @@ aws_nat_gateway_eip_association
 ```
 
 ```release-note:enhancement
-resource/aws_nat_gateway: Change `secondary_allocation_ids` to Computed
+resource/aws_nat_gateway: Change `secondary_allocation_ids` to Optional and Computed
 ```
