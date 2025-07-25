@@ -21,11 +21,11 @@ resource "aws_bedrock_guardrail" "example" {
   blocked_outputs_messaging = "example"
   description               = "example"
 
-  cross_region_inference {
+  cross_region_config {
     # All Guardrail profiles listed here:
     # https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html
     # NOTE: this is only available in certain regions!
-    guardrail_profile = "us.guardrail.v1:0"
+    guardrail_profile_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:us.guardrail.v1:0"
   }
 
   content_policy_config {
@@ -131,11 +131,11 @@ The `filters_config` configuration block supports the following arguments:
 
 ### Cross Region Inference
 
-* `cross_region_inference` (Optional) configuration block to enable cross region routing for bedrock guardrails. See [Guardrail Profile](#guardrail-profile) for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+* `cross_region_config` (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [Cross Region Config](#cross-region-config for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
 
-#### Guardrail Profile
+#### Cross Region Config
 
-* `guardrail_profile` (Required) defines the destination regions where guardrail inference requests can be automatically routed.
+* `guardrail_profile_arn` (Required) Guardrail profile ARN.
 
 ### Topic Policy Config
 

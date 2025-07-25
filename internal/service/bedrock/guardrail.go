@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -199,16 +198,16 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-			"cross_region_inference": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[crossRegionConfig](ctx),
-				Validators: []validator.Set{
-					setvalidator.SizeAtMost(1),
+			"cross_region_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailCrossRegionConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"guardrail_profile": schema.StringAttribute{
-							Required:    true,
-							Description: "Name of the guardrail profile, e.g. \"us.guardrail.v1:0\"",
+						"guardrail_profile_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
 						},
 					},
 				},
@@ -394,22 +393,23 @@ var (
 )
 
 func (r *guardrailResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
 	var plan guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &bedrock.CreateGuardrailInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexOpt)...)
+	conn := r.Meta().BedrockClient(ctx)
+
+	var in bedrock.CreateGuardrailInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, flexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in.Tags = getTagsIn(ctx)
-	out, err := conn.CreateGuardrail(ctx, in)
+
+	out, err := conn.CreateGuardrail(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameGuardrail, plan.Name.String(), err),
@@ -447,13 +447,14 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
 	var state guardrailResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().BedrockClient(ctx)
+
 	out, err := findGuardrailByTwoPartKey(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -468,36 +469,38 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, flexOpt)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.KmsKeyId = fwflex.StringToFramework(ctx, out.KmsKeyArn)
 
-	if out.CrossRegionDetails != nil && out.CrossRegionDetails.GuardrailProfileId != nil {
-		cr := crossRegionConfig{
-			GuardrailProfileIdentifier: fwflex.StringToFramework(ctx, out.CrossRegionDetails.GuardrailProfileId),
+	// Different field name on Read.
+	if out.CrossRegionDetails != nil && out.CrossRegionDetails.GuardrailProfileArn != nil {
+		cr := guardrailCrossRegionConfigModel{
+			GuardrailProfileARN: fwflex.StringToFrameworkARN(ctx, out.CrossRegionDetails.GuardrailProfileArn),
 		}
 
 		var diags diag.Diagnostics
-		state.CrossRegionConfig, diags = fwtypes.NewSetNestedObjectValueOfPtr(ctx, &cr)
-		if diags.HasError() {
+		state.CrossRegionConfig, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, &cr)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
-
-	if resp.Diagnostics.HasError() {
-		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
 	var plan, state guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().BedrockClient(ctx)
 
 	if !plan.BlockedInputMessaging.Equal(state.BlockedInputMessaging) ||
 		!plan.BlockedOutputsMessaging.Equal(state.BlockedOutputsMessaging) ||
@@ -509,15 +512,15 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 		!plan.WordPolicy.Equal(state.WordPolicy) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
-		in := &bedrock.UpdateGuardrailInput{
+		in := bedrock.UpdateGuardrailInput{
 			GuardrailIdentifier: plan.GuardrailID.ValueStringPointer(),
 		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in, flexOpt)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, flexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateGuardrail(ctx, in)
+		out, err := conn.UpdateGuardrail(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -559,18 +562,18 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *guardrailResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
 	var state guardrailResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &bedrock.DeleteGuardrailInput{
+	conn := r.Meta().BedrockClient(ctx)
+
+	in := bedrock.DeleteGuardrailInput{
 		GuardrailIdentifier: state.GuardrailID.ValueStringPointer(),
 	}
-	if _, err := conn.DeleteGuardrail(ctx, in); err != nil {
+	if _, err := conn.DeleteGuardrail(ctx, &in); err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
@@ -705,7 +708,7 @@ type guardrailResourceModel struct {
 	ContentPolicy              fwtypes.ListNestedObjectValueOf[guardrailContentPolicyConfigModel] `tfsdk:"content_policy_config"`
 	ContextualGroundingPolicy  fwtypes.ListNestedObjectValueOf[contextualGroundingPolicyConfig]   `tfsdk:"contextual_grounding_policy_config"`
 	CreatedAt                  timetypes.RFC3339                                                  `tfsdk:"created_at"`
-	CrossRegionConfig          fwtypes.SetNestedObjectValueOf[crossRegionConfig]                  `tfsdk:"cross_region_inference"`
+	CrossRegionConfig          fwtypes.ListNestedObjectValueOf[guardrailCrossRegionConfigModel]   `tfsdk:"cross_region_config"`
 	Description                types.String                                                       `tfsdk:"description"`
 	GuardrailArn               types.String                                                       `tfsdk:"guardrail_arn"`
 	GuardrailID                types.String                                                       `tfsdk:"guardrail_id"`
@@ -745,8 +748,8 @@ type contextualGroundingFiltersConfig struct {
 	Type      fwtypes.StringEnum[awstypes.GuardrailContextualGroundingFilterType] `tfsdk:"type"`
 }
 
-type crossRegionConfig struct {
-	GuardrailProfileIdentifier types.String `tfsdk:"guardrail_profile"`
+type guardrailCrossRegionConfigModel struct {
+	GuardrailProfileARN fwtypes.ARN `tfsdk:"guardrail_profile_arn"`
 }
 
 type sensitiveInformationPolicyConfig struct {

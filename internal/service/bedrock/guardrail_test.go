@@ -50,8 +50,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.0.tier_name", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cross_region_inference.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cross_region_inference.0.guardrail_profile", "us.guardrail.v1:0"),
+					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyARN),
@@ -273,14 +272,18 @@ func testAccCheckGuardrailExists(ctx context.Context, name string, guardrail *be
 
 func testAccGuardrailConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bedrock_guardrail" "test" {
   name                      = %[1]q
   blocked_input_messaging   = "test"
   blocked_outputs_messaging = "test"
   description               = "test"
 
-  cross_region_inference {
-    guardrail_profile = "us.guardrail.v1:0"
+  cross_region_config {
+    guardrail_profile = ""arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:us.guardrail.v1:0"
   }
 
   content_policy_config {
