@@ -14,6 +14,7 @@ var (
 	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
 	ResourceDataQualityRuleset            = resourceDataQualityRuleset
 	ResourceDevEndpoint                   = resourceDevEndpoint
+	ResourceFederatedCatalog              = newResourceFederatedCatalog
 	ResourceJob                           = resourceJob
 	ResourceMLTransform                   = resourceMLTransform
 	ResourcePartition                     = resourcePartition
@@ -33,6 +34,7 @@ var (
 	FindDatabaseByName           = findDatabaseByName
 	FindDataQualityRulesetByName = findDataQualityRulesetByName
 	FindDevEndpointByName        = findDevEndpointByName
+	FindFederatedCatalogByID     = findFederatedCatalogByID
 	FindJobByName                = findJobByName
 	FindPartitionByValues        = findPartitionByValues
 	FindPartitionIndexByName     = findPartitionIndexByName
