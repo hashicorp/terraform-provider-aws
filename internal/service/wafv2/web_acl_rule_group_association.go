@@ -23,11 +23,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -212,8 +210,12 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
 		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
 		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		Description:          webACL.WebACL.Description,
 		TokenDomains:         webACL.WebACL.TokenDomains,
+	}
+
+	// Only set description if it's not empty
+	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
+		updateInput.Description = webACL.WebACL.Description
 	}
 
 	const timeout = 5 * time.Minute
@@ -231,8 +233,8 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 
 	// Set the ID as a combination that uniquely identifies this association
 	// Format: webACLARN/ruleName/ruleGroupARN (using slashes for consistency with other WAFv2 resources)
-	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", 
-		plan.WebACLARN.ValueString(), 
+	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
+		plan.WebACLARN.ValueString(),
 		plan.RuleName.ValueString(),
 		plan.RuleGroupARN.ValueString()))
 
@@ -294,10 +296,10 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 	// Find the rule group in the Web ACL rules
 	found := false
 	for _, rule := range webACL.WebACL.Rules {
-		if aws.ToString(rule.Name) == ruleName && 
-		   rule.Statement != nil && 
-		   rule.Statement.RuleGroupReferenceStatement != nil &&
-		   aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupARN {
+		if aws.ToString(rule.Name) == ruleName &&
+			rule.Statement != nil &&
+			rule.Statement.RuleGroupReferenceStatement != nil &&
+			aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupARN {
 			found = true
 			state.Priority = types.Int32Value(rule.Priority)
 
@@ -342,7 +344,7 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 
 	// Most attributes require replacement, so we only need to handle changes to attributes
 	// that don't require replacement (currently none)
-	
+
 	// For future extensibility, if any attributes are added that don't require replacement,
 	// they would be handled here
 
@@ -425,8 +427,12 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
 		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
 		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
-		Description:          webACL.WebACL.Description,
 		TokenDomains:         webACL.WebACL.TokenDomains,
+	}
+
+	// Only set description if it's not empty
+	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
+		updateInput.Description = webACL.WebACL.Description
 	}
 
 	const timeout = 5 * time.Minute
@@ -469,7 +475,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 	}
 
 	// Set the ID in the expected format for Read
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), 
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"),
 		fmt.Sprintf("%s/%s/%s", webACLARN, ruleName, ruleGroupARN))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_arn"), ruleGroupARN)...)
@@ -484,31 +490,32 @@ func parseWebACLARN(arn string) (id, name, scope string, err error) {
 	if len(parts) < 6 {
 		return "", "", "", fmt.Errorf("invalid Web ACL ARN format: %s", arn)
 	}
-	
+
 	resourceParts := strings.Split(parts[5], "/")
 	if len(resourceParts) < 4 {
 		return "", "", "", fmt.Errorf("invalid Web ACL ARN resource format: %s", parts[5])
 	}
-	
+
 	// Validate that this is a webacl ARN
 	if resourceParts[1] != "webacl" {
 		return "", "", "", fmt.Errorf("invalid Web ACL ARN: expected webacl resource type, got %s", resourceParts[1])
 	}
-	
+
 	// Determine scope
 	scopeValue := "REGIONAL"
 	if parts[3] == "global" || resourceParts[0] == "global" {
 		scopeValue = "CLOUDFRONT"
 	}
-	
+
 	// Extract name and ID
 	nameIndex := len(resourceParts) - 2
 	idIndex := len(resourceParts) - 1
-	
+
 	return resourceParts[idIndex], resourceParts[nameIndex], scopeValue, nil
 }
 
 type resourceWebACLRuleGroupAssociationModel struct {
+	framework.WithRegionModel
 	ID             types.String   `tfsdk:"id"`
 	RuleName       types.String   `tfsdk:"rule_name"`
 	Priority       types.Int32    `tfsdk:"priority"`
@@ -517,13 +524,3 @@ type resourceWebACLRuleGroupAssociationModel struct {
 	OverrideAction types.String   `tfsdk:"override_action"`
 	Timeouts       timeouts.Value `tfsdk:"timeouts"`
 }
-
-func sweepWebACLRuleGroupAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	// Since this is a synthetic resource that modifies web ACLs,
-	// we don't need a specific sweep function for it.
-	// The web ACL sweep function will handle cleaning up web ACLs.
-	return nil, nil
-}
-
-// Unit tests for parseWebACLARN function
-// These tests are included in the main file following the pattern used in flex_test.go

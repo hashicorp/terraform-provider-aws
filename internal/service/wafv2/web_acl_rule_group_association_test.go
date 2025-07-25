@@ -474,7 +474,7 @@ func parseWebACLARN(arn string) (id, name, scope string, err error) {
 	if len(resourceParts) < 4 {
 		return "", "", "", fmt.Errorf("invalid Web ACL ARN resource format: %s", parts[5])
 	}
-	
+
 	// Validate that this is a webacl ARN
 	if resourceParts[1] != "webacl" {
 		return "", "", "", fmt.Errorf("invalid Web ACL ARN: expected webacl resource type, got %s", resourceParts[1])
