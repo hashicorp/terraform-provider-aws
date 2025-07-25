@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,12 +87,10 @@ func resourceMaintenanceWindow() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -151,7 +148,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -182,7 +179,7 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -230,7 +227,7 @@ func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMaintenanceWindowRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

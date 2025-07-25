@@ -166,6 +166,7 @@ provider "aws" {
 |DocumentDB Elastic|`docdbelastic`|`AWS_ENDPOINT_URL_DOCDB_ELASTIC`|`docdb_elastic`|
 |DRS (Elastic Disaster Recovery)|`drs`|`AWS_ENDPOINT_URL_DRS`|`drs`|
 |Directory Service|`ds`(or `directoryservice`)|`AWS_ENDPOINT_URL_DIRECTORY_SERVICE`|`directory_service`|
+|DSQL|`dsql`|`AWS_ENDPOINT_URL_DSQL`|`dsql`|
 |DynamoDB|`dynamodb`|`AWS_ENDPOINT_URL_DYNAMODB`|`dynamodb`|
 |EC2 (Elastic Compute Cloud)|`ec2`|`AWS_ENDPOINT_URL_EC2`|`ec2`|
 |ECR (Elastic Container Registry)|`ecr`|`AWS_ENDPOINT_URL_ECR`|`ecr`|
@@ -184,6 +185,7 @@ provider "aws" {
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
@@ -206,8 +208,6 @@ provider "aws" {
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
-|IoT Analytics|`iotanalytics`|`AWS_ENDPOINT_URL_IOTANALYTICS`|`iotanalytics`|
-|IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
 |IVS (Interactive Video)|`ivs`|`AWS_ENDPOINT_URL_IVS`|`ivs`|
 |IVS (Interactive Video) Chat|`ivschat`|`AWS_ENDPOINT_URL_IVSCHAT`|`ivschat`|
 |Managed Streaming for Kafka|`kafka`(or `msk`)|`AWS_ENDPOINT_URL_KAFKA`|`kafka`|
@@ -247,10 +247,11 @@ provider "aws" {
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
+|User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
-|OpsWorks|`opsworks`|`AWS_ENDPOINT_URL_OPSWORKS`|`opsworks`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
 |OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
@@ -288,7 +289,7 @@ provider "aws" {
 |S3 Control|`s3control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3outposts`|
 |S3 Tables|`s3tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3tables`|
-|SageMaker|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
+|SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
 |Secrets Manager|`secretsmanager`|`AWS_ENDPOINT_URL_SECRETS_MANAGER`|`secrets_manager`|
@@ -304,7 +305,6 @@ provider "aws" {
 |SFN (Step Functions)|`sfn`(or `stepfunctions`)|`AWS_ENDPOINT_URL_SFN`|`sfn`|
 |Shield|`shield`|`AWS_ENDPOINT_URL_SHIELD`|`shield`|
 |Signer|`signer`|`AWS_ENDPOINT_URL_SIGNER`|`signer`|
-|SDB (SimpleDB)|`simpledb`(or `sdb`)|`AWS_ENDPOINT_URL_SIMPLEDB`|`simpledb`|
 |SNS (Simple Notification)|`sns`|`AWS_ENDPOINT_URL_SNS`|`sns`|
 |SQS (Simple Queue)|`sqs`|`AWS_ENDPOINT_URL_SQS`|`sqs`|
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|
@@ -330,7 +330,6 @@ provider "aws" {
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
-|WorkLink|`worklink`|`AWS_ENDPOINT_URL_WORKLINK`|`worklink`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|

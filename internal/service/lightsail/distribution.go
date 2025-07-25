@@ -317,8 +317,6 @@ func ResourceDistribution() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -326,21 +324,21 @@ const (
 	ResNameDistribution = "Distribution"
 )
 
-func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := &lightsail.CreateDistributionInput{
 		BundleId:             aws.String(d.Get("bundle_id").(string)),
-		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
+		DefaultCacheBehavior: expandCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any)),
 		DistributionName:     aws.String(d.Get(names.AttrName).(string)),
-		Origin:               expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{})),
+		Origin:               expandInputOrigin(d.Get("origin").([]any)[0].(map[string]any)),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.CacheBehaviorSettings = expandCacheSettings(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("cache_behavior_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.CacheBehaviorSettings = expandCacheSettings(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("cache_behavior"); ok && v.(*schema.Set).Len() > 0 {
@@ -398,7 +396,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
-func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -423,7 +421,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if out.CacheBehaviorSettings != nil {
-		if err := d.Set("cache_behavior_settings", []interface{}{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
+		if err := d.Set("cache_behavior_settings", []any{flattenCacheSettings(out.CacheBehaviorSettings)}); err != nil {
 			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 		}
 	} else {
@@ -433,14 +431,14 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("certificate_name", out.CertificateName)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 
-	if err := d.Set("default_cache_behavior", []interface{}{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
+	if err := d.Set("default_cache_behavior", []any{flattenCacheBehavior(out.DefaultCacheBehavior)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set(names.AttrIPAddressType, out.IpAddressType)
-	d.Set(names.AttrLocation, []interface{}{flattenResourceLocation(out.Location)})
-	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
+	d.Set(names.AttrLocation, []any{flattenResourceLocation(out.Location)})
+	if err := d.Set("origin", []any{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set(names.AttrName, out.Name)
@@ -454,7 +452,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -471,7 +469,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("cache_behavior_settings") {
-		in.CacheBehaviorSettings = expandCacheSettings(d.Get("cache_behavior_settings").([]interface{})[0].(map[string]interface{}))
+		in.CacheBehaviorSettings = expandCacheSettings(d.Get("cache_behavior_settings").([]any)[0].(map[string]any))
 		update = true
 	}
 
@@ -481,7 +479,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("default_cache_behavior") {
-		in.DefaultCacheBehavior = expandCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{}))
+		in.DefaultCacheBehavior = expandCacheBehavior(d.Get("default_cache_behavior").([]any)[0].(map[string]any))
 		update = true
 	}
 
@@ -491,7 +489,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChanges("origin") {
-		in.Origin = expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{}))
+		in.Origin = expandInputOrigin(d.Get("origin").([]any)[0].(map[string]any))
 		update = true
 	}
 
@@ -554,7 +552,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
-func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -605,12 +603,12 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string
 	return &out.Distributions[0], nil
 }
 
-func flattenCookieObject(apiObject *types.CookieObject) map[string]interface{} {
+func flattenCookieObject(apiObject *types.CookieObject) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.CookiesAllowList; len(v) > 0 {
 		m["cookies_allow_list"] = v
@@ -623,12 +621,12 @@ func flattenCookieObject(apiObject *types.CookieObject) map[string]interface{} {
 	return m
 }
 
-func flattenHeaderObject(apiObject *types.HeaderObject) map[string]interface{} {
+func flattenHeaderObject(apiObject *types.HeaderObject) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.HeadersAllowList; len(v) > 0 {
 		m["headers_allow_list"] = v
@@ -641,12 +639,12 @@ func flattenHeaderObject(apiObject *types.HeaderObject) map[string]interface{} {
 	return m
 }
 
-func flattenQueryStringObject(apiObject *types.QueryStringObject) map[string]interface{} {
+func flattenQueryStringObject(apiObject *types.QueryStringObject) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.QueryStringsAllowList; len(v) > 0 {
 		m["query_strings_allowed_list"] = v
@@ -659,12 +657,12 @@ func flattenQueryStringObject(apiObject *types.QueryStringObject) map[string]int
 	return m
 }
 
-func flattenCacheSettings(apiObject *types.CacheSettings) map[string]interface{} {
+func flattenCacheSettings(apiObject *types.CacheSettings) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.AllowedHTTPMethods; v != nil {
 		m["allowed_http_methods"] = aws.ToString(v)
@@ -679,15 +677,15 @@ func flattenCacheSettings(apiObject *types.CacheSettings) map[string]interface{}
 	}
 
 	if v := apiObject.ForwardedCookies; v != nil {
-		m["forwarded_cookies"] = []interface{}{flattenCookieObject(v)}
+		m["forwarded_cookies"] = []any{flattenCookieObject(v)}
 	}
 
 	if v := apiObject.ForwardedHeaders; v != nil {
-		m["forwarded_headers"] = []interface{}{flattenHeaderObject(v)}
+		m["forwarded_headers"] = []any{flattenHeaderObject(v)}
 	}
 
 	if v := apiObject.ForwardedQueryStrings; v != nil {
-		m["forwarded_query_strings"] = []interface{}{flattenQueryStringObject(v)}
+		m["forwarded_query_strings"] = []any{flattenQueryStringObject(v)}
 	}
 
 	if v := apiObject.MaximumTTL; v != nil {
@@ -701,12 +699,12 @@ func flattenCacheSettings(apiObject *types.CacheSettings) map[string]interface{}
 	return m
 }
 
-func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[string]interface{} {
+func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[string]any {
 	if apiObject == (types.CacheBehaviorPerPath{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Behavior; v != "" {
 		m["behavior"] = v
@@ -719,12 +717,12 @@ func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[strin
 	return m
 }
 
-func flattenCacheBehaviorsPerPath(apiObjects []types.CacheBehaviorPerPath) []interface{} {
+func flattenCacheBehaviorsPerPath(apiObjects []types.CacheBehaviorPerPath) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.CacheBehaviorPerPath{}) {
@@ -737,12 +735,12 @@ func flattenCacheBehaviorsPerPath(apiObjects []types.CacheBehaviorPerPath) []int
 	return l
 }
 
-func flattenCacheBehavior(apiObject *types.CacheBehavior) map[string]interface{} {
+func flattenCacheBehavior(apiObject *types.CacheBehavior) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Behavior; v != "" {
 		m["behavior"] = v
@@ -751,12 +749,12 @@ func flattenCacheBehavior(apiObject *types.CacheBehavior) map[string]interface{}
 	return m
 }
 
-func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
+func flattenOrigin(apiObject *types.Origin) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		m[names.AttrName] = aws.ToString(v)
@@ -777,7 +775,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	return m
 }
 
-func expandInputOrigin(tfMap map[string]interface{}) *types.InputOrigin {
+func expandInputOrigin(tfMap map[string]any) *types.InputOrigin {
 	if tfMap == nil {
 		return nil
 	}
@@ -799,7 +797,7 @@ func expandInputOrigin(tfMap map[string]interface{}) *types.InputOrigin {
 	return a
 }
 
-func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehaviorPerPath {
+func expandCacheBehaviorPerPath(tfMap map[string]any) types.CacheBehaviorPerPath {
 	if tfMap == nil {
 		return types.CacheBehaviorPerPath{}
 	}
@@ -817,7 +815,7 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehavio
 	return a
 }
 
-func expandCacheBehaviorsPerPath(tfList []interface{}) []types.CacheBehaviorPerPath {
+func expandCacheBehaviorsPerPath(tfList []any) []types.CacheBehaviorPerPath {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -825,7 +823,7 @@ func expandCacheBehaviorsPerPath(tfList []interface{}) []types.CacheBehaviorPerP
 	var s []types.CacheBehaviorPerPath
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -843,7 +841,7 @@ func expandCacheBehaviorsPerPath(tfList []interface{}) []types.CacheBehaviorPerP
 	return s
 }
 
-func expandAllowList(tfList []interface{}) []string {
+func expandAllowList(tfList []any) []string {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -863,7 +861,7 @@ func expandAllowList(tfList []interface{}) []string {
 	return s
 }
 
-func expandHeaderEnumList(tfList []interface{}) []types.HeaderEnum {
+func expandHeaderEnumList(tfList []any) []types.HeaderEnum {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -882,7 +880,7 @@ func expandHeaderEnumList(tfList []interface{}) []types.HeaderEnum {
 
 	return s
 }
-func expandCookieObject(tfMap map[string]interface{}) *types.CookieObject {
+func expandCookieObject(tfMap map[string]any) *types.CookieObject {
 	if tfMap == nil {
 		return nil
 	}
@@ -900,7 +898,7 @@ func expandCookieObject(tfMap map[string]interface{}) *types.CookieObject {
 	return a
 }
 
-func expandHeaderObject(tfMap map[string]interface{}) *types.HeaderObject {
+func expandHeaderObject(tfMap map[string]any) *types.HeaderObject {
 	if tfMap == nil {
 		return nil
 	}
@@ -918,7 +916,7 @@ func expandHeaderObject(tfMap map[string]interface{}) *types.HeaderObject {
 	return a
 }
 
-func expandQueryStringObject(tfMap map[string]interface{}) *types.QueryStringObject {
+func expandQueryStringObject(tfMap map[string]any) *types.QueryStringObject {
 	if tfMap == nil {
 		return nil
 	}
@@ -936,7 +934,7 @@ func expandQueryStringObject(tfMap map[string]interface{}) *types.QueryStringObj
 	return a
 }
 
-func expandCacheSettings(tfMap map[string]interface{}) *types.CacheSettings {
+func expandCacheSettings(tfMap map[string]any) *types.CacheSettings {
 	if tfMap == nil {
 		return nil
 	}
@@ -955,16 +953,16 @@ func expandCacheSettings(tfMap map[string]interface{}) *types.CacheSettings {
 		a.DefaultTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["forwarded_cookies"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.ForwardedCookies = expandCookieObject(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["forwarded_cookies"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.ForwardedCookies = expandCookieObject(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["forwarded_headers"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.ForwardedHeaders = expandHeaderObject(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["forwarded_headers"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.ForwardedHeaders = expandHeaderObject(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["forwarded_query_strings"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.ForwardedQueryStrings = expandQueryStringObject(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["forwarded_query_strings"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.ForwardedQueryStrings = expandQueryStringObject(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_ttl"].(int); ok && v != 0 {
@@ -978,7 +976,7 @@ func expandCacheSettings(tfMap map[string]interface{}) *types.CacheSettings {
 	return a
 }
 
-func expandCacheBehavior(tfMap map[string]interface{}) *types.CacheBehavior {
+func expandCacheBehavior(tfMap map[string]any) *types.CacheBehavior {
 	if tfMap == nil {
 		return nil
 	}

@@ -160,6 +160,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the policy. Typically used to store information about the permissions defined in the policy.
 
 ## Attribute Reference
@@ -200,4 +201,4 @@ Using `terraform import`, import OpenSearchServerless Access Policy using the `n
 % terraform import aws_opensearchserverless_access_policy.example example/data
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-025702799f46af465a8f782db7f780da1b73dd0220b3ff605a2cb05cd1fc3137 -->
+<!-- cache-key: cdktf-0.20.8 input-79b73f7bbd824877f38f16c1a540c4b05a5807db4052e3b10f6a16c8844610da -->

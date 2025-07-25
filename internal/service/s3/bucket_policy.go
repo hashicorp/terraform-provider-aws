@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,22 +40,12 @@ func resourceBucketPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 		},
 	}
 }
 
-func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -73,7 +63,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -84,7 +74,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findBucketPolicy(ctx, conn, bucket)
 		})
 
@@ -96,7 +86,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -128,7 +118,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -150,7 +140,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketPolicy(ctx, conn, bucket)
 	})
 

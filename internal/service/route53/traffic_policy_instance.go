@@ -37,6 +37,10 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrHostedZoneID: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -48,7 +52,7 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					value := strings.TrimSuffix(v.(string), ".")
 					return strings.ToLower(value)
 				},
@@ -72,7 +76,7 @@ func resourceTrafficPolicyInstance() *schema.Resource {
 	}
 }
 
-func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -85,7 +89,7 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 		TTL:                  aws.Int64(int64(d.Get("ttl").(int))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchTrafficPolicy](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.CreateTrafficPolicyInstance(ctx, input)
 	})
 
@@ -102,7 +106,7 @@ func resourceTrafficPolicyInstanceCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTrafficPolicyInstanceRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -118,6 +122,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Traffic Policy Instance (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, trafficPolicyInstanceARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrHostedZoneID, trafficPolicyInstance.HostedZoneId)
 	d.Set(names.AttrName, strings.TrimSuffix(aws.ToString(trafficPolicyInstance.Name), "."))
 	d.Set("traffic_policy_id", trafficPolicyInstance.TrafficPolicyId)
@@ -127,7 +132,7 @@ func resourceTrafficPolicyInstanceRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -151,7 +156,7 @@ func resourceTrafficPolicyInstanceUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceTrafficPolicyInstanceRead(ctx, d, meta)...)
 }
 
-func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -201,7 +206,7 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 }
 
 func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrafficPolicyInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -289,4 +294,9 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 	}
 
 	return nil, err
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonroute53.html#amazonroute53-resources-for-iam-policies.
+func trafficPolicyInstanceARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARNNoAccount(ctx, "route53", "trafficpolicyinstance/"+id)
 }

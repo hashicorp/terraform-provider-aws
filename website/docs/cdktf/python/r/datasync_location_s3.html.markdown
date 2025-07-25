@@ -66,6 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_arns` - (Optional) (Amazon S3 on Outposts only) Amazon Resource Name (ARN) of the DataSync agent on the Outpost.
 * `s3_bucket_arn` - (Required) Amazon Resource Name (ARN) of the S3 bucket, or the Amazon S3 access point if the S3 bucket is located on an AWS Outposts resource.
 * `s3_config` - (Required) Configuration block containing information for connecting to S3.
@@ -112,4 +113,4 @@ Using `terraform import`, import `aws_datasync_location_s3` using the DataSync T
 % terraform import aws_datasync_location_s3.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-02d5c8e51fa2e717abfee3e129549f5f2280fb0e9a6253268fcca011b1ff0e02 -->
+<!-- cache-key: cdktf-0.20.8 input-5a97569237fbf40c7921be33ce3e93e07ce8205da65a63811c0725f30b668a8e -->

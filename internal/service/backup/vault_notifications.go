@@ -67,7 +67,7 @@ func resourceVaultNotifications() *schema.Resource {
 	}
 }
 
-func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -89,7 +89,7 @@ func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVaultNotificationsRead(ctx, d, meta)...)
 }
 
-func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceVaultNotificationsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultNotificationsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 

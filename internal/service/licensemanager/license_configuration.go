@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -83,12 +82,10 @@ func resourceLicenseConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -111,8 +108,8 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		input.LicenseCountHardLimit = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("license_rules"); ok && len(v.([]interface{})) > 0 {
-		input.LicenseRules = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("license_rules"); ok && len(v.([]any)) > 0 {
+		input.LicenseRules = flex.ExpandStringValueList(v.([]any))
 	}
 
 	output, err := conn.CreateLicenseConfiguration(ctx, input)
@@ -126,7 +123,7 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -156,7 +153,7 @@ func resourceLicenseConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -182,7 +179,7 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLicenseConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 

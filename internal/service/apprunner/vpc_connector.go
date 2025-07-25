@@ -22,22 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
 		ReadWithoutTimeout:   resourceVPCConnectorRead,
 		UpdateWithoutTimeout: resourceVPCConnectorUpdate,
 		DeleteWithoutTimeout: resourceVPCConnectorDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -73,12 +70,10 @@ func resourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -106,7 +101,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceVPCConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -133,12 +128,12 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
-func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -197,7 +192,7 @@ func findVPCConnectorByARN(ctx context.Context, conn *apprunner.Client, arn stri
 }
 
 func statusVPCConnector(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVPCConnectorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

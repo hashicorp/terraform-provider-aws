@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,8 +36,6 @@ func resourceUserHierarchyGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -113,7 +110,7 @@ func hierarchyPathLevelSchema() *schema.Schema {
 	}
 }
 
-func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -141,7 +138,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceUserHierarchyGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -176,7 +173,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -202,7 +199,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceUserHierarchyGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -212,10 +209,11 @@ func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Connect User Hierarchy Group: %s", d.Id())
-	_, err = conn.DeleteUserHierarchyGroup(ctx, &connect.DeleteUserHierarchyGroupInput{
+	input := connect.DeleteUserHierarchyGroupInput{
 		HierarchyGroupId: aws.String(userHierarchyGroupID),
 		InstanceId:       aws.String(instanceID),
-	})
+	}
+	_, err = conn.DeleteUserHierarchyGroup(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -277,12 +275,12 @@ func findUserHierarchyGroup(ctx context.Context, conn *connect.Client, input *co
 	return output.HierarchyGroup, nil
 }
 
-func flattenHierarchyPath(apiObject *awstypes.HierarchyPath) []interface{} {
+func flattenHierarchyPath(apiObject *awstypes.HierarchyPath) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LevelOne != nil {
 		tfMap["level_one"] = flattenHierarchyGroupSummary(apiObject.LevelOne)
@@ -304,19 +302,19 @@ func flattenHierarchyPath(apiObject *awstypes.HierarchyPath) []interface{} {
 		tfMap["level_five"] = flattenHierarchyGroupSummary(apiObject.LevelFive)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenHierarchyGroupSummary(apiObject *awstypes.HierarchyGroupSummary) []interface{} {
+func flattenHierarchyGroupSummary(apiObject *awstypes.HierarchyGroupSummary) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrARN:  aws.ToString(apiObject.Arn),
 		names.AttrID:   aws.ToString(apiObject.Id),
 		names.AttrName: aws.ToString(apiObject.Name),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

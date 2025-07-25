@@ -98,7 +98,7 @@ const (
 	ListPoolMaxResults = 20
 )
 
-func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
@@ -147,11 +147,11 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name string) (*cognitoidentity.DescribeIdentityPoolOutput, error) {
 	var poolID string
-	input := &cognitoidentity.ListIdentityPoolsInput{
+	listInout := cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(ListPoolMaxResults),
 	}
 
-	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, input)
+	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, &listInout)
 	for p.HasMorePages() {
 		pools, err := p.NextPage(ctx)
 		if err != nil {
@@ -169,9 +169,10 @@ func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name stri
 		return nil, fmt.Errorf("no identity pool found with name %q", name)
 	}
 
-	pool, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+	describeInput := cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(poolID),
-	})
+	}
+	pool, err := conn.DescribeIdentityPool(ctx, &describeInput)
 
 	if err != nil {
 		return nil, err

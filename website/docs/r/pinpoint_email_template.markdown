@@ -28,8 +28,9 @@ resource "aws_pinpoint_email_template" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `template_name` - (Required) name of the message template. A template name must start with an alphanumeric character and can contain a maximum of 128 characters. The characters can be alphanumeric characters, underscores (_), or hyphens (-). Template names are case sensitive.
 * `email_template` - (Required) Specifies the content and settings for a message template that can be used in messages that are sent through the email channel. See [Email Template](#email-template)
 

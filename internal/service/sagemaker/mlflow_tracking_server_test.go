@@ -67,6 +67,36 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerMlflowTrackingServer_mlflowVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mpg sagemaker.DescribeMlflowTrackingServerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMlflowTrackingServerConfig_mflowVersion(rName, "2.16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mlflow_version", "2.16"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
+					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeMlflowTrackingServerOutput
@@ -153,7 +183,7 @@ func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestC
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Mlflow Tracking Server %s still exists", rs.Primary.ID)
@@ -244,6 +274,17 @@ resource "aws_sagemaker_mlflow_tracking_server" "test" {
   artifact_store_uri   = "s3://${aws_s3_bucket.test.bucket}/path"
 }
 `, rName))
+}
+
+func testAccMlflowTrackingServerConfig_mflowVersion(rName, mlflowVersion string) string {
+	return acctest.ConfigCompose(testAccMlflowTrackingServerConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_mlflow_tracking_server" "test" {
+  tracking_server_name = %[1]q
+  mlflow_version       = %[2]q
+  role_arn             = aws_iam_role.test.arn
+  artifact_store_uri   = "s3://${aws_s3_bucket.test.bucket}/path"
+}
+`, rName, mlflowVersion))
 }
 
 func testAccMlflowTrackingServerConfig_update(rName string) string {

@@ -14,7 +14,7 @@ Generates an ECR lifecycle policy document in JSON format. Can be used with reso
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ecr_lifecycle_policy_document" "example" {
   rule {
     priority    = 1

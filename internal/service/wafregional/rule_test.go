@@ -253,7 +253,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 func computeRulePredicate(dataId **string, negated bool, pType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		predicateResource := tfwafregional.ResourceRule().SchemaMap()["predicate"].Elem.(*schema.Resource)
-		m := map[string]interface{}{
+		m := map[string]any{
 			"data_id":      **dataId,
 			"negated":      negated,
 			names.AttrType: pType,

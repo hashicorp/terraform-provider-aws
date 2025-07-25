@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
             name="example-bucket"
         )
         aws_s3_tables_namespace_example = S3TablesNamespace(self, "example_1",
-            namespace="example-namespace",
+            namespace="example_namespace",
             table_bucket_arn=example.arn
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -42,8 +42,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespace` - (Required, Forces new resource) Name of the namespace.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
@@ -82,4 +83,4 @@ Using `terraform import`, import S3 Tables Namespace using the `table_bucket_arn
 % terraform import aws_s3tables_namespace.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23fbca81594192465f6491ea4ab2110f75a60e3dac8626c1df32b18174d62609 -->
+<!-- cache-key: cdktf-0.20.8 input-b9440cce56a2b3e5b7f6d7b9e4737dff2562956bed791d33b59a7d3d5131de13 -->

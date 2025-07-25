@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +39,6 @@ func resourceFargateProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -110,7 +107,7 @@ func resourceFargateProfile() *schema.Resource {
 	}
 }
 
-func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -134,7 +131,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// Retry for IAM eventual consistency on error:
 	// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateFargateProfile(ctx, input)
 	}, "Misconfigured PodExecutionRole Trust Policy")
 
@@ -151,7 +148,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceFargateProfileRead(ctx, d, meta)...)
 }
 
-func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -187,13 +184,13 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceFargateProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFargateProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// Tags only.
 	return append(diags, resourceFargateProfileRead(ctx, d, meta)...)
 }
 
-func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -255,7 +252,7 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 }
 
 func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
 		if tfresource.NotFound(err) {
@@ -304,7 +301,7 @@ func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterNam
 	return nil, err
 }
 
-func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelector {
+func expandFargateProfileSelectors(l []any) []types.FargateProfileSelector {
 	if len(l) == 0 {
 		return nil
 	}
@@ -312,7 +309,7 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 	fargateProfileSelectors := make([]types.FargateProfileSelector, 0, len(l))
 
 	for _, mRaw := range l {
-		m, ok := mRaw.(map[string]interface{})
+		m, ok := mRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -320,7 +317,7 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 
 		fargateProfileSelector := types.FargateProfileSelector{}
 
-		if v, ok := m["labels"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := m["labels"].(map[string]any); ok && len(v) > 0 {
 			fargateProfileSelector.Labels = flex.ExpandStringValueMap(v)
 		}
 
@@ -334,15 +331,15 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 	return fargateProfileSelectors
 }
 
-func flattenFargateProfileSelectors(fargateProfileSelectors []types.FargateProfileSelector) []map[string]interface{} {
+func flattenFargateProfileSelectors(fargateProfileSelectors []types.FargateProfileSelector) []map[string]any {
 	if len(fargateProfileSelectors) == 0 {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	l := make([]map[string]interface{}, 0, len(fargateProfileSelectors))
+	l := make([]map[string]any, 0, len(fargateProfileSelectors))
 
 	for _, fargateProfileSelector := range fargateProfileSelectors {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"labels":            fargateProfileSelector.Labels,
 			names.AttrNamespace: aws.ToString(fargateProfileSelector.Namespace),
 		}

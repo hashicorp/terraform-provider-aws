@@ -56,13 +56,9 @@ func newIngestionDestinationResource(context.Context) (resource.ResourceWithConf
 }
 
 type ingestionDestinationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ingestionDestinationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*ingestionDestinationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion_destination"
 }
 
 func (r *ingestionDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -387,10 +383,6 @@ func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resou
 	}
 }
 
-func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) (*awstypes.IngestionDestination, error) {
 	input := &appfabric.GetIngestionDestinationInput{
 		AppBundleIdentifier:            aws.String(appBundleARN),
@@ -419,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 }
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {
@@ -473,6 +465,7 @@ func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client
 }
 
 type ingestionDestinationResourceModel struct {
+	framework.WithRegionModel
 	AppBundleARN             fwtypes.ARN                                                    `tfsdk:"app_bundle_arn"`
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	DestinationConfiguration fwtypes.ListNestedObjectValueOf[destinationConfigurationModel] `tfsdk:"destination_configuration"`

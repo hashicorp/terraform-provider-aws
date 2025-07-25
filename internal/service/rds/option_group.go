@@ -24,7 +24,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -137,12 +136,10 @@ func resourceOptionGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -166,7 +163,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceOptionGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -197,7 +194,7 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -232,7 +229,7 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.OptionsToRemove = optionsToRemove
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 				return conn.ModifyOptionGroup(ctx, input)
 			}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -245,7 +242,7 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceOptionGroupRead(ctx, d, meta)...)
 }
 
-func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -255,7 +252,7 @@ func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Option Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.InvalidOptionGroupStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteOptionGroup(ctx, &rds.DeleteOptionGroupInput{
 			OptionGroupName: aws.String(d.Id()),
 		})
@@ -330,17 +327,17 @@ func findOptionGroups(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func flattenOptionNames(tfList []interface{}) []string {
-	return tfslices.ApplyToAll(tfList, func(v interface{}) string {
-		return v.(map[string]interface{})["option_name"].(string)
+func flattenOptionNames(tfList []any) []string {
+	return tfslices.ApplyToAll(tfList, func(v any) string {
+		return v.(map[string]any)["option_name"].(string)
 	})
 }
 
-func expandOptionConfigurations(tfList []interface{}) []types.OptionConfiguration {
+func expandOptionConfigurations(tfList []any) []types.OptionConfiguration {
 	var apiObjects []types.OptionConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := types.OptionConfiguration{
 			OptionName: aws.String(tfMap["option_name"].(string)),
@@ -372,8 +369,8 @@ func expandOptionConfigurations(tfList []interface{}) []types.OptionConfiguratio
 	return apiObjects
 }
 
-func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionConfiguration) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionConfiguration) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		if apiObject.OptionName == nil {
@@ -388,7 +385,7 @@ func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionC
 			configuredOption = &v[0]
 		}
 
-		optionSettings := make([]interface{}, 0)
+		optionSettings := make([]any, 0)
 		for _, apiOptionSetting := range apiObject.OptionSettings {
 			// The RDS API responds with all settings. Omit settings that match default value,
 			// but only if unconfigured. This is to prevent operators from continually needing
@@ -410,7 +407,7 @@ func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionC
 				continue
 			}
 
-			optionSetting := map[string]interface{}{
+			optionSetting := map[string]any{
 				names.AttrName:  optionSettingName,
 				names.AttrValue: optionSettingValue,
 			}
@@ -424,7 +421,7 @@ func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionC
 			optionSettings = append(optionSettings, optionSetting)
 		}
 
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"db_security_group_memberships": tfslices.ApplyToAll(apiObject.DBSecurityGroupMemberships, func(v types.DBSecurityGroupMembership) string {
 				return aws.ToString(v.DBSecurityGroupName)
 			}),
@@ -449,11 +446,11 @@ func flattenOptions(apiObjects []types.Option, configuredObjects []types.OptionC
 	return tfList
 }
 
-func expandOptionSettings(tfList []interface{}) []types.OptionSetting {
+func expandOptionSettings(tfList []any) []types.OptionSetting {
 	apiObjects := make([]types.OptionSetting, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := types.OptionSetting{
 			Name:  aws.String(tfMap[names.AttrName].(string)),

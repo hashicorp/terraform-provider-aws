@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
         ApiGatewayDomainNameAccessAssociation(self, "example",
             access_association_source=Token.as_string(aws_vpc_endpoint_example.id),
             access_association_source_type="VPCE",
-            domain_name_arn=Token.as_string(aws_api_gateway_domain_name_example.domain_name_arn)
+            domain_name_arn=Token.as_string(aws_api_gateway_domain_name_example.arn)
         )
 ```
 
@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_association_source` - (Required) The identifier of the domain name access association source. For a `VPCE`, the value is the VPC endpoint ID.
 * `access_association_source_type` - (Required) The type of the domain name access association source. Valid values are `VPCE`.
 * `domain_name_arn` - (Required) The ARN of the domain name.
@@ -75,4 +76,4 @@ Using `terraform import`, import API Gateway domain name acces associations as u
 % terraform import aws_api_gateway_domain_name_access_association.example arn:aws:apigateway:us-west-2:123456789012:/domainnameaccessassociations/domainname/12qmzgp2.9m7ilski.test+hykg7a12e7/vpcesource/vpce-05de3f8f82740a748
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fea7ddfd619aab0059f4600448771ebafb7f28b43853f645957f1c276042568d -->
+<!-- cache-key: cdktf-0.20.8 input-8bb3d64cfd1ad084281554ff87806749a8adb5f7178578ce4584a48eb1b01f18 -->

@@ -85,6 +85,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The friendly name for the SNS platform application
 * `platform` - (Required) The platform that the app is registered with. See [Platform][1] for supported platforms.
 * `platform_credential` - (Required) Application Platform credential. See [Credential][1] for type of credential required for platform. The value of this attribute when stored into the Terraform state is only a hash of the real value, so therefore it is not practical to use this as an attribute for other resources.
@@ -137,4 +138,4 @@ Using `terraform import`, import SNS platform applications using the ARN. For ex
 % terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:123456789012:app/GCM/gcm_application
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-091a40bc776c6d9196d8c2d8a3184e775e9d9839b99e7f4cdc7a26bf6c561943 -->
+<!-- cache-key: cdktf-0.20.8 input-529fd1bdfa73706ce1222aeaf44c86f0f93ebfc3f5e77b939fb5f0744fa2a851 -->

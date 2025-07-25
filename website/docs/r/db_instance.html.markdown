@@ -27,6 +27,8 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data instate](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `password_wo` is available to use in place of `password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 > **Hands-on:** Try the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds) tutorial on HashiCorp Learn.
 
 ## RDS Instance Class Types
@@ -274,11 +276,9 @@ resource "aws_db_instance" "default" {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
@@ -308,8 +308,9 @@ Defaults to true.
   See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html) or
   [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
   Cannot be set  with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
-* `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
+* `copy_tags_to_snapshot` - (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
+* `database_insights_mode` - (Optional) The mode of Database Insights that is enabled for the instance. Valid values: `standard`, `advanced` .
 * `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html).
   DB instance will be created in the VPC associated with the DB subnet group.
@@ -423,6 +424,9 @@ is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `customer_owned_ip_enabled` - (Optional) Indicates whether to enable a customer-owned IP address (CoIP) for an RDS on Outposts DB instance. See [CoIP for RDS on Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html#rds-on-outposts.coip) for more information.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully

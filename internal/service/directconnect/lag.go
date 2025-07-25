@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,12 +90,10 @@ func resourceLag() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -139,7 +136,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 
-func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -174,7 +171,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -194,7 +191,7 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceLagRead(ctx, d, meta)...)
 }
 
-func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -293,7 +290,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 }
 
 func statusLag(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLagByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

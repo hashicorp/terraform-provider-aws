@@ -69,7 +69,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 							ValidateFunc:          validation.StringIsJSON,
 							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 							DiffSuppressOnRefresh: true,
-							StateFunc: func(v interface{}) string {
+							StateFunc: func(v any) string {
 								json, _ := structure.NormalizeJsonString(v)
 								return json
 							},
@@ -89,7 +89,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 	}
 }
 
-func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -101,8 +101,8 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 		AccountId: aws.String(accountID),
 	}
 
-	if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]any)[0].(map[string]any))
 	}
 
 	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
@@ -125,7 +125,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceMultiRegionAccessPointPolicyRead(ctx, d, meta)...)
 }
 
-func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -148,12 +148,12 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrAccountID, accountID)
 	if policyDocument != nil {
-		var oldDetails map[string]interface{}
-		if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			oldDetails = v.([]interface{})[0].(map[string]interface{})
+		var oldDetails map[string]any
+		if v, ok := d.GetOk("details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			oldDetails = v.([]any)[0].(map[string]any)
 		}
 
-		if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointPolicyDocument(name, policyDocument, oldDetails)}); err != nil {
+		if err := d.Set("details", []any{flattenMultiRegionAccessPointPolicyDocument(name, policyDocument, oldDetails)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 		}
 	} else {
@@ -173,7 +173,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -186,8 +186,8 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 		AccountId: aws.String(accountID),
 	}
 
-	if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("details"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
@@ -235,7 +235,7 @@ func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, c
 	return output.Policy, nil
 }
 
-func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *types.PutMultiRegionAccessPointPolicyInput {
+func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]any) *types.PutMultiRegionAccessPointPolicyInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -258,12 +258,12 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.MultiRegionAccessPointPolicyDocument, old map[string]interface{}) map[string]interface{} {
+func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.MultiRegionAccessPointPolicyDocument, old map[string]any) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrName] = name
 

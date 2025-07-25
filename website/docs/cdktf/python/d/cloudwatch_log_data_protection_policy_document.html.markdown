@@ -84,6 +84,7 @@ The following arguments are optional:
 
 * `description` - (Optional)
 * `version` - (Optional)
+* `configuration` - (Optional)
 
 ### statement Configuration Block
 
@@ -124,10 +125,19 @@ The following arguments are optional:
 
 * `mask_config` - (Required) An empty object that configures masking.
 
+### configuration Configuration Block
+
+* `custom_data_identifier` - (Optional) Configures custom regular expressions to detect sensitive data. Read more in [Custom data identifiers](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL-custom-data-identifiers.html).
+
+#### custom_data_identifier Configuration Block
+
+* `name` - (Required) Name of the custom data idenfitier
+* `regex` - (Required) Regular expression to match sensitive data
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.8 input-f0c94e0aa8a0da473585431ea622f8f0cfd32bb09136ae337369c54288ff6f27 -->
+<!-- cache-key: cdktf-0.20.8 input-4c58e855d6626ca8f266da57b7d0263777d8947c611506d608c213d86d1115f7 -->

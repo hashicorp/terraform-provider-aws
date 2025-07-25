@@ -401,12 +401,10 @@ func resourceModel() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -423,11 +421,11 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
-		createOpts.PrimaryContainer = expandContainer(v.([]interface{})[0].(map[string]interface{}))
+		createOpts.PrimaryContainer = expandContainer(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("container"); ok {
-		createOpts.Containers = expandContainers(v.([]interface{}))
+		createOpts.Containers = expandContainers(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
@@ -435,7 +433,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
-		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
+		createOpts.VpcConfig = expandVPCConfigRequest(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enable_network_isolation"); ok {
@@ -443,23 +441,23 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("inference_execution_config"); ok {
-		createOpts.InferenceExecutionConfig = expandModelInferenceExecutionConfig(v.([]interface{}))
+		createOpts.InferenceExecutionConfig = expandModelInferenceExecutionConfig(v.([]any))
 	}
 
-	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	log.Printf("[DEBUG] SageMaker AI model create config: %#v", *createOpts)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
 		return conn.CreateModel(ctx, createOpts)
 	}, ErrCodeValidationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker model: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI model: %s", err)
 	}
 	d.SetId(name)
 
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -472,7 +470,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker model %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI model %s: %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.ModelArn)
@@ -499,7 +497,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -507,14 +505,14 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI model: %s", d.Id())
 
 	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteModel(ctx, deleteOpts)
@@ -567,12 +565,12 @@ func findModelByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	return output, nil
 }
 
-func expandVPCConfigRequest(l []interface{}) *awstypes.VpcConfig {
+func expandVPCConfigRequest(l []any) *awstypes.VpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	return &awstypes.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
@@ -580,20 +578,20 @@ func expandVPCConfigRequest(l []interface{}) *awstypes.VpcConfig {
 	}
 }
 
-func flattenVPCConfigResponse(vpcConfig *awstypes.VpcConfig) []map[string]interface{} {
+func flattenVPCConfigResponse(vpcConfig *awstypes.VpcConfig) []map[string]any {
 	if vpcConfig == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(vpcConfig.SecurityGroupIds),
 		names.AttrSubnets:          flex.FlattenStringValueSet(vpcConfig.Subnets),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandContainer(m map[string]interface{}) *awstypes.ContainerDefinition {
+func expandContainer(m map[string]any) *awstypes.ContainerDefinition {
 	container := awstypes.ContainerDefinition{}
 
 	if v, ok := m["image"]; ok && v.(string) != "" {
@@ -614,51 +612,51 @@ func expandContainer(m map[string]interface{}) *awstypes.ContainerDefinition {
 		container.ModelPackageName = aws.String(v.(string))
 	}
 	if v, ok := m["model_data_source"]; ok {
-		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
+		container.ModelDataSource = expandModelDataSource(v.([]any))
 	}
-	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := m["image_config"]; ok {
-		container.ImageConfig = expandModelImageConfig(v.([]interface{}))
+		container.ImageConfig = expandModelImageConfig(v.([]any))
 	}
 
 	if v, ok := m["inference_specification_name"]; ok && v.(string) != "" {
 		container.InferenceSpecificationName = aws.String(v.(string))
 	}
 
-	if v, ok := m["multi_model_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["multi_model_config"].([]any); ok && len(v) > 0 {
 		container.MultiModelConfig = expandMultiModelConfig(v)
 	}
 
 	return &container
 }
 
-func expandModelDataSource(l []interface{}) *awstypes.ModelDataSource {
+func expandModelDataSource(l []any) *awstypes.ModelDataSource {
 	if len(l) == 0 {
 		return nil
 	}
 
 	modelDataSource := awstypes.ModelDataSource{}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	if v, ok := m["s3_data_source"]; ok {
-		modelDataSource.S3DataSource = expandS3ModelDataSource(v.([]interface{}))
+		modelDataSource.S3DataSource = expandS3ModelDataSource(v.([]any))
 	}
 
 	return &modelDataSource
 }
 
-func expandS3ModelDataSource(l []interface{}) *awstypes.S3ModelDataSource {
+func expandS3ModelDataSource(l []any) *awstypes.S3ModelDataSource {
 	if len(l) == 0 {
 		return nil
 	}
 
 	s3ModelDataSource := awstypes.S3ModelDataSource{}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	if v, ok := m["s3_uri"]; ok && v.(string) != "" {
 		s3ModelDataSource.S3Uri = aws.String(v.(string))
@@ -670,32 +668,32 @@ func expandS3ModelDataSource(l []interface{}) *awstypes.S3ModelDataSource {
 		s3ModelDataSource.CompressionType = awstypes.ModelCompressionType(v.(string))
 	}
 
-	if v, ok := m["model_access_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["model_access_config"].([]any); ok && len(v) > 0 {
 		s3ModelDataSource.ModelAccessConfig = expandModelAccessConfig(v)
 	}
 
 	return &s3ModelDataSource
 }
 
-func expandModelImageConfig(l []interface{}) *awstypes.ImageConfig {
+func expandModelImageConfig(l []any) *awstypes.ImageConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	imageConfig := &awstypes.ImageConfig{
 		RepositoryAccessMode: awstypes.RepositoryAccessMode(m["repository_access_mode"].(string)),
 	}
 
-	if v, ok := m["repository_auth_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		imageConfig.RepositoryAuthConfig = expandRepositoryAuthConfig(v[0].(map[string]interface{}))
+	if v, ok := m["repository_auth_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		imageConfig.RepositoryAuthConfig = expandRepositoryAuthConfig(v[0].(map[string]any))
 	}
 
 	return imageConfig
 }
 
-func expandRepositoryAuthConfig(tfMap map[string]interface{}) *awstypes.RepositoryAuthConfig {
+func expandRepositoryAuthConfig(tfMap map[string]any) *awstypes.RepositoryAuthConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -709,22 +707,22 @@ func expandRepositoryAuthConfig(tfMap map[string]interface{}) *awstypes.Reposito
 	return apiObject
 }
 
-func expandContainers(a []interface{}) []awstypes.ContainerDefinition {
+func expandContainers(a []any) []awstypes.ContainerDefinition {
 	containers := make([]awstypes.ContainerDefinition, 0, len(a))
 
 	for _, m := range a {
-		containers = append(containers, *expandContainer(m.(map[string]interface{})))
+		containers = append(containers, *expandContainer(m.(map[string]any)))
 	}
 
 	return containers
 }
 
-func expandModelAccessConfig(l []interface{}) *awstypes.ModelAccessConfig {
+func expandModelAccessConfig(l []any) *awstypes.ModelAccessConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	modelAccessConfig := &awstypes.ModelAccessConfig{}
 
@@ -735,12 +733,12 @@ func expandModelAccessConfig(l []interface{}) *awstypes.ModelAccessConfig {
 	return modelAccessConfig
 }
 
-func expandMultiModelConfig(l []interface{}) *awstypes.MultiModelConfig {
+func expandMultiModelConfig(l []any) *awstypes.MultiModelConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	multiModelConfig := &awstypes.MultiModelConfig{}
 
@@ -751,12 +749,12 @@ func expandMultiModelConfig(l []interface{}) *awstypes.MultiModelConfig {
 	return multiModelConfig
 }
 
-func flattenContainer(container *awstypes.ContainerDefinition) []interface{} {
+func flattenContainer(container *awstypes.ContainerDefinition) []any {
 	if container == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	if container.Image != nil {
 		cfg["image"] = aws.ToString(container.Image)
@@ -792,29 +790,29 @@ func flattenContainer(container *awstypes.ContainerDefinition) []interface{} {
 		cfg["multi_model_config"] = flattenMultiModelConfig(container.MultiModelConfig)
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []interface{} {
+func flattenModelDataSource(modelDataSource *awstypes.ModelDataSource) []any {
 	if modelDataSource == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	if modelDataSource.S3DataSource != nil {
 		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []interface{} {
+func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []any {
 	if s3ModelDataSource == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	if s3ModelDataSource.S3Uri != nil {
 		cfg["s3_uri"] = aws.ToString(s3ModelDataSource.S3Uri)
@@ -828,31 +826,31 @@ func flattenS3ModelDataSource(s3ModelDataSource *awstypes.S3ModelDataSource) []i
 		cfg["model_access_config"] = flattenModelAccessConfig(s3ModelDataSource.ModelAccessConfig)
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenImageConfig(imageConfig *awstypes.ImageConfig) []interface{} {
+func flattenImageConfig(imageConfig *awstypes.ImageConfig) []any {
 	if imageConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	cfg["repository_access_mode"] = imageConfig.RepositoryAccessMode
 
 	if tfMap := flattenRepositoryAuthConfig(imageConfig.RepositoryAuthConfig); len(tfMap) > 0 {
-		cfg["repository_auth_config"] = []interface{}{tfMap}
+		cfg["repository_auth_config"] = []any{tfMap}
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[string]interface{} {
+func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.RepositoryCredentialsProviderArn; v != nil {
 		tfMap["repository_credentials_provider_arn"] = aws.ToString(v)
@@ -861,46 +859,46 @@ func flattenRepositoryAuthConfig(apiObject *awstypes.RepositoryAuthConfig) map[s
 	return tfMap
 }
 
-func flattenContainers(containers []awstypes.ContainerDefinition) []interface{} {
-	fContainers := make([]interface{}, 0, len(containers))
+func flattenContainers(containers []awstypes.ContainerDefinition) []any {
+	fContainers := make([]any, 0, len(containers))
 	for _, container := range containers {
-		fContainers = append(fContainers, flattenContainer(&container)[0].(map[string]interface{}))
+		fContainers = append(fContainers, flattenContainer(&container)[0].(map[string]any))
 	}
 	return fContainers
 }
 
-func flattenModelAccessConfig(config *awstypes.ModelAccessConfig) []interface{} {
+func flattenModelAccessConfig(config *awstypes.ModelAccessConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	cfg["accept_eula"] = aws.ToBool(config.AcceptEula)
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func flattenMultiModelConfig(config *awstypes.MultiModelConfig) []interface{} {
+func flattenMultiModelConfig(config *awstypes.MultiModelConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	if config.ModelCacheSetting != "" {
 		cfg["model_cache_setting"] = config.ModelCacheSetting
 	}
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }
 
-func expandModelInferenceExecutionConfig(l []interface{}) *awstypes.InferenceExecutionConfig {
+func expandModelInferenceExecutionConfig(l []any) *awstypes.InferenceExecutionConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.InferenceExecutionConfig{
 		Mode: awstypes.InferenceExecutionMode(m[names.AttrMode].(string)),
@@ -909,14 +907,14 @@ func expandModelInferenceExecutionConfig(l []interface{}) *awstypes.InferenceExe
 	return config
 }
 
-func flattenModelInferenceExecutionConfig(config *awstypes.InferenceExecutionConfig) []interface{} {
+func flattenModelInferenceExecutionConfig(config *awstypes.InferenceExecutionConfig) []any {
 	if config == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	cfg := make(map[string]interface{})
+	cfg := make(map[string]any)
 
 	cfg[names.AttrMode] = config.Mode
 
-	return []interface{}{cfg}
+	return []any{cfg}
 }

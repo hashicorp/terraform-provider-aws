@@ -437,7 +437,7 @@ func dataSourceInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -483,9 +483,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("ena_support", v.NetworkInfo.EnaSupport)
 	d.Set("encryption_in_transit_supported", v.NetworkInfo.EncryptionInTransitSupported)
 	if v := v.FpgaInfo; v != nil {
-		tfList := make([]interface{}, len(v.Fpgas))
+		tfList := make([]any, len(v.Fpgas))
 		for i, v := range v.Fpgas {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"count":        aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
@@ -498,9 +498,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("free_tier_eligible", v.FreeTierEligible)
 	if v := v.GpuInfo; v != nil {
-		tfList := make([]interface{}, len(v.Gpus))
+		tfList := make([]any, len(v.Gpus))
 		for i, v := range v.Gpus {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"count":        aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
@@ -514,9 +514,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("hibernation_supported", v.HibernationSupported)
 	d.Set("hypervisor", v.Hypervisor)
 	if v := v.InferenceAcceleratorInfo; v != nil {
-		tfList := make([]interface{}, len(v.Accelerators))
+		tfList := make([]any, len(v.Accelerators))
 		for i, v := range v.Accelerators {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"count":        aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
@@ -529,9 +529,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	if v := v.InstanceStorageInfo; v != nil {
 		if v := v.Disks; v != nil {
-			tfList := make([]interface{}, len(v))
+			tfList := make([]any, len(v))
 			for i, v := range v {
-				tfMap := map[string]interface{}{
+				tfMap := map[string]any{
 					"count":        aws.ToInt32(v.Count),
 					names.AttrSize: aws.ToInt64(v.SizeInGB),
 					names.AttrType: v.Type,
@@ -550,9 +550,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	if v := v.MediaAcceleratorInfo; v != nil {
-		tfList := make([]interface{}, len(v.Accelerators))
+		tfList := make([]any, len(v.Accelerators))
 		for i, v := range v.Accelerators {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"count":        aws.ToInt32(v.Count),
 				"manufacturer": aws.ToString(v.Manufacturer),
 				"memory_size":  aws.ToInt32(v.MemoryInfo.SizeInMiB),
@@ -565,9 +565,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
 	if v := v.NeuronInfo; v != nil {
-		tfList := make([]interface{}, len(v.NeuronDevices))
+		tfList := make([]any, len(v.NeuronDevices))
 		for i, v := range v.NeuronDevices {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"count":        aws.ToInt32(v.Count),
 				"core_count":   aws.ToInt32(v.CoreInfo.Count),
 				"core_version": aws.ToInt32(v.CoreInfo.Version),
@@ -588,9 +588,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("nitro_tpm_supported_versions", nitroTPMSupportedVersions)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
 	if v := v.NetworkInfo; v != nil {
-		tfList := make([]interface{}, len(v.NetworkCards))
+		tfList := make([]any, len(v.NetworkCards))
 		for i, v := range v.NetworkCards {
-			tfMap := map[string]interface{}{
+			tfMap := map[string]any{
 				"baseline_bandwidth": aws.ToFloat64(v.BaselineBandwidthInGbps),
 				"index":              aws.ToInt32(v.NetworkCardIndex),
 				"maximum_interfaces": aws.ToInt32(v.MaximumNetworkInterfaces),

@@ -27,6 +27,22 @@ func dataSourceFirewall() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFirewallResourceRead,
 
 		Schema: map[string]*schema.Schema{
+			"availability_zone_change_protection": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"availability_zone_mapping": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"availability_zone_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -41,6 +57,11 @@ func dataSourceFirewall() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"enabled_analysis_types": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeSet,
@@ -133,6 +154,10 @@ func dataSourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												names.AttrStatusMessage: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -141,6 +166,26 @@ func dataSourceFirewall() *schema.Resource {
 										},
 									},
 									names.AttrAvailabilityZone: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"transit_gateway_attachment_sync_states": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"attachment_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrStatusMessage: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"transit_gateway_attachment_status": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -168,12 +213,20 @@ func dataSourceFirewall() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrSubnetID: {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTransitGatewayID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"transit_gateway_owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -186,11 +239,11 @@ func dataSourceFirewall() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-	input := &networkfirewall.DescribeFirewallInput{}
+	var input networkfirewall.DescribeFirewallInput
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.FirewallArn = aws.String(v.(string))
 	}
@@ -198,7 +251,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		input.FirewallName = aws.String(v.(string))
 	}
 
-	output, err := findFirewall(ctx, conn, input)
+	output, err := findFirewall(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall: %s", err)
@@ -207,8 +260,11 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	firewall := output.Firewall
 	d.SetId(aws.ToString(firewall.FirewallArn))
 	d.Set(names.AttrARN, firewall.FirewallArn)
+	d.Set("availability_zone_change_protection", firewall.AvailabilityZoneChangeProtection)
+	d.Set("availability_zone_mapping", flattenDataSourceAvailabilityZoneMapping(firewall.AvailabilityZoneMappings))
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
+	d.Set("enabled_analysis_types", firewall.EnabledAnalysisTypes)
 	if err := d.Set(names.AttrEncryptionConfiguration, flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
@@ -222,6 +278,8 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mappings: %s", err)
 	}
+	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
+	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
 	d.Set("update_token", output.UpdateToken)
 	d.Set(names.AttrVPCID, firewall.VpcId)
 
@@ -230,12 +288,12 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenDataSourceFirewallStatus(apiObject *awstypes.FirewallStatus) []interface{} {
+func flattenDataSourceFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"configuration_sync_state_summary": apiObject.ConfigurationSyncStateSummary,
 		names.AttrStatus:                   apiObject.Status,
 	}
@@ -246,45 +304,48 @@ func flattenDataSourceFirewallStatus(apiObject *awstypes.FirewallStatus) []inter
 	if apiObject.SyncStates != nil {
 		tfMap["sync_states"] = flattenDataSourceSyncStates(apiObject.SyncStates)
 	}
+	if apiObject.TransitGatewayAttachmentSyncState != nil {
+		tfMap["transit_gateway_attachment_sync_states"] = flattenDataSourceTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState)
+	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataSourceCapacityUsageSummary(apiObject *awstypes.CapacityUsageSummary) []interface{} {
+func flattenDataSourceCapacityUsageSummary(apiObject *awstypes.CapacityUsageSummary) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cidrs": flattenDataSourceCIDRSummary(apiObject.CIDRs),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataSourceCIDRSummary(apiObject *awstypes.CIDRSummary) []interface{} {
+func flattenDataSourceCIDRSummary(apiObject *awstypes.CIDRSummary) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"available_cidr_count": aws.ToInt32(apiObject.AvailableCIDRCount),
 		"ip_set_references":    flattenDataSourceIPSetReferences(apiObject.IPSetReferences),
 		"utilized_cidr_count":  aws.ToInt32(apiObject.UtilizedCIDRCount),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataSourceIPSetReferences(apiObject map[string]awstypes.IPSetMetadata) []interface{} {
+func flattenDataSourceIPSetReferences(apiObject map[string]awstypes.IPSetMetadata) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for _, v := range apiObject {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"resolved_cidr_count": aws.ToInt32(v.ResolvedCIDRCount),
 		})
 	}
@@ -292,15 +353,15 @@ func flattenDataSourceIPSetReferences(apiObject map[string]awstypes.IPSetMetadat
 	return tfList
 }
 
-func flattenDataSourceSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
+func flattenDataSourceSyncStates(apiObject map[string]awstypes.SyncState) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObject))
+	tfList := make([]any, 0, len(apiObject))
 
 	for k, v := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"attachment":               flattenDataSourceAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
 		}
@@ -311,25 +372,26 @@ func flattenDataSourceSyncStates(apiObject map[string]awstypes.SyncState) []inte
 	return tfList
 }
 
-func flattenDataSourceAttachment(apiObject *awstypes.Attachment) []interface{} {
+func flattenDataSourceAttachment(apiObject *awstypes.Attachment) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"endpoint_id":      aws.ToString(apiObject.EndpointId),
-		names.AttrStatus:   apiObject.Status,
-		names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
+	tfMap := map[string]any{
+		"endpoint_id":           aws.ToString(apiObject.EndpointId),
+		names.AttrStatus:        apiObject.Status,
+		names.AttrStatusMessage: aws.ToString(apiObject.StatusMessage),
+		names.AttrSubnetID:      aws.ToString(apiObject.SubnetId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataSourceSubnetMappings(apiObjects []awstypes.SubnetMapping) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenDataSourceSubnetMappings(apiObjects []awstypes.SubnetMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, s := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrSubnetID: aws.ToString(s.SubnetId),
 		}
 
@@ -339,15 +401,43 @@ func flattenDataSourceSubnetMappings(apiObjects []awstypes.SubnetMapping) []inte
 	return tfList
 }
 
-func flattenDataSourceEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []interface{} {
+func flattenDataSourceEncryptionConfiguration(apiObject *awstypes.EncryptionConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrKeyID: aws.ToString(apiObject.KeyId),
 		names.AttrType:  apiObject.Type,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
+}
+
+func flattenDataSourceTransitGatewayAttachmentSyncState(apiObject *awstypes.TransitGatewayAttachmentSyncState) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"attachment_id":                     aws.ToString(apiObject.AttachmentId),
+		names.AttrStatusMessage:             aws.ToString(apiObject.StatusMessage),
+		"transit_gateway_attachment_status": apiObject.TransitGatewayAttachmentStatus,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDataSourceAvailabilityZoneMapping(apiObjects []awstypes.AvailabilityZoneMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"availability_zone_id": aws.ToString(apiObject.AvailabilityZone),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

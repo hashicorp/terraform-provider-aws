@@ -45,17 +45,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-// @EphemeralResource(name="Example")
-func newEphemeralExample(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralExample{}, nil
+// @EphemeralResource("aws_something_example", name="Example")
+func newExampleEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &exampleEphemeralResource{}, nil
 }
 
-type ephemeralExample struct {
-	framework.EphemeralResourceWithConfigure
+type exampleEphemeralResource struct {
+	framework.EphemeralResourceWithModel[exampleEphemeralResourceModel]
 }
 
-func (r *ephemeralExample) Metadata(_ context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "aws_something_example"
+type exampleEphemeralResourceModel {
+	// Fields corresponding to attributes in the Schema.
 }
 ```
 

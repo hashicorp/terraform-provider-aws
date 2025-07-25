@@ -32,12 +32,8 @@ func newAccountSettingResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type accountSettingResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSettingResourceModel]
 	framework.WithNoOpDelete
-}
-
-func (*accountSettingResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ecr_account_setting"
 }
 
 func (r *accountSettingResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -153,6 +149,7 @@ func (r *accountSettingResource) ImportState(ctx context.Context, request resour
 }
 
 type accountSettingResourceModel struct {
+	framework.WithRegionModel
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }

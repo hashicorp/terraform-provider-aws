@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the connection to be created. The name must be unique in the calling AWS account. Changing `name` will create a new resource.
 * `providerType` - (Optional) The name of the external provider where your third-party code repository is configured. Changing `providerType` will create a new resource. Conflicts with `hostArn`.
 * `hostArn` - (Optional) The Amazon Resource Name (ARN) of the host associated with the connection. Conflicts with `providerType`
@@ -52,9 +53,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The codeconnections connection ARN.
 * `arn` - The codeconnections connection ARN.
 * `connectionStatus` - The codeconnections connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
+* `id` - (**Deprecated**) The codeconnections connection ARN.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -89,4 +90,4 @@ Using `terraform import`, import CodeConnections connection using the ARN. For e
 % terraform import aws_codeconnections_connection.test-connection arn:aws:codeconnections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-703ee3263b2855af9509c6048e4b35767cf2234d794822fe00864affd9cf14f6 -->
+<!-- cache-key: cdktf-0.20.8 input-ee1dd38fa2f451c5034f74bd46a562bcfb8179ea0fb6033b9978cb238b07f7be -->

@@ -42,13 +42,9 @@ func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithC
 }
 
 type customDomainAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customDomainAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*customDomainAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_redshiftserverless_custom_domain_association"
 }
 
 func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -240,6 +236,7 @@ func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshift
 }
 
 type customDomainAssociationResourceModel struct {
+	framework.WithRegionModel
 	CustomDomainCertificateARN        fwtypes.ARN       `tfsdk:"custom_domain_certificate_arn"`
 	CustomDomainCertificateExpiryTime timetypes.RFC3339 `tfsdk:"custom_domain_certificate_expiry_time"`
 	CustomDomainName                  types.String      `tfsdk:"custom_domain_name"`

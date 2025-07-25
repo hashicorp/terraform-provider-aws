@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -143,12 +142,10 @@ func resourceFramework() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -179,7 +176,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceFrameworkRead(ctx, d, meta)...)
 }
 
-func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -208,7 +205,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -220,7 +217,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			IdempotencyToken:     aws.String(sdkid.UniqueId()),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
 			return conn.UpdateFramework(ctx, input)
 		})
 
@@ -236,12 +233,12 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceFrameworkRead(ctx, d, meta)...)
 }
 
-func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Framework: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
 		return conn.DeleteFramework(ctx, &backup.DeleteFrameworkInput{
 			FrameworkName: aws.String(d.Id()),
 		})
@@ -292,7 +289,7 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 }
 
 func statusFramework(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFrameworkByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -366,7 +363,7 @@ func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, name string,
 	return nil, err
 }
 
-func expandFrameworkControls(ctx context.Context, tfList []interface{}) []awstypes.FrameworkControl {
+func expandFrameworkControls(ctx context.Context, tfList []any) []awstypes.FrameworkControl {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -374,7 +371,7 @@ func expandFrameworkControls(ctx context.Context, tfList []interface{}) []awstyp
 	apiObjects := []awstypes.FrameworkControl{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		// on some updates, there is an { ControlName: "" } element in Framework Controls.
 		// this element must be skipped to avoid the "A control name is required." error
@@ -385,7 +382,7 @@ func expandFrameworkControls(ctx context.Context, tfList []interface{}) []awstyp
 
 		apiObject := awstypes.FrameworkControl{
 			ControlName:  aws.String(tfMap[names.AttrName].(string)),
-			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]interface{})),
+			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]any)),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
@@ -398,7 +395,7 @@ func expandFrameworkControls(ctx context.Context, tfList []interface{}) []awstyp
 	return apiObjects
 }
 
-func expandControlInputParameters(tfList []interface{}) []awstypes.ControlInputParameter {
+func expandControlInputParameters(tfList []any) []awstypes.ControlInputParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -406,7 +403,7 @@ func expandControlInputParameters(tfList []interface{}) []awstypes.ControlInputP
 	apiObjects := []awstypes.ControlInputParameter{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.ControlInputParameter{}
 
@@ -424,12 +421,12 @@ func expandControlInputParameters(tfList []interface{}) []awstypes.ControlInputP
 	return apiObjects
 }
 
-func expandControlScope(ctx context.Context, tfList []interface{}) *awstypes.ControlScope {
+func expandControlScope(ctx context.Context, tfList []any) *awstypes.ControlScope {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -446,22 +443,22 @@ func expandControlScope(ctx context.Context, tfList []interface{}) *awstypes.Con
 
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+		apiObject.Tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	return apiObject
 }
 
-func flattenFrameworkControls(ctx context.Context, apiObjects []awstypes.FrameworkControl) []interface{} {
+func flattenFrameworkControls(ctx context.Context, apiObjects []awstypes.FrameworkControl) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := []interface{}{}
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap["input_parameter"] = flattenControlInputParameters(apiObject.ControlInputParameters)
 		tfMap[names.AttrName] = aws.ToString(apiObject.ControlName)
 		tfMap[names.AttrScope] = flattenControlScope(ctx, apiObject.ControlScope)
@@ -472,15 +469,15 @@ func flattenFrameworkControls(ctx context.Context, apiObjects []awstypes.Framewo
 	return tfList
 }
 
-func flattenControlInputParameters(apiObjects []awstypes.ControlInputParameter) []interface{} {
+func flattenControlInputParameters(apiObjects []awstypes.ControlInputParameter) []any {
 	if apiObjects == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := []interface{}{}
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 		tfMap[names.AttrName] = aws.ToString(apiObject.ParameterName)
 		tfMap[names.AttrValue] = aws.ToString(apiObject.ParameterValue)
 
@@ -490,19 +487,19 @@ func flattenControlInputParameters(apiObjects []awstypes.ControlInputParameter) 
 	return tfList
 }
 
-func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) []interface{} {
+func flattenControlScope(ctx context.Context, apiObject *awstypes.ControlScope) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"compliance_resource_ids":   apiObject.ComplianceResourceIds,
 		"compliance_resource_types": apiObject.ComplianceResourceTypes,
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

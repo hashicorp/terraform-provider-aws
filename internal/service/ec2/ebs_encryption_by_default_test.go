@@ -54,7 +54,8 @@ func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		input := ec2.GetEbsEncryptionByDefaultInput{}
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -80,7 +81,8 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled b
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		input := ec2.GetEbsEncryptionByDefaultInput{}
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
 			return err
 		}

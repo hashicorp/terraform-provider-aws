@@ -105,12 +105,10 @@ func resourceTheme() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -128,8 +126,8 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThemeId:      aws.String(themeID),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
@@ -155,7 +153,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
-func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -203,7 +201,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -220,8 +218,8 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			ThemeId:      aws.String(themeID),
 		}
 
-		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Configuration = quicksightschema.ExpandThemeConfiguration(v.([]any))
 		}
 
 		_, err := conn.UpdateTheme(ctx, input)
@@ -263,7 +261,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceThemeRead(ctx, d, meta)...)
 }
 
-func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThemeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -369,7 +367,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 }
 
 func statusTheme(ctx context.Context, conn *quicksight.Client, awsAccountID, themeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findThemeByTwoPartKey(ctx, conn, awsAccountID, themeID)
 
 		if tfresource.NotFound(err) {

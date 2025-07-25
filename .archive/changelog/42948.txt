@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_route53_vpc_association_authorization: Retry `InvalidPaginationToken` errors on read
+```
+```release-note:enhancement
+resource/aws_route53_vpc_association_authorization: Add configurable timeouts for create, read, and delete
+```
+```release-note:note
+resource/aws_route53_vpc_association_authorization: Because we cannot easily replicate the highly concurrent environments in which these errors have been observed, this fix is best effort and we ask for community help in verifying the reported issues are resolved by this change
+```

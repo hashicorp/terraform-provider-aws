@@ -109,12 +109,10 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -144,7 +142,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateEnvironmentEC2(ctx, input)
 	}, "User")
 
@@ -161,7 +159,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -187,7 +185,7 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -208,14 +206,15 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironment(ctx, &cloud9.DeleteEnvironmentInput{
+	input := cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -295,7 +294,7 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 }
 
 func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

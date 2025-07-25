@@ -44,7 +44,7 @@ func dataSourceHTTPNamespace() *schema.Resource {
 	}
 }
 
-func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)

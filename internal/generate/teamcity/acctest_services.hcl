@@ -56,12 +56,20 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "cloudtrail" {
+  parallelism = 5
+}
+
 service "comprehend" {
   parallelism = 10
 }
 
 service "cur" {
   region = "us-east-1"
+}
+
+service "dataexchange" {
+  parallelism = 10
 }
 
 service "datasync" {

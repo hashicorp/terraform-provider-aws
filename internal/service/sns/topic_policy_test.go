@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -153,10 +154,22 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccTopicPolicyConfig_equivalent2(rName),
-				PlanOnly: true,
+				Config: testAccTopicPolicyConfig_equivalent2(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

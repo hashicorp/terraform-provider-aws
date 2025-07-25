@@ -21,7 +21,13 @@ func NullValueOf(ctx context.Context, v any) (attr.Value, error) {
 	case basetypes.BoolValuable:
 		attrType = v.Type(ctx)
 		tfType = tftypes.Bool
+	case basetypes.Float32Valuable:
+		attrType = v.Type(ctx)
+		tfType = tftypes.Number
 	case basetypes.Float64Valuable:
+		attrType = v.Type(ctx)
+		tfType = tftypes.Number
+	case basetypes.Int32Valuable:
 		attrType = v.Type(ctx)
 		tfType = tftypes.Number
 	case basetypes.Int64Valuable:

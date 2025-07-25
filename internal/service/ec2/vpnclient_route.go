@@ -73,7 +73,7 @@ func resourceClientVPNRoute() *schema.Resource {
 	}
 }
 
-func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -92,7 +92,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (any, error) {
 		return conn.CreateClientVpnRoute(ctx, input)
 	}, errCodeInvalidClientVPNActiveAssociationNotFound)
 
@@ -109,7 +109,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceClientVPNRouteRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -140,7 +140,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -150,11 +150,12 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
-	_, err = conn.DeleteClientVpnRoute(ctx, &ec2.DeleteClientVpnRouteInput{
+	input := ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
-	})
+	}
+	_, err = conn.DeleteClientVpnRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNRouteNotFound) {
 		return diags

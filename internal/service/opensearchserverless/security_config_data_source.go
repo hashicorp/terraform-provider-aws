@@ -13,63 +13,73 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_opensearchserverless_security_config", name="Security Config")
-func newDataSourceSecurityConfig(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSecurityConfig{}, nil
+func newSecurityConfigDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &securityConfigDataSource{}, nil
 }
 
 const (
 	DSNameSecurityConfig = "Security Config Data Source"
 )
 
-type dataSourceSecurityConfig struct {
-	framework.DataSourceWithConfigure
+type securityConfigDataSource struct {
+	framework.DataSourceWithModel[securityConfigDataSourceModel]
 }
 
-func (d *dataSourceSecurityConfig) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_security_config"
-}
-
-func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *securityConfigDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"config_version": schema.StringAttribute{
-				Computed: true,
+				Description: "The version of the security configuration.",
+				Computed:    true,
 			},
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "The date the configuration was created.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "The description of the security configuration.",
+				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Required: true,
+				Description: "The unique identifier of the security configuration.",
+				Required:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "The date the configuration was last modified.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
+				Description: "The type of security configuration.",
+				Computed:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"saml_options": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"group_attribute": schema.StringAttribute{
-						Computed: true,
-					},
-					"metadata": schema.StringAttribute{
-						Computed: true,
-					},
-					"session_timeout": schema.Int64Attribute{
-						Computed: true,
-					},
-					"user_attribute": schema.StringAttribute{
-						Computed: true,
+			"saml_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[samlOptionsData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_attribute": schema.StringAttribute{
+							Description: "Group attribute for this SAML integration.",
+							Computed:    true,
+						},
+						"metadata": schema.StringAttribute{
+							Description: "The XML IdP metadata file generated from your identity provider.",
+							Computed:    true,
+						},
+						"session_timeout": schema.Int64Attribute{
+							Description: "Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.",
+							Computed:    true,
+						},
+						"user_attribute": schema.StringAttribute{
+							Description: "User attribute for this SAML integration.",
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -77,10 +87,10 @@ func (d *dataSourceSecurityConfig) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *securityConfigDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceSecurityConfigData
+	var data securityConfigDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -95,30 +105,25 @@ func (d *dataSourceSecurityConfig) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
-	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	data.ConfigVersion = flex.StringToFramework(ctx, out.ConfigVersion)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.ID = flex.StringToFramework(ctx, out.Id)
-
-	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
-	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-
-	samlOptions := flattenSAMLOptions(ctx, out.SamlOptions)
-	data.SamlOptions = samlOptions
+	// Special handling for Unix time conversion
+	data.CreatedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
+	data.LastModifiedDate = fwflex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSecurityConfigData struct {
-	ConfigVersion    types.String `tfsdk:"config_version"`
-	CreatedDate      types.String `tfsdk:"created_date"`
-	Description      types.String `tfsdk:"description"`
-	ID               types.String `tfsdk:"id"`
-	LastModifiedDate types.String `tfsdk:"last_modified_date"`
-	SamlOptions      types.Object `tfsdk:"saml_options"`
-	Type             types.String `tfsdk:"type"`
+type securityConfigDataSourceModel struct {
+	framework.WithRegionModel
+	ConfigVersion    types.String                                     `tfsdk:"config_version"`
+	CreatedDate      types.String                                     `tfsdk:"created_date"`
+	Description      types.String                                     `tfsdk:"description"`
+	ID               types.String                                     `tfsdk:"id"`
+	LastModifiedDate types.String                                     `tfsdk:"last_modified_date"`
+	SamlOptions      fwtypes.ListNestedObjectValueOf[samlOptionsData] `tfsdk:"saml_options"`
+	Type             types.String                                     `tfsdk:"type"`
 }

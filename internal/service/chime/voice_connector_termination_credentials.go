@@ -64,7 +64,7 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 	}
 }
 
-func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -85,7 +85,7 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -113,7 +113,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 	return diags
 }
 
-func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -134,7 +134,7 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
@@ -157,22 +157,22 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 	return diags
 }
 
-func expandCredentialsUsernames(data []interface{}) []string {
+func expandCredentialsUsernames(data []any) []string {
 	var rawNames []string
 
 	for _, rData := range data {
-		item := rData.(map[string]interface{})
+		item := rData.(map[string]any)
 		rawNames = append(rawNames, item[names.AttrUsername].(string))
 	}
 
 	return rawNames
 }
 
-func expandCredentials(data []interface{}) []awstypes.Credential {
+func expandCredentials(data []any) []awstypes.Credential {
 	var credentials []awstypes.Credential
 
 	for _, rItem := range data {
-		item := rItem.(map[string]interface{})
+		item := rItem.(map[string]any)
 		credentials = append(credentials, awstypes.Credential{
 			Username: aws.String(item[names.AttrUsername].(string)),
 			Password: aws.String(item[names.AttrPassword].(string)),

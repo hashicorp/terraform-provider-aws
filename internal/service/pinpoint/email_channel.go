@@ -74,7 +74,7 @@ func resourceEmailChannel() *schema.Resource {
 	}
 }
 
-func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceEmailChannelRead(ctx, d, meta)...)
 }
 
-func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -143,7 +143,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

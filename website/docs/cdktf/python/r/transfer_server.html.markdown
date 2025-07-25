@@ -201,6 +201,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
 * `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.
 * `protocols` - (Optional) Specifies the file transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint. This defaults to `SFTP` . The available protocols are:
@@ -215,8 +216,8 @@ This resource supports the following arguments:
 * `url` - (Optional) - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.
 * `identity_provider_type` - (Optional) The mode of authentication enabled for this service. The default value is `SERVICE_MANAGED`, which allows you to store and access SFTP user credentials within the service. `API_GATEWAY` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice. Using `AWS_DIRECTORY_SERVICE` will allow for authentication against AWS Managed Active Directory or Microsoft Active Directory in your on-premises environment, or in AWS using AD Connectors. Use the `AWS_LAMBDA` value to directly use a Lambda function as your identity provider. If you choose this value, you must specify the ARN for the lambda function in the `function` argument.
 * `directory_id` - (Optional) The directory service ID of the directory service you want to connect to with an `identity_provider_type` of `AWS_DIRECTORY_SERVICE`.
-* `function` - (Optional) The ARN for a lambda function to use for the Identity provider.
-* `sftp_authentication_methods` - (Optional) For SFTP-enabled servers, and for custom identity providers only. Valid values are `PASSWORD`, `PUBLIC_KEY`, `PUBLIC_KEY_OR_PASSWORD` and `PUBLIC_KEY_AND_PASSWORD`. Default value is: `PUBLIC_KEY_OR_PASSWORD`.
+* `function` - (Optional) The ARN for a lambda function to use for the Identity provider with an `identity_provider_type` of `AWS_LAMBDA`.
+* `sftp_authentication_methods` - (Optional) For SFTP-enabled servers with an `identity_provider_type` of `API_GATEWAY` or `AWS_LAMBDA`. Valid values are `PASSWORD`, `PUBLIC_KEY`, `PUBLIC_KEY_OR_PASSWORD` and `PUBLIC_KEY_AND_PASSWORD`. Default value is: `PUBLIC_KEY_OR_PASSWORD`.
 * `logging_role` - (Optional) Amazon Resource Name (ARN) of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `force_destroy` - (Optional) A boolean that indicates all users associated with the server should be deleted so that the Server can be destroyed without error. The default value is `false`. This option only applies to servers configured with a `SERVICE_MANAGED` `identity_provider_type`.
 * `post_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
@@ -229,15 +230,18 @@ This resource supports the following arguments:
     * `TransferSecurityPolicy-2022-03`
     * `TransferSecurityPolicy-2023-05`
     * `TransferSecurityPolicy-2024-01`
+    * `TransferSecurityPolicy-2025-03`
     * `TransferSecurityPolicy-FIPS-2020-06`
     * `TransferSecurityPolicy-FIPS-2023-05`
     * `TransferSecurityPolicy-FIPS-2024-01`
     * `TransferSecurityPolicy-FIPS-2024-05`
+    * `TransferSecurityPolicy-FIPS-2025-03`
     * `TransferSecurityPolicy-PQ-SSH-Experimental-2023-04`
     * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
     * `TransferSecurityPolicy-Restricted-2018-11`
     * `TransferSecurityPolicy-Restricted-2020-06`
     * `TransferSecurityPolicy-Restricted-2024-06`
+    * `TransferSecurityPolicy-SshAuditCompliant-2025-02`
 
    See [Security policies for AWS Transfer Family servers](https://docs.aws.amazon.com/transfer/latest/userguide/security-policies.html) for details.
 * `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
@@ -329,4 +333,4 @@ Using `terraform import`, import Transfer Servers using the server `id`. For exa
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.8 input-3837a1546cd71f2d3ec526f581c931d10d0c50531d3fa50fae2e53cd9dd090cc -->
+<!-- cache-key: cdktf-0.20.8 input-add2822e6902873bd30af2e7f862e646c6978fc4befb9951014b1a58667877fd -->

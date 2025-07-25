@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,12 +52,10 @@ func resourcePipeline() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
@@ -84,7 +81,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
@@ -106,7 +103,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -114,7 +111,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 

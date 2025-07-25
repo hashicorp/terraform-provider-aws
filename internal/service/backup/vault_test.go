@@ -308,7 +308,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 }
 
 func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -355,6 +355,7 @@ func testAccVaultConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_backup_vault" "test" {

@@ -61,6 +61,7 @@ var (
 	ResourceNetworkInsightsAnalysis                       = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                           = resourceNetworkInsightsPath
 	ResourceNetworkInterface                              = resourceNetworkInterface
+	ResourceNetworkInterfacePermission                    = newNetworkInterfacePermissionResource
 	ResourceNetworkInterfaceSGAttachment                  = resourceNetworkInterfaceSGAttachment
 	ResourceNetworkPerformanceMetricSubscription          = resourceNetworkPerformanceMetricSubscription
 	ResourcePlacementGroup                                = resourcePlacementGroup
@@ -70,7 +71,7 @@ var (
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
-	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
+	ResourceSecurityGroupVPCAssociation                   = newSecurityGroupVPCAssociationResource
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -113,6 +114,11 @@ var (
 	ResourceVPCIPv4CIDRBlockAssociation                   = resourceVPCIPv4CIDRBlockAssociation
 	ResourceVPCIPv6CIDRBlockAssociation                   = resourceVPCIPv6CIDRBlockAssociation
 	ResourceVPCPeeringConnection                          = resourceVPCPeeringConnection
+	ResourceVPCRouteServer                                = newVPCRouteServerResource
+	ResourceVPCRouteServerEndpoint                        = newVPCRouteServerEndpointResource
+	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
+	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
+	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -141,6 +147,7 @@ var (
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
 	FindCreateSnapshotCreateVolumePermissionByTwoPartKey       = findCreateSnapshotCreateVolumePermissionByTwoPartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
+	FindDefaultCreditSpecificationByInstanceFamily             = findDefaultCreditSpecificationByInstanceFamily
 	FindDHCPOptionsByID                                        = findDHCPOptionsByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID
@@ -154,6 +161,7 @@ var (
 	FindHostByID                                               = findHostByID
 	FindIPAMByID                                               = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                         = findIPAMPoolAllocationByTwoPartKey
+	FindIPAMPoolAllocationsForVPC                              = findIPAMPoolAllocationsForVPC
 	FindIPAMPoolByID                                           = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                               = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                   = findIPAMResourceDiscoveryAssociationByID
@@ -180,6 +188,7 @@ var (
 	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByID                                   = findNetworkInterfaceByID
+	FindNetworkInterfacePermissionByID                         = findNetworkInterfacePermissionByID
 	FindNetworkInterfaceSecurityGroup                          = findNetworkInterfaceSecurityGroup
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName
@@ -187,11 +196,17 @@ var (
 	FindRouteByIPv4Destination                                 = findRouteByIPv4Destination
 	FindRouteByIPv6Destination                                 = findRouteByIPv6Destination
 	FindRouteByPrefixListIDDestination                         = findRouteByPrefixListIDDestination
+	FindRouteServerByID                                        = findRouteServerByID
+	FindRouteServerAssociationByTwoPartKey                     = findRouteServerAssociationByTwoPartKey
+	FindRouteServerEndpointByID                                = findRouteServerEndpointByID
+	FindRouteServerPeerByID                                    = findRouteServerPeerByID
+	FindRouteServerPropagationByTwoPartKey                     = findRouteServerPropagationByTwoPartKey
 	FindRouteTableAssociationByID                              = findRouteTableAssociationByID
 	FindRouteTableByID                                         = findRouteTableByID
 	FindSecurityGroupByID                                      = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                            = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                           = findSecurityGroupIngressRuleByID
+	FindSecurityGroupVPCAssociationByTwoPartKey                = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSnapshot                                               = findSnapshot
 	FindSnapshotByID                                           = findSnapshotByID
 	FindSpotDatafeedSubscription                               = findSpotDatafeedSubscription
@@ -249,6 +264,7 @@ var (
 	FlattenSecurityGroups                                      = flattenSecurityGroups
 	IPAMServicePrincipal                                       = ipamServicePrincipal
 	InstanceMigrateState                                       = instanceMigrateState
+	InstanceStateUpgradeV1                                     = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                   = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                        = keyPairMigrateState
 	ManagedPrefixListEntryCreateResourceID                     = managedPrefixListEntryCreateResourceID

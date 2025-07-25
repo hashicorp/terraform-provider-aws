@@ -48,15 +48,14 @@ func resourceTransitGateway() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta any) bool {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTableAssociationValueDisable) && new.(string) == string(awstypes.DefaultRouteTableAssociationValueEnable)
 			}),
-			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta any) bool {
 				// Only changes from disable to enable for feature_set should force a new resource.
 				return old.(string) == string(awstypes.DefaultRouteTablePropagationValueDisable) && new.(string) == string(awstypes.DefaultRouteTablePropagationValueEnable)
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -149,7 +148,7 @@ func resourceTransitGateway() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -194,7 +193,7 @@ func resourceTransitGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceTransitGatewayRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -230,7 +229,7 @@ func resourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -297,7 +296,7 @@ func resourceTransitGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -305,7 +304,7 @@ func resourceTransitGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
 		return conn.DeleteTransitGateway(ctx, &ec2.DeleteTransitGatewayInput{
 			TransitGatewayId: aws.String(d.Id()),
 		})

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -19,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,7 +44,7 @@ func resourceRestAPI() *schema.Resource {
 		DeleteWithoutTimeout: resourceRestAPIDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("put_rest_api_mode", types.PutModeOverwrite)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -92,6 +93,12 @@ func resourceRestAPI() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -141,18 +148,7 @@ func resourceRestAPI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"put_rest_api_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -173,11 +169,11 @@ func resourceRestAPI() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: endpointConfigurationPlantimeValidate,
 	}
 }
 
-func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -192,7 +188,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("binary_media_types"); ok {
-		input.BinaryMediaTypes = flex.ExpandStringValueList(v.([]interface{}))
+		input.BinaryMediaTypes = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -203,25 +199,23 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DisableExecuteApiEndpoint = v.(bool)
 	}
 
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		input.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("minimum_compression_size"); ok && v.(string) != "" && v.(string) != "-1" {
-		mcs, err := strconv.ParseInt(v.(string), 0, 32)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "converting minimum_compression_size (%s): %s", v, err)
+	if v, ok := d.GetOk("minimum_compression_size"); ok {
+		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null && v != -1 {
+			input.MinimumCompressionSize = aws.Int32(v)
 		}
-		input.MinimumCompressionSize = aws.Int32(int32(mcs))
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
-		policy, err := structure.NormalizeJsonString(v.(string))
+		v, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Policy = aws.String(policy)
+		input.Policy = aws.String(v)
 	}
 
 	output, err := conn.CreateRestApi(ctx, &input)
@@ -248,8 +242,8 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.FailOnWarnings = v.(bool)
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-			input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+			input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
 		api, err := conn.PutRestApi(ctx, &input)
@@ -278,9 +272,10 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceRestAPIRead(ctx, d, meta)...)
 }
 
-func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	api, err := findRestAPIByID(ctx, conn, d.Id())
 
@@ -295,7 +290,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("api_key_source", api.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set(names.AttrCreatedDate, api.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, api.Description)
@@ -303,11 +298,11 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
-		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
+		d.Set("minimum_compression_size", flex.Int32ToStringValue(api.MinimumCompressionSize))
 	}
 	d.Set(names.AttrName, api.Name)
 
@@ -344,7 +339,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -363,8 +358,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			o, n := d.GetChange("binary_media_types")
 			prefix := "binaryMediaTypes"
 
-			old := o.([]interface{})
-			new := n.([]interface{})
+			old := o.([]any)
+			new := n.([]any)
 
 			// Remove every binary media types. Simpler to remove and add new ones,
 			// since there are no replacings.
@@ -410,13 +405,13 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("endpoint_configuration.0.types") {
 			// The REST API must have an endpoint type.
 			// If attempting to remove the configuration, do nothing.
-			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
-				m := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+				m := v.([]any)[0].(map[string]any)
 
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpReplace,
 					Path:  aws.String("/endpointConfiguration/types/0"),
-					Value: aws.String(m["types"].([]interface{})[0].(string)),
+					Value: aws.String(m["types"].([]any)[0].(string)),
 				})
 			}
 		}
@@ -452,6 +447,18 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					Op:    types.OpAdd,
 					Path:  aws.String(prefix),
 					Value: aws.String(v.(string)),
+				})
+			}
+		}
+
+		if d.HasChange("endpoint_configuration.0.ip_address_type") {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
 				})
 			}
 		}
@@ -515,8 +522,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					input.FailOnWarnings = v.(bool)
 				}
 
-				if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
-					input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+				if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]any)) > 0 {
+					input.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 				}
 
 				output, err := conn.PutRestApi(ctx, &input)
@@ -547,7 +554,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceRestAPIRead(ctx, d, meta)...)
 }
 
-func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -566,6 +573,18 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func endpointConfigurationPlantimeValidate(_ context.Context, diff *schema.ResourceDiff, v any) error {
+	if v, ok := diff.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		if apiObject := expandEndpointConfiguration(v.([]any)[0].(map[string]any)); apiObject != nil {
+			if apiObject.Types[0] == types.EndpointTypePrivate && apiObject.IpAddressType == types.IpAddressTypeIpv4 {
+				return fmt.Errorf("endpoint_configuration type %[1]q requires ip_address_type %[2]q", types.EndpointTypePrivate, types.IpAddressTypeDualstack)
+			}
+		}
+	}
+
+	return nil
 }
 
 func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetRestApiOutput, error) {
@@ -603,7 +622,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		})
 	}
 
-	if v, ok := d.GetOk("binary_media_types"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("binary_media_types"); ok && len(v.([]any)) > 0 {
 		if len(output.BinaryMediaTypes) > 0 {
 			for _, elem := range output.BinaryMediaTypes {
 				operations = append(operations, types.PatchOperation{
@@ -613,7 +632,7 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 			}
 		}
 
-		for _, elem := range v.([]interface{}) {
+		for _, elem := range v.([]any) {
 			if el, ok := elem.(string); ok {
 				operations = append(operations, types.PatchOperation{
 					Op:   types.OpAdd,
@@ -640,16 +659,14 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	// Compare the defined values to the output values, don't blindly remove as they can cause race conditions with DNS and endpoint creation
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		endpointConfiguration := expandEndpointConfiguration(v.([]interface{}))
-		prefix := "/endpointConfiguration/vpcEndpointIds"
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		endpointConfiguration := expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 		if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
+			prefix := "/endpointConfiguration/vpcEndpointIds"
 			if output.EndpointConfiguration != nil {
 				for _, v := range output.EndpointConfiguration.VpcEndpointIds {
-					for _, x := range endpointConfiguration.VpcEndpointIds {
-						if v == x {
-							break
-						}
+					if slices.Contains(endpointConfiguration.VpcEndpointIds, v) {
+						continue
 					}
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpRemove,
@@ -660,15 +677,24 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 			}
 
 			for _, v := range endpointConfiguration.VpcEndpointIds {
-				for _, x := range output.EndpointConfiguration.VpcEndpointIds {
-					if v == x {
-						break
-					}
+				if slices.Contains(output.EndpointConfiguration.VpcEndpointIds, v) {
+					continue
 				}
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpAdd,
 					Path:  aws.String(prefix),
 					Value: aws.String(v),
+				})
+			}
+		}
+		if endpointConfiguration != nil && endpointConfiguration.IpAddressType != "" && endpointConfiguration.IpAddressType != output.EndpointConfiguration.IpAddressType {
+			if len(v.([]any)) > 0 {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
 				})
 			}
 		}
@@ -725,38 +751,42 @@ func modeConfigOrDefault(d *schema.ResourceData) string {
 	}
 }
 
-func expandEndpointConfiguration(l []interface{}) *types.EndpointConfiguration {
-	if len(l) == 0 {
+func expandEndpointConfiguration(tfMap map[string]any) *types.EndpointConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-
-	endpointConfiguration := &types.EndpointConfiguration{
-		Types: flex.ExpandStringyValueList[types.EndpointType](m["types"].([]interface{})),
+	apiObject := &types.EndpointConfiguration{
+		Types: flex.ExpandStringyValueList[types.EndpointType](tfMap["types"].([]any)),
 	}
 
-	if endpointIds, ok := m["vpc_endpoint_ids"]; ok {
-		endpointConfiguration.VpcEndpointIds = flex.ExpandStringValueSet(endpointIds.(*schema.Set))
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 
-	return endpointConfiguration
+	if v, ok := tfMap["vpc_endpoint_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.VpcEndpointIds = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
 }
 
-func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfiguration) []interface{} {
-	if endpointConfiguration == nil {
-		return []interface{}{}
+func flattenEndpointConfiguration(apiObject *types.EndpointConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"types": endpointConfiguration.Types,
+	tfMap := map[string]any{
+		names.AttrIPAddressType: apiObject.IpAddressType,
+		"types":                 apiObject.Types,
 	}
 
-	if len(endpointConfiguration.VpcEndpointIds) > 0 {
-		m["vpc_endpoint_ids"] = endpointConfiguration.VpcEndpointIds
+	// No VPC endpoints IDs for domain names.
+	if len(apiObject.VpcEndpointIds) > 0 {
+		tfMap["vpc_endpoint_ids"] = apiObject.VpcEndpointIds
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
 func flattenAPIPolicy(apiObject *string) (string, error) {

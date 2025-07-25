@@ -23,6 +23,8 @@ phase because a modification has not yet taken place. You can use the
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ```typescript
@@ -53,11 +55,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowMajorVersionUpgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `applyImmediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
@@ -79,8 +79,12 @@ This resource supports the following arguments:
     made.
 * `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`aws_docdb_global_cluster`](/docs/providers/aws/r/docdb_global_cluster.html).
 * `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyId`, `storageEncrypted` needs to be set to true.
-* `masterPassword` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
-    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints.
+* `manageMasterUserPassword` - (Optional) Set to `true` to allow Amazon DocumentDB to manage the master user password in AWS Secrets Manager. Cannot be set if `masterPassword` or `masterPasswordWo` is provided.
+* `masterPassword` - (Optional, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
+    show up in logs, and it will be stored in the state file. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPasswordWo` and `manageMasterUserPassword`.
+* `masterPasswordWo` - (Optional, Write-Only, required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may
+  show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `masterPassword` and `manageMasterUserPassword`.
+* `masterPasswordWoVersion` - (Optional) Used together with `masterPasswordWo` to trigger an update. Increment this value when an update to the `masterPasswordWo` is required.
 * `masterUsername` - (Required unless a `snapshotIdentifier` or unless a `globalClusterIdentifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
@@ -94,6 +98,9 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate
   with the Cluster
+
+For more detailed documentation about each argument, refer to
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
 ### Restore To Point In Time
 
@@ -109,11 +116,11 @@ The `restoreToPointInTime` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
-* `clusterMembers` – List of DocumentDB Instances that are a part of this cluster
+* `clusterMembers` - List of DocumentDB Instances that are a part of this cluster
 * `clusterResourceId` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hostedZoneId` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The DocumentDB Cluster Identifier
+* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
 * `readerEndpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -158,4 +165,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-904fc284b6c7a5652f0f5b0730354356928abca9165b63fc07d46db96fa506c9 -->
+<!-- cache-key: cdktf-0.20.8 input-14dc4c488c1d2f4e4af7cd84789d2cb06634bf1421fa232a433e410bc046a5d6 -->

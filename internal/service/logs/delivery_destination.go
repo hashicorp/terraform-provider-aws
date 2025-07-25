@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,11 +41,7 @@ func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfi
 }
 
 type deliveryDestinationResource struct {
-	framework.ResourceWithConfigure
-}
-
-func (*deliveryDestinationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudwatch_log_delivery_destination"
+	framework.ResourceWithModel[deliveryDestinationResourceModel]
 }
 
 func (r *deliveryDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -143,7 +139,7 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 
 	output, err := findDeliveryDestinationByName(ctx, conn, data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -237,10 +233,6 @@ func (r *deliveryDestinationResource) ImportState(ctx context.Context, request r
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-func (r *deliveryDestinationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findDeliveryDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliveryDestination, error) {
 	input := cloudwatchlogs.GetDeliveryDestinationInput{
 		Name: aws.String(name),
@@ -254,8 +246,7 @@ func findDeliveryDestination(ctx context.Context, conn *cloudwatchlogs.Client, i
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -289,6 +280,7 @@ func requiresReplaceIfARNServiceChanges(ctx context.Context, request planmodifie
 }
 
 type deliveryDestinationResourceModel struct {
+	framework.WithRegionModel
 	ARN                              types.String                                                           `tfsdk:"arn"`
 	DeliveryDestinationConfiguration fwtypes.ListNestedObjectValueOf[deliveryDestinationConfigurationModel] `tfsdk:"delivery_destination_configuration"`
 	DeliveryDestinationType          fwtypes.StringEnum[awstypes.DeliveryDestinationType]                   `tfsdk:"delivery_destination_type"`

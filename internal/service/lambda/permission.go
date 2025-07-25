@@ -113,7 +113,7 @@ func resourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -159,7 +159,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Retry for IAM and Lambda eventual consistency.
 	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.ResourceConflictException, *awstypes.ResourceNotFoundException](ctx, lambdaPropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.AddPermission(ctx, input)
 		})
 
@@ -172,12 +172,12 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
+	statement, err := tfresource.RetryWhenNewResourceNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (*policyStatement, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	}, d.IsNewResource())
 
@@ -191,9 +191,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
-	statement := outputRaw.(*PolicyStatement)
 	qualifier, _ := getQualifierFromAliasOrVersionARN(statement.Resource)
-
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
@@ -212,7 +210,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrAction, statement.Action)
 	// Check if the principal is a cross-account IAM role
-	if v, ok := statement.Principal.(map[string]interface{}); ok {
+	if v, ok := statement.Principal.(map[string]any); ok {
 		if _, ok := v["AWS"]; ok {
 			d.Set(names.AttrPrincipal, v["AWS"])
 		} else {
@@ -239,7 +237,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -271,7 +269,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "removing Lambda Permission (%s/%s): %s", functionName, d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, lambdaPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 	})
 
@@ -282,7 +280,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", d.Id())
@@ -339,7 +337,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	return output, nil
 }
 
-func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, statementID, qualifier string) (*PolicyStatement, error) {
+func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, statementID, qualifier string) (*policyStatement, error) {
 	input := &lambda.GetPolicyInput{
 		FunctionName: aws.String(functionName),
 	}
@@ -353,7 +351,7 @@ func findPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Client, f
 		return nil, err
 	}
 
-	policy := &Policy{}
+	policy := &policy{}
 	err = json.Unmarshal([]byte(aws.ToString(output.Policy)), policy)
 
 	if err != nil {
@@ -390,17 +388,17 @@ func getFunctionNameFromARN(arn string) (string, error) {
 	return matches[5], nil
 }
 
-type Policy struct {
+type policy struct {
 	Version   string
-	Statement []PolicyStatement
+	Statement []policyStatement
 	Id        string
 }
 
-type PolicyStatement struct {
+type policyStatement struct {
 	Condition map[string]map[string]string
 	Action    string
 	Resource  string
 	Effect    string
-	Principal interface{}
+	Principal any
 	Sid       string
 }

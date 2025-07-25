@@ -68,20 +68,20 @@ func dataSourcePublicKey() *schema.Resource {
 	}
 }
 
-func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	keyID := d.Get(names.AttrKeyID).(string)
-	input := &kms.GetPublicKeyInput{
+	input := kms.GetPublicKeyInput{
 		KeyId: aws.String(keyID),
 	}
 
-	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
-		input.GrantTokens = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]any)) > 0 {
+		input.GrantTokens = flex.ExpandStringValueList(v.([]any))
 	}
 
-	output, err := conn.GetPublicKey(ctx, input)
+	output, err := conn.GetPublicKey(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Public Key (%s): %s", keyID, err)
@@ -89,7 +89,7 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.ToString(output.KeyId))
 	d.Set(names.AttrARN, output.KeyId)
-	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
+	d.Set("customer_master_key_spec", output.KeySpec)
 	d.Set("encryption_algorithms", output.EncryptionAlgorithms)
 	d.Set("key_usage", output.KeyUsage)
 	d.Set(names.AttrPublicKey, itypes.Base64Encode(output.PublicKey))

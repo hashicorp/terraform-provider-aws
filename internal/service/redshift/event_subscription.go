@@ -110,12 +110,10 @@ func resourceEventSubscription() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -154,7 +152,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -192,7 +190,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -217,7 +215,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 	deleteOpts := redshift.DeleteEventSubscriptionInput{

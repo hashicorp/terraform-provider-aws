@@ -49,7 +49,7 @@ func resourceDomainServiceAccessPolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -62,7 +62,7 @@ func resourceDomainServiceAccessPolicy() *schema.Resource {
 	}
 }
 
-func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceDomainServiceAccessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
@@ -123,15 +123,16 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain Service Access Policy: %s", d.Id())
-	_, err := conn.UpdateServiceAccessPolicies(ctx, &cloudsearch.UpdateServiceAccessPoliciesInput{
+	input := cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),
 		DomainName:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.UpdateServiceAccessPolicies(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -190,7 +191,7 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Clien
 }
 
 func statusAccessPolicyState(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccessPoliciesStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

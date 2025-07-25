@@ -210,7 +210,7 @@ func resourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					if v != nil {
 						value := v.(string)
 						return strings.ToLower(value)
@@ -240,12 +240,10 @@ func resourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -316,7 +314,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateDBInstance(ctx, input)
 		},
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -363,7 +361,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -444,7 +442,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -510,7 +508,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.ModifyDBInstance(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -527,7 +525,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -543,7 +541,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.DeleteDBInstance(ctx, input)
 		},
 		"Delete the replica cluster before deleting")

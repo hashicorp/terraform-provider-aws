@@ -9,14 +9,13 @@ var (
 	ResourceDashboard                     = resourceDashboard
 	ResourceMetricAlarm                   = resourceMetricAlarm
 	ResourceMetricStream                  = resourceMetricStream
-	ResourceContributorInsightRule        = newResourceContributorInsightRule
-	ResourceContributorManagedInsightRule = newResourceContributorManagedInsightRule
+	ResourceContributorInsightRule        = newContributorInsightRuleResource
+	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
 
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
 	FindDashboardByName                                        = findDashboardByName
 	FindMetricAlarmByName                                      = findMetricAlarmByName
 	FindMetricStreamByName                                     = findMetricStreamByName
 	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
-	FindContributorManagedInsightRuleByTwoPartKey              = findContributorManagedInsightRuleByTwoPartKey
 	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
 )

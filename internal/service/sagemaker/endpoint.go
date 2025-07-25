@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -234,12 +233,10 @@ func resourceEndpoint() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -255,39 +252,39 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-		input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
+		input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
 	}
 
 	_, err := conn.CreateEndpoint(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Endpoint (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) create: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) create: %s", name, err)
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Endpoint (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, endpoint.EndpointArn)
@@ -300,7 +297,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -310,29 +307,29 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		}
 
-		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]interface{})) > 0) {
-			input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]interface{}))
+		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
+			input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
 		}
 
 		_, err := conn.UpdateEndpoint(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Endpoint (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Endpoint: %s", d.Id())
+	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
 	_, err := conn.DeleteEndpoint(ctx, &sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	})
@@ -342,11 +339,11 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Endpoint (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEndpointDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Endpoint (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -395,7 +392,7 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 }
 
 func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -458,34 +455,34 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	return nil, err
 }
 
-func expandEndpointDeploymentConfig(configured []interface{}) *awstypes.DeploymentConfig {
+func expandEndpointDeploymentConfig(configured []any) *awstypes.DeploymentConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.DeploymentConfig{
-		BlueGreenUpdatePolicy: expandEndpointDeploymentConfigBlueGreenUpdatePolicy(m["blue_green_update_policy"].([]interface{})),
+		BlueGreenUpdatePolicy: expandEndpointDeploymentConfigBlueGreenUpdatePolicy(m["blue_green_update_policy"].([]any)),
 	}
 
-	if v, ok := m["auto_rollback_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["auto_rollback_configuration"].([]any); ok && len(v) > 0 {
 		c.AutoRollbackConfiguration = expandEndpointDeploymentConfigAutoRollbackConfig(v)
 	}
 
-	if v, ok := m["rolling_update_policy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rolling_update_policy"].([]any); ok && len(v) > 0 {
 		c.RollingUpdatePolicy = expandEndpointDeploymentConfigRollingUpdatePolicy(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfig(configured *awstypes.DeploymentConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfig(configured *awstypes.DeploymentConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"blue_green_update_policy": flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured.BlueGreenUpdatePolicy),
 	}
 
@@ -497,19 +494,19 @@ func flattenEndpointDeploymentConfig(configured *awstypes.DeploymentConfig) []ma
 		cfg["rolling_update_policy"] = flattenEndpointDeploymentConfigRollingUpdatePolicy(configured.RollingUpdatePolicy)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []interface{}) *awstypes.BlueGreenUpdatePolicy {
+func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []any) *awstypes.BlueGreenUpdatePolicy {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.BlueGreenUpdatePolicy{
 		TerminationWaitInSeconds:    aws.Int32(int32(m["termination_wait_in_seconds"].(int))),
-		TrafficRoutingConfiguration: expandEndpointDeploymentConfigTrafficRoutingConfiguration(m["traffic_routing_configuration"].([]interface{})),
+		TrafficRoutingConfiguration: expandEndpointDeploymentConfigTrafficRoutingConfiguration(m["traffic_routing_configuration"].([]any)),
 	}
 
 	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
@@ -519,12 +516,12 @@ func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []interface{
 	return c
 }
 
-func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *awstypes.BlueGreenUpdatePolicy) []map[string]interface{} {
+func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *awstypes.BlueGreenUpdatePolicy) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"termination_wait_in_seconds":   aws.ToInt32(configured.TerminationWaitInSeconds),
 		"traffic_routing_configuration": flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured.TrafficRoutingConfiguration),
 	}
@@ -533,38 +530,38 @@ func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *awstypes.B
 		cfg["maximum_execution_timeout_in_seconds"] = aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []interface{}) *awstypes.TrafficRoutingConfig {
+func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []any) *awstypes.TrafficRoutingConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.TrafficRoutingConfig{
 		Type:                  awstypes.TrafficRoutingConfigType(m[names.AttrType].(string)),
 		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
 	}
 
-	if v, ok := m["canary_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["canary_size"].([]any); ok && len(v) > 0 {
 		c.CanarySize = expandEndpointDeploymentCapacitySize(v)
 	}
 
-	if v, ok := m["linear_step_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["linear_step_size"].([]any); ok && len(v) > 0 {
 		c.LinearStepSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *awstypes.TrafficRoutingConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *awstypes.TrafficRoutingConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		names.AttrType:             configured.Type,
 		"wait_interval_in_seconds": aws.ToInt32(configured.WaitIntervalInSeconds),
 	}
@@ -577,15 +574,15 @@ func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *awst
 		cfg["linear_step_size"] = flattenEndpointDeploymentCapacitySize(configured.LinearStepSize)
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentCapacitySize(configured []interface{}) *awstypes.CapacitySize {
+func expandEndpointDeploymentCapacitySize(configured []any) *awstypes.CapacitySize {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.CapacitySize{
 		Type:  awstypes.CapacitySizeType(m[names.AttrType].(string)),
@@ -595,25 +592,25 @@ func expandEndpointDeploymentCapacitySize(configured []interface{}) *awstypes.Ca
 	return c
 }
 
-func flattenEndpointDeploymentCapacitySize(configured *awstypes.CapacitySize) []map[string]interface{} {
+func flattenEndpointDeploymentCapacitySize(configured *awstypes.CapacitySize) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		names.AttrType:  configured.Type,
 		names.AttrValue: aws.ToInt32(configured.Value),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfig(configured []interface{}) *awstypes.AutoRollbackConfig {
+func expandEndpointDeploymentConfigAutoRollbackConfig(configured []any) *awstypes.AutoRollbackConfig {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.AutoRollbackConfig{
 		Alarms: expandEndpointDeploymentConfigAutoRollbackConfigAlarms(m["alarms"].(*schema.Set).List()),
@@ -622,24 +619,24 @@ func expandEndpointDeploymentConfigAutoRollbackConfig(configured []interface{}) 
 	return c
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *awstypes.AutoRollbackConfig) []map[string]interface{} {
+func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *awstypes.AutoRollbackConfig) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"alarms": flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured.Alarms),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []interface{}) *awstypes.RollingUpdatePolicy {
+func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []any) *awstypes.RollingUpdatePolicy {
 	if len(configured) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	m := configured[0].(map[string]any)
 
 	c := &awstypes.RollingUpdatePolicy{
 		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
@@ -649,33 +646,33 @@ func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []interface{})
 		c.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := m["maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["maximum_batch_size"].([]any); ok && len(v) > 0 {
 		c.MaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
-	if v, ok := m["rollback_maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["rollback_maximum_batch_size"].([]any); ok && len(v) > 0 {
 		c.RollbackMaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	return c
 }
 
-func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *awstypes.RollingUpdatePolicy) []map[string]interface{} {
+func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *awstypes.RollingUpdatePolicy) []map[string]any {
 	if configured == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	cfg := map[string]interface{}{
+	cfg := map[string]any{
 		"maximum_execution_timeout_in_seconds": aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds),
 		"wait_interval_in_seconds":             aws.ToInt32(configured.WaitIntervalInSeconds),
 		"maximum_batch_size":                   flattenEndpointDeploymentCapacitySize(configured.MaximumBatchSize),
 		"rollback_maximum_batch_size":          flattenEndpointDeploymentCapacitySize(configured.RollbackMaximumBatchSize),
 	}
 
-	return []map[string]interface{}{cfg}
+	return []map[string]any{cfg}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interface{}) []awstypes.Alarm {
+func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []any) []awstypes.Alarm {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -683,7 +680,7 @@ func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interfa
 	alarms := make([]awstypes.Alarm, 0, len(configured))
 
 	for _, alarmRaw := range configured {
-		m := alarmRaw.(map[string]interface{})
+		m := alarmRaw.(map[string]any)
 
 		alarm := awstypes.Alarm{
 			AlarmName: aws.String(m["alarm_name"].(string)),
@@ -695,11 +692,11 @@ func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interfa
 	return alarms
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []awstypes.Alarm) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(configured))
+func flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []awstypes.Alarm) []map[string]any {
+	result := make([]map[string]any, 0, len(configured))
 
 	for _, i := range configured {
-		l := map[string]interface{}{
+		l := map[string]any{
 			"alarm_name": aws.ToString(i.AlarmName),
 		}
 

@@ -40,7 +40,7 @@ func resourceAuthorizer() *schema.Resource {
 		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/AUTHORIZER-ID", d.Id())
@@ -109,7 +109,7 @@ func resourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -176,7 +176,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -210,7 +210,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -303,7 +303,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -327,7 +327,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if diff.HasChange(names.AttrType) {
 		o, n := diff.GetChange(names.AttrType)

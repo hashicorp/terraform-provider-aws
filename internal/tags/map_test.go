@@ -4,7 +4,6 @@
 package tags
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -75,7 +74,7 @@ func TestTagMapEquality(t *testing.T) {
 			semanticEquals: false,
 		},
 
-		"set-missing": {
+		"set-missing-different-lengths": {
 			val1: newMapValueMust(
 				map[string]attr.Value{
 					"key1": types.StringValue("value1"),
@@ -84,6 +83,23 @@ func TestTagMapEquality(t *testing.T) {
 			),
 			val2: newMapValueMust(
 				map[string]attr.Value{
+					"key2": types.StringValue("value2"),
+				},
+			),
+			equals:         false,
+			semanticEquals: false,
+		},
+
+		"set-missing-same-lengths": {
+			val1: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			val2: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
 					"key2": types.StringValue("value2"),
 				},
 			),
@@ -213,7 +229,7 @@ func TestTagMapEquality(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			equals := test.val1.Equal(test.val2)
 
@@ -225,6 +241,93 @@ func TestTagMapEquality(t *testing.T) {
 
 			if got, want := equals, test.semanticEquals; got != want {
 				t.Errorf("MapSemanticEquals(%q, %q) = %v, want %v", test.val1, test.val2, got, want)
+			}
+		})
+	}
+}
+
+func TestTagMapIsWhollyKnown(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		val        Map
+		fullyKnown bool
+	}
+	tests := map[string]testCase{
+		"map unknown": {
+			val:        NewMapValueUnknown(),
+			fullyKnown: false,
+		},
+		"map null": {
+			val:        NewMapValueNull(),
+			fullyKnown: true,
+		},
+		"map empty": {
+			val:        newMapValueMust(map[string]attr.Value{}),
+			fullyKnown: true,
+		},
+		"map single unknown element": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringUnknown(),
+				},
+			),
+			fullyKnown: false,
+		},
+		"map single null element": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringNull(),
+				},
+			),
+			fullyKnown: true,
+		},
+		"map single element": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+				},
+			),
+			fullyKnown: true,
+		},
+		"map multiple elements, one unknown": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key2": types.StringUnknown(),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			fullyKnown: false,
+		},
+		"map multiple elements, one null": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key2": types.StringNull(),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			fullyKnown: true,
+		},
+		"map multiple elements": {
+			val: newMapValueMust(
+				map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key2": types.StringValue("value2"),
+					"key3": types.StringValue("value3"),
+				},
+			),
+			fullyKnown: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := test.val.IsWhollyKnown(), test.fullyKnown; got != want {
+				t.Errorf("IsFullyKnown(%q) = %v, want %v", test.val, got, want)
 			}
 		})
 	}

@@ -250,12 +250,12 @@ func insightVisualSchema() *schema.Schema {
 	}
 }
 
-func expandInsightVisual(tfList []interface{}) *awstypes.InsightVisual {
+func expandInsightVisual(tfList []any) *awstypes.InsightVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -268,45 +268,45 @@ func expandInsightVisual(tfList []interface{}) *awstypes.InsightVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["insight_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["insight_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.InsightConfiguration = expandInsightConfiguration(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandInsightConfiguration(tfList []interface{}) *awstypes.InsightConfiguration {
+func expandInsightConfiguration(tfList []any) *awstypes.InsightConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.InsightConfiguration{}
 
-	if v, ok := tfMap["computation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["computation"].([]any); ok && len(v) > 0 {
 		apiObject.Computations = expandComputations(v)
 	}
-	if v, ok := tfMap["custom_narrative"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_narrative"].([]any); ok && len(v) > 0 {
 		apiObject.CustomNarrative = expandCustomNarrativeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandComputations(tfList []interface{}) []awstypes.Computation {
+func expandComputations(tfList []any) []awstypes.Computation {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -314,7 +314,7 @@ func expandComputations(tfList []interface{}) []awstypes.Computation {
 	var apiObjects []awstypes.Computation
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -330,53 +330,53 @@ func expandComputations(tfList []interface{}) []awstypes.Computation {
 	return apiObjects
 }
 
-func expandComputation(tfMap map[string]interface{}) *awstypes.Computation {
+func expandComputation(tfMap map[string]any) *awstypes.Computation {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.Computation{}
 
-	if v, ok := tfMap["forecast"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["forecast"].([]any); ok && len(v) > 0 {
 		apiObject.Forecast = expandForecastComputation(v)
 	}
-	if v, ok := tfMap["growth_rate"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["growth_rate"].([]any); ok && len(v) > 0 {
 		apiObject.GrowthRate = expandGrowthRateComputation(v)
 	}
-	if v, ok := tfMap["maximum_minimum"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["maximum_minimum"].([]any); ok && len(v) > 0 {
 		apiObject.MaximumMinimum = expandMaximumMinimumComputation(v)
 	}
-	if v, ok := tfMap["metric_comparison"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["metric_comparison"].([]any); ok && len(v) > 0 {
 		apiObject.MetricComparison = expandMetricComparisonComputation(v)
 	}
-	if v, ok := tfMap["period_over_period"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["period_over_period"].([]any); ok && len(v) > 0 {
 		apiObject.PeriodOverPeriod = expandPeriodOverPeriodComputation(v)
 	}
-	if v, ok := tfMap["period_to_date"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["period_to_date"].([]any); ok && len(v) > 0 {
 		apiObject.PeriodToDate = expandPeriodToDateComputation(v)
 	}
-	if v, ok := tfMap["top_bottom_movers"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["top_bottom_movers"].([]any); ok && len(v) > 0 {
 		apiObject.TopBottomMovers = expandTopBottomMoversComputation(v)
 	}
-	if v, ok := tfMap["top_bottom_ranked"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["top_bottom_ranked"].([]any); ok && len(v) > 0 {
 		apiObject.TopBottomRanked = expandTopBottomRankedComputation(v)
 	}
-	if v, ok := tfMap["total_aggregation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["total_aggregation"].([]any); ok && len(v) > 0 {
 		apiObject.TotalAggregation = expandTotalAggregationComputation(v)
 	}
-	if v, ok := tfMap["unique_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["unique_values"].([]any); ok && len(v) > 0 {
 		apiObject.UniqueValues = expandUniqueValuesComputation(v)
 	}
 
 	return apiObject
 }
 
-func expandForecastComputation(tfList []interface{}) *awstypes.ForecastComputation {
+func expandForecastComputation(tfList []any) *awstypes.ForecastComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -410,22 +410,22 @@ func expandForecastComputation(tfList []interface{}) *awstypes.ForecastComputati
 	if v, ok := tfMap["upper_boundary"].(float64); ok {
 		apiObject.UpperBoundary = aws.Float64(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandGrowthRateComputation(tfList []interface{}) *awstypes.GrowthRateComputation {
+func expandGrowthRateComputation(tfList []any) *awstypes.GrowthRateComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -441,22 +441,22 @@ func expandGrowthRateComputation(tfList []interface{}) *awstypes.GrowthRateCompu
 	if v, ok := tfMap["period_size"].(int); ok {
 		apiObject.PeriodSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandMaximumMinimumComputation(tfList []interface{}) *awstypes.MaximumMinimumComputation {
+func expandMaximumMinimumComputation(tfList []any) *awstypes.MaximumMinimumComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -472,22 +472,22 @@ func expandMaximumMinimumComputation(tfList []interface{}) *awstypes.MaximumMini
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.MaximumMinimumComputationType(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandMetricComparisonComputation(tfList []interface{}) *awstypes.MetricComparisonComputation {
+func expandMetricComparisonComputation(tfList []any) *awstypes.MetricComparisonComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -500,25 +500,25 @@ func expandMetricComparisonComputation(tfList []interface{}) *awstypes.MetricCom
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap["from_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["from_value"].([]any); ok && len(v) > 0 {
 		apiObject.FromValue = expandMeasureField(v)
 	}
-	if v, ok := tfMap["target_value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["target_value"].([]any); ok && len(v) > 0 {
 		apiObject.TargetValue = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandPeriodOverPeriodComputation(tfList []interface{}) *awstypes.PeriodOverPeriodComputation {
+func expandPeriodOverPeriodComputation(tfList []any) *awstypes.PeriodOverPeriodComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -531,22 +531,22 @@ func expandPeriodOverPeriodComputation(tfList []interface{}) *awstypes.PeriodOve
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandPeriodToDateComputation(tfList []interface{}) *awstypes.PeriodToDateComputation {
+func expandPeriodToDateComputation(tfList []any) *awstypes.PeriodToDateComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -562,22 +562,22 @@ func expandPeriodToDateComputation(tfList []interface{}) *awstypes.PeriodToDateC
 	if v, ok := tfMap["period_time_granularity"].(string); ok && v != "" {
 		apiObject.PeriodTimeGranularity = awstypes.TimeGranularity(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandTopBottomMoversComputation(tfList []interface{}) *awstypes.TopBottomMoversComputation {
+func expandTopBottomMoversComputation(tfList []any) *awstypes.TopBottomMoversComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -599,25 +599,25 @@ func expandTopBottomMoversComputation(tfList []interface{}) *awstypes.TopBottomM
 	if v, ok := tfMap["mover_size"].(int); ok {
 		apiObject.MoverSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 {
 		apiObject.Time = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandTopBottomRankedComputation(tfList []interface{}) *awstypes.TopBottomRankedComputation {
+func expandTopBottomRankedComputation(tfList []any) *awstypes.TopBottomRankedComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -636,22 +636,22 @@ func expandTopBottomRankedComputation(tfList []interface{}) *awstypes.TopBottomR
 	if v, ok := tfMap["result_size"].(int); ok {
 		apiObject.ResultSize = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandTotalAggregationComputation(tfList []interface{}) *awstypes.TotalAggregationComputation {
+func expandTotalAggregationComputation(tfList []any) *awstypes.TotalAggregationComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -664,19 +664,19 @@ func expandTotalAggregationComputation(tfList []interface{}) *awstypes.TotalAggr
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 {
 		apiObject.Value = expandMeasureField(v)
 	}
 
 	return apiObject
 }
 
-func expandUniqueValuesComputation(tfList []interface{}) *awstypes.UniqueValuesComputation {
+func expandUniqueValuesComputation(tfList []any) *awstypes.UniqueValuesComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -689,19 +689,19 @@ func expandUniqueValuesComputation(tfList []interface{}) *awstypes.UniqueValuesC
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionField(v)
 	}
 
 	return apiObject
 }
 
-func expandCustomNarrativeOptions(tfList []interface{}) *awstypes.CustomNarrativeOptions {
+func expandCustomNarrativeOptions(tfList []any) *awstypes.CustomNarrativeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -715,12 +715,12 @@ func expandCustomNarrativeOptions(tfList []interface{}) *awstypes.CustomNarrativ
 	return apiObject
 }
 
-func flattenInsightVisual(apiObject *awstypes.InsightVisual) []interface{} {
+func flattenInsightVisual(apiObject *awstypes.InsightVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id":           aws.ToString(apiObject.VisualId),
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 	}
@@ -738,15 +738,15 @@ func flattenInsightVisual(apiObject *awstypes.InsightVisual) []interface{} {
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenInsightConfiguration(apiObject *awstypes.InsightConfiguration) []interface{} {
+func flattenInsightConfiguration(apiObject *awstypes.InsightConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Computations != nil {
 		tfMap["computation"] = flattenComputation(apiObject.Computations)
@@ -755,18 +755,18 @@ func flattenInsightConfiguration(apiObject *awstypes.InsightConfiguration) []int
 		tfMap["custom_narrative"] = flattenCustomNarrativeOptions(apiObject.CustomNarrative)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenComputation(apiObjects []awstypes.Computation) []interface{} {
+func flattenComputation(apiObjects []awstypes.Computation) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.Forecast != nil {
 			tfMap["forecast"] = flattenForecastComputation(apiObject.Forecast)
@@ -805,12 +805,12 @@ func flattenComputation(apiObjects []awstypes.Computation) []interface{} {
 	return tfList
 }
 
-func flattenForecastComputation(apiObject *awstypes.ForecastComputation) []interface{} {
+func flattenForecastComputation(apiObject *awstypes.ForecastComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -844,15 +844,15 @@ func flattenForecastComputation(apiObject *awstypes.ForecastComputation) []inter
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGrowthRateComputation(apiObject *awstypes.GrowthRateComputation) []interface{} {
+func flattenGrowthRateComputation(apiObject *awstypes.GrowthRateComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -870,15 +870,15 @@ func flattenGrowthRateComputation(apiObject *awstypes.GrowthRateComputation) []i
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMaximumMinimumComputation(apiObject *awstypes.MaximumMinimumComputation) []interface{} {
+func flattenMaximumMinimumComputation(apiObject *awstypes.MaximumMinimumComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -894,15 +894,15 @@ func flattenMaximumMinimumComputation(apiObject *awstypes.MaximumMinimumComputat
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMetricComparisonComputation(apiObject *awstypes.MetricComparisonComputation) []interface{} {
+func flattenMetricComparisonComputation(apiObject *awstypes.MetricComparisonComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -920,15 +920,15 @@ func flattenMetricComparisonComputation(apiObject *awstypes.MetricComparisonComp
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPeriodOverPeriodComputation(apiObject *awstypes.PeriodOverPeriodComputation) []interface{} {
+func flattenPeriodOverPeriodComputation(apiObject *awstypes.PeriodOverPeriodComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -943,15 +943,15 @@ func flattenPeriodOverPeriodComputation(apiObject *awstypes.PeriodOverPeriodComp
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPeriodToDateComputation(apiObject *awstypes.PeriodToDateComputation) []interface{} {
+func flattenPeriodToDateComputation(apiObject *awstypes.PeriodToDateComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -967,15 +967,15 @@ func flattenPeriodToDateComputation(apiObject *awstypes.PeriodToDateComputation)
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTopBottomMoversComputation(apiObject *awstypes.TopBottomMoversComputation) []interface{} {
+func flattenTopBottomMoversComputation(apiObject *awstypes.TopBottomMoversComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -998,15 +998,15 @@ func flattenTopBottomMoversComputation(apiObject *awstypes.TopBottomMoversComput
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTopBottomRankedComputation(apiObject *awstypes.TopBottomRankedComputation) []interface{} {
+func flattenTopBottomRankedComputation(apiObject *awstypes.TopBottomRankedComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -1025,15 +1025,15 @@ func flattenTopBottomRankedComputation(apiObject *awstypes.TopBottomRankedComput
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenTotalAggregationComputation(apiObject *awstypes.TotalAggregationComputation) []interface{} {
+func flattenTotalAggregationComputation(apiObject *awstypes.TotalAggregationComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -1045,15 +1045,15 @@ func flattenTotalAggregationComputation(apiObject *awstypes.TotalAggregationComp
 		tfMap[names.AttrValue] = flattenMeasureField(apiObject.Value)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUniqueValuesComputation(apiObject *awstypes.UniqueValuesComputation) []interface{} {
+func flattenUniqueValuesComputation(apiObject *awstypes.UniqueValuesComputation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ComputationId != nil {
 		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
@@ -1065,19 +1065,19 @@ func flattenUniqueValuesComputation(apiObject *awstypes.UniqueValuesComputation)
 		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomNarrativeOptions(apiObject *awstypes.CustomNarrativeOptions) []interface{} {
+func flattenCustomNarrativeOptions(apiObject *awstypes.CustomNarrativeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Narrative != nil {
 		tfMap["narrative"] = aws.ToString(apiObject.Narrative)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

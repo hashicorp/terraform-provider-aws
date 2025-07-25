@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
@@ -31,12 +32,6 @@ func resourceGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -77,7 +72,7 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -89,7 +84,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("insights_configuration"); ok {
-		input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
+		input.InsightsConfiguration = expandInsightsConfig(v.([]any))
 	}
 
 	output, err := conn.CreateGroup(ctx, &input)
@@ -103,7 +98,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -129,7 +124,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -141,7 +136,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if v, ok := d.GetOk("insights_configuration"); ok {
-			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
+			input.InsightsConfiguration = expandInsightsConfig(v.([]any))
 		}
 
 		_, err := conn.UpdateGroup(ctx, &input)
@@ -154,7 +149,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -200,12 +195,12 @@ func findGroupByARN(ctx context.Context, conn *xray.Client, arn string) (*types.
 	return output.Group, nil
 }
 
-func expandInsightsConfig(l []interface{}) *types.InsightsConfiguration {
+func expandInsightsConfig(l []any) *types.InsightsConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	config := types.InsightsConfiguration{}
 
 	if v, ok := m["insights_enabled"]; ok {
@@ -218,12 +213,12 @@ func expandInsightsConfig(l []interface{}) *types.InsightsConfiguration {
 	return &config
 }
 
-func flattenInsightsConfig(config *types.InsightsConfiguration) []interface{} {
+func flattenInsightsConfig(config *types.InsightsConfiguration) []any {
 	if config == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.InsightsEnabled != nil {
 		m["insights_enabled"] = config.InsightsEnabled
@@ -232,5 +227,5 @@ func flattenInsightsConfig(config *types.InsightsConfiguration) []interface{} {
 		m["notifications_enabled"] = config.NotificationsEnabled
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

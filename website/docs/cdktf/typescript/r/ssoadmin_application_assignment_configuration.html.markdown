@@ -33,9 +33,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsoadminApplicationAssignmentConfiguration(this, "example", {
-      applicationArn: Token.asString(
-        awsSsoadminApplicationExample.applicationArn
-      ),
+      applicationArn: Token.asString(awsSsoadminApplicationExample.arn),
       assignmentRequired: true,
     });
   }
@@ -45,8 +43,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationArn` - (Required) ARN of the application.
 * `assignmentRequired` - (Required) Indicates whether users must have an explicit assignment to access the application. If `false`, all users have access to the application.
 
@@ -88,4 +87,4 @@ Using `terraform import`, import SSO Admin Application Assignment Configuration 
 % terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::123456789012:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c63af6f678dc94b4869dd1205895273a2172d51e8255ff4e188bc28bd67da7f -->
+<!-- cache-key: cdktf-0.20.8 input-d2e30a58f52e19ae15a14ceee35887bbc8bb788b03abf4de890e527928c03318 -->

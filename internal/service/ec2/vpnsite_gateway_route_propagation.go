@@ -43,7 +43,7 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 	}
 }
 
-func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -60,7 +60,7 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 	return append(diags, resourceVPNGatewayRoutePropagationRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -79,7 +79,7 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 	return sdkdiag.AppendFromErr(diags, err)
 }
 
-func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

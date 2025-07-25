@@ -68,7 +68,7 @@ func resourceTagOptionResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -111,7 +111,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -150,7 +150,7 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

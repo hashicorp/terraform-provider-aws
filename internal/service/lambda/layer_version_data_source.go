@@ -89,7 +89,7 @@ func dataSourceLayerVersion() *schema.Resource {
 			"source_code_hash": {
 				Type:       schema.TypeString,
 				Computed:   true,
-				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
+				Deprecated: "source_code_hash is deprecated. Use code_sha256 instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -105,7 +105,7 @@ func dataSourceLayerVersion() *schema.Resource {
 	}
 }
 
-func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 

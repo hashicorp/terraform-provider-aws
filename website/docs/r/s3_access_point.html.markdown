@@ -14,7 +14,7 @@ Provides a resource to manage an S3 Access Point.
 
 -> Advanced usage: To use a custom API endpoint for this Terraform resource, use the [`s3control` endpoint provider configuration](/docs/providers/aws/index.html#s3control), not the `s3` endpoint provider configuration.
 
--> This resource cannot be used with S3 directory buckets.
+-> This resource can be used with s3 directory buckets. Please see [AWS Documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-directory-buckets.html) for more information.
 
 ## Example Usage
 
@@ -53,6 +53,26 @@ resource "aws_vpc" "example" {
 }
 ```
 
+### AWS Partition Directory Bucket
+
+```terraform
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_s3_directory_bucket" "example" {
+  bucket = "example--zoneId--x-s3"
+  location {
+    name = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+
+resource "aws_s3_access_point" "example" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = "example--zoneId--xa-s3"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -62,6 +82,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) AWS account ID for the owner of the bucket for which you want to create an access point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `bucket_account_id` - (Optional) AWS account ID associated with the S3 bucket associated with this access point.
 * `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).

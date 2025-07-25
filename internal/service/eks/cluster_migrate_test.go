@@ -19,23 +19,23 @@ func TestClusterStateUpgradeV0(t *testing.T) {
 
 	testCases := []struct {
 		testName string
-		rawState map[string]interface{}
-		want     map[string]interface{}
+		rawState map[string]any
+		want     map[string]any
 	}{
 		{
 			testName: "empty state",
-			rawState: map[string]interface{}{},
-			want: map[string]interface{}{
+			rawState: map[string]any{},
+			want: map[string]any{
 				"bootstrap_self_managed_addons": acctest.CtTrue,
 			},
 		},
 		{
 			testName: "non-empty state",
-			rawState: map[string]interface{}{
+			rawState: map[string]any{
 				names.AttrName:    "testing",
 				names.AttrVersion: "1.1.0",
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"bootstrap_self_managed_addons": acctest.CtTrue,
 				names.AttrName:                  "testing",
 				names.AttrVersion:               "1.1.0",
@@ -43,12 +43,12 @@ func TestClusterStateUpgradeV0(t *testing.T) {
 		},
 		{
 			testName: "bootstrap_self_managed_addons set",
-			rawState: map[string]interface{}{
+			rawState: map[string]any{
 				"bootstrap_self_managed_addons": acctest.CtFalse,
 				names.AttrName:                  "testing",
 				names.AttrVersion:               "1.1.0",
 			},
-			want: map[string]interface{}{
+			want: map[string]any{
 				"bootstrap_self_managed_addons": acctest.CtFalse,
 				names.AttrName:                  "testing",
 				names.AttrVersion:               "1.1.0",

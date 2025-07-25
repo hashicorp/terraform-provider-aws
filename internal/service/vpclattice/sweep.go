@@ -158,7 +158,7 @@ func sweepTargetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, v := range page.Items {
-			r := ResourceTargetGroup()
+			r := resourceTargetGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 

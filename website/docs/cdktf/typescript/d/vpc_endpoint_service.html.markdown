@@ -98,12 +98,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoint services.
-The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
-* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `serviceName` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `serviceRegions` - (Optional) AWS regions in which to look for services.
 * `serviceType` - (Optional) Service type, `Gateway` or `Interface`.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
@@ -129,8 +128,9 @@ This data source exports the following attributes in addition to the arguments a
 * `owner` - AWS account ID of the service owner or `amazon`.
 * `privateDnsName` - Private DNS name for the service.
 * `privateDnsNames` - Private DNS names assigned to the VPC endpoint service.
-* `region` - Region of the endpoint service.
+* `region` - (**Deprecated**) Region of the endpoint service. Use `serviceRegion` instead.
 * `serviceId` - ID of the endpoint service.
+* `serviceRegion` - Region of the endpoint service.
 * `supportedIpAddressTypes` - The supported IP address types.
 * `tags` - Map of tags assigned to the resource.
 * `vpcEndpointPolicySupported` - Whether or not the service supports endpoint policies - `true` or `false`.
@@ -141,4 +141,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-38d7121cfc7cba878f7c79020dee432097522a776d67ec066df32796d636d45a -->
+<!-- cache-key: cdktf-0.20.8 input-26623ea0b7a5351a938b72e50bb685aa58941d2a889ac5eb744b5e364c00a972 -->

@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,12 +78,10 @@ func resourceBucket() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -102,7 +99,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.BucketArn))
 
-	if tags := keyValueTagsS3(ctx, getTagsInS3(ctx)); len(tags) > 0 {
+	if tags := keyValueTagsFromS3Tags(ctx, getS3TagsIn(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -111,7 +108,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -154,12 +151,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	setTagsOutS3(ctx, tagsS3(tags))
+	setS3TagsOut(ctx, svcS3Tags(tags))
 
 	return diags
 }
 
-func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -174,7 +171,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -193,7 +190,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	log.Printf("[DEBUG] Deleting S3 Control Bucket: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (any, error) {
 		return conn.DeleteBucket(ctx, input)
 	}, errCodeInvalidBucketState)
 
@@ -260,7 +257,7 @@ func bucketListTags(ctx context.Context, conn *s3control.Client, identifier stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTagsS3(ctx, output.TagSet), nil
+	return keyValueTagsFromS3Tags(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
@@ -289,7 +286,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 			AccountId: aws.String(parsedArn.AccountID),
 			Bucket:    aws.String(identifier),
 			Tagging: &types.Tagging{
-				TagSet: tagsS3(newTags.Merge(ignoredTags)),
+				TagSet: svcS3Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 

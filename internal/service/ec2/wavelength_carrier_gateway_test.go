@@ -177,14 +177,14 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *awstypes
 func testAccPreCheckWavelengthZoneAvailable(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAvailabilityZonesInput{
+	input := ec2.DescribeAvailabilityZonesInput{
 		Filters: tfec2.NewAttributeFilterList(map[string]string{
 			"zone-type":     "wavelength-zone",
 			"opt-in-status": "opted-in",
 		}),
 	}
 
-	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)
+	output, err := tfec2.FindAvailabilityZones(ctx, conn, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

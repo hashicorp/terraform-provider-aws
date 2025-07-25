@@ -57,6 +57,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -148,7 +149,7 @@ const (
 	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
-func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
@@ -178,7 +179,8 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
+		smerr.Append(ctx, diags, err, smerr.ID, name)
+		return diags
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Set the ID
@@ -214,19 +216,22 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 
 	d.Set("policy", p)
@@ -242,7 +247,8 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 	{{- end }}
 	{{ if .IncludeComments }}

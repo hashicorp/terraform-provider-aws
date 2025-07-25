@@ -62,7 +62,7 @@ func resourceVaultLockConfiguration() *schema.Resource {
 	}
 }
 
-func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -94,7 +94,7 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVaultLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 

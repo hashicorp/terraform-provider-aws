@@ -45,7 +45,7 @@ func resourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -57,7 +57,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
 		return conn.EnableOrganizationAdminAccount(ctx, input)
 	}, errCodeResourceConflictException)
 
@@ -74,7 +74,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -95,7 +95,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -167,7 +167,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 }
 
 func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 
 		if tfresource.NotFound(err) {

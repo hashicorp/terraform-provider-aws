@@ -26,12 +26,12 @@ func emptyVisualSchema() *schema.Schema {
 	}
 }
 
-func expandEmptyVisual(tfList []interface{}) *awstypes.EmptyVisual {
+func expandEmptyVisual(tfList []any) *awstypes.EmptyVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -44,19 +44,19 @@ func expandEmptyVisual(tfList []interface{}) *awstypes.EmptyVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
 
 	return apiObject
 }
 
-func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []interface{} {
+func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
@@ -65,5 +65,5 @@ func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []interface{} {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

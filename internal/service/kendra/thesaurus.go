@@ -98,12 +98,10 @@ func ResourceThesaurus() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -113,7 +111,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
+		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]any)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -122,7 +120,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateThesaurus(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -158,7 +156,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThesaurusRead(ctx, d, meta)...)
 }
 
-func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -203,7 +201,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -232,13 +230,13 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("source_s3_path") {
-			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]interface{}))
+			input.SourceS3Path = expandSourceS3Path(d.Get("source_s3_path").([]any))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Thesaurus (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateThesaurus(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -264,7 +262,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceThesaurusRead(ctx, d, meta)...)
 }
 
-func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -298,7 +296,7 @@ func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindThesaurusByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

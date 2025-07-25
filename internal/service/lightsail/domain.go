@@ -39,7 +39,7 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.CreateDomain(ctx, &lightsail.CreateDomainInput{
@@ -55,7 +55,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	resp, err := conn.GetDomain(ctx, &lightsail.GetDomainInput{
@@ -75,7 +75,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.DeleteDomain(ctx, &lightsail.DeleteDomainInput{

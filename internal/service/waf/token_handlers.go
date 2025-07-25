@@ -18,9 +18,9 @@ type retryer struct {
 	connection *waf.Client
 }
 
-type withTokenFunc func(token *string) (interface{}, error)
+type withTokenFunc func(token *string) (any, error)
 
-func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interface{}, error) {
+func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (any, error) {
 	const (
 		key = "WafRetryer"
 	)
@@ -30,7 +30,7 @@ func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interfac
 	const (
 		timeout = 15 * time.Minute
 	)
-	return tfresource.RetryWhenIsA[*awstypes.WAFStaleDataException](ctx, timeout, func() (interface{}, error) {
+	return tfresource.RetryWhenIsA[*awstypes.WAFStaleDataException](ctx, timeout, func() (any, error) {
 		input := &waf.GetChangeTokenInput{}
 		output, err := t.connection.GetChangeToken(ctx, input)
 

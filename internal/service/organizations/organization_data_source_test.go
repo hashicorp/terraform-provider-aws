@@ -65,7 +65,7 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 				Config: testAccOrganizationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr(dataSourceName, "accounts.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, dataSourceName, names.AttrARN, "organizations", "organization/o-{id}"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),
@@ -100,7 +100,7 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 2),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, dataSourceName, names.AttrARN, "organizations", "organization/o-{id}"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),

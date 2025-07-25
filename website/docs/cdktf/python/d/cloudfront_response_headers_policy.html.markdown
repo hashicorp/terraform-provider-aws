@@ -65,6 +65,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The response headers policy ARN.
 * `comment` - Comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `etag` - Current version of the response headers policy.
 * `cors_config` - Configuration for a set of HTTP response headers that are used for Cross-Origin Resource Sharing (CORS). See [Cors Config](#cors-config) for more information.
@@ -139,4 +140,4 @@ This data source exports the following attributes in addition to the arguments a
 * `enabled` - Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `sampling_rate` - Number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to.
 
-<!-- cache-key: cdktf-0.20.8 input-72a56289982ff99c5a8915f5f70bc400c310b4c8325a6846d6c8b892d3eab9cb -->
+<!-- cache-key: cdktf-0.20.8 input-7f7a22e4a13361be23802f57b5a88ccd777739eb6e93d69ff4bff2f9ca2f4d3c -->

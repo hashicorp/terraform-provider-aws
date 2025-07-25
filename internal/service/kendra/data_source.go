@@ -5,6 +5,7 @@ package kendra
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/document"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -56,8 +59,8 @@ func ResourceDataSource() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
+				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]any), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -71,7 +74,6 @@ func ResourceDataSource() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -85,9 +87,10 @@ func ResourceDataSource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:       schema.TypeList,
+							Deprecated: "s3_configuration is deprecated. Use template_configuration instead.",
+							Optional:   true,
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"access_control_list_configuration": {
@@ -162,10 +165,21 @@ func ResourceDataSource() *schema.Resource {
 								},
 							},
 						},
-						"web_crawler_configuration": {
+						"template_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"template": sdkv2.JSONDocumentSchemaRequired(),
+								},
+							},
+						},
+						"web_crawler_configuration": {
+							Type:       schema.TypeList,
+							Deprecated: "web_crawler_configuration is deprecated. Use template_configuration instead.",
+							Optional:   true,
+							MaxItems:   1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_configuration": {
@@ -591,7 +605,7 @@ func documentAttributeValueSchema() *schema.Schema {
 	}
 }
 
-func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -606,11 +620,15 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk(names.AttrConfiguration); ok {
-		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
+		configuration, err := expandDataSourceConfiguration(v.([]any))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		input.Configuration = configuration
 	}
 
 	if v, ok := d.GetOk("custom_document_enrichment_configuration"); ok {
-		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]interface{}))
+		input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -630,7 +648,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -666,7 +684,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -710,9 +728,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+	configuration, err := flattenDataSourceConfiguration(resp.Configuration)
+	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	d.Set(names.AttrConfiguration, configuration)
 
 	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -721,7 +741,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -738,11 +758,15 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrConfiguration) {
-			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
+			configuration, err := expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]any))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			input.Configuration = configuration
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
-			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]interface{}))
+			input.CustomDocumentEnrichmentConfiguration = expandCustomDocumentEnrichmentConfiguration(d.Get("custom_document_enrichment_configuration").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -768,7 +792,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -794,7 +818,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
@@ -891,7 +915,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindDataSourceByID(ctx, conn, id, indexId)
 
 		if tfresource.NotFound(err) {
@@ -906,322 +930,352 @@ func statusDataSource(ctx context.Context, conn *kendra.Client, id, indexId stri
 	}
 }
 
-func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfiguration {
+func expandDataSourceConfiguration(tfList []any) (*types.DataSourceConfiguration, error) {
 	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
+		return nil, nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
-		return nil
+		return nil, nil
 	}
 
-	result := &types.DataSourceConfiguration{}
+	apiObject := &types.DataSourceConfiguration{}
 
-	if v, ok := tfMap["s3_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.S3Configuration = expandS3Configuration(v)
+	if v, ok := tfMap["s3_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.S3Configuration = expandS3Configuration(v)
 	}
 
-	if v, ok := tfMap["web_crawler_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.WebCrawlerConfiguration = expandWebCrawlerConfiguration(v)
+	if v, ok := tfMap["web_crawler_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.WebCrawlerConfiguration = expandWebCrawlerConfiguration(v)
 	}
 
-	return result
+	if v, ok := tfMap["template_configuration"].([]any); ok && len(v) > 0 {
+		templateConfiguration, err := expandTemplateConfiguration(v)
+		if err != nil {
+			return apiObject, err
+		}
+		apiObject.TemplateConfiguration = templateConfiguration
+	}
+
+	return apiObject, nil
+}
+
+// Template Configuration
+func expandTemplateConfiguration(tfList []any) (*types.TemplateConfiguration, error) {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil, nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil, nil
+	}
+
+	var body any
+	err := json.Unmarshal([]byte(tfMap["template"].(string)), &body)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	return &types.TemplateConfiguration{
+		Template: document.NewLazyDocument(body),
+	}, nil
 }
 
 // S3 Configuration
-func expandS3Configuration(tfList []interface{}) *types.S3DataSourceConfiguration {
+func expandS3Configuration(tfList []any) *types.S3DataSourceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.S3DataSourceConfiguration{
+	apiObject := &types.S3DataSourceConfiguration{
 		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
 	}
 
-	if v, ok := tfMap["access_control_list_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.AccessControlListConfiguration = expandAccessControlListConfiguration(v)
+	if v, ok := tfMap["access_control_list_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AccessControlListConfiguration = expandAccessControlListConfiguration(v)
 	}
 
-	if v, ok := tfMap["documents_metadata_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.DocumentsMetadataConfiguration = expandDocumentsMetadataConfiguration(v)
+	if v, ok := tfMap["documents_metadata_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.DocumentsMetadataConfiguration = expandDocumentsMetadataConfiguration(v)
 	}
 
 	if v, ok := tfMap["exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.ExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.ExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.InclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.InclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["inclusion_prefixes"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.InclusionPrefixes = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.InclusionPrefixes = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandAccessControlListConfiguration(tfList []interface{}) *types.AccessControlListConfiguration {
+func expandAccessControlListConfiguration(tfList []any) *types.AccessControlListConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.AccessControlListConfiguration{}
+	apiObject := &types.AccessControlListConfiguration{}
 
 	if v, ok := tfMap["key_path"].(string); ok && v != "" {
-		result.KeyPath = aws.String(v)
+		apiObject.KeyPath = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandDocumentsMetadataConfiguration(tfList []interface{}) *types.DocumentsMetadataConfiguration {
+func expandDocumentsMetadataConfiguration(tfList []any) *types.DocumentsMetadataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.DocumentsMetadataConfiguration{}
+	apiObject := &types.DocumentsMetadataConfiguration{}
 
 	if v, ok := tfMap["s3_prefix"].(string); ok && v != "" {
-		result.S3Prefix = aws.String(v)
+		apiObject.S3Prefix = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
 // Web Crawler Configuration
-func expandWebCrawlerConfiguration(tfList []interface{}) *types.WebCrawlerConfiguration {
+func expandWebCrawlerConfiguration(tfList []any) *types.WebCrawlerConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.WebCrawlerConfiguration{
-		Urls: expandURLs(tfMap["urls"].([]interface{})),
+	apiObject := &types.WebCrawlerConfiguration{
+		Urls: expandURLs(tfMap["urls"].([]any)),
 	}
 
-	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.AuthenticationConfiguration = expandAuthenticationConfiguration(v)
+	if v, ok := tfMap["authentication_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AuthenticationConfiguration = expandAuthenticationConfiguration(v)
 	}
 
 	if v, ok := tfMap["crawl_depth"].(int); ok {
-		result.CrawlDepth = aws.Int32(int32(v))
+		apiObject.CrawlDepth = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_content_size_per_page_in_mega_bytes"].(float32); ok {
-		result.MaxContentSizePerPageInMegaBytes = aws.Float32(v)
+		apiObject.MaxContentSizePerPageInMegaBytes = aws.Float32(v)
 	}
 
 	if v, ok := tfMap["max_links_per_page"].(int); ok {
-		result.MaxLinksPerPage = aws.Int32(int32(v))
+		apiObject.MaxLinksPerPage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_urls_per_minute_crawl_rate"].(int); ok {
-		result.MaxUrlsPerMinuteCrawlRate = aws.Int32(int32(v))
+		apiObject.MaxUrlsPerMinuteCrawlRate = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["proxy_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.ProxyConfiguration = expandProxyConfiguration(v)
+	if v, ok := tfMap["proxy_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ProxyConfiguration = expandProxyConfiguration(v)
 	}
 
 	if v, ok := tfMap["url_exclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.UrlExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.UrlExclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["url_inclusion_patterns"]; ok && v.(*schema.Set).Len() >= 0 {
-		result.UrlInclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.UrlInclusionPatterns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandAuthenticationConfiguration(tfList []interface{}) *types.AuthenticationConfiguration {
+func expandAuthenticationConfiguration(tfList []any) *types.AuthenticationConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.AuthenticationConfiguration{}
+	apiObject := &types.AuthenticationConfiguration{}
 
 	if v, ok := tfMap["basic_authentication"]; ok && v.(*schema.Set).Len() > 0 {
-		result.BasicAuthentication = expandBasicAuthentication(v.(*schema.Set).List())
+		apiObject.BasicAuthentication = expandBasicAuthentication(v.(*schema.Set).List())
 	}
 
-	return result
+	return apiObject
 }
 
-func expandBasicAuthentication(tfList []interface{}) []types.BasicAuthenticationConfiguration {
+func expandBasicAuthentication(tfList []any) []types.BasicAuthenticationConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	result := []types.BasicAuthenticationConfiguration{}
+	apiObject := []types.BasicAuthenticationConfiguration{}
 
 	for _, basicAuthenticationConfig := range tfList {
-		data := basicAuthenticationConfig.(map[string]interface{})
+		data := basicAuthenticationConfig.(map[string]any)
 		basicAuthenticationConfigExpanded := types.BasicAuthenticationConfiguration{
 			Credentials: aws.String(data["credentials"].(string)),
 			Host:        aws.String(data["host"].(string)),
 			Port:        aws.Int32(int32(data[names.AttrPort].(int))),
 		}
 
-		result = append(result, basicAuthenticationConfigExpanded)
+		apiObject = append(apiObject, basicAuthenticationConfigExpanded)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandProxyConfiguration(tfList []interface{}) *types.ProxyConfiguration {
+func expandProxyConfiguration(tfList []any) *types.ProxyConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ProxyConfiguration{
+	apiObject := &types.ProxyConfiguration{
 		Host: aws.String(tfMap["host"].(string)),
 		Port: aws.Int32(int32(tfMap[names.AttrPort].(int))),
 	}
 
 	if v, ok := tfMap["credentials"].(string); ok && v != "" {
-		result.Credentials = aws.String(tfMap["credentials"].(string))
+		apiObject.Credentials = aws.String(tfMap["credentials"].(string))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandURLs(tfList []interface{}) *types.Urls {
+func expandURLs(tfList []any) *types.Urls {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.Urls{}
+	apiObject := &types.Urls{}
 
-	if v, ok := tfMap["seed_url_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.SeedUrlConfiguration = expandSeedURLConfiguration(v)
+	if v, ok := tfMap["seed_url_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SeedUrlConfiguration = expandSeedURLConfiguration(v)
 	}
 
-	if v, ok := tfMap["site_maps_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.SiteMapsConfiguration = expandSiteMapsConfiguration(v)
+	if v, ok := tfMap["site_maps_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.SiteMapsConfiguration = expandSiteMapsConfiguration(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandSeedURLConfiguration(tfList []interface{}) *types.SeedUrlConfiguration {
+func expandSeedURLConfiguration(tfList []any) *types.SeedUrlConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.SeedUrlConfiguration{
+	apiObject := &types.SeedUrlConfiguration{
 		SeedUrls: flex.ExpandStringValueSet(tfMap["seed_urls"].(*schema.Set)),
 	}
 
 	if v, ok := tfMap["web_crawler_mode"].(string); ok && v != "" {
-		result.WebCrawlerMode = types.WebCrawlerMode(tfMap["web_crawler_mode"].(string))
+		apiObject.WebCrawlerMode = types.WebCrawlerMode(tfMap["web_crawler_mode"].(string))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandSiteMapsConfiguration(tfList []interface{}) *types.SiteMapsConfiguration {
+func expandSiteMapsConfiguration(tfList []any) *types.SiteMapsConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.SiteMapsConfiguration{
+	apiObject := &types.SiteMapsConfiguration{
 		SiteMaps: flex.ExpandStringValueSet(tfMap["site_maps"].(*schema.Set)),
 	}
 
-	return result
+	return apiObject
 }
 
 // Custom document enrichment configuration
-func expandCustomDocumentEnrichmentConfiguration(tfList []interface{}) *types.CustomDocumentEnrichmentConfiguration {
+func expandCustomDocumentEnrichmentConfiguration(tfList []any) *types.CustomDocumentEnrichmentConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.CustomDocumentEnrichmentConfiguration{}
+	apiObject := &types.CustomDocumentEnrichmentConfiguration{}
 
 	if v, ok := tfMap["inline_configurations"]; ok && v.(*schema.Set).Len() > 0 {
-		result.InlineConfigurations = expandInlineCustomDocumentEnrichmentConfiguration(v.(*schema.Set).List())
+		apiObject.InlineConfigurations = expandInlineCustomDocumentEnrichmentConfiguration(v.(*schema.Set).List())
 	}
 
-	if v, ok := tfMap["post_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.PostExtractionHookConfiguration = expandHookConfiguration(v)
+	if v, ok := tfMap["post_extraction_hook_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PostExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
-	if v, ok := tfMap["pre_extraction_hook_configuration"].([]interface{}); ok && len(v) > 0 {
-		result.PreExtractionHookConfiguration = expandHookConfiguration(v)
+	if v, ok := tfMap["pre_extraction_hook_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.PreExtractionHookConfiguration = expandHookConfiguration(v)
 	}
 
 	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
-		result.RoleArn = aws.String(v)
+		apiObject.RoleArn = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []types.InlineCustomDocumentEnrichmentConfiguration {
+func expandInlineCustomDocumentEnrichmentConfiguration(tfList []any) []types.InlineCustomDocumentEnrichmentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	result := []types.InlineCustomDocumentEnrichmentConfiguration{}
+	apiObject := []types.InlineCustomDocumentEnrichmentConfiguration{}
 
 	for _, inlineConfig := range tfList {
-		data := inlineConfig.(map[string]interface{})
+		data := inlineConfig.(map[string]any)
 		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
 
-		if v, ok := data[names.AttrCondition].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrCondition].([]any); ok && len(v) > 0 {
 			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
 		}
 
@@ -1229,450 +1283,475 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]any); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
-		result = append(result, inlineConfigExpanded)
+		apiObject = append(apiObject, inlineConfigExpanded)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandDocumentAttributeTarget(tfList []interface{}) *types.DocumentAttributeTarget {
+func expandDocumentAttributeTarget(tfList []any) *types.DocumentAttributeTarget {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.DocumentAttributeTarget{}
+	apiObject := &types.DocumentAttributeTarget{}
 
 	if v, ok := tfMap["target_document_attribute_key"].(string); ok && v != "" {
-		result.TargetDocumentAttributeKey = aws.String(v)
+		apiObject.TargetDocumentAttributeKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_document_attribute_value"].([]interface{}); ok && len(v) > 0 {
-		result.TargetDocumentAttributeValue = expandDocumentAttributeValue(v)
+	if v, ok := tfMap["target_document_attribute_value"].([]any); ok && len(v) > 0 {
+		apiObject.TargetDocumentAttributeValue = expandDocumentAttributeValue(v)
 	}
 
 	if v, ok := tfMap["target_document_attribute_value_deletion"].(bool); ok {
-		result.TargetDocumentAttributeValueDeletion = v
+		apiObject.TargetDocumentAttributeValueDeletion = v
 	}
 
-	return result
+	return apiObject
 }
 
-func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
+func expandHookConfiguration(tfList []any) *types.HookConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.HookConfiguration{
+	apiObject := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
 		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
-	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
-		result.InvocationCondition = expandDocumentAttributeCondition(v)
+	if v, ok := tfMap["invocation_condition"].([]any); ok && len(v) > 0 {
+		apiObject.InvocationCondition = expandDocumentAttributeCondition(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandDocumentAttributeCondition(tfList []interface{}) *types.DocumentAttributeCondition {
+func expandDocumentAttributeCondition(tfList []any) *types.DocumentAttributeCondition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.DocumentAttributeCondition{
+	apiObject := &types.DocumentAttributeCondition{
 		ConditionDocumentAttributeKey: aws.String(tfMap["condition_document_attribute_key"].(string)),
 		Operator:                      types.ConditionOperator(tfMap["operator"].(string)),
 	}
 
-	if v, ok := tfMap["condition_on_value"].([]interface{}); ok && len(v) > 0 {
-		result.ConditionOnValue = expandDocumentAttributeValue(v)
+	if v, ok := tfMap["condition_on_value"].([]any); ok && len(v) > 0 {
+		apiObject.ConditionOnValue = expandDocumentAttributeValue(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandDocumentAttributeValue(tfList []interface{}) *types.DocumentAttributeValue {
+func expandDocumentAttributeValue(tfList []any) *types.DocumentAttributeValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.DocumentAttributeValue{}
+	apiObject := &types.DocumentAttributeValue{}
 
 	// Only one of these values can be set at a time
 	if v, ok := tfMap["date_value"].(string); ok && v != "" {
 		// A date expressed as an ISO 8601 string.
 		timeValue, _ := time.Parse(ISO8601UTC, v)
-		result.DateValue = aws.Time(timeValue)
+		apiObject.DateValue = aws.Time(timeValue)
 	} else if v, ok := tfMap["string_value"].(string); ok && v != "" {
-		result.StringValue = aws.String(v)
+		apiObject.StringValue = aws.String(v)
 	} else if v, ok := tfMap["string_list_value"]; ok && v.(*schema.Set).Len() > 0 {
-		result.StringListValue = flex.ExpandStringValueSet(v.(*schema.Set))
+		apiObject.StringListValue = flex.ExpandStringValueSet(v.(*schema.Set))
 	} else if v, ok := tfMap["long_value"]; ok {
 		// When no value was passed it was interpreted as a 0 leading to errors if other values like DateValue, StringValue, StringListValue were defined
 		// ValidationException: DocumentAttributeValue can only have 1 non-null field, but given value for key <> has too many non-null fields.
 		// hence check this as the last else if
-		result.LongValue = aws.Int64(int64(v.(int)))
+		apiObject.LongValue = aws.Int64(int64(v.(int)))
 	}
 
-	return result
+	return apiObject
 }
 
-func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []interface{} {
+func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) ([]any, error) {
 	if apiObject == nil {
-		return nil
+		return nil, nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Configuration; v != nil {
-		m["s3_configuration"] = flattenS3Configuration(v)
+		tfMap["s3_configuration"] = flattenS3Configuration(v)
 	}
 
 	if v := apiObject.WebCrawlerConfiguration; v != nil {
-		m["web_crawler_configuration"] = flattenWebCrawlerConfiguration(v)
+		tfMap["web_crawler_configuration"] = flattenWebCrawlerConfiguration(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.TemplateConfiguration; v != nil {
+		templateConfiguration, err := flattenTemplateConfiguration(v)
+		if err != nil {
+			return nil, err
+		}
+		tfMap["template_configuration"] = templateConfiguration
+	}
+
+	return []any{tfMap}, nil
 }
 
 // S3 Configuration
-func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []interface{} {
+func flattenS3Configuration(apiObject *types.S3DataSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrBucketName: aws.ToString(apiObject.BucketName),
 	}
 
 	if v := apiObject.AccessControlListConfiguration; v != nil {
-		m["access_control_list_configuration"] = flattenAccessControlListConfiguration(v)
+		tfMap["access_control_list_configuration"] = flattenAccessControlListConfiguration(v)
 	}
 
 	if v := apiObject.DocumentsMetadataConfiguration; v != nil {
-		m["documents_metadata_configuration"] = flattenDocumentsMetadataConfiguration(v)
+		tfMap["documents_metadata_configuration"] = flattenDocumentsMetadataConfiguration(v)
 	}
 
 	if v := apiObject.ExclusionPatterns; v != nil {
-		m["exclusion_patterns"] = flex.FlattenStringValueSet(v)
+		tfMap["exclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.InclusionPatterns; v != nil {
-		m["inclusion_patterns"] = flex.FlattenStringValueSet(v)
+		tfMap["inclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.InclusionPrefixes; v != nil {
-		m["inclusion_prefixes"] = flex.FlattenStringValueSet(v)
+		tfMap["inclusion_prefixes"] = flex.FlattenStringValueSet(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenAccessControlListConfiguration(apiObject *types.AccessControlListConfiguration) []interface{} {
+func flattenAccessControlListConfiguration(apiObject *types.AccessControlListConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.KeyPath; v != nil {
-		m["key_path"] = aws.ToString(v)
+		tfMap["key_path"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataConfiguration) []interface{} {
+func flattenDocumentsMetadataConfiguration(apiObject *types.DocumentsMetadataConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Prefix; v != nil {
-		m["s3_prefix"] = aws.ToString(v)
+		tfMap["s3_prefix"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
 // Web Crawler Configuration
-func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []interface{} {
+func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"crawl_depth": aws.ToInt32(apiObject.CrawlDepth),
 		"urls":        flattenURLs(apiObject.Urls),
 	}
 
 	if v := apiObject.AuthenticationConfiguration; v != nil {
-		m["authentication_configuration"] = flattenAuthenticationConfiguration(v)
+		tfMap["authentication_configuration"] = flattenAuthenticationConfiguration(v)
 	}
 
 	if v := apiObject.MaxContentSizePerPageInMegaBytes; v != nil {
-		m["max_content_size_per_page_in_mega_bytes"] = aws.ToFloat32(v)
+		tfMap["max_content_size_per_page_in_mega_bytes"] = aws.ToFloat32(v)
 	}
 
 	if v := apiObject.MaxLinksPerPage; v != nil {
-		m["max_links_per_page"] = aws.ToInt32(v)
+		tfMap["max_links_per_page"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.MaxUrlsPerMinuteCrawlRate; v != nil {
-		m["max_urls_per_minute_crawl_rate"] = aws.ToInt32(v)
+		tfMap["max_urls_per_minute_crawl_rate"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.ProxyConfiguration; v != nil {
-		m["proxy_configuration"] = flattenProxyConfiguration(v)
+		tfMap["proxy_configuration"] = flattenProxyConfiguration(v)
 	}
 
 	if v := apiObject.UrlExclusionPatterns; v != nil {
-		m["url_exclusion_patterns"] = flex.FlattenStringValueSet(v)
+		tfMap["url_exclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.UrlInclusionPatterns; v != nil {
-		m["url_inclusion_patterns"] = flex.FlattenStringValueSet(v)
+		tfMap["url_inclusion_patterns"] = flex.FlattenStringValueSet(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []interface{} {
+func flattenTemplateConfiguration(apiObject *types.TemplateConfiguration) ([]any, error) {
+	if apiObject == nil {
+		return nil, nil
+	}
+
+	tfMap := map[string]any{}
+	if v := apiObject.Template; v != nil {
+		bytes, err := apiObject.Template.MarshalSmithyDocument()
+		if err != nil {
+			return nil, err
+		}
+
+		tfMap["template"] = string(bytes[:])
+	}
+
+	return []any{tfMap}, nil
+}
+
+func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
+	tfMap := map[string]any{}
 	if v := apiObject.BasicAuthentication; v != nil {
-		m["basic_authentication"] = flattenBasicAuthentication(v)
+		tfMap["basic_authentication"] = flattenBasicAuthentication(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenBasicAuthentication(basicAuthentications []types.BasicAuthenticationConfiguration) []interface{} {
-	BasicAuthenticationList := []interface{}{}
+func flattenBasicAuthentication(apiObject []types.BasicAuthenticationConfiguration) []any {
+	tfList := []any{}
 
-	for _, basicAuthentication := range basicAuthentications {
-		m := map[string]interface{}{
+	for _, basicAuthentication := range apiObject {
+		tfMap := map[string]any{
 			"credentials":  aws.ToString(basicAuthentication.Credentials),
 			"host":         aws.ToString(basicAuthentication.Host),
 			names.AttrPort: aws.ToInt32(basicAuthentication.Port),
 		}
 
-		BasicAuthenticationList = append(BasicAuthenticationList, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return BasicAuthenticationList
+	return tfList
 }
 
-func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []interface{} {
+func flattenProxyConfiguration(apiObject *types.ProxyConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"host":         aws.ToString(apiObject.Host),
 		names.AttrPort: aws.ToInt32(apiObject.Port),
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		m["credentials"] = aws.ToString(v)
+		tfMap["credentials"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenURLs(apiObject *types.Urls) []interface{} {
+func flattenURLs(apiObject *types.Urls) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SeedUrlConfiguration; v != nil {
-		m["seed_url_configuration"] = flattenSeedURLConfiguration(v)
+		tfMap["seed_url_configuration"] = flattenSeedURLConfiguration(v)
 	}
 
 	if v := apiObject.SiteMapsConfiguration; v != nil {
-		m["site_maps_configuration"] = flattenSiteMapsConfiguration(v)
+		tfMap["site_maps_configuration"] = flattenSiteMapsConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenSeedURLConfiguration(apiObject *types.SeedUrlConfiguration) []interface{} {
+func flattenSeedURLConfiguration(apiObject *types.SeedUrlConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"seed_urls":        flex.FlattenStringValueSet(apiObject.SeedUrls),
 		"web_crawler_mode": string(apiObject.WebCrawlerMode),
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []interface{} {
+func flattenSiteMapsConfiguration(apiObject *types.SiteMapsConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"site_maps": flex.FlattenStringValueSet(apiObject.SiteMaps),
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
 // Custom Document Enrichment Configuration
-func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []interface{} {
+func flattenCustomDocumentEnrichmentConfiguration(apiObject *types.CustomDocumentEnrichmentConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.InlineConfigurations; v != nil {
-		m["inline_configurations"] = flattenInlineConfigurations(v)
+		tfMap["inline_configurations"] = flattenInlineConfigurations(v)
 	}
 
 	if v := apiObject.PostExtractionHookConfiguration; v != nil {
-		m["post_extraction_hook_configuration"] = flattenHookConfiguration(v)
+		tfMap["post_extraction_hook_configuration"] = flattenHookConfiguration(v)
 	}
 
 	if v := apiObject.PreExtractionHookConfiguration; v != nil {
-		m["pre_extraction_hook_configuration"] = flattenHookConfiguration(v)
+		tfMap["pre_extraction_hook_configuration"] = flattenHookConfiguration(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		m[names.AttrRoleARN] = aws.ToString(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocumentEnrichmentConfiguration) []interface{} {
-	inlineConfigurationList := []interface{}{}
+func flattenInlineConfigurations(apiObjects []types.InlineCustomDocumentEnrichmentConfiguration) []any {
+	tfList := []any{}
 
-	for _, inlineConfiguration := range inlineConfigurations {
-		m := map[string]interface{}{
-			"document_content_deletion": inlineConfiguration.DocumentContentDeletion,
+	for _, obj := range apiObjects {
+		tfMap := map[string]any{
+			"document_content_deletion": obj.DocumentContentDeletion,
 		}
 
-		if v := inlineConfiguration.Condition; v != nil {
-			m[names.AttrCondition] = flattenDocumentAttributeCondition(v)
+		if v := obj.Condition; v != nil {
+			tfMap[names.AttrCondition] = flattenDocumentAttributeCondition(v)
 		}
 
-		if v := inlineConfiguration.Target; v != nil {
-			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
+		if v := obj.Target; v != nil {
+			tfMap[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
-		inlineConfigurationList = append(inlineConfigurationList, m)
+		tfList = append(tfList, tfMap)
 	}
 
-	return inlineConfigurationList
+	return tfList
 }
 
-func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []interface{} {
+func flattenDocumentAttributeTarget(apiObject *types.DocumentAttributeTarget) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"target_document_attribute_value_deletion": apiObject.TargetDocumentAttributeValueDeletion,
 	}
 
 	if v := apiObject.TargetDocumentAttributeKey; v != nil {
-		m["target_document_attribute_key"] = aws.ToString(v)
+		tfMap["target_document_attribute_key"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetDocumentAttributeValue; v != nil {
-		m["target_document_attribute_value"] = flattenDocumentAttributeValue(v)
+		tfMap["target_document_attribute_value"] = flattenDocumentAttributeValue(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} {
+func flattenHookConfiguration(apiObject *types.HookConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
 		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {
-		m["invocation_condition"] = flattenDocumentAttributeCondition(v)
+		tfMap["invocation_condition"] = flattenDocumentAttributeCondition(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeCondition) []interface{} {
+func flattenDocumentAttributeCondition(apiObject *types.DocumentAttributeCondition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	tfMap := map[string]any{
 		"condition_document_attribute_key": aws.ToString(apiObject.ConditionDocumentAttributeKey),
 		"operator":                         string(apiObject.Operator),
 	}
 
 	if v := apiObject.ConditionOnValue; v != nil {
-		m["condition_on_value"] = flattenDocumentAttributeValue(v)
+		tfMap["condition_on_value"] = flattenDocumentAttributeValue(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []interface{} {
+func flattenDocumentAttributeValue(apiObject *types.DocumentAttributeValue) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	// only one of these values should be set at a time
 	if v := apiObject.DateValue; v != nil {
 		// A date expressed as an ISO 8601 string.
-		m["date_value"] = aws.ToTime(v).Format(ISO8601UTC)
+		tfMap["date_value"] = aws.ToTime(v).Format(ISO8601UTC)
 	} else if v := apiObject.StringValue; v != nil {
-		m["string_value"] = aws.ToString(v)
+		tfMap["string_value"] = aws.ToString(v)
 	} else if v := apiObject.StringListValue; v != nil {
-		m["string_list_value"] = flex.FlattenStringValueSet(v)
+		tfMap["string_list_value"] = flex.FlattenStringValueSet(v)
 	} else if v := apiObject.LongValue; v != nil {
-		m["long_value"] = aws.ToInt64(v)
+		tfMap["long_value"] = aws.ToInt64(v)
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }

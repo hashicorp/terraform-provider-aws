@@ -458,7 +458,8 @@ func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestChe
 			return fmt.Errorf("EC2 Default VPC %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.CreateDefaultVpc(ctx, &ec2.CreateDefaultVpcInput{})
+		input := ec2.CreateDefaultVpcInput{}
+		_, err := conn.CreateDefaultVpc(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error creating new default VPC: %w", err)

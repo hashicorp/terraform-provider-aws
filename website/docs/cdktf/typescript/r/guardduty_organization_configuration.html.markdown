@@ -63,14 +63,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of `autoEnable` or `autoEnableOrganizationMembers` must be specified.
-
 This resource supports the following arguments:
 
-* `autoEnable` - (Optional) *Deprecated:* Use `autoEnableOrganizationMembers` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
-* `autoEnableOrganizationMembers` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `autoEnableOrganizationMembers` - (Required) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization.
+  Valid values are `ALL`, `NEW`, `NONE`.
 * `detectorId` - (Required) The detector ID of the GuardDuty account.
 * `datasources` - (Optional) Configuration for the collected datasources. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_organization_configuration_feature` resources](guardduty_organization_configuration_feature.html).
+
+~> **NOTE:** One of `autoEnable` or `autoEnableOrganizationMembers` must be specified.
 
 `datasources` supports the following:
 
@@ -121,9 +122,7 @@ The `ebsVolumes` block supports the following:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Identifier of the GuardDuty Detector.
+This resource exports no additional attributes.
 
 ## Import
 
@@ -157,4 +156,4 @@ Using `terraform import`, import GuardDuty Organization Configurations using the
 % terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-78779efab27e7a91a6e820374fc7c688c0b165a8ed1d602adc5ffe2a33d2d729 -->
+<!-- cache-key: cdktf-0.20.8 input-2847ef5247177108ce9a99cf77f498c80f311a4abd2fcc8ed71e0138270162e2 -->

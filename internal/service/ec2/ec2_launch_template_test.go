@@ -47,7 +47,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", "0"),
@@ -327,43 +326,6 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2LaunchTemplate_elasticInferenceAccelerator(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template1 awstypes.LaunchTemplate
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_template.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.medium"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.medium"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, "eia1.large"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template1),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.large"),
 				),
 			},
 		},
@@ -1377,6 +1339,41 @@ func TestAccEC2LaunchTemplate_NetworkInterface_ipv6AddressCount(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_NetworkInterface_enaSrd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"network_interfaces.0.ena_srd_specification.0.ena_srd_udp_specification.0.ena_srd_udp_enabled", // <-- Nested path
+						acctest.CtTrue,
+					),
+				),
 			},
 		},
 	})
@@ -3511,6 +3508,44 @@ resource "aws_launch_template" "test" {
 `, rName, deleteOnTermination)
 }
 
+func testAccLaunchTemplateConfig_networkInterfaceEnaSrd(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    device_index = 0
+    subnet_id    = aws_subnet.test.id
+
+    ena_srd_specification {
+      ena_srd_enabled = %[2]t
+
+      ena_srd_udp_specification {
+        ena_srd_udp_enabled = %[3]t
+      }
+    }
+  }
+}
+`, rName, enaSrdEnabled, enaSrdUdpEnabled)
+}
+
 func testAccLaunchTemplateConfig_ebsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -3518,18 +3553,6 @@ resource "aws_launch_template" "test" {
   name          = %[2]q
 }
 `, ebsOptimized, rName)
-}
-
-func testAccLaunchTemplateConfig_elasticInferenceAccelerator(rName, elasticInferenceAcceleratorType string) string {
-	return fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name = %[1]q
-
-  elastic_inference_accelerator {
-    type = %[2]q
-  }
-}
-`, rName, elasticInferenceAcceleratorType)
 }
 
 func testAccLaunchTemplateConfig_data(rName string) string {

@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `virtualMfaDeviceName` - (Required) The name of the virtual MFA device. Use with path to uniquely identify a virtual MFA device.
-* `path` – (Optional) The path for the virtual MFA device.
+* `path` - (Optional) The path for the virtual MFA device.
 * `tags` - (Optional) Map of resource tags for the virtual mfa device. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -94,4 +94,4 @@ Using `terraform import`, import IAM Virtual MFA Devices using the `arn`. For ex
 % terraform import aws_iam_virtual_mfa_device.example arn:aws:iam::123456789012:mfa/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e8a74071097a35d1fabe1f8e98c50def43b822970d49ce5d2336e31e57fe8b7c -->
+<!-- cache-key: cdktf-0.20.8 input-f177af04dbb41ca8c039a9cf1354d02c17b8730a31fe1798378ca492d8985f56 -->

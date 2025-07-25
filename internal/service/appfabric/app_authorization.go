@@ -55,13 +55,9 @@ func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type appAuthorizationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appAuthorizationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*appAuthorizationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_app_authorization"
 }
 
 func (r *appAuthorizationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -406,10 +402,6 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
 	in := &appfabric.GetAppAuthorizationInput{
 		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
@@ -437,7 +429,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 }
 
 func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
 		if tfresource.NotFound(err) {
@@ -504,6 +496,7 @@ func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, ap
 }
 
 type appAuthorizationResourceModel struct {
+	framework.WithRegionModel
 	App                 types.String                                     `tfsdk:"app"`
 	AppAuthorizationARN types.String                                     `tfsdk:"arn"`
 	AppBundleARN        fwtypes.ARN                                      `tfsdk:"app_bundle_arn"`

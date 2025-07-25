@@ -52,13 +52,9 @@ func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, 
 }
 
 type knowledgeBaseResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[knowledgeBaseResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
 func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -632,7 +628,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 
@@ -693,10 +689,6 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	}
 }
 
-func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),
@@ -755,7 +747,7 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -796,6 +788,7 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 }
 
 type knowledgeBaseResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
 	Description                types.String                                                     `tfsdk:"description"`
 	FailureReasons             fwtypes.ListValueOf[types.String]                                `tfsdk:"failure_reasons"`

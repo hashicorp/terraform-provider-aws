@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
@@ -89,7 +90,7 @@ The following arguments are optional:
 
 ### `input_data_config` Configuration Block
 
-* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -165,4 +166,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.8 input-4af629e294b01ca1442c39138ff55ca609ec54b70a3b1088c1d2663747e60231 -->

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,10 +62,6 @@ func ResourceBucket() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"support_code": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,12 +73,10 @@ func ResourceBucket() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -112,7 +105,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -134,7 +127,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("bundle_id", out.BundleId)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrRegion, out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)
 	d.Set(names.AttrURL, out.Url)
 
@@ -143,7 +135,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -169,7 +161,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
-func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

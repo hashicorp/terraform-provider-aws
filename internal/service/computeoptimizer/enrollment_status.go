@@ -41,14 +41,10 @@ func newEnrollmentStatusResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type enrollmentStatusResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[enrollmentStatusResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 	framework.WithImportByID
-}
-
-func (*enrollmentStatusResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_enrollment_status"
 }
 
 func (r *enrollmentStatusResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -115,7 +111,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	data.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -181,7 +177,7 @@ func (r *enrollmentStatusResource) Update(ctx context.Context, request resource.
 		return
 	}
 
-	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFramework(ctx, output.NumberOfMemberAccountsOptedIn)
+	new.NumberOfMemberAccountsOptedIn = fwflex.Int32ToFrameworkInt64(ctx, output.NumberOfMemberAccountsOptedIn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -203,7 +199,7 @@ func findEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) (*
 }
 
 func statusEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnrollmentStatus(ctx, conn)
 
 		if tfresource.NotFound(err) {
@@ -238,6 +234,7 @@ func waitEnrollmentStatusUpdated(ctx context.Context, conn *computeoptimizer.Cli
 }
 
 type enrollmentStatusResourceModel struct {
+	framework.WithRegionModel
 	ID                            types.String   `tfsdk:"id"`
 	MemberAccountsEnrolled        types.Bool     `tfsdk:"include_member_accounts"`
 	NumberOfMemberAccountsOptedIn types.Int64    `tfsdk:"number_of_member_accounts_opted_in"`

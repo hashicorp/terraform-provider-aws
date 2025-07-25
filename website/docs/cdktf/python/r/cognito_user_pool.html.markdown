@@ -93,12 +93,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the user pool.
-
-The following arguments are optional:
-
 * `account_recovery_setting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
@@ -192,7 +190,7 @@ The following arguments are optional:
 #### pre_token_configuration_type
 
 * `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
-* `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+* `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`, `V3_0`.
 
 ### password_policy
 
@@ -288,11 +286,16 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 ### user_pool_add_ons
 
+* `advanced_security_additional_flows` - (Optional) A block to specify the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced_security_additional_flows).
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
+
+### advanced_security_additional_flows
+
+* `custom_auth_mode` - (Optional) Mode of threat protection operation in custom authentication. Valid values are `AUDIT` or `ENFORCED`. The default value is `AUDIT`.
 
 ### username_configuration
 
-* `case_sensitive` - (Required) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
+* `case_sensitive` - (Optional) Whether username case sensitivity will be applied for all users in the user pool through Cognito APIs.
 
 ### verification_message_template
 
@@ -342,4 +345,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5054bf1f8c99d38b3df5f641dc7c9e291006da93b9aaa80a66822cd21ccdfd0b -->
+<!-- cache-key: cdktf-0.20.8 input-3818f01eb26badc3e930894ec6c23f7a970c9e1316432fbaf2e86b5e425429d9 -->

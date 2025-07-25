@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,9 +18,9 @@ import (
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -200,9 +199,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -250,8 +249,14 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -260,9 +265,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_null(t *testing.T) {
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -306,8 +311,14 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyMap(t *testing.T)
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -316,9 +327,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyMap(t *testing.T)
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -396,9 +407,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_AddOnUpdate(t *testing
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -484,9 +495,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnCreate(t *t
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -620,9 +631,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnUpdate_Add(
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -708,9 +719,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_EmptyTag_OnUpdate_Repl
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -888,9 +899,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_providerOn
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1047,9 +1058,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nonOverlap
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1222,9 +1233,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_overlappin
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1311,9 +1322,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToPr
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1399,9 +1410,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_updateToRe
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1463,9 +1474,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyResou
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1519,9 +1530,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_emptyProvi
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1580,9 +1591,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullOverla
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1641,9 +1652,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_DefaultTags_nullNonOve
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1695,9 +1706,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnCreate(t
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1791,9 +1802,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_A
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1877,9 +1888,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_ComputedTag_OnUpdate_R
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -1910,7 +1921,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Def
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1959,7 +1970,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Def
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2008,7 +2019,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Def
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2038,9 +2049,9 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Def
 func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -2069,7 +2080,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Res
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2132,7 +2143,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Res
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2195,7 +2206,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags_IgnoreTags_Overlap_Res
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

@@ -50,7 +50,7 @@ func resourceInternetGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -66,7 +66,7 @@ func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceInternetGatewayAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -76,7 +76,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	igw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.InternetGatewayAttachment, error) {
 		return findInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 	}, d.IsNewResource())
 
@@ -90,15 +90,13 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	igw := outputRaw.(*awstypes.InternetGatewayAttachment)
-
 	d.Set("internet_gateway_id", igwID)
 	d.Set(names.AttrVPCID, igw.VpcId)
 
 	return diags
 }
 
-func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

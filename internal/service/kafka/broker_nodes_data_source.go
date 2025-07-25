@@ -67,7 +67,7 @@ func dataSourceBrokerNodes() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -97,10 +97,10 @@ func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta
 		return cmp.Compare(aws.ToFloat64(a.BrokerNodeInfo.BrokerId), aws.ToFloat64(b.BrokerNodeInfo.BrokerId))
 	})
 
-	tfList := []interface{}{}
+	tfList := []any{}
 	for _, apiObject := range nodeInfos {
 		brokerNodeInfo := apiObject.BrokerNodeInfo
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"attached_eni_id":       aws.ToString(brokerNodeInfo.AttachedENIId),
 			"broker_id":             aws.ToFloat64(brokerNodeInfo.BrokerId),
 			"client_subnet":         aws.ToString(brokerNodeInfo.ClientSubnet),

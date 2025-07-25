@@ -48,13 +48,9 @@ func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type resourceGatewayResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceGatewayResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*resourceGatewayResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_gateway"
 }
 
 func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -280,10 +276,6 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *resourceGatewayResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {
 	input := vpclattice.GetResourceGatewayInput{
 		ResourceGatewayIdentifier: aws.String(id),
@@ -310,7 +302,7 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 }
 
 func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -361,6 +353,7 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 }
 
 type resourceGatewayResourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String                                              `tfsdk:"arn"`
 	ID               types.String                                              `tfsdk:"id"`
 	IPAddressType    fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`

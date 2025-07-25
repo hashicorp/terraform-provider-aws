@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,8 +48,6 @@ func resourceVocabulary() *schema.Resource {
 			// https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html
 			Delete: schema.DefaultTimeout(100 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -106,7 +103,7 @@ func resourceVocabulary() *schema.Resource {
 	}
 }
 
-func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -138,7 +135,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -174,12 +171,12 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceVocabularyRead(ctx, d, meta)
 }
 
-func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -189,10 +186,11 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Vocabulary: %s", d.Id())
-	_, err = conn.DeleteVocabulary(ctx, &connect.DeleteVocabularyInput{
+	input := connect.DeleteVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
-	})
+	}
+	_, err = conn.DeleteVocabulary(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -259,7 +257,7 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 }
 
 func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
 		if tfresource.NotFound(err) {

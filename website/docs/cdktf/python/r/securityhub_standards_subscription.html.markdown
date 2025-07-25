@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         SecurityhubStandardsSubscription(self, "pci_321",
             depends_on=[example],
-            standards_arn="arn:aws:securityhub:${" + current.name + "}::standards/pci-dss/v/3.2.1"
+            standards_arn="arn:aws:securityhub:${" + current.region + "}::standards/pci-dss/v/3.2.1"
         )
 ```
 
@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standards_arn` - (Required) The ARN of a standard - see below.
 
 Currently available standards (remember to replace `${var.partition}` and `${var.region}` as appropriate):
@@ -63,6 +64,13 @@ Currently available standards (remember to replace `${var.partition}` and `${var
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of a resource that represents your subscription to a supported standard.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 
@@ -127,4 +135,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc0e821402cbe9c5d05c2a06a4c4a136423a27592e2e2dc7b6613093e3784e9 -->
+<!-- cache-key: cdktf-0.20.8 input-4302e6d9436e8418e7cba5157154103bb04347ee4a2f41f175dd718ddbccf428 -->

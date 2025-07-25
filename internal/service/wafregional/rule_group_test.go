@@ -471,9 +471,9 @@ func computeActivatedRuleWithRuleId(rule *awstypes.Rule, actionType string, prio
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
-		m := map[string]interface{}{
-			names.AttrAction: []interface{}{
-				map[string]interface{}{
+		m := map[string]any{
+			names.AttrAction: []any{
+				map[string]any{
 					names.AttrType: actionType,
 				},
 			},

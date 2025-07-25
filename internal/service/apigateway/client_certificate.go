@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,12 +61,10 @@ func resourceClientCertificate() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -90,7 +87,7 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -123,7 +120,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -149,7 +146,7 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 

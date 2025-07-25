@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
@@ -94,8 +93,8 @@ func newAdminAccountSweeper(resource *schema.Resource, d *schema.ResourceData, c
 	}
 }
 
-func (aas adminAccountSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := aas.sweepable.Delete(ctx, timeout, optFns...)
+func (aas adminAccountSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	err := aas.sweepable.Delete(ctx, optFns...)
 	if err != nil && strings.Contains(err.Error(), "AccessDeniedException") {
 		tflog.Warn(ctx, "Skipping resource", map[string]any{
 			"attr.account_id": aas.d.Get(names.AttrAccountID),

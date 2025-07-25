@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -124,12 +123,10 @@ func resourceClusterSnapshot() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -143,7 +140,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.InvalidDBClusterStateFault](ctx, timeout, func() (any, error) {
 		return conn.CreateDBClusterSnapshot(ctx, input)
 	})
 
@@ -174,7 +171,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -220,7 +217,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -245,7 +242,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -324,7 +321,7 @@ func findDBClusterSnapshots(ctx context.Context, conn *rds.Client, input *rds.De
 }
 
 func statusDBClusterSnapshot(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

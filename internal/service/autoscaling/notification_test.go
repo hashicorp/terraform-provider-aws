@@ -117,7 +117,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	var groups []string
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		groups = append(groups, fmt.Sprintf("%s-%d", rName, i))
 	}
 

@@ -29,16 +29,17 @@ import (
 
 // @SDKResource("aws_devicefarm_device_pool", name="Device Pool")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.DevicePool")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
 		ReadWithoutTimeout:   resourceDevicePoolRead,
 		UpdateWithoutTimeout: resourceDevicePoolUpdate,
 		DeleteWithoutTimeout: resourceDevicePoolDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -93,11 +94,10 @@ func resourceDevicePool() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -131,7 +131,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -167,7 +167,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -206,7 +206,7 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDevicePoolRead(ctx, d, meta)...)
 }
 
-func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -256,7 +256,7 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 
 	for _, r := range s.List() {
 		rule := awstypes.Rule{}
-		tfMap := r.(map[string]interface{})
+		tfMap := r.(map[string]any)
 
 		if v, ok := tfMap["attribute"].(string); ok && v != "" {
 			rule.Attribute = awstypes.DeviceAttribute(v)
@@ -275,14 +275,14 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 	return rules
 }
 
-func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []awstypes.Rule) []map[string]any {
 	if len(list) == 0 {
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0, len(list))
+	result := make([]map[string]any, 0, len(list))
 	for _, setting := range list {
-		l := map[string]interface{}{}
+		l := map[string]any{}
 
 		l["attribute"] = string(setting.Attribute)
 		l["operator"] = string(setting.Operator)

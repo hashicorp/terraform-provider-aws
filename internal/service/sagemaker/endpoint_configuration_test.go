@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -871,11 +872,23 @@ func TestAccSageMakerEndpointConfiguration_upgradeToEnableSSMAccess(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccEndpointConfigurationConfig_basic(rName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -970,7 +983,7 @@ func testAccCheckEndpointConfigurationDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Endpoint Configuration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Endpoint Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -981,11 +994,11 @@ func testAccCheckEndpointConfigurationExists(ctx context.Context, n string) reso
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SageMaker endpoint config not found: %s", n)
+			return fmt.Errorf("SageMaker AI endpoint config not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker endpoint config ID is set")
+			return fmt.Errorf("no SageMaker AI endpoint config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -1172,6 +1185,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1414,6 +1428,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1479,6 +1494,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1521,6 +1537,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1560,6 +1577,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1597,6 +1615,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_endpoint_configuration" "test" {
@@ -1746,7 +1765,7 @@ data "aws_iam_policy_document" "managed_instance_scaling_test_policy" {
 
 resource "aws_iam_policy" "managed_instance_scaling_test" {
   name        = %[1]q
-  description = "Allow SageMaker to create model"
+  description = "Allow SageMaker AI to create model"
   policy      = data.aws_iam_policy_document.managed_instance_scaling_test_policy.json
 }
 

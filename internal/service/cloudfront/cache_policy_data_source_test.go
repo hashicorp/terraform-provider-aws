@@ -27,7 +27,8 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "default_ttl", resourceName, "default_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "min_ttl", resourceName, "min_ttl"),
@@ -45,6 +46,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_string_behavior", resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_string_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_strings.#", resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.query_strings_config.0.query_strings.#"),
 
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "default_ttl", resourceName, "default_ttl"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "min_ttl", resourceName, "min_ttl"),

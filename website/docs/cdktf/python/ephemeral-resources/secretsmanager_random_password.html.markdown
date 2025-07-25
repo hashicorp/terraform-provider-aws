@@ -29,6 +29,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.
@@ -44,4 +45,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `random_password` - Random password.
 
-<!-- cache-key: cdktf-0.20.8 input-73e14206197c77212c7f407513592900ef8708f5719029d6f3f62dd6dd4baf77 -->
+<!-- cache-key: cdktf-0.20.8 input-a7e8ee1e60360baca80276fae2937776039b823601fcd88b07c9fdd317966161 -->
