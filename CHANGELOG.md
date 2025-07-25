@@ -1,5 +1,22 @@
 ## 6.6.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_globalaccelerator_custom_routing_endpoint_group: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
+* resource/aws_globalaccelerator_custom_routing_listener: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
+* resource/aws_globalaccelerator_endpoint_group: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
+* resource/aws_globalaccelerator_listener: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
+* resource/aws_imagebuilder_container_recipe: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_distribution_configuration: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_image: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_image_pipeline: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_image_recipe: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_infrastructure_configuration: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_imagebuilder_workflow: Add resource identity support ([#43540](https://github.com/hashicorp/terraform-provider-aws/issues/43540))
+* resource/aws_inspector_assessment_target: Add resource identity support ([#43542](https://github.com/hashicorp/terraform-provider-aws/issues/43542))
+* resource/aws_inspector_assessment_template: Add resource identity support ([#43542](https://github.com/hashicorp/terraform-provider-aws/issues/43542))
+* resource/aws_inspector_resource_group: Add resource identity support ([#43542](https://github.com/hashicorp/terraform-provider-aws/issues/43542))
+
 ## 6.5.0 (July 24, 2025)
 
 NOTES:
