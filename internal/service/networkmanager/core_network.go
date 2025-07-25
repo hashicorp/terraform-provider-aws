@@ -43,7 +43,9 @@ const (
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
+// @Testing(importIgnore="create_base_policy")
 func resourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,
