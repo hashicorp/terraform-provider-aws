@@ -48,7 +48,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "blocked_outputs_messaging", "test"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.filters_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "contextual_grounding_policy_config.0.filters_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "0"),

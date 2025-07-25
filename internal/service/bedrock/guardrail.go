@@ -134,6 +134,9 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"tier_config": framework.ResourceOptionalComputedListOfObjectsAttribute[guardrailContentFiltersTierConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+					},
 					Blocks: map[string]schema.Block{
 						"filters_config": schema.SetNestedBlock{
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[guardrailContentFilterConfigModel](ctx),
@@ -150,20 +153,6 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterType](),
-									},
-								},
-							},
-						},
-						"tier_config": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailContentFiltersTierConfigModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"tier_name": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFiltersTierName](),
-										Required:   true,
 									},
 								},
 							},
