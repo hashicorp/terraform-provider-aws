@@ -294,9 +294,9 @@ resource "aws_bedrock_guardrail" "test" {
       output_strength = "HIGH"
       type            = "VIOLENCE"
     }
-	tier_config {
-		name = "STANDARD"
-	}
+    tier_config {
+      name = "STANDARD"
+    }
   }
 
   contextual_grounding_policy_config {
@@ -334,9 +334,9 @@ resource "aws_bedrock_guardrail" "test" {
       type       = "DENY"
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
-	tier_config {
-		name = "STANDARD"
-	}
+    tier_config {
+      name = "STANDARD"
+    }
   }
 
   word_policy_config {
