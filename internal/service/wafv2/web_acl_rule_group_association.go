@@ -24,10 +24,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	webACLRuleGroupAssociationResourceIDPartCount = 3
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -96,8 +101,10 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 			"override_action": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					stringvalidator.OneOf("none", "count"),
@@ -182,6 +189,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	overrideAction := plan.OverrideAction.ValueString()
 	if overrideAction == "" {
 		overrideAction = "none"
+		plan.OverrideAction = types.StringValue("none") // Set the default in the plan
 	}
 
 	if overrideAction == "none" {
@@ -231,12 +239,21 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		return
 	}
 
-	// Set the ID as a combination that uniquely identifies this association
-	// Format: webACLARN/ruleName/ruleGroupARN (using slashes for consistency with other WAFv2 resources)
-	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s",
+	// Set the ID using the standard flex utility with comma separators
+	// Format: webACLARN,ruleName,ruleGroupARN
+	id, err := flex.FlattenResourceId([]string{
 		plan.WebACLARN.ValueString(),
 		plan.RuleName.ValueString(),
-		plan.RuleGroupARN.ValueString()))
+		plan.RuleGroupARN.ValueString(),
+	}, webACLRuleGroupAssociationResourceIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating resource ID",
+			fmt.Sprintf("Could not create resource ID: %s", err),
+		)
+		return
+	}
+	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -250,20 +267,20 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 
 	conn := r.Meta().WAFV2Client(ctx)
 
-	// Parse the ID to get Web ACL ARN, rule name, and rule group ARN
-	// Format: webACLARN/ruleName/ruleGroupARN
-	idParts := strings.SplitN(state.ID.ValueString(), "/", 3)
-	if len(idParts) != 3 {
+	// Parse the ID using the standard flex utility
+	// Format: webACLARN,ruleName,ruleGroupARN
+	parts, err := flex.ExpandResourceId(state.ID.ValueString(), webACLRuleGroupAssociationResourceIDPartCount, false)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Resource ID",
-			"Resource ID should be in format 'webACLARN/ruleName/ruleGroupARN'",
+			fmt.Sprintf("Could not parse resource ID: %s", err),
 		)
 		return
 	}
 
-	webACLARN := idParts[0]
-	ruleName := idParts[1]
-	ruleGroupARN := idParts[2]
+	webACLARN := parts[0]
+	ruleName := parts[1]
+	ruleGroupARN := parts[2]
 
 	// Parse Web ACL ARN to get ID, name, and scope
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -360,19 +377,19 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 
 	conn := r.Meta().WAFV2Client(ctx)
 
-	// Parse the ID to get Web ACL ARN, rule name, and rule group ARN
-	// Format: webACLARN/ruleName/ruleGroupARN
-	idParts := strings.SplitN(state.ID.ValueString(), "/", 3)
-	if len(idParts) != 3 {
+	// Parse the ID using the standard flex utility
+	// Format: webACLARN,ruleName,ruleGroupARN
+	parts, err := flex.ExpandResourceId(state.ID.ValueString(), webACLRuleGroupAssociationResourceIDPartCount, false)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Resource ID",
-			"Resource ID should be in format 'webACLARN/ruleName/ruleGroupARN'",
+			fmt.Sprintf("Could not parse resource ID: %s", err),
 		)
 		return
 	}
 
-	webACLARN := idParts[0]
-	ruleName := idParts[1]
+	webACLARN := parts[0]
+	ruleName := parts[1]
 
 	// Parse Web ACL ARN to get ID, name, and scope
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -474,9 +491,17 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		return
 	}
 
-	// Set the ID in the expected format for Read
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"),
-		fmt.Sprintf("%s/%s/%s", webACLARN, ruleName, ruleGroupARN))...)
+	// Set the ID using the standard flex utility with comma separators
+	id, err := flex.FlattenResourceId([]string{webACLARN, ruleName, ruleGroupARN}, webACLRuleGroupAssociationResourceIDPartCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating resource ID",
+			fmt.Sprintf("Could not create resource ID: %s", err),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_arn"), ruleGroupARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)

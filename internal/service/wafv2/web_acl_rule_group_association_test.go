@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -226,16 +227,16 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			// Parse the ID to get Web ACL ARN, rule name, and rule group ARN
-			// Format: webACLARN/ruleName/ruleGroupARN
-			idParts := strings.SplitN(rs.Primary.ID, "/", 3)
-			if len(idParts) != 3 {
+			// Parse the ID using the standard flex utility
+			// Format: webACLARN,ruleName,ruleGroupARN
+			parts, err := flex.ExpandResourceId(rs.Primary.ID, 3, false)
+			if err != nil {
 				continue
 			}
 
-			webACLARN := idParts[0]
-			ruleName := idParts[1]
-			ruleGroupARN := idParts[2]
+			webACLARN := parts[0]
+			ruleName := parts[1]
+			ruleGroupARN := parts[2]
 
 			// Parse Web ACL ARN to get ID, name, and scope
 			webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -279,16 +280,16 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 			return fmt.Errorf("No WAFv2 WebACLRuleGroupAssociation ID is set")
 		}
 
-		// Parse the ID to get Web ACL ARN, rule name, and rule group ARN
-		// Format: webACLARN/ruleName/ruleGroupARN
-		idParts := strings.SplitN(rs.Primary.ID, "/", 3)
-		if len(idParts) != 3 {
+		// Parse the ID using the standard flex utility
+		// Format: webACLARN,ruleName,ruleGroupARN
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, 3, false)
+		if err != nil {
 			return fmt.Errorf("Invalid ID format: %s", rs.Primary.ID)
 		}
 
-		webACLARN := idParts[0]
-		ruleName := idParts[1]
-		ruleGroupARN := idParts[2]
+		webACLARN := parts[0]
+		ruleName := parts[1]
+		ruleGroupARN := parts[2]
 
 		// Parse Web ACL ARN to get ID, name, and scope
 		webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -389,6 +390,10 @@ resource "aws_wafv2_web_acl" "test" {
     metric_name                = %[1]q
     sampled_requests_enabled   = false
   }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
@@ -447,6 +452,10 @@ resource "aws_wafv2_web_acl" "test" {
     cloudwatch_metrics_enabled = false
     metric_name                = %[1]q
     sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
