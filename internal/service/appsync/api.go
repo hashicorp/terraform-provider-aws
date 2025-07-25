@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -42,7 +41,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(importStateIdAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
-// @Testing(preIdentityVersion="v6.3.0")
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAPI{}
 
@@ -59,6 +57,7 @@ const (
 
 type resourceAPI struct {
 	framework.ResourceWithModel[resourceAPIModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -308,7 +307,7 @@ func (r *resourceAPI) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	apiId := state.ApiId.ValueString()
-	fmt.Println("hello", apiId)
+	fmt.Println("Read api id", apiId)
 
 	out, err := findAPIByID(ctx, conn, apiId)
 	if tfresource.NotFound(err) {
@@ -369,7 +368,6 @@ func (r *resourceAPI) Update(ctx context.Context, req resource.UpdateRequest, re
 			return
 		}
 	}
-
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan), smerr.ID, plan.ApiId.String())
 }
 
@@ -402,10 +400,6 @@ func (r *resourceAPI) Delete(ctx context.Context, req resource.DeleteRequest, re
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
 		return
 	}
-}
-
-func (r *resourceAPI) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 const (
