@@ -93,6 +93,10 @@ func TestAccIoTThingType_full(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "foo"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "bar"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "baz"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.mqtt_configuration.0.propagating_attributes.0.user_property_key", "iot:ClientId"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.mqtt_configuration.0.propagating_attributes.0.connection_attribute", "iot:ClientId"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.mqtt_configuration.0.propagating_attributes.1.user_property_key", "test"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.mqtt_configuration.0.propagating_attributes.1.thing_attribute", "attribute"),
 				),
 			},
 			{
@@ -214,6 +218,18 @@ resource "aws_iot_thing_type" "test" {
   properties {
     description           = "MyDescription"
     searchable_attributes = ["foo", "bar", "baz"]
+		mqtt5_configuration {
+			propagating_attributes = [
+				{
+					user_property_key = "iot:ClientId"
+					connection_attribute = "iot:ClientId"
+				},
+				{
+					user_property_key = "test"
+					thing_attribute = "attribute"
+				}
+			]
+		}
   }
 }
 `, rName, deprecated)
