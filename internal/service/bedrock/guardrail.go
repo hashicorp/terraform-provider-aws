@@ -162,7 +162,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrName: schema.StringAttribute{
+									"tier_name": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFiltersTierName](),
 										Required:   true,
 									},
@@ -285,7 +285,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrName: schema.StringAttribute{
+									"tier_name": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicsTierName](),
 										Required:   true,
 									},
@@ -733,7 +733,7 @@ type guardrailContentFilterConfigModel struct {
 }
 
 type guardrailContentFiltersTierConfigModel struct {
-	TierName fwtypes.StringEnum[awstypes.GuardrailContentFiltersTierName] `tfsdk:"name"`
+	TierName fwtypes.StringEnum[awstypes.GuardrailContentFiltersTierName] `tfsdk:"tier_name"`
 }
 
 type contextualGroundingPolicyConfig struct {
@@ -779,7 +779,7 @@ type guardrailTopicConfigModel struct {
 }
 
 type guardrailTopicsTierConfigModel struct {
-	TierName fwtypes.StringEnum[awstypes.GuardrailTopicsTierName] `tfsdk:"name"`
+	TierName fwtypes.StringEnum[awstypes.GuardrailTopicsTierName] `tfsdk:"tier_name"`
 }
 
 type wordPolicyConfig struct {

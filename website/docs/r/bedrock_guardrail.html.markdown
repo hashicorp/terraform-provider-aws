@@ -35,7 +35,7 @@ resource "aws_bedrock_guardrail" "example" {
       type            = "HATE"
     }
     tier_config {
-      name = "STANDARD"
+      tier_name = "STANDARD"
     }
   }
 
@@ -61,7 +61,7 @@ resource "aws_bedrock_guardrail" "example" {
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
     tier_config {
-      name = "CLASSIC"
+      tier_name = "CLASSIC"
     }
   }
 
@@ -102,8 +102,7 @@ The `content_policy_config` configuration block supports the following arguments
 
 * `filters_config` - (Optional) Set of content filter configs in content policy.
   See [Filters Config](#content-filters-config) for more information.
-
-* `tier_config` - (Optional) configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
+* `tier_config` - (Optional) Configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
 
 #### Content Filters Config
 
@@ -115,9 +114,9 @@ The `filters_config` configuration block supports the following arguments:
 
 #### Content Tier Config
 
-The tier_config configuration block supports the following arguments:
+The `tier_config` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Contextual Grounding Policy Config
 
@@ -140,8 +139,8 @@ The `filters_config` configuration block supports the following arguments:
 
 ### Topic Policy Config
 
+* `tier_config` - (Optional) Configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
 * `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
-* `tier_config` - (Optional) configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
 
 #### Topics Config
 
@@ -152,9 +151,9 @@ The `filters_config` configuration block supports the following arguments:
 
 #### Topics Tier Config
 
-The tier_config configuration block supports the following arguments:
+The `tier_config` configuration block supports the following arguments:
 
-* `name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Sensitive Information Policy Config
 
