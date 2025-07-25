@@ -5,13 +5,19 @@ Finds and optionally fixes non-smarterr error patterns in Terraform AWS Provider
 ## Usage
 
 ```bash
-go build .
+make smarterr-parser
 
-# Analyze only
-./smarterr-parser <folder_path>
+# Analyze a folder
+./smarterr-parser --directory <folder_path>
 
-# Analyze and auto-fix bare return statements
-./smarterr-parser <folder_path> --fix
+# Analyze and auto-fix bare return statements in a folder
+./smarterr-parser --directory <folder_path> --fix
+
+# Analyze a file
+./smarterr-parser --file <file_path>
+
+# Analyze and auto-fix bare return statements in a file
+./smarterr-parser --file <file_path> --fix
 ```
 
 ## Output
