@@ -118,8 +118,8 @@ func RetryGWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duratio
 }
 
 // RetryWhenAWSErrCodeContains retries the specified function when it returns an AWS error containing the specified code.
-func RetryWhenAWSErrCodeContains(ctx context.Context, timeout time.Duration, f func() (any, error), code string) (any, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenAWSErrCodeContains[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), code string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeContains(err, code) {
 			return true, err
 		}
@@ -149,8 +149,8 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 	})
 }
 
-func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsOneOf2[T any, T1, T2 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) {
 			return true, err
 		}
@@ -159,8 +159,8 @@ func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration,
 	})
 }
 
-func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsOneOf3[T any, T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
 			return true, err
 		}
@@ -169,8 +169,8 @@ func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Durat
 	})
 }
 
-func RetryWhenIsOneOf4[T1, T2, T3, T4 error](ctx context.Context, timeout time.Duration, f func() (any, error)) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsOneOf4[T any, T1, T2, T3, T4 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) || errs.IsA[T4](err) {
 			return true, err
 		}
@@ -362,4 +362,12 @@ func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, opt
 	// resultErr takes precedence over waitErr if both are set because it is
 	// more likely to be useful
 	return resultErr
+}
+
+type retryable func(error) (bool, error)
+
+func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
+	return retry.Op(f).If(func(_ T, err error) (bool, error) {
+		return retryable(err)
+	})(ctx, timeout, opts...)
 }
