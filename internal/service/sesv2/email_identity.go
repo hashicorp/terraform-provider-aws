@@ -89,8 +89,9 @@ func resourceEmailIdentity() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.DkimSigningKeyLength](),
 						},
 						"signing_attributes_origin": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.DkimSigningAttributesOrigin](),
 						},
 						names.AttrStatus: {
 							Type:     schema.TypeString,
@@ -309,6 +310,13 @@ func expandDKIMSigningAttributes(tfMap map[string]any) *types.DkimSigningAttribu
 func getSigningAttributesOrigin(tfMap map[string]any) types.DkimSigningAttributesOrigin {
 	if tfMap == nil {
 		return types.DkimSigningAttributesOriginAwsSes
+	}
+
+	// Return the explicitly set value if it's not DkimSigningAttributesOriginAwsSes or DkimSigningAttributesOriginExternal
+	if v, ok := tfMap["signing_attributes_origin"].(string); ok && v != "" &&
+		v != string(types.DkimSigningAttributesOriginAwsSes) &&
+		v != string(types.DkimSigningAttributesOriginExternal) {
+		return types.DkimSigningAttributesOrigin(v)
 	}
 
 	if v, ok := tfMap["next_signing_key_length"].(string); ok && v != "" {
