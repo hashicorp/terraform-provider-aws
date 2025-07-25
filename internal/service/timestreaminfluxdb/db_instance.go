@@ -376,12 +376,12 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	out, err := conn.CreateDbInstance(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, "name", plan.Name.String())
 		return
 	}
 
 	if out == nil || out.Id == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "name", plan.Name.String())
 		return
 	}
 
