@@ -157,7 +157,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}, errCodeAccessDenied)
 
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		smerr.AddError(ctx, &response.Diagnostics, err, name)
 
 		return
 	}

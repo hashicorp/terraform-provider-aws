@@ -53,7 +53,7 @@ This document is designed to enable **AI systems** (and humans) to fully and acc
 
 smarterr's `EnrichAppend`, `AddError`, and `Append` take variadic keyvals. Where possible include `smerr.ID` (key) and the ID (value) (such as `d.Id()`, `state.RuleName.String()`, `plan.ResourceArn.String()`).
 
-- If **no ID available** (e.g., early in `Create`), something like `smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))`, without ID, is okay
+- If **no ID available** (e.g., early in `Create` before the first flex.Flatten), something like `smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))`, without ID, is okay
 - But, if **ID is available** (e.g., read, update, delete, middle-to-end of create), use something like `smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state), smerr.ID, state.RuleName.String())`, **with the ID**
 - IDs may be names, ARNs, IDs, combinations, etc.
 - In SDK, you cannot use `d.Id()` until after `d.SetId()`

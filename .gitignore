@@ -53,3 +53,6 @@ awssdk.patch
 
 # go-vcr recordings
 /testdata
+
+#tooling
+tools/smarterr-parser/main

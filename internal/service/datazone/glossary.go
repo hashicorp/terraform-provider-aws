@@ -101,11 +101,11 @@ func (r *glossaryResource) Create(ctx context.Context, req resource.CreateReques
 	}
 	out, err := conn.CreateGlossary(ctx, in)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, plan.Name.String())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), plan.Name.String())
 		return
 	}
 

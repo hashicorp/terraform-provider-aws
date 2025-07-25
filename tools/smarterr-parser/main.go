@@ -7,10 +7,45 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 )
+
+const (
+	sdkdiagAppendFromErrPattern                    = `sdkdiag\.AppendFromErr\s*\(`
+	sdkdiagAppendErrorfPattern                     = `sdkdiag\.AppendErrorf\s*\(`
+	createAppendDiagErrorPattern                   = `create\.AppendDiagError\s*\(`
+	responseDiagnosticsAddErrorPattern             = `response\.Diagnostics\.AddError\s*\(`
+	respDiagnosticsAddErrorPattern                 = `resp\.Diagnostics\.AddError\s*\(`
+	createAddErrorPattern                          = `create\.AddError\s*\(`
+	bareReturnNilErrPattern                        = `^\s*return\s+nil\s*,\s*err\s*$`
+	returnRetryNotFoundErrorPattern                = `return\s+nil\s*,\s*&retry\.NotFoundError\s*{`
+	returnTfResourceNewEmptyResultErrorPattern     = `return\s+nil\s*,\s*tfresource\.NewEmptyResultError\s*\(`
+	returnTfResourceAssertSingleValueResultPattern = `return\s+tfresource\.AssertSingleValueResult\s*\(`
+	respDiagnosticsAppendPattern                   = `resp\.Diagnostics\.Append\s*\(`
+	responseDiagnosticsAppendPattern               = `response\.Diagnostics\.Append\s*\(`
+	diagsAddErrorPattern                           = `diags\.AddError\s*\(`
+	diagnosticsAddErrorPattern                     = `diagnostics\.AddError\s*\(`
+)
+
+var patterns = map[string]*regexp.Regexp{
+	"sdkdiag.AppendFromErr":                     regexp.MustCompile(sdkdiagAppendFromErrPattern),
+	"sdkdiag.AppendErrorf":                      regexp.MustCompile(sdkdiagAppendErrorfPattern),
+	"create.AppendDiagError":                    regexp.MustCompile(createAppendDiagErrorPattern),
+	"response.Diagnostics.AddError":             regexp.MustCompile(responseDiagnosticsAddErrorPattern),
+	"resp.Diagnostics.AddError":                 regexp.MustCompile(respDiagnosticsAddErrorPattern),
+	"create.AddError":                           regexp.MustCompile(createAddErrorPattern),
+	"bare_return_nil_err":                       regexp.MustCompile(bareReturnNilErrPattern),
+	"return_retry_NotFoundError":                regexp.MustCompile(returnRetryNotFoundErrorPattern),
+	"return_tfresource_NewEmptyResultError":     regexp.MustCompile(returnTfResourceNewEmptyResultErrorPattern),
+	"return_tfresource_AssertSingleValueResult": regexp.MustCompile(returnTfResourceAssertSingleValueResultPattern),
+	"resp.Diagnostics.Append":                   regexp.MustCompile(respDiagnosticsAppendPattern),
+	"response.Diagnostics.Append":               regexp.MustCompile(responseDiagnosticsAppendPattern),
+	"diags.AddError":                            regexp.MustCompile(diagsAddErrorPattern),
+	"diagnostics.AddError":                      regexp.MustCompile(diagnosticsAddErrorPattern),
+}
 
 type FileResult struct {
 	FilePath   string
@@ -30,7 +65,7 @@ func handleArgs() ([]string, error) {
 		return nil, fmt.Errorf("not enough arguments provided\n%s", usage)
 	}
 
-	results := []FileResult{}
+	results := make([]FileResult, 0)
 	mode := os.Args[1]
 	switch mode {
 	case "--help", "-h":
@@ -43,18 +78,31 @@ func handleArgs() ([]string, error) {
 		if stat, err := os.Stat(dir); os.IsNotExist(err) || !stat.IsDir() {
 			return nil, fmt.Errorf("directory %s does not exist", dir)
 		}
-		results, err := analyzeFolder(dir)
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return nil, fmt.Errorf("error reading directory %s: %v", dir, err)
+		}
+
+		if len(entries) == 0 {
+			return nil, fmt.Errorf("directory %s is empty", dir)
+		}
+
+		err = analyzeFolder(dir, &results)
 		if err != nil {
 			return nil, fmt.Errorf("error analyzing folder: %v", err)
 		}
+		fmt.Printf("len(results): %v\n", len(results))
 		if len(os.Args) > 3 && os.Args[3] == "--fix" {
+			print("helllo")
 			err = fixFiles(results)
 			if err != nil {
 				return nil, fmt.Errorf("error fixing files: %v", err)
 			}
 			// Inform about fixed files.
 			fmt.Printf("Fixed %d files with bare return statements\n", countFilesWithBareReturns(results))
-			results, err = analyzeFolder(dir)
+			results = results[:0]
+			err = analyzeFolder(dir, &results)
 			if err != nil {
 				return nil, fmt.Errorf("error re-analyzing folder: %v", err)
 			}
@@ -63,6 +111,7 @@ func handleArgs() ([]string, error) {
 		if len(os.Args) < 3 {
 			return nil, fmt.Errorf("usage: smarterr-parser --file <file_path> [--fix]")
 		}
+		fmt.Println("hello1")
 		filePath := os.Args[2]
 		if stat, err := os.Stat(filePath); os.IsNotExist(err) || stat.IsDir() {
 			return nil, fmt.Errorf("file %s does not exist", filePath)
@@ -71,6 +120,7 @@ func handleArgs() ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error analyzing file: %v", err)
 		}
+		fmt.Printf("len(r.Errors): %v\n", len(r.Errors))
 		if len(os.Args) > 3 && os.Args[3] == "--fix" {
 			for _, errorMatch := range r.Errors {
 				if errorMatch.Pattern == "bare_return_nil_err" {
@@ -87,10 +137,12 @@ func handleArgs() ([]string, error) {
 				return nil, err
 			}
 		}
-		results = []FileResult{r}
+		results = append(results, r)
+		fmt.Printf("len(results): %v\n", len(results))
 	default:
 		return nil, fmt.Errorf("%s", usage)
 	}
+	fmt.Printf("len(results): %v\n", len(results))
 	return combineResults(results), nil
 }
 func main() {
@@ -108,11 +160,18 @@ func main() {
 	for _, result := range resultStrings {
 		fmt.Println(result)
 	}
+	cmd := exec.Command("echo", "Hello, World!")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error executing command: %v\n", err)
+	} else {
+		fmt.Printf("Command output:\n%s\n", output)
+	}
+
 }
 
 // analyzeFolder walks through the folder and analyzes all .go files
-func analyzeFolder(folderPath string) ([]FileResult, error) {
-	var results []FileResult
+func analyzeFolder(folderPath string, results *[]FileResult) error {
 
 	err := filepath.Walk(folderPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -130,13 +189,13 @@ func analyzeFolder(folderPath string) ([]FileResult, error) {
 		}
 
 		if result.IsResource && len(result.Errors) > 0 {
-			results = append(results, result)
+			*results = append(*results, result)
 		}
 
 		return nil
 	})
 
-	return results, err
+	return err
 }
 
 func analyzeFile(filePath string) (FileResult, error) {
@@ -207,22 +266,6 @@ func isResourceOrDataSource(line string) bool {
 }
 
 func findNonSmarterrPattern(line string) string {
-	patterns := map[string]*regexp.Regexp{
-		"sdkdiag.AppendFromErr":                     regexp.MustCompile(`sdkdiag\.AppendFromErr\s*\(`),
-		"sdkdiag.AppendErrorf":                      regexp.MustCompile(`sdkdiag\.AppendErrorf\s*\(`),
-		"create.AppendDiagError":                    regexp.MustCompile(`create\.AppendDiagError\s*\(`),
-		"response.Diagnostics.AddError":             regexp.MustCompile(`response\.Diagnostics\.AddError\s*\(`),
-		"resp.Diagnostics.AddError":                 regexp.MustCompile(`resp\.Diagnostics\.AddError\s*\(`),
-		"create.AddError":                           regexp.MustCompile(`create\.AddError\s*\(`),
-		"bare_return_nil_err":                       regexp.MustCompile(`^\s*return\s+nil\s*,\s*err\s*$`),
-		"return_retry_NotFoundError":                regexp.MustCompile(`return\s+nil\s*,\s*&retry\.NotFoundError\s*{`),
-		"return_tfresource_NewEmptyResultError":     regexp.MustCompile(`return\s+nil\s*,\s*tfresource\.NewEmptyResultError\s*\(`),
-		"return_tfresource_AssertSingleValueResult": regexp.MustCompile(`return\s+tfresource\.AssertSingleValueResult\s*\(`),
-		"resp.Diagnostics.Append":                   regexp.MustCompile(`resp\.Diagnostics\.Append\s*\(`),
-		"response.Diagnostics.Append":               regexp.MustCompile(`response\.Diagnostics\.Append\s*\(`),
-		"diags.AddError":                            regexp.MustCompile(`diags\.AddError\s*\(`),
-		"diagnostics.AddError":                      regexp.MustCompile(`diagnostics\.AddError\s*\(`),
-	}
 
 	for patternName, regex := range patterns {
 		if regex.MatchString(line) {
@@ -235,7 +278,6 @@ func findNonSmarterrPattern(line string) string {
 
 func combineResults(results []FileResult) []string {
 	if len(results) == 0 {
-		fmt.Println("No non-smarterr error patterns found in resource/datasource files.")
 		return []string{}
 	}
 	resultStrings := []string{}

@@ -160,11 +160,11 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, plan.Name.String())
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failure when creating"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failure when creating"), plan.Name.String())
 		return
 	}
 	if !(out.FailureReasons == nil) && len(out.FailureReasons) > 0 {
