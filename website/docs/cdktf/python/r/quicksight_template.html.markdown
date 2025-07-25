@@ -127,6 +127,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 * `definition` - (Optional) A detailed template definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `permissions` - (Optional) A set of resource permissions on the template. Maximum of 64 items. See [permissions](#permissions).
@@ -213,4 +214,4 @@ Using `terraform import`, import a QuickSight Template using the AWS account ID 
 % terraform import aws_quicksight_template.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-684fee6425d01e2059464d789630cbb0f5fd11eece6c679b299e9511a988d107 -->
+<!-- cache-key: cdktf-0.20.8 input-93f767bc273ed3d3724331ccf314235bfd7087f558a73b6d3a3a4de4220ac02a -->

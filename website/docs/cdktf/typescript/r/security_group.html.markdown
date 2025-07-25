@@ -125,14 +125,12 @@ import { TerraformStack } from "cdktf";
 import { SecurityGroup } from "./.gen/providers/aws/security-group";
 import { VpcEndpoint } from "./.gen/providers/aws/vpc-endpoint";
 interface MyConfig {
-  serviceName: any;
   vpcId: any;
 }
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string, config: MyConfig) {
     super(scope, name);
     const myEndpoint = new VpcEndpoint(this, "my_endpoint", {
-      serviceName: config.serviceName,
       vpcId: config.vpcId,
     });
     new SecurityGroup(this, "example", {
@@ -338,6 +336,7 @@ resource "null_resource" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) Security group description. Defaults to `Managed by Terraform`. Cannot be `""`. **NOTE**: This field maps to the AWS `GroupDescription` attribute, for which there is no Update API. If you'd like to classify your security groups in a way that can be updated, use `tags`.
 * `egress` - (Optional, VPC only) Configuration block for egress rules. Can be specified multiple times for each egress rule. Each egress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `ingress` - (Optional) Configuration block for ingress rules. Can be specified multiple times for each ingress rule. Each ingress block supports fields documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -433,4 +432,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_security_group.elb_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f27b2ddd1b96fb8f3101f366dcdd7ee739c133499a9b5dbadc26b5d39c054f26 -->
+<!-- cache-key: cdktf-0.20.8 input-30b7664a66000ed494f6d87b6ac7d76cbb048ba1cd60f878dd231a8b46a8de1f -->

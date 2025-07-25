@@ -39,7 +39,7 @@ func newNetworkInterfacePermissionResource(context.Context) (resource.ResourceWi
 }
 
 type networkInterfacePermissionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[networkInterfacePermissionResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
 }
@@ -182,6 +182,7 @@ func (r *networkInterfacePermissionResource) ImportState(ctx context.Context, re
 }
 
 type networkInterfacePermissionResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID                 types.String                                         `tfsdk:"aws_account_id"`
 	NetworkInterfaceID           types.String                                         `tfsdk:"network_interface_id"`
 	NetworkInterfacePermissionID types.String                                         `tfsdk:"network_interface_permission_id"`

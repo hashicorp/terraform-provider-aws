@@ -78,6 +78,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Short description of the Application Version.
 * `force_delete` - (Optional) On delete, force an Application Version to be deleted when it may be in use by multiple Elastic Beanstalk Environments.
 * `process` - (Optional) Pre-processes and validates the environment manifest (env.yaml ) and configuration files (*.config files in the .ebextensions folder) in the source bundle. Validating configuration files can identify issues prior to deploying the application version to an environment. You must turn processing on for application versions that you create using AWS CodeBuild or AWS CodeCommit. For application versions built from a source bundle in Amazon S3, processing is optional. It validates Elastic Beanstalk configuration files. It doesn’t validate your application’s configuration files, like proxy server or Docker configuration.
@@ -90,4 +91,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-d980ba6101905477f12ae1bde62eefea2484271ec160315dfdf63262aa4eb89e -->
+<!-- cache-key: cdktf-0.20.8 input-f4cf64f648f6b3fb11dc8b9bf05300e27a9b835539a1430db0a55058412aeeb1 -->

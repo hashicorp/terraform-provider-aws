@@ -538,6 +538,7 @@ func testAccDatabaseConfig_kms(rName string, dbName string, forceDestroy bool) s
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
   description             = %[1]q
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {

@@ -40,8 +40,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
 * `maxRetentionDays` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
 * `minRetentionDays` - (Required) Minimum retention period that the Logically Air Gapped Backup Vault retains recovery points.
@@ -94,4 +95,4 @@ Using `terraform import`, import Backup Logically Air Gapped Vault using the `id
 % terraform import aws_backup_logically_air_gapped_vault.example lag-example-vault
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da77f247c1e95863bf20b1db72a05ad717f04d5ae1e812521cc9b3a879256789 -->
+<!-- cache-key: cdktf-0.20.8 input-0ff68cd87217b0d55ec07fc6702526d5d80d3687ee2656847363c5409101b77a -->

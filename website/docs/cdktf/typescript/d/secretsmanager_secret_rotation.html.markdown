@@ -40,14 +40,21 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secretId` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `rotationEnabled` - ARN of the secret.
-* `rotationLambdaArn` - Decrypted part of the protected secret information that was originally provided as a string.
-* `rotationRules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
+* `rotationEnabled` - Specifies whether automatic rotation is enabled for this secret.
+* `rotationLambdaArn` - Amazon Resource Name (ARN) of the lambda function used for rotation.
+* `rotationRules` - Configuration block for rotation rules. See [`rotationRules`](#rotation_rules) below.
 
-<!-- cache-key: cdktf-0.20.8 input-2448dfcf59d864854ccf6398cd399be423918454506132f213ed03592d690dc1 -->
+### rotation_rules
+
+* `automaticallyAfterDays` - Number of days between automatic scheduled rotations of the secret.
+* `duration` - Length of the rotation window in hours.
+* `scheduleExpression` - A `cron()` or `rate()` expression that defines the schedule for rotating the secret.
+
+<!-- cache-key: cdktf-0.20.8 input-6a96b1517cfb590873948eec737398cb3347269bd8e453040d2b87ba9636bfd0 -->

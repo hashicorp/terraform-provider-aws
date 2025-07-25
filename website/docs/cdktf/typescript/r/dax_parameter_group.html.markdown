@@ -48,11 +48,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name of the parameter group.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name of the parameter group.
 * `description` - (Optional, ForceNew) A description of the parameter group.
-
-* `parameters` – (Optional) The parameters of the parameter group.
+* `parameters` - (Optional) The parameters of the parameter group.
 
 ## parameters
 
@@ -95,4 +94,4 @@ Using `terraform import`, import DAX Parameter Group using the `name`. For examp
 % terraform import aws_dax_parameter_group.example my_dax_pg
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3baebb2b38580e9504f432df3ad10f9401086de59d9fede3a77fa269c4b381fa -->
+<!-- cache-key: cdktf-0.20.8 input-e24f534e16d285d3b69705c60b61368fc5bcbb86119ac7fdadff64841c637882 -->

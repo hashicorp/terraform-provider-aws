@@ -19,7 +19,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -62,8 +61,15 @@ func resourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  instanceMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceInstanceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: instanceStateUpgradeV1,
+				Version: 1,
+			},
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -156,37 +162,19 @@ func resourceInstance() *schema.Resource {
 							},
 						},
 						"core_count": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_core_count"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 						"threads_per_core": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"cpu_threads_per_core"},
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 					},
 				},
-			},
-			"cpu_core_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_core_count is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.core_count"},
-			},
-			"cpu_threads_per_core": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				Deprecated:    "cpu_threads_per_core is deprecated. Use cpu_options instead.",
-				ConflictsWith: []string{"cpu_options.0.threads_per_core"},
 			},
 			"credit_specification": {
 				Type:     schema.TypeList,
@@ -488,7 +476,6 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
@@ -809,7 +796,6 @@ func resourceInstance() *schema.Resource {
 			"user_data": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
@@ -818,17 +804,38 @@ func resourceInstance() *schema.Resource {
 						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
 						return true
 					}
+
+					oldHashExists := old == userDataHashSum(new)
+					base64Encoded := userDataHashSum(old) == userDataHashSum(new)
+					if oldHashExists || base64Encoded {
+						return true
+					}
 					return false
 				},
-				StateFunc: func(v any) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(0, 16384),
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringLenBetween(0, 16384)),
+					func(i any, path cty.Path) diag.Diagnostics {
+						var diags diag.Diagnostics
+						v, ok := i.(string)
+						if !ok {
+							return sdkdiag.AppendErrorf(diags, "expected type to be string")
+						}
+
+						if _, err := itypes.Base64Decode(v); err == nil {
+							// value is a base46 encoded string
+							return diag.Diagnostics{
+								diag.Diagnostic{
+									Severity:      diag.Warning,
+									Summary:       "Value is base64 encoded",
+									Detail:        "The value is base64 encoded. If you want to use base64 encoding, please use the user_data_base64 argument. user_data attribute is set as cleartext in state",
+									AttributePath: path,
+								},
+							}
+						}
+
+						return diags
+					},
+				),
 			},
 			"user_data_base64": {
 				Type:          schema.TypeString,
@@ -914,7 +921,7 @@ func resourceInstance() *schema.Resource {
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
-						if o, n := diff.GetChange("user_data"); userDataHashSum(n.(string)) == o.(string) {
+						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
 							return nil
 						}
 					}
@@ -969,6 +976,23 @@ func resourceInstance() *schema.Resource {
 					return false
 				}
 
+				return true
+			}),
+			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("ipv6_address_count")
+			}),
+			customdiff.ForceNewIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if !diff.HasChange("ipv6_addresses") {
+					return false
+				}
+
+				// Don't force new if ipv6_address_count is also changing
+				// This indicates the ipv6_addresses change is computed, not user-driven
+				if diff.HasChange("ipv6_address_count") {
+					return false
+				}
+
+				// Force new only for explicit user changes to ipv6_addresses
 				return true
 			}),
 		),
@@ -1051,7 +1075,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	var output *ec2.RunInstancesOutput
-	for r := backoff.NewRetryLoop(iamPropagationTimeout); r.Continue(ctx); {
+	for l := backoff.NewLoop(iamPropagationTimeout); l.Continue(ctx); {
 		output, err = conn.RunInstances(ctx, &input)
 
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1146,7 +1170,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
@@ -1183,12 +1208,6 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("placement_partition_number", v.PartitionNumber)
 
 		d.Set("tenancy", v.Tenancy)
-	}
-
-	// preserved to maintain backward compatibility
-	if v := instance.CpuOptions; v != nil {
-		d.Set("cpu_core_count", v.CoreCount)
-		d.Set("cpu_threads_per_core", v.ThreadsPerCore)
 	}
 
 	if err := d.Set("cpu_options", flattenCPUOptions(instance.CpuOptions)); err != nil {
@@ -1393,14 +1412,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// ARN
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	// Instance attributes
 	{
@@ -1451,7 +1463,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
+				data, err := itypes.Base64Decode(aws.ToString(attr.UserData.Value))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
+				}
+				d.Set("user_data", string(data))
 			}
 		}
 	}
@@ -3105,16 +3121,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 
 	if v, ok := d.GetOk("cpu_options"); ok {
 		opts.CpuOptions = expandCPUOptions(v.([]any))
-	} else if v := d.Get("cpu_core_count").(int); v > 0 {
-		// preserved to maintain backward compatibility
-		tc := d.Get("cpu_threads_per_core").(int)
-		if tc < 0 {
-			tc = 2
-		}
-		opts.CpuOptions = &awstypes.CpuOptionsRequest{
-			CoreCount:      aws.Int32(int32(v)),
-			ThreadsPerCore: aws.Int32(int32(tc)),
-		}
 	}
 
 	if v := d.Get("hibernation"); v != "" {
@@ -4123,4 +4129,7 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 		}
 	}
 	return false
+}
+func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
 }

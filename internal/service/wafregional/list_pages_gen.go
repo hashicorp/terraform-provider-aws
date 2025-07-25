@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 )
 
-func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListActivatedRulesInRuleGroupInput, fn func(*wafregional.ListActivatedRulesInRuleGroupOutput, bool) bool) error {
+func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListActivatedRulesInRuleGroupInput, fn func(*wafregional.ListActivatedRulesInRuleGroupOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListActivatedRulesInRuleGroup(ctx, input)
+		output, err := conn.ListActivatedRulesInRuleGroup(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -25,9 +25,9 @@ func listActivatedRulesInRuleGroupPages(ctx context.Context, conn *wafregional.C
 	}
 	return nil
 }
-func listByteMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListByteMatchSetsInput, fn func(*wafregional.ListByteMatchSetsOutput, bool) bool) error {
+func listByteMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListByteMatchSetsInput, fn func(*wafregional.ListByteMatchSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListByteMatchSets(ctx, input)
+		output, err := conn.ListByteMatchSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -41,9 +41,9 @@ func listByteMatchSetsPages(ctx context.Context, conn *wafregional.Client, input
 	}
 	return nil
 }
-func listGeoMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListGeoMatchSetsInput, fn func(*wafregional.ListGeoMatchSetsOutput, bool) bool) error {
+func listGeoMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListGeoMatchSetsInput, fn func(*wafregional.ListGeoMatchSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListGeoMatchSets(ctx, input)
+		output, err := conn.ListGeoMatchSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -57,9 +57,9 @@ func listGeoMatchSetsPages(ctx context.Context, conn *wafregional.Client, input 
 	}
 	return nil
 }
-func listIPSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListIPSetsInput, fn func(*wafregional.ListIPSetsOutput, bool) bool) error {
+func listIPSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListIPSetsInput, fn func(*wafregional.ListIPSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListIPSets(ctx, input)
+		output, err := conn.ListIPSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -73,9 +73,9 @@ func listIPSetsPages(ctx context.Context, conn *wafregional.Client, input *wafre
 	}
 	return nil
 }
-func listRateBasedRulesPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRateBasedRulesInput, fn func(*wafregional.ListRateBasedRulesOutput, bool) bool) error {
+func listRateBasedRulesPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRateBasedRulesInput, fn func(*wafregional.ListRateBasedRulesOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListRateBasedRules(ctx, input)
+		output, err := conn.ListRateBasedRules(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -89,9 +89,9 @@ func listRateBasedRulesPages(ctx context.Context, conn *wafregional.Client, inpu
 	}
 	return nil
 }
-func listRegexMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRegexMatchSetsInput, fn func(*wafregional.ListRegexMatchSetsOutput, bool) bool) error {
+func listRegexMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRegexMatchSetsInput, fn func(*wafregional.ListRegexMatchSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListRegexMatchSets(ctx, input)
+		output, err := conn.ListRegexMatchSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -105,9 +105,9 @@ func listRegexMatchSetsPages(ctx context.Context, conn *wafregional.Client, inpu
 	}
 	return nil
 }
-func listRegexPatternSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRegexPatternSetsInput, fn func(*wafregional.ListRegexPatternSetsOutput, bool) bool) error {
+func listRegexPatternSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRegexPatternSetsInput, fn func(*wafregional.ListRegexPatternSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListRegexPatternSets(ctx, input)
+		output, err := conn.ListRegexPatternSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -121,9 +121,9 @@ func listRegexPatternSetsPages(ctx context.Context, conn *wafregional.Client, in
 	}
 	return nil
 }
-func listRuleGroupsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRuleGroupsInput, fn func(*wafregional.ListRuleGroupsOutput, bool) bool) error {
+func listRuleGroupsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRuleGroupsInput, fn func(*wafregional.ListRuleGroupsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListRuleGroups(ctx, input)
+		output, err := conn.ListRuleGroups(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -137,9 +137,9 @@ func listRuleGroupsPages(ctx context.Context, conn *wafregional.Client, input *w
 	}
 	return nil
 }
-func listRulesPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRulesInput, fn func(*wafregional.ListRulesOutput, bool) bool) error {
+func listRulesPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListRulesInput, fn func(*wafregional.ListRulesOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListRules(ctx, input)
+		output, err := conn.ListRules(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -153,9 +153,9 @@ func listRulesPages(ctx context.Context, conn *wafregional.Client, input *wafreg
 	}
 	return nil
 }
-func listSizeConstraintSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSizeConstraintSetsInput, fn func(*wafregional.ListSizeConstraintSetsOutput, bool) bool) error {
+func listSizeConstraintSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSizeConstraintSetsInput, fn func(*wafregional.ListSizeConstraintSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListSizeConstraintSets(ctx, input)
+		output, err := conn.ListSizeConstraintSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -169,9 +169,9 @@ func listSizeConstraintSetsPages(ctx context.Context, conn *wafregional.Client, 
 	}
 	return nil
 }
-func listSQLInjectionMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSqlInjectionMatchSetsInput, fn func(*wafregional.ListSqlInjectionMatchSetsOutput, bool) bool) error {
+func listSQLInjectionMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSqlInjectionMatchSetsInput, fn func(*wafregional.ListSqlInjectionMatchSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListSqlInjectionMatchSets(ctx, input)
+		output, err := conn.ListSqlInjectionMatchSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -185,9 +185,9 @@ func listSQLInjectionMatchSetsPages(ctx context.Context, conn *wafregional.Clien
 	}
 	return nil
 }
-func listSubscribedRuleGroupsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, fn func(*wafregional.ListSubscribedRuleGroupsOutput, bool) bool) error {
+func listSubscribedRuleGroupsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, fn func(*wafregional.ListSubscribedRuleGroupsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListSubscribedRuleGroups(ctx, input)
+		output, err := conn.ListSubscribedRuleGroups(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -201,9 +201,9 @@ func listSubscribedRuleGroupsPages(ctx context.Context, conn *wafregional.Client
 	}
 	return nil
 }
-func listWebACLsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListWebACLsInput, fn func(*wafregional.ListWebACLsOutput, bool) bool) error {
+func listWebACLsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListWebACLsInput, fn func(*wafregional.ListWebACLsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListWebACLs(ctx, input)
+		output, err := conn.ListWebACLs(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}
@@ -217,9 +217,9 @@ func listWebACLsPages(ctx context.Context, conn *wafregional.Client, input *wafr
 	}
 	return nil
 }
-func listXSSMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListXssMatchSetsInput, fn func(*wafregional.ListXssMatchSetsOutput, bool) bool) error {
+func listXSSMatchSetsPages(ctx context.Context, conn *wafregional.Client, input *wafregional.ListXssMatchSetsInput, fn func(*wafregional.ListXssMatchSetsOutput, bool) bool, optFns ...func(*wafregional.Options)) error {
 	for {
-		output, err := conn.ListXssMatchSets(ctx, input)
+		output, err := conn.ListXssMatchSets(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

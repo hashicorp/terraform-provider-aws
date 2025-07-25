@@ -14,6 +14,7 @@
 //go:generate go run ../../generate/listpages/main.go -ListOps=ListVpcOrigins -InputPaginator=Marker -OutputPaginator=VpcOriginList.NextMarker -- list_vpc_origin_pages_gen.go
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsInIDElem=Resource -ListTagsOutTagsElem=Tags.Items -ServiceTagsSlice "-TagInCustomVal=&awstypes.Tags{Items: svcTags(updatedTags)}" -TagInIDElem=Resource "-UntagInCustomVal=&awstypes.TagKeys{Items: removedTags.Keys()}" -UpdateTags
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package cloudfront

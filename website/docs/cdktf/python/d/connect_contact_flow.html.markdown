@@ -56,13 +56,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contact_flow_id` - (Optional) Returns information on a specific Contact Flow by contact flow id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `contact_flow_id` is required.
 
 ## Attribute Reference
 
@@ -74,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Tags to assign to the Contact Flow.
 * `type` - Type of Contact Flow.
 
-<!-- cache-key: cdktf-0.20.8 input-e687be18811b5f7ced20540147bf684c8a25ea91d3a80b8f1efc5aab2dd13bd4 -->
+<!-- cache-key: cdktf-0.20.8 input-799ca9b466f5eaf8b5549c6caac50601412e706aa0293f7bf97305d43f57711f -->

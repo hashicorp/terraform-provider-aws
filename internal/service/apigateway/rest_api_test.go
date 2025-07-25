@@ -14,7 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -1362,6 +1366,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf apigateway.GetRestApiOutput
 	resourceName := "aws_api_gateway_rest_api.test"
 	expectedPolicyText := `{"Statement":[{"Action":"execute-api:Invoke","Condition":{"IpAddress":{"aws:SourceIp":["123.123.123.123/32","122.122.122.122/32","169.254.169.253/32"]}},"Effect":"Allow","Principal":{"AWS":"*"},"Resource":"*"}],"Version":"2012-10-17"}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1375,12 +1380,30 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_policyOrder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringExact(expectedPolicyText)),
+				},
 			},
 			{
-				Config:   testAccRestAPIConfig_policyNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccRestAPIConfig_policyNewOrder(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1712,7 +1735,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1762,7 +1785,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1771,7 +1794,7 @@ resource "aws_vpc_endpoint" "test" {
 resource "aws_vpc_endpoint" "test2" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1823,7 +1846,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1908,7 +1931,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -1992,7 +2015,7 @@ resource "aws_subnet" "test" {
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_default_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.execute-api"
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id

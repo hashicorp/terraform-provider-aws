@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -59,6 +60,10 @@ recent AMI.
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
+* `allow_unsafe_filter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `most_recent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
 * `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -88,6 +93,7 @@ This data source exports the following attributes in addition to the arguments a
         * `volume_size` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
         * `volume_type` - The volume type.
+        * `volume_initialization_rate` - The volume initialization rate, in MiB/s.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
     * `virtual_name` - Virtual device name (for instance stores).
 * `creation_date` - Date and time the image was created.
@@ -145,4 +151,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-20e01b0a74f9ac0f7e51fa71d8bb9b456d55fab280e87e7630b32a84f2e95273 -->
+<!-- cache-key: cdktf-0.20.8 input-bb5d7d662f9b4a8aa15b1c63d1ee7a13e07553335a38463929c9138cdcf1191a -->

@@ -5,11 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -84,7 +82,8 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	carrierGateway, err := findCarrierGatewayByID(ctx, conn, d.Id())
 
@@ -99,14 +98,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	ownerID := aws.ToString(carrierGateway.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, carrierGatewayARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 	d.Set(names.AttrVPCID, carrierGateway.VpcId)
 
@@ -146,4 +138,8 @@ func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func carrierGatewayARN(ctx context.Context, c *conns.AWSClient, accountID, carrierGatewayID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "carrier-gateway/"+carrierGatewayID)
 }

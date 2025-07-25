@@ -33,6 +33,7 @@ func testAccReplicationSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReplicationSetDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
+					acctest.MatchResourceAttrGlobalARN(ctx, dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "created_by", dataSourceName, "created_by"),
 					resource.TestCheckResourceAttrPair(resourceName, "deletion_protected", dataSourceName, "deletion_protected"),
@@ -45,8 +46,7 @@ func testAccReplicationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.kms_key_arn", dataSourceName, "region.0.kms_key_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status", dataSourceName, "region.0.status"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status_message", dataSourceName, "region.0.status_message"),
-
-					acctest.MatchResourceAttrGlobalARN(ctx, dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set/.+$`)),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "region.#", dataSourceName, "regions.#"),
 				),
 			},
 		},
@@ -69,7 +69,5 @@ resource "aws_ssmincidents_replication_set" "test" {
 data "aws_ssmincidents_replication_set" "test" {
   depends_on = [aws_ssmincidents_replication_set.test]
 }
-
-
 `, acctest.Region())
 }

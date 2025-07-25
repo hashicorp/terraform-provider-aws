@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `userId` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific User by name
 * `userId` - (Optional) Returns information on a specific User by User id
+
+~> **NOTE:** `instanceId` and one of either `name` or `userId` is required.
 
 ## Attribute Reference
 
@@ -103,4 +104,4 @@ A `phoneConfig` block supports the following attributes:
 * `deskPhoneNumber` - The phone number for the user's desk phone.
 * `phoneType` - The phone type. Valid values are `DESK_PHONE` and `SOFT_PHONE`.
 
-<!-- cache-key: cdktf-0.20.8 input-6418677498d3243fc3fad545047e17a0d6914a6f2c25c35af2a886541c4e8bb5 -->
+<!-- cache-key: cdktf-0.20.8 input-3130859da24bb2310def4e794e06761b2aa633dc3b3825657c8eb8e08107cd3f -->

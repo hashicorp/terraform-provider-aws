@@ -22,14 +22,14 @@ import (
 )
 
 // @FrameworkResource("aws_apprunner_default_auto_scaling_configuration_version", name="Default AutoScaling Configuration Version")
-func newResourceDefaultAutoScalingConfigurationVersion(context.Context) (resource.ResourceWithConfigure, error) {
+func newDefaultAutoScalingConfigurationVersionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultAutoScalingConfigurationVersionResource{}
 
 	return r, nil
 }
 
 type defaultAutoScalingConfigurationVersionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[defaultAutoScalingConfigurationVersionResourceModel]
 	framework.WithNoOpDelete
 	framework.WithImportByID
 }
@@ -137,6 +137,7 @@ func putDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Cli
 }
 
 type defaultAutoScalingConfigurationVersionResourceModel struct {
+	framework.WithRegionModel
 	AutoScalingConfigurationARN fwtypes.ARN  `tfsdk:"auto_scaling_configuration_arn"`
 	ID                          types.String `tfsdk:"id"`
 }

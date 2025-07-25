@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) DB cluster parameter group name.
 
 ## Attribute Reference
@@ -45,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `family` - Family of the cluster parameter group.
 * `description` - Description of the cluster parameter group.
 
-<!-- cache-key: cdktf-0.20.8 input-540200d01738dc1f4247a7ca518c35386db69da97ab4a69a5f76ccce1697dc22 -->
+<!-- cache-key: cdktf-0.20.8 input-4288c2e8995101210f7bd3ee7a515f3c6f199913cf1a61cafac46eb36f6c3706 -->

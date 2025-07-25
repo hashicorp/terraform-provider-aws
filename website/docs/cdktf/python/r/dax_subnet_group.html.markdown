@@ -36,16 +36,17 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name of the subnet group.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name of the subnet group.
 * `description` - (Optional) A description of the subnet group.
-* `subnet_ids` – (Required) A list of VPC subnet IDs for the subnet group.
+* `subnet_ids` - (Required) A list of VPC subnet IDs for the subnet group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the subnet group.
-* `vpc_id` – VPC ID of the subnet group.
+* `vpc_id` - VPC ID of the subnet group.
 
 ## Import
 
@@ -72,4 +73,4 @@ Using `terraform import`, import DAX Subnet Group using the `name`. For example:
 % terraform import aws_dax_subnet_group.example my_dax_sg
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7e0b85bfae073f3145aed1d3f2658b614702a6a6a2bc2cf27086e92f41fc07d8 -->
+<!-- cache-key: cdktf-0.20.8 input-72c93c0709cf2cab63c60941f2f21931999a44702ea33841ba751a67422d3098 -->

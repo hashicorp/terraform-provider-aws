@@ -3,8 +3,8 @@ package organizations
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -24,13 +24,20 @@ func listTags(ctx context.Context, conn *organizations.Client, identifier string
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := organizations.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists organizations service tags and set them in Context.
@@ -39,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).OrganizationsClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -67,8 +74,8 @@ func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from organizations service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from organizations service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -93,7 +100,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets organizations service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -117,7 +124,7 @@ func updateTags(ctx context.Context, conn *organizations.Client, identifier stri
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -132,7 +139,7 @@ func updateTags(ctx context.Context, conn *organizations.Client, identifier stri
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

@@ -133,6 +133,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
 * `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.

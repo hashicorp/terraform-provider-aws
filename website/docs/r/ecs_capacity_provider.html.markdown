@@ -15,7 +15,7 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 ## Example Usage
 
 ```terraform
-resource "aws_autoscaling_group" "test" {
+resource "aws_autoscaling_group" "example" {
   # ... other configuration, including potentially other tags ...
 
   tag {
@@ -25,11 +25,11 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 
-resource "aws_ecs_capacity_provider" "test" {
-  name = "test"
+resource "aws_ecs_capacity_provider" "example" {
+  name = "example"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
+    auto_scaling_group_arn         = aws_autoscaling_group.example.arn
     managed_termination_protection = "ENABLED"
 
     managed_scaling {
@@ -46,6 +46,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_scaling_group_provider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -72,22 +73,21 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the capacity provider.
-* `id` - ARN that identifies the capacity provider.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `arn`. For example:
 
 ```terraform
 import {
   to = aws_ecs_capacity_provider.example
-  id = "example"
+  id = "arn:aws:ecs:us-west-2:123456789012:capacity-provider/example"
 }
 ```
 
-Using `terraform import`, import ECS Capacity Providers using the `name`. For example:
+Using `terraform import`, import ECS Capacity Providers using the `arn`. For example:
 
 ```console
-% terraform import aws_ecs_capacity_provider.example example
+% terraform import aws_ecs_capacity_provider.example arn:aws:ecs:us-west-2:123456789012:capacity-provider/example
 ```

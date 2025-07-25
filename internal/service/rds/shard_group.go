@@ -33,6 +33,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +51,7 @@ func newShardGroupResource(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 type shardGroupResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[shardGroupResourceModel]
 	framework.WithTimeouts
 }
 
@@ -151,7 +152,7 @@ func (r *shardGroupResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	deadline := tfresource.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
+	deadline := inttypes.NewDeadline(r.CreateTimeout(ctx, data.Timeouts))
 	shardGroup, err := waitShardGroupCreated(ctx, conn, data.DBShardGroupIdentifier.ValueString(), deadline.Remaining())
 
 	if err != nil {
@@ -238,7 +239,7 @@ func (r *shardGroupResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		deadline := tfresource.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
+		deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 		if _, err := waitShardGroupUpdated(ctx, conn, new.DBShardGroupIdentifier.ValueString(), deadline.Remaining()); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) update", new.DBShardGroupIdentifier.ValueString()), err.Error())
 
@@ -278,7 +279,7 @@ func (r *shardGroupResource) Delete(ctx context.Context, request resource.Delete
 		return
 	}
 
-	deadline := tfresource.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
+	deadline := inttypes.NewDeadline(r.DeleteTimeout(ctx, data.Timeouts))
 	if _, err := waitShardGroupDeleted(ctx, conn, data.DBShardGroupIdentifier.ValueString(), deadline.Remaining()); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Shard Group (%s) delete", data.DBShardGroupIdentifier.ValueString()), err.Error())
 
@@ -428,6 +429,7 @@ func waitShardGroupDeleted(ctx context.Context, conn *rds.Client, id string, tim
 }
 
 type shardGroupResourceModel struct {
+	framework.WithRegionModel
 	ComputeRedundancy      types.Int64    `tfsdk:"compute_redundancy"`
 	DBClusterIdentifier    types.String   `tfsdk:"db_cluster_identifier"`
 	DBShardGroupARN        types.String   `tfsdk:"arn"`

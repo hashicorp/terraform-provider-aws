@@ -11,7 +11,7 @@
 {{ end }}
 
 {{ define "Test" -}}
-resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
 {{- end }}
 
 {{ define "TestCaseSetup" -}}
@@ -89,6 +89,7 @@ package {{ .ProviderPackage }}_test
 import (
 	{{ if .OverrideIdentifier }}
 	"context"
+	"unique"
 	{{- end }}
 	"testing"
 
@@ -132,7 +133,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -160,7 +161,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +185,7 @@ func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -208,7 +209,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -242,7 +243,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -269,7 +270,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					{{ template "expectFullDataSourceTags" . }}(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullDataSourceTags" . }}(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -282,7 +283,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
@@ -304,7 +305,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					{{ template "expectFullDataSourceTags" . }}(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullDataSourceTags" . }}(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -321,12 +322,12 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 {{- end }}
 
 {{ if .OverrideIdentifier }}
-func {{ template "expectFullDataSourceTags" . }}(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func {{ template "expectFullDataSourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
 		{{ if ne .OverrideResourceType "" -}}
 		ResourceType:        "{{ .OverrideResourceType }}",
 		{{- end }}
-	}, knownValue)
+	}), knownValue)
 }
 {{ end }}

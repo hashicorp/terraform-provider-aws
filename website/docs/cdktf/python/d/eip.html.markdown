@@ -100,6 +100,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `public_ip`
 * `public_ip` - (Optional) Public IP of the specific EIP to retrieve.
@@ -139,4 +140,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-4a794b8ba1f01bc48d71d2b2f7542f85ece010bae490bc59924b266b5c889287 -->
+<!-- cache-key: cdktf-0.20.8 input-a217cb9ee7887eae8156d27d984ee0879f21d8974441b5ca3c22063e4d63488d -->

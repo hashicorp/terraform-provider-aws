@@ -42,6 +42,7 @@ resource "aws_iot_certificate" "cert" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active
 * `csr` - (Optional) The certificate signing request. Review
   [CreateCertificateFromCsr](https://docs.aws.amazon.com/iot/latest/apireference/API_CreateCertificateFromCsr.html)

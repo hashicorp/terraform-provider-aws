@@ -73,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `grafanaToken` - (Optional) A token from Grafana Labs that ties your AWS account with a Grafana Labs account.
 * `licenseType` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspaceId` - (Required) The workspace id.
@@ -116,4 +117,4 @@ Using `terraform import`, import Grafana workspace license association using the
 % terraform import aws_grafana_license_association.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-78984364313468b80fa3a73019f77575fce8fb8f6a36ef50fa639d2f9d2428e5 -->
+<!-- cache-key: cdktf-0.20.8 input-e849564597fa773fcafee168404f7ff43d95505cc5a173a11c3fe5c43191f71e -->

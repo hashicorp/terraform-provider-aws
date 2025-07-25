@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `topicArn` - (Optional) The Amazon Resource Name (ARN) of the Amazon SNS topic. Can be set to `""` (an empty string) to disable publishing.
 * `notificationType` - (Required) The type of notifications that will be published to the specified Amazon SNS topic. Valid Values: `Bounce`, `Complaint` or `Delivery`.
 * `identity` - (Required) The identity for which the Amazon SNS topic will be set. You can specify an identity by using its name or by using its Amazon Resource Name (ARN).
@@ -82,4 +83,4 @@ Using `terraform import`, import Identity Notification Topics using the ID of th
 % terraform import aws_ses_identity_notification_topic.test 'example.com|Bounce'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1fd58b89206153f067a3a6422fdd5ac0bb0cbc19db85bec1ae6fff15e992d4ac -->
+<!-- cache-key: cdktf-0.20.8 input-9489545a4881d43856246f7721ab0e870a7452afd04a9085b7117ff682fe5c1c -->
