@@ -55,12 +55,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "unknownTagKey" {
   type     = string
   nullable = false

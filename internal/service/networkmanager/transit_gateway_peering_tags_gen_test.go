@@ -20,7 +20,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -31,7 +30,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -62,7 +60,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -74,7 +71,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -110,7 +106,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -123,7 +118,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -154,7 +148,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -166,7 +159,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -187,7 +179,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -202,7 +193,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -213,7 +203,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -237,7 +226,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -249,7 +237,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -269,7 +256,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -280,7 +266,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -302,7 +287,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ResourceName:      resourceName,
@@ -312,7 +296,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -332,7 +315,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -343,7 +325,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -365,7 +346,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -396,7 +376,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -415,7 +394,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -426,7 +404,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -456,7 +433,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -468,7 +444,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -489,7 +464,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -506,7 +480,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -517,7 +490,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -548,7 +520,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -582,7 +553,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -595,7 +565,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -626,7 +595,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -645,7 +613,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -656,7 +623,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -687,7 +653,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -717,7 +682,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -734,7 +698,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -745,7 +708,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -774,7 +736,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -788,7 +749,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -820,7 +780,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
@@ -835,7 +794,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -864,7 +822,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -878,7 +835,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -900,7 +856,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -915,7 +870,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -926,7 +880,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -963,7 +916,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -979,7 +931,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1021,7 +972,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -1038,7 +988,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1060,7 +1009,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -1075,7 +1023,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1086,7 +1033,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1121,7 +1067,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1137,7 +1082,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1178,7 +1122,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
@@ -1196,7 +1139,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1231,7 +1173,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1251,7 +1192,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1262,7 +1202,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1294,7 +1233,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1323,7 +1261,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1341,7 +1278,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1352,7 +1288,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1381,7 +1316,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1413,7 +1347,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1432,7 +1365,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1443,7 +1375,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1477,7 +1408,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1499,7 +1429,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1510,7 +1439,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1538,7 +1466,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -1556,7 +1483,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1567,7 +1493,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1598,7 +1523,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1618,7 +1542,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1629,7 +1552,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1660,7 +1582,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1680,7 +1601,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1691,7 +1611,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1720,7 +1639,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1735,7 +1653,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1746,7 +1663,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1778,7 +1694,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1815,7 +1730,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1832,7 +1746,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1843,7 +1756,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -1875,7 +1787,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1904,7 +1815,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
@@ -1919,7 +1829,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -1931,7 +1840,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -1980,7 +1888,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
@@ -2029,7 +1936,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
 					}),
@@ -2081,7 +1987,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_Resource
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -2093,7 +1998,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_Resource
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2156,7 +2060,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_Resource
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
@@ -2219,7 +2122,6 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_Resource
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/TransitGatewayPeering/tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),
