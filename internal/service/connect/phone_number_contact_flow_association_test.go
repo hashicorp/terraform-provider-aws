@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -88,17 +87,7 @@ func testAccCheckPhoneNumberContactFlowAssociationDestroy(ctx context.Context) r
 				continue
 			}
 
-			phoneNumber, err := tfconnect.FindPhoneNumberByID(ctx, conn, rs.Primary.Attributes["phone_number_id"])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
+			_, err := tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["phone_number_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -124,13 +113,7 @@ func testAccCheckPhoneNumberContactFlowAssociationExists(ctx context.Context, n 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
-		phoneNumber, err := tfconnect.FindPhoneNumberByID(ctx, conn, rs.Primary.Attributes["phone_number_id"])
-
-		if err != nil {
-			return err
-		}
-
-		output, err := tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
+		output, err := tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["phone_number_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
 
 		if err != nil {
 			return err

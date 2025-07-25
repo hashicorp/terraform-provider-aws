@@ -101,23 +101,7 @@ func (r *phoneNumberContactFlowAssociationResource) Read(ctx context.Context, re
 	conn := r.Meta().ConnectClient(ctx)
 
 	phoneNumberID, instanceID, contactFlowID := fwflex.StringValueFromFramework(ctx, data.PhoneNumberID), fwflex.StringValueFromFramework(ctx, data.InstanceID), fwflex.StringValueFromFramework(ctx, data.ContactFlowID)
-	phoneNumber, err := findPhoneNumberByID(ctx, conn, phoneNumberID)
-
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Connect Phone Number (%s)", phoneNumberID), err.Error())
-
-		return
-	}
-
-	phoneNumberARN := aws.ToString(phoneNumber.PhoneNumberArn)
-	_, err = findPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, phoneNumberARN, instanceID, contactFlowID)
+	_, err := findPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, phoneNumberID, instanceID, contactFlowID)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -179,14 +163,26 @@ func (r *phoneNumberContactFlowAssociationResource) ImportState(ctx context.Cont
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("contact_flow_id"), parts[2])...)
 }
 
-func findPhoneNumberContactFlowAssociationByThreePartKey(ctx context.Context, conn *connect.Client, phoneNumberARN, instanceID, contactFlowID string) (*awstypes.FlowAssociationSummary, error) {
+func findPhoneNumberContactFlowAssociationByThreePartKey(ctx context.Context, conn *connect.Client, phoneNumberID, instanceID, contactFlowID string) (*awstypes.FlowAssociationSummary, error) {
+	phoneNumber, err := findPhoneNumberByID(ctx, conn, phoneNumberID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	contactFlow, err := findContactFlowByTwoPartKey(ctx, conn, instanceID, contactFlowID)
+
+	if err != nil {
+		return nil, err
+	}
+
 	input := connect.ListFlowAssociationsInput{
 		InstanceId:   aws.String(instanceID),
 		ResourceType: awstypes.ListFlowAssociationResourceTypeVoicePhoneNumber,
 	}
 
 	return findFlowAssociation(ctx, conn, &input, func(v *awstypes.FlowAssociationSummary) bool {
-		return aws.ToString(v.ResourceId) == phoneNumberARN && aws.ToString(v.FlowId) == contactFlowID
+		return aws.ToString(v.ResourceId) == aws.ToString(phoneNumber.PhoneNumberArn) && aws.ToString(v.FlowId) == aws.ToString(contactFlow.Arn)
 	})
 }
 
