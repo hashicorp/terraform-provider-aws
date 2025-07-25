@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connect v1.131.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.26.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.22.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.22.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.29.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.51.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.16.3 // indirect
@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.50.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.24.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.33.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.31.3 // indirect

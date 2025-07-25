@@ -169,8 +169,8 @@ github.com/aws/aws-sdk-go-v2/service/connect v1.131.1 h1:kQX9yr5uYeQPv/PdCtw+iLU
 github.com/aws/aws-sdk-go-v2/service/connect v1.131.1/go.mod h1:TSGHpIRxxjWpqQRn/FInBotVOPOv7wOQJad9ucm6iWU=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.26.1 h1:1TlYiaR1ucS9NlU+l4f8p+5Ue8NFUUQaDbD2qxkeSag=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.26.1/go.mod h1:eNyJ6rFm5OTP3JXjVpp9wrOu8wa6XRxHRZU+QZiGf4o=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.22.4 h1:5Y8szHaQWdvdr48C4XW63/DYz3N3MsDH+vElK2coxfc=
-github.com/aws/aws-sdk-go-v2/service/controltower v1.22.4/go.mod h1:WosAX974DNY0bPjPpKvw7tK7B4ARJXv1FR/q+SZuhPQ=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.22.5 h1:QuWyeLxBYKT5Wx5U6X1tNzfJscFC9mug0edQ3Wi+TBA=
+github.com/aws/aws-sdk-go-v2/service/controltower v1.22.5/go.mod h1:WosAX974DNY0bPjPpKvw7tK7B4ARJXv1FR/q+SZuhPQ=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.29.5 h1:OdVZq2UHcWT8GUxJytMxhsby+bLFBIJJoEtUoS2joi4=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.29.5/go.mod h1:U3eF3yeSbJ7zJVJuVVPaLo+SiXU3FTpMqjpHtNlt1Kc=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.51.3 h1:zHAUNgh+Zj1+u/y3IAJuCrjGiqpMTewg+QQG10IEuzg=
@@ -189,8 +189,8 @@ github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.5 h1:aOhy2bBDbv/nHya/XFF
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.26.5/go.mod h1:VOS/nLyPNTxaZ6/LJ4Inix6mfcBMpZomz5hiS66BAl0=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.50.1 h1:fECKYyWQ7RzM2xD9307zY4AFFqaN4yghtB88eEEcafU=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.50.1/go.mod h1:dJRLZd4GxQvdLMNCdxMxJby9CEWCDTVVVEFRwBb8whQ=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.32.1 h1:HStaAF6CL9E7SCaLGClx8ZcszQUtR3jsvVIH6vJSWRM=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.32.1/go.mod h1:881G+9Os0xBYOGTbNM7kamRikVOQ107xt9AYh2a23KY=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.33.0 h1:LjSYeh4xU+XmgzW1BvpmcMV9cMb8xs5jeyKRXJ7pHXM=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.33.0/go.mod h1:881G+9Os0xBYOGTbNM7kamRikVOQ107xt9AYh2a23KY=
 github.com/aws/aws-sdk-go-v2/service/dax v1.24.5 h1:wTzRRGW3P9iobio7VnNyoEKqPL3OyYDiZDTtsad5gig=
 github.com/aws/aws-sdk-go-v2/service/dax v1.24.5/go.mod h1:jV0aNsqq36cqs8bCQ2XQtbewjwfQ3j7exl/dKQfZGMs=
 github.com/aws/aws-sdk-go-v2/service/detective v1.33.3 h1:f/BN0OiEXsq0n4BlZLTAVrFM2N18/tsXkQ4rOFf+P88=
