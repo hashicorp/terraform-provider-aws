@@ -5,7 +5,6 @@ package bedrock
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -498,7 +497,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
-		out, err := conn.UpdateGuardrail(ctx, &in)
+		_, err := conn.UpdateGuardrail(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -506,15 +505,6 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-		if out == nil || out.GuardrailArn == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-		plan.GuardrailArn = fwflex.StringToFramework(ctx, out.GuardrailArn)
-		plan.GuardrailID = fwflex.StringToFramework(ctx, out.GuardrailId)
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		if _, err := waitGuardrailUpdated(ctx, conn, plan.GuardrailID.ValueString(), state.Version.ValueString(), updateTimeout); err != nil {
@@ -525,7 +515,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
-		output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+		guardrail, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
@@ -533,7 +523,12 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
-		plan.Status = fwtypes.StringEnumValue(output.Status)
+
+		// Set values for unknowns.
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, guardrail, &plan, r.flexOpt)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
