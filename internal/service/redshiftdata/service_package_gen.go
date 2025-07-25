@@ -4,7 +4,6 @@ package redshiftdata
 
 import (
 	"context"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -35,8 +34,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceStatement,
 			TypeName: "aws_redshiftdata_statement",
-			Name:     "Statement",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  resourceBatchStatement,
+			TypeName: "aws_redshiftdata_batch_statement",
 		},
 	}
 }
