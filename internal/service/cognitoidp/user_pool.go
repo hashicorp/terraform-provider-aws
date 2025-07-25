@@ -1148,12 +1148,12 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		if v, ok := d.GetOk(names.AttrName); ok {
-			input.PoolName = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("mfa_configuration"); ok {
 			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
+		}
+
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("password_policy"); ok {

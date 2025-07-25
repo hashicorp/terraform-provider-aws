@@ -14,8 +14,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -2052,17 +2055,29 @@ func TestAccCognitoIDPUserPool_nameUpdate(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName + "-test1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-test1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-test1")),
+				},
 			},
 			{
 				Config: testAccUserPoolConfig_name(rName + "-test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"-test2"),
-					// check that the user pool was not recreated
-					testAccCheckUserPoolIdEqual(&pool1, &pool2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-test2")),
+				},
 			},
 		},
 	})
@@ -2129,18 +2144,6 @@ func testAccCheckUserPoolNotRecreated(pool1, pool2 *awstypes.UserPoolType) resou
 func testAccPreCheckIdentityProvider(ctx context.Context, t *testing.T) {
 	t.Helper()
 	acctest.PreCheckCognitoIdentityProvider(ctx, t)
-}
-
-func testAccCheckUserPoolIdEqual(pool1 *awstypes.UserPoolType, pool2 *awstypes.UserPoolType) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if pool1.Id == nil || pool2.Id == nil {
-			return fmt.Errorf("user pool ID is nil")
-		}
-		if aws.ToString(pool1.Id) != aws.ToString(pool2.Id) {
-			return fmt.Errorf("user pool %s should not have been replaced with %s", aws.ToString(pool1.Id), aws.ToString(pool2.Id))
-		}
-		return nil
-	}
 }
 
 func testAccUserPoolSMSConfigurationConfig_base(rName string, externalID string) string {
