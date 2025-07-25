@@ -205,7 +205,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"guardrail_profile_arn": schema.StringAttribute{
+						"guardrail_profile_identifier": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
@@ -478,7 +478,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 	// Different field name on Read.
 	if out.CrossRegionDetails != nil && out.CrossRegionDetails.GuardrailProfileArn != nil {
 		cr := guardrailCrossRegionConfigModel{
-			GuardrailProfileARN: fwflex.StringToFrameworkARN(ctx, out.CrossRegionDetails.GuardrailProfileArn),
+			GuardrailProfileIdentifier: fwflex.StringToFrameworkARN(ctx, out.CrossRegionDetails.GuardrailProfileArn),
 		}
 
 		var diags diag.Diagnostics
@@ -504,14 +504,15 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 
 	if !plan.BlockedInputMessaging.Equal(state.BlockedInputMessaging) ||
 		!plan.BlockedOutputsMessaging.Equal(state.BlockedOutputsMessaging) ||
-		!plan.KmsKeyId.Equal(state.KmsKeyId) ||
 		!plan.ContentPolicy.Equal(state.ContentPolicy) ||
 		!plan.ContextualGroundingPolicy.Equal(state.ContextualGroundingPolicy) ||
+		!plan.CrossRegionConfig.Equal(state.CrossRegionConfig) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.KmsKeyId.Equal(state.KmsKeyId) ||
+		!plan.Name.Equal(state.Name) ||
 		!plan.SensitiveInformationPolicy.Equal(state.SensitiveInformationPolicy) ||
 		!plan.TopicPolicy.Equal(state.TopicPolicy) ||
-		!plan.WordPolicy.Equal(state.WordPolicy) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) {
+		!plan.WordPolicy.Equal(state.WordPolicy) {
 		in := bedrock.UpdateGuardrailInput{
 			GuardrailIdentifier: plan.GuardrailID.ValueStringPointer(),
 		}
@@ -749,7 +750,7 @@ type contextualGroundingFiltersConfig struct {
 }
 
 type guardrailCrossRegionConfigModel struct {
-	GuardrailProfileARN fwtypes.ARN `tfsdk:"guardrail_profile_arn"`
+	GuardrailProfileIdentifier fwtypes.ARN `tfsdk:"guardrail_profile_identifier"`
 }
 
 type sensitiveInformationPolicyConfig struct {

@@ -283,7 +283,7 @@ resource "aws_bedrock_guardrail" "test" {
   description               = "test"
 
   cross_region_config {
-    guardrail_profile = ""arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:us.guardrail.v1:0"
+    guardrail_profile_identifier = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:guardrail-profile/us.guardrail.v1:0"
   }
 
   content_policy_config {

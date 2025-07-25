@@ -21,13 +21,6 @@ resource "aws_bedrock_guardrail" "example" {
   blocked_outputs_messaging = "example"
   description               = "example"
 
-  cross_region_config {
-    # All Guardrail profiles listed here:
-    # https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html
-    # NOTE: this is only available in certain regions!
-    guardrail_profile_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:us.guardrail.v1:0"
-  }
-
   content_policy_config {
     filters_config {
       input_strength  = "MEDIUM"
@@ -135,7 +128,7 @@ The `filters_config` configuration block supports the following arguments:
 
 #### Cross Region Config
 
-* `guardrail_profile_arn` (Required) Guardrail profile ARN.
+* `guardrail_profile_identifier` (Required) Guardrail profile ARN.
 
 ### Topic Policy Config
 
