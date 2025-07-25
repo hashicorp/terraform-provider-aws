@@ -24,6 +24,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_connect_phone_number_contact_flow_association", name="Phone Number Contact Flow Association")
@@ -47,7 +48,7 @@ func (r *phoneNumberContactFlowAssociationResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"instance_id": schema.StringAttribute{
+			names.AttrInstanceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -174,7 +175,7 @@ func (r *phoneNumberContactFlowAssociationResource) ImportState(ctx context.Cont
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("phone_number_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("instance_id"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrInstanceID), parts[1])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("contact_flow_id"), parts[2])...)
 }
 

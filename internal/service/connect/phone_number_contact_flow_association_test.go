@@ -98,7 +98,7 @@ func testAccCheckPhoneNumberContactFlowAssociationDestroy(ctx context.Context) r
 				return err
 			}
 
-			_, err = tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["contact_flow_id"])
+			_, err = tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -130,7 +130,7 @@ func testAccCheckPhoneNumberContactFlowAssociationExists(ctx context.Context, n 
 			return err
 		}
 
-		output, err := tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["contact_flow_id"])
+		output, err := tfconnect.FindPhoneNumberContactFlowAssociationByThreePartKey(ctx, conn, aws.ToString(phoneNumber.PhoneNumberArn), rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"])
 
 		if err != nil {
 			return err
@@ -149,7 +149,7 @@ func testAccPhoneNumberContactFlowAssociationImportStateIDFunc(n string) resourc
 			return "", fmt.Errorf("Not Found: %s", n)
 		}
 
-		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes["phone_number_id"], rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["contact_flow_id"]), nil
+		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes["phone_number_id"], rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["contact_flow_id"]), nil
 	}
 }
 
