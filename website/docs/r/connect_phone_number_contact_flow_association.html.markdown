@@ -16,7 +16,7 @@ Associates a flow with a phone number claimed to an Amazon Connect instance.
 resource "aws_connect_phone_number_contact_flow_association" "example" {
   phone_number_id = aws_connect_phone_number.example.id
   instance_id     = aws_connect_instance.example.id
-  contact_flow_id = aws_connect_contact_flow.example.id
+  contact_flow_id = aws_connect_contact_flow.example.contact_flow_id
 }
 ```
 
