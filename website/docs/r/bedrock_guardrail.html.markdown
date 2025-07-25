@@ -35,8 +35,8 @@ resource "aws_bedrock_guardrail" "example" {
       type            = "HATE"
     }
     tier_config {
-		  name = "STANDARD"
-	  }
+      name = "STANDARD"
+    }
   }
 
   sensitive_information_policy_config {
@@ -61,8 +61,8 @@ resource "aws_bedrock_guardrail" "example" {
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
     }
     tier_config {
-		  name = "CLASSIC"
-	  }
+      name = "CLASSIC"
+    }
   }
 
   word_policy_config {
