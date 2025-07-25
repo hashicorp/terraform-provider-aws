@@ -1,3 +1,3 @@
 ```release-note:enhancement
-feature/aws_bedrock_guardrail: Add `cross_region_inference` and `tier_config` arguments
+feature/aws_bedrock_guardrail: Add `cross_region_inference`, `content_policy_config.tier_config`, and `topic_policy_config.tier_config` arguments
 ```
