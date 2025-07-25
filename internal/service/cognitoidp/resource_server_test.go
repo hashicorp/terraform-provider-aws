@@ -11,7 +11,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -140,15 +144,29 @@ func TestAccCognitoIDPResourceServer_nameChange(t *testing.T) {
 				Config: testAccResourceServerConfig_basic(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+				},
 			},
 			{
 				Config: testAccResourceServerConfig_nameUpdate(identifier, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf(`%s updated`, rName)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+" updated")),
+				},
 			},
 		},
 	})
