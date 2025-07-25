@@ -1,7 +1,13 @@
 ## 6.6.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_connect_phone_number_contact_flow_association` ([#43557](https://github.com/hashicorp/terraform-provider-aws/issues/43557))
+
 ENHANCEMENTS:
 
+* resource/aws_cognito_resource_server: Allow `name` to be updated in-place ([#41702](https://github.com/hashicorp/terraform-provider-aws/issues/41702))
+* resource/aws_cognito_user_pool: Allow `name` to be updated in-place ([#42639](https://github.com/hashicorp/terraform-provider-aws/issues/42639))
 * resource/aws_globalaccelerator_custom_routing_endpoint_group: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
 * resource/aws_globalaccelerator_custom_routing_listener: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
 * resource/aws_globalaccelerator_endpoint_group: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
