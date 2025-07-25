@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -294,11 +295,11 @@ func findEnvironmentProfileByID(ctx context.Context, conn *datazone.Client, id s
 				LastRequest: in,
 			}
 		}
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil
