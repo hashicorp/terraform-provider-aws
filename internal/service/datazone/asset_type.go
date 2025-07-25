@@ -150,12 +150,12 @@ func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateReque
 
 	out, err := conn.CreateAssetType(ctx, &in)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, "name", plan.Name.String())
 		return
 	}
 
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), "name", plan.Name.String())
 		return
 	}
 

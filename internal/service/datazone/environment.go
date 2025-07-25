@@ -184,7 +184,7 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 	out, err := conn.CreateEnvironment(ctx, in)
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, "name", plan.Name.String())
 		return
 	}
 

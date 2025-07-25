@@ -164,12 +164,12 @@ func (r *projectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failure when creating"), plan.Name.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("failure when creating"), "name", plan.Name.String())
 		return
 	}
 	if !(out.FailureReasons == nil) && len(out.FailureReasons) > 0 {
 		for _, reason := range out.FailureReasons {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("error message: "+*reason.Message+" error code: "+*reason.Code), smerr.ID, plan.Name.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("error message: "+*reason.Message+" error code: "+*reason.Code), "name", plan.Name.String())
 		}
 		return
 	}
