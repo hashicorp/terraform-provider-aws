@@ -62,7 +62,7 @@ func TestAccBedrockGuardrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "DRAFT"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.managed_word_lists_config.#", "1"),

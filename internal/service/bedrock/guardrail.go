@@ -46,7 +46,9 @@ import (
 // @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
 // @Testing(importStateIdAttribute="guardrail_id")
 func newGuardrailResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &guardrailResource{}
+	r := &guardrailResource{
+		flexOpt: fwflex.WithFieldNameSuffix("Config"),
+	}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -62,9 +64,17 @@ const (
 type guardrailResource struct {
 	framework.ResourceWithModel[guardrailResourceModel]
 	framework.WithTimeouts
+
+	flexOpt fwflex.AutoFlexOptionsFunc
 }
 
 func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	const (
+		filtersConfigThresholdMin = 0.000000
+	)
+	guardrailNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_]+$")
+	topicsConfigNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"blocked_input_messaging": schema.StringAttribute{
@@ -357,19 +367,6 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-const (
-	filtersConfigThresholdMin = 0.000000
-
-	guardrailIDParts = 2
-)
-
-var (
-	flexOpt = fwflex.WithFieldNameSuffix("Config")
-
-	guardrailNameRegex    = regexache.MustCompile("^[0-9a-zA-Z-_]+$")
-	topicsConfigNameRegex = regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
-)
-
 func (r *guardrailResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan guardrailResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -380,11 +377,12 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 	conn := r.Meta().BedrockClient(ctx)
 
 	var in bedrock.CreateGuardrailInput
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, r.flexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateGuardrail(ctx, &in)
@@ -396,13 +394,9 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	plan.GuardrailArn = fwflex.StringToFramework(ctx, out.GuardrailArn)
-	plan.GuardrailID = fwflex.StringToFramework(ctx, out.GuardrailId)
-	plan.Version = fwflex.StringToFramework(ctx, out.Version)
-	plan.CreatedAt = fwflex.TimeToFramework(ctx, out.CreatedAt)
-
+	guardrailID, version := aws.ToString(out.GuardrailId), aws.ToString(out.Version)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitGuardrailCreated(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString(), createTimeout)
+	_, err = waitGuardrailCreated(ctx, conn, guardrailID, version, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionWaitingForCreation, ResNameGuardrail, plan.Name.String(), err),
@@ -411,15 +405,20 @@ func (r *guardrailResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+	guardrail, err := findGuardrailByTwoPartKey(ctx, conn, guardrailID, version)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, guardrailID, err),
 			err.Error(),
 		)
 		return
 	}
-	plan.Status = fwtypes.StringEnumValue(output.Status)
+
+	// Set values for unknowns.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, guardrail, &plan, r.flexOpt)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -446,7 +445,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 		)
 		return
 	}
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state, r.flexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -494,7 +493,7 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 		in := bedrock.UpdateGuardrailInput{
 			GuardrailIdentifier: plan.GuardrailID.ValueStringPointer(),
 		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, flexOpt)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in, r.flexOpt)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -574,6 +573,9 @@ func (r *guardrailResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *guardrailResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	const (
+		guardrailIDParts = 2
+	)
 	parts, err := intflex.ExpandResourceId(req.ID, guardrailIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
