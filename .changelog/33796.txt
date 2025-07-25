@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `target_region` argument in `cross_region_copy_rule`, to be used for `IMAGE_MANAGEMENT` policies.
+```
