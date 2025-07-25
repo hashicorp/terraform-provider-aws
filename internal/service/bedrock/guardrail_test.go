@@ -228,44 +228,10 @@ func TestAccBedrockGuardrail_crossRegion(t *testing.T) {
 				Config: testAccGuardrailConfig_crossRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "1"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "guardrail_id",
-			},
-		},
-	})
-}
-
-func TestAccBedrockGuardrail_tierConfig(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var guardrail bedrock.GetGuardrailOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_guardrail.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGuardrailConfig_tierConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_policy_config.0.tier_config.0.tier_name", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "cross_region_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.tier_config.0.tier_name", "STANDARD"),
@@ -545,76 +511,6 @@ resource "aws_bedrock_guardrail" "test" {
   cross_region_config {
     guardrail_profile_identifier = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:guardrail-profile/us.guardrail.v1:0"
   }
-
-  content_policy_config {
-    filters_config {
-      input_strength  = "MEDIUM"
-      output_strength = "MEDIUM"
-      type            = "HATE"
-    }
-    filters_config {
-      input_strength  = "HIGH"
-      output_strength = "HIGH"
-      type            = "VIOLENCE"
-    }
-  }
-
-  contextual_grounding_policy_config {
-    filters_config {
-      threshold = 0.4
-      type      = "GROUNDING"
-    }
-  }
-
-  sensitive_information_policy_config {
-    pii_entities_config {
-      action = "BLOCK"
-      type   = "NAME"
-    }
-    pii_entities_config {
-      action = "BLOCK"
-      type   = "DRIVER_ID"
-    }
-    pii_entities_config {
-      action = "ANONYMIZE"
-      type   = "USERNAME"
-    }
-    regexes_config {
-      action      = "BLOCK"
-      description = "example regex"
-      name        = "regex_example"
-      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
-    }
-  }
-
-  topic_policy_config {
-    topics_config {
-      name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
-      type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
-    }
-  }
-
-  word_policy_config {
-    managed_word_lists_config {
-      type = "PROFANITY"
-    }
-    words_config {
-      text = "HATE"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccGuardrailConfig_tierConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_bedrock_guardrail" "test" {
-  name                      = %[1]q
-  blocked_input_messaging   = "test"
-  blocked_outputs_messaging = "test"
-  description               = "test"
 
   content_policy_config {
     filters_config {
