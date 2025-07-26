@@ -179,8 +179,8 @@ func RetryWhenIsOneOf4[T any, E1, E2, E3, E4 error](ctx context.Context, timeout
 	})
 }
 
-func RetryWhenIsAErrorMessageContains[E errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (any, error), needle string) (any, error) {
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenIsAErrorMessageContains[T any, E errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), needle string) (T, error) {
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsAErrorMessageContains[E](err, needle) {
 			return true, err
 		}
