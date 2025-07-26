@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -80,6 +81,52 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSSMServiceSetting_upgradeFromV6_5_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var setting awstypes.ServiceSetting
+	resourceName := "aws_ssm_service_setting.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy: testAccCheckServiceSettingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.5.0",
+					},
+				},
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
