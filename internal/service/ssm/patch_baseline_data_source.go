@@ -82,10 +82,8 @@ func dataSourcePatchBaseline() *schema.Resource {
 				},
 			},
 			"available_security_updates_compliance_status": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.PatchComplianceStatus](),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
