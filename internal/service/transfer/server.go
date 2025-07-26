@@ -822,8 +822,8 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, 1*time.Minute,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, 1*time.Minute,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteServer(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),
 			})
@@ -884,7 +884,7 @@ func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.Up
 	// To prevent accessing the EC2 API directly to check the VPC Endpoint
 	// state, which can require confusing IAM permissions and have other
 	// eventual consistency consideration, we retry only via the Transfer API.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateServer(ctx, input)
 	}, "VPC Endpoint state is not yet available")
 
