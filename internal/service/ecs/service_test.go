@@ -378,13 +378,33 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				Config:      testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				ExpectError: regexache.MustCompile(`force_new_deployment should be true when capacity_provider_strategy is being updated`),
+			},
+			{
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -406,6 +426,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -417,6 +440,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -455,10 +481,13 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -466,6 +495,9 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE_SPOT"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -477,10 +509,11 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
