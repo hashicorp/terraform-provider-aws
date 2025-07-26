@@ -26,8 +26,8 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
-		func() (*elasticache.ListTagsForResourceOutput, error) {
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+		func(ctx context.Context) (*elasticache.ListTagsForResourceOutput, error) {
 			return conn.ListTagsForResource(ctx, &input, optFns...)
 		},
 		"not in available state",

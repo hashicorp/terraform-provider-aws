@@ -27,8 +27,8 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	}
 {{- if .ListTagsOpPaginated }}
     {{- if .RetryTagOps }}
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func(ctx context.Context) (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 			var output []awstypes.{{ or .TagType2 .TagType }}
 
 			pages := {{ .AWSService }}.New{{ .ListTagsOp }}Paginator(conn, &input)
@@ -139,8 +139,8 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 {{- else }}
 
     {{ if .RetryTagOps }}
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func(ctx context.Context) (*{{ .AWSService }}.{{ .RetryTagsListTagsType }}, error) {
 			return conn.{{ .ListTagsOp }}(ctx, &input, optFns...)
 		},
 		"{{ .RetryErrorMessage }}",
