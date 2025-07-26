@@ -111,7 +111,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	eventBusName := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateEventBusInput{
+	input := eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 		Tags: getTagsIn(ctx),
 	}
@@ -136,13 +136,13 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
 	}
 
-	output, err := conn.CreateEventBus(ctx, input)
+	output, err := conn.CreateEventBus(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		output, err = conn.CreateEventBus(ctx, input)
+		output, err = conn.CreateEventBus(ctx, &input)
 	}
 
 	if err != nil {
@@ -185,10 +185,14 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
+	if err := d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
-	d.Set("log_config", flattenLogConfig(output.LogConfig))
+	if err := d.Set("log_config", flattenLogConfig(output.LogConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+	}
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -198,8 +202,8 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChanges("dead_letter_config", names.AttrDescription, "kms_key_identifier", "log_config") {
-		input := &eventbridge.UpdateEventBusInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -222,7 +226,7 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
 		}
 
-		_, err := conn.UpdateEventBus(ctx, input)
+		_, err := conn.UpdateEventBus(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Event Bus (%s): %s", d.Id(), err)
@@ -237,9 +241,10 @@ func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Event Bus: %s", d.Id())
-	_, err := conn.DeleteEventBus(ctx, &eventbridge.DeleteEventBusInput{
+	input := eventbridge.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventBus(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -253,11 +258,11 @@ func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func findEventBusByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeEventBusOutput, error) {
-	input := &eventbridge.DescribeEventBusInput{
+	input := eventbridge.DescribeEventBusInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeEventBus(ctx, input)
+	output, err := conn.DescribeEventBus(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
