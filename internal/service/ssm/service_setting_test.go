@@ -20,13 +20,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMServiceSetting_basic(t *testing.T) {
+func TestAccSSMServiceSetting_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:     testAccServiceSetting_basic,
+		"upgradeFromV6_5_0": testAccServiceSetting_upgradeFromV6_5_0,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccServiceSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
 	settingID := "/ssm/parameter-store/high-throughput-enabled"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,12 +97,12 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMServiceSetting_upgradeFromV6_5_0(t *testing.T) {
+func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
 		CheckDestroy: testAccCheckServiceSettingDestroy(ctx),
