@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_networkmanager_connect_attachment", name="Connect Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,

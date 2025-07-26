@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_networkmanager_global_network", name="Global Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,

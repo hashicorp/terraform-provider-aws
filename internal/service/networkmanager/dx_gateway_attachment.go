@@ -34,6 +34,7 @@ import (
 
 // @FrameworkResource("aws_networkmanager_dx_gateway_attachment", name="Direct Connect Gateway Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 

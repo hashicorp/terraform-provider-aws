@@ -26,6 +26,9 @@ import (
 
 // @SDKResource("aws_networkmanager_transit_gateway_peering", name="Transit Gateway Peering")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayPeering")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,
@@ -100,7 +103,6 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 		TransitGatewayArn: aws.String(transitGatewayARN),
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Peering: %#v", input)
 	output, err := conn.CreateTransitGatewayPeering(ctx, input)
 
 	if err != nil {
@@ -157,7 +159,6 @@ func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeering(ctx, &networkmanager.DeletePeeringInput{
 		PeeringId: aws.String(d.Id()),
 	})
@@ -220,10 +221,12 @@ func statusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 
 func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PeeringStateCreating),
-		Target:  enum.Slice(awstypes.PeeringStateAvailable),
-		Timeout: timeout,
-		Refresh: statusTransitGatewayPeeringState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.PeeringStateCreating),
+		Target:     enum.Slice(awstypes.PeeringStateAvailable),
+		Timeout:    timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusTransitGatewayPeeringState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -239,10 +242,12 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 
 func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayPeering, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PeeringStateDeleting),
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusTransitGatewayPeeringState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.PeeringStateDeleting),
+		Target:     []string{},
+		Timeout:    timeout,
+		Delay:      3 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusTransitGatewayPeeringState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

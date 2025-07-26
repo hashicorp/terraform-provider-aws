@@ -43,6 +43,7 @@ const (
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,
@@ -435,7 +436,7 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id
 		Pending:    enum.Slice(awstypes.CoreNetworkStateDeleting),
 		Target:     []string{},
 		Timeout:    timeout,
-		Delay:      5 * time.Minute,
+		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
