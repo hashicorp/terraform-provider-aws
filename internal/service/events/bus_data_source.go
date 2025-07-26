@@ -80,10 +80,14 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(eventBusName)
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
+	if err := d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
-	d.Set("log_config", flattenLogConfig(output.LogConfig))
+	if err := d.Set("log_config", flattenLogConfig(output.LogConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+	}
 	d.Set(names.AttrName, output.Name)
 
 	return diags
