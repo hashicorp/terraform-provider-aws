@@ -110,6 +110,7 @@ func implementsAttrValue(field reflect.Value) bool {
 
 func skippedFields() []string {
 	return []string{
+		"Region",
 		"Tags",
 		"TagsAll",
 		"Timeouts",
