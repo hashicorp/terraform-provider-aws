@@ -64,32 +64,26 @@ func resourceServiceSetting() *schema.Resource {
 
 func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SSMClient(ctx)
 
 	settingID := d.Get("setting_id").(string)
-	input := &ssm.UpdateServiceSettingInput{
+	input := ssm.UpdateServiceSettingInput{
 		SettingId:    aws.String(settingID),
 		SettingValue: aws.String(d.Get("setting_value").(string)),
 	}
 
-	_, err := conn.UpdateServiceSetting(ctx, input)
+	_, err := conn.UpdateServiceSetting(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating SSM Service Setting (%s): %s", settingID, err)
 	}
 
-	// While settingID can be either a full ARN or an ID with "/ssm/" prefix, id is always ARN
+	// While settingID can be either a full ARN or an ID with "/ssm/" prefix, id is always ARN.
 	if arn.IsARN(settingID) {
 		d.SetId(settingID)
 	} else {
-		settingARN := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition(ctx),
-			Region:    meta.(*conns.AWSClient).Region(ctx),
-			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-			Service:   "ssm",
-			Resource:  "servicesetting" + settingID,
-		}
-		d.SetId(settingARN.String())
+		d.SetId(c.RegionalARN(ctx, "ssm", "servicesetting"+settingID))
 	}
 
 	if _, err := waitServiceSettingUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -136,9 +130,10 @@ func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
-	_, err := conn.ResetServiceSetting(ctx, &ssm.ResetServiceSettingInput{
+	input := ssm.ResetServiceSettingInput{
 		SettingId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.ResetServiceSetting(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSM Service Setting (%s): %s", d.Id(), err)
@@ -152,11 +147,11 @@ func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*awstypes.ServiceSetting, error) {
-	input := &ssm.GetServiceSettingInput{
+	input := ssm.GetServiceSettingInput{
 		SettingId: aws.String(id),
 	}
 
-	output, err := conn.GetServiceSetting(ctx, input)
+	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
 		return nil, &retry.NotFoundError{
