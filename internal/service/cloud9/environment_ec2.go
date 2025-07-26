@@ -142,7 +142,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEnvironmentEC2(ctx, input)
 	}, "User")
 
