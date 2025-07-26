@@ -48,25 +48,34 @@ func resourceComputeEnvironment() *schema.Resource {
 
 		CustomizeDiff: resourceComputeEnvironmentCustomizeDiff,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    computeEnvironmentSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: computeEnvironmentStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"compute_environment_name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"compute_environment_name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
 			"compute_resources": {
@@ -104,6 +113,11 @@ func resourceComputeEnvironment() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"image_kubernetes_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"image_type": {
@@ -278,7 +292,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
+	computeEnvironmentName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	computeEnvironmentType := awstypes.CEType(d.Get(names.AttrType).(string))
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
@@ -349,8 +363,8 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
-	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
-	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
+	d.Set(names.AttrName, computeEnvironment.ComputeEnvironmentName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
@@ -608,6 +622,12 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 
 			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_id_override") {
 				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_id_override"); err != nil {
+					return err
+				}
+			}
+
+			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_kubernetes_version") {
+				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_kubernetes_version"); err != nil {
 					return err
 				}
 			}
@@ -974,6 +994,10 @@ func expandEC2Configuration(tfMap map[string]any) *awstypes.Ec2Configuration {
 		apiObject.ImageIdOverride = aws.String(v)
 	}
 
+	if v, ok := tfMap["image_kubernetes_version"].(string); ok && v != "" {
+		apiObject.ImageKubernetesVersion = aws.String(v)
+	}
+
 	if v, ok := tfMap["image_type"].(string); ok && v != "" {
 		apiObject.ImageType = aws.String(v)
 	}
@@ -1185,6 +1209,10 @@ func flattenEC2Configuration(apiObject *awstypes.Ec2Configuration) map[string]an
 
 	if v := apiObject.ImageIdOverride; v != nil {
 		tfMap["image_id_override"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ImageKubernetesVersion; v != nil {
+		tfMap["image_kubernetes_version"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ImageType; v != nil {

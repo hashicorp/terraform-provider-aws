@@ -41,6 +41,7 @@ resource "aws_eip" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Optional, Forces new resource) ID of the associated Elastic IP.
   This argument is required despite being optional at the resource level due to legacy support for EC2-Classic networking.
 * `allow_reassociation` - (Optional, Forces new resource) Whether to allow an Elastic IP address to be re-associated.

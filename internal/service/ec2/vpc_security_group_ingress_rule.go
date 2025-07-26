@@ -43,7 +43,7 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
@@ -167,7 +167,7 @@ type securityGroupRule interface {
 
 type securityGroupRuleResource struct {
 	securityGroupRule
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[securityGroupRuleResourceModel]
 	framework.WithImportByID
 }
 
@@ -426,6 +426,7 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 }
 
 type securityGroupRuleResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String `tfsdk:"arn"`
 	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
 	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`

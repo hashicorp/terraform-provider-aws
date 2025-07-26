@@ -41,7 +41,7 @@ func newEventRuleResource(_ context.Context) (resource.ResourceWithConfigure, er
 }
 
 type eventRuleResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[eventRuleResourceModel]
 }
 
 func (r *eventRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

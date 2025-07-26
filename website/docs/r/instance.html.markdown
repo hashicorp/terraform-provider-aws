@@ -210,17 +210,12 @@ Do not use `volume_tags` if you plan to manage block device tags outside the `aw
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ami` - (Optional) AMI to use for the instance. Required unless `launch_template` is specified and the Launch Template specifes an AMI. If an AMI is specified in the Launch Template, setting `ami` will override the AMI specified in the Launch Template.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
-
 * `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
-
--> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
-
-* `cpu_core_count` - (Optional, **Deprecated** use the `cpu_options` argument instead) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
 * `cpu_options` - (Optional) The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
-* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set, **Deprecated** use the `cpu_options` argument instead)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 * `credit_specification` - (Optional) Configuration block for customizing the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details. Terraform will only perform drift detection of its value when present in a configuration. Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
 * `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
 * `disable_api_termination` - (Optional) If true, enables [EC2 Instance Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination).

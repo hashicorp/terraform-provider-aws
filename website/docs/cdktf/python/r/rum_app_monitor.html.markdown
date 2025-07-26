@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the log stream.
 * `app_monitor_configuration` - (Optional) configuration data for the app monitor. See [app_monitor_configuration](#app_monitor_configuration) below.
 * `cw_log_enabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
@@ -95,4 +96,4 @@ Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. Fo
 % terraform import aws_rum_app_monitor.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-be323fb51125940eba1e5a0c538f0e5c74b3fc700bfe2e3f70e2e386422a3d52 -->
+<!-- cache-key: cdktf-0.20.8 input-b79cc3763c3e90bb4872796d248f7220a9871eaa19f8fdfb9dd75fca3b2e1748 -->

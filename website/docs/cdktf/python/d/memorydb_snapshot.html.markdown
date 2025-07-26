@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the snapshot.
 
 ## Attribute Reference
@@ -63,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source` - Whether the snapshot is from an automatic backup (`automated`) or was created manually (`manual`).
 * `tags` - Map of tags assigned to the snapshot.
 
-<!-- cache-key: cdktf-0.20.8 input-e94ab6cd7345a255089c20a61c035ebc77a7df9ba99fcf8adb275d33809caa41 -->
+<!-- cache-key: cdktf-0.20.8 input-b5e4e4aac4205f02e5b1975942550d1e3fb93fb17f0db8aa9040dc54b130f265 -->

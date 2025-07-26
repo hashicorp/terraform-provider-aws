@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the virtual router.
 * `mesh_name` - (Required) Name of the mesh in which the virtual router exists
 
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Virtual routers specification. See the [`aws_appmesh_virtual_router`](/docs/providers/aws/r/appmesh_virtual_router.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-5d0cd8631251816c4b334a7f2cfad1d5225127d7aa239ba8ccdb670edff7d180 -->
+<!-- cache-key: cdktf-0.20.8 input-a5cefad128d42f22bf84b02726f0b8b2f2607990f222304491cce98ae1a1113a -->

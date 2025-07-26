@@ -61,6 +61,7 @@ The `sourceS3Path` configuration block supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description for a block list.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block), tags with matching keys will overwrite those defined at the provider-level.
 
@@ -112,4 +113,4 @@ Using `terraform import`, import the `aws_kendra_query_suggestions_block_list` r
 % terraform import aws_kendra_query_suggestions_block_list.example blocklist-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6163688d652d44086864869ca5678b9e49c9f4dfd42ccb33a1b997d4692a3df0 -->
+<!-- cache-key: cdktf-0.20.8 input-c3f0258d125ae302dc1cb1de441abe7a58be01006304bedbd844661b54c0661d -->

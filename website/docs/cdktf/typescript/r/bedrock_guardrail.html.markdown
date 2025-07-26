@@ -75,6 +75,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contentPolicyConfig` - (Optional) Content policy config for a guardrail. See [Content Policy Config](#content-policy-config) for more information.
 * `contextualGroundingPolicyConfig` - (Optional) Contextual grounding policy config for a guardrail. See [Contextual Grounding Policy Config](#contextual-grounding-policy-config) for more information.
 * `description` (Optional) Description of the guardrail or its version.
@@ -201,4 +202,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2873c8d22e69cb64f94b98f29e9e8738870bd55a15c8c3cf1565dc90c8e99003 -->
+<!-- cache-key: cdktf-0.20.8 input-23e752f947d94a58639d3c5cd0fd2eb950961b765d7b43612283eb1b0535f448 -->

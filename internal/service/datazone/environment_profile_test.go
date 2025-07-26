@@ -260,7 +260,7 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   domain_id                = aws_datazone_domain.test.id
   environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
   provisioning_role_arn    = aws_iam_role.domain_execution_role.arn
-  enabled_regions          = [data.aws_region.test.name]
+  enabled_regions          = [data.aws_region.test.region]
 }
 `)
 }
@@ -271,7 +271,7 @@ func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string
 		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   description                      = "desc"
   name                             = %[1]q
@@ -291,7 +291,7 @@ func testAccEnvironmentProfileConfig_update(rName, domainName, projectName strin
 		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   description                      = "description"
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   name                             = %[1]q

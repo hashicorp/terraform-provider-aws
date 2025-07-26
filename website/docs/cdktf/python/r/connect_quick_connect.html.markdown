@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the Quick Connect.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Quick Connect.
@@ -109,4 +110,4 @@ Using `terraform import`, import Amazon Connect Quick Connects using the `instan
 % terraform import aws_connect_quick_connect.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-01f9e092c1240fc60d8e6329e1e37cd1a809022b9cf4800e0a25c88837374218 -->
+<!-- cache-key: cdktf-0.20.8 input-9f7839e35ec969fabb5d333a0754d70757944b1bbf4000bd41318d7c8cafc097 -->

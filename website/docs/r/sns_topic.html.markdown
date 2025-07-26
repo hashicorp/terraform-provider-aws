@@ -72,6 +72,7 @@ The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the topic. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 256 characters long. For a FIFO (first-in-first-out) topic, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`
 * `display_name` - (Optional) The display name for the topic

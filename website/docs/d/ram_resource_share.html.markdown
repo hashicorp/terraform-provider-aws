@@ -35,6 +35,7 @@ data "aws_ram_resource_share" "tag_filter" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Name of the resource share to retrieve.
 * `resource_owner` (Required) Owner of the resource share. Valid values are `SELF` or `OTHER-ACCOUNTS`.
 * `resource_share_status` (Optional) Specifies that you want to retrieve details of only those resource shares that have this status. Valid values are `PENDING`, `ACTIVE`, `FAILED`, `DELETING`, and `DELETED`.

@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cdc_start_position` - (Optional, Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be a RFC3339 formatted date, a checkpoint, or a LSN/SCN format depending on the source engine. For more information see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
 * `cdc_start_time` - (Optional, Conflicts with `cdc_start_position`) RFC3339 formatted date string or UNIX timestamp for the start of the Change Data Capture (CDC) operation.
 * `migration_type` - (Required) Migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
@@ -93,4 +94,4 @@ Using `terraform import`, import replication tasks using the `replication_task_i
 % terraform import aws_dms_replication_task.test test-dms-replication-task-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e11e9e05b5529a88f50b383dac8a49965adbeb2ba4cae01b923a80ea790ec74d -->
+<!-- cache-key: cdktf-0.20.8 input-d170c35288f5a5db2211746b5d0ab315bbb8d2f819b361b3c6a819f41b5d1f7f -->

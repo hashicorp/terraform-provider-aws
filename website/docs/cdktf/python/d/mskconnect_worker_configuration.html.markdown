@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the worker configuration.
 
 ## Attribute Reference
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `properties_file_content` - contents of connect-distributed.properties file.
 * `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-b067e099cacc6901069c55fafe52d9391278196c63c58becdcbbd36667cf890b -->
+<!-- cache-key: cdktf-0.20.8 input-e63276f6ab300f0740f42881b28dbac6e0a92e6797080aad432a70e1a1506244 -->

@@ -1,0 +1,21 @@
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_distribution_configuration: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_image_pipeline: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_infrastructure_configuration: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_imagebuilder_workflow: Add resource identity support
+```

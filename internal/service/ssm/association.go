@@ -84,12 +84,6 @@ func resourceAssociation() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`), ""),
 			},
-			names.AttrInstanceID: {
-				Type:       schema.TypeString,
-				ForceNew:   true,
-				Optional:   true,
-				Deprecated: "instance_id is deprecated. Use targets instead.",
-			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -206,10 +200,6 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.DocumentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrInstanceID); ok {
-		input.InstanceId = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("max_concurrency"); ok {
 		input.MaxConcurrency = aws.String(v.(string))
 	}
@@ -286,7 +276,6 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("document_version", association.DocumentVersion)
-	d.Set(names.AttrInstanceID, association.InstanceId)
 	d.Set("max_concurrency", association.MaxConcurrency)
 	d.Set("max_errors", association.MaxErrors)
 	d.Set(names.AttrName, association.Name)

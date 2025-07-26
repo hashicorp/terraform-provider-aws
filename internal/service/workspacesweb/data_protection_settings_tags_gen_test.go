@@ -21,7 +21,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags(t *testing.T) {
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -202,7 +202,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_null(t *testing.T) {
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -263,7 +263,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_EmptyMap(t *testing.T) {
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -312,7 +312,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_AddOnUpdate(t *testing.T) {
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -390,7 +390,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_EmptyTag_OnCreate(t *testin
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -479,7 +479,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_EmptyTag_OnUpdate_Add(t *te
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -616,7 +616,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_EmptyTag_OnUpdate_Replace(t
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -704,7 +704,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_providerOnly(t 
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -884,7 +884,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_nonOverlapping(
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1043,7 +1043,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_overlapping(t *
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1218,7 +1218,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_updateToProvide
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1306,7 +1306,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_updateToResourc
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1393,7 +1393,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_emptyResourceTa
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1458,7 +1458,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_emptyProviderOn
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1515,7 +1515,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_nullOverlapping
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1583,7 +1583,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_DefaultTags_nullNonOverlapp
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1653,7 +1653,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_ComputedTag_OnCreate(t *tes
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1707,7 +1707,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_ComputedTag_OnUpdate_Add(t 
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1802,7 +1802,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_ComputedTag_OnUpdate_Replac
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1887,7 +1887,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_DefaultT
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -1917,7 +1917,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_DefaultT
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1965,7 +1965,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_DefaultT
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2013,7 +2013,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_DefaultT
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2045,7 +2045,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_Resource
 	var v types.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckDataProtectionSettingsDestroy(ctx),
@@ -2074,7 +2074,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_Resource
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2131,7 +2131,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_Resource
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2187,7 +2187,7 @@ func TestAccWorkSpacesWebDataProtectionSettings_tags_IgnoreTags_Overlap_Resource
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

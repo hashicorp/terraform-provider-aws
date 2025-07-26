@@ -24,19 +24,19 @@ import (
 
 // @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
-func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCollection{}, nil
+func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &collectionDataSource{}, nil
 }
 
 const (
 	DSNameCollection = "Collection Data Source"
 )
 
-type dataSourceCollection struct {
-	framework.DataSourceWithConfigure
+type collectionDataSource struct {
+	framework.DataSourceWithModel[collectionDataSourceModel]
 }
 
-func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *collectionDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -107,10 +107,10 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 		},
 	}
 }
-func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceCollectionData
+	var data collectionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,7 +156,8 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceCollectionData struct {
+type collectionDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
 	CreatedDate        types.String `tfsdk:"created_date"`

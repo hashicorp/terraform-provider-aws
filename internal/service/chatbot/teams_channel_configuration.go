@@ -48,7 +48,7 @@ func newTeamsChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type teamsChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[teamsChannelConfigurationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -403,6 +403,7 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type teamsChannelConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ChannelID                 types.String                      `tfsdk:"channel_id"`
 	ChannelName               types.String                      `tfsdk:"channel_name"`
 	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`

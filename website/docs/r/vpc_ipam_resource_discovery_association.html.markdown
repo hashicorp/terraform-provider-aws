@@ -31,6 +31,7 @@ resource "aws_vpc_ipam_resource_discovery_association" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_id` - (Required) The ID of the IPAM to associate.
 * `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.
 * `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.

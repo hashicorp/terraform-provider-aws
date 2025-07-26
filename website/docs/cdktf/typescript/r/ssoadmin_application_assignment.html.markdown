@@ -28,9 +28,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsoadminApplicationAssignment(this, "example", {
-      applicationArn: Token.asString(
-        awsSsoadminApplicationExample.applicationArn
-      ),
+      applicationArn: Token.asString(awsSsoadminApplicationExample.arn),
       principalId: Token.asString(awsIdentitystoreUserExample.userId),
       principalType: "USER",
     });
@@ -54,9 +52,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsoadminApplicationAssignment(this, "example", {
-      applicationArn: Token.asString(
-        awsSsoadminApplicationExample.applicationArn
-      ),
+      applicationArn: Token.asString(awsSsoadminApplicationExample.arn),
       principalId: Token.asString(awsIdentitystoreGroupExample.groupId),
       principalType: "GROUP",
     });
@@ -67,8 +63,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationArn` - (Required) ARN of the application.
 * `principalId` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principalType` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
@@ -111,4 +108,4 @@ Using `terraform import`, import SSO Admin Application Assignment using the `id`
 % terraform import aws_ssoadmin_application_assignment.example arn:aws:sso::123456789012:application/id-12345678,abcd1234,USER
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2cb68a00655e293796d48311cd7c102cf57ad40e92a3e87eacbe769a8cc758b1 -->
+<!-- cache-key: cdktf-0.20.8 input-12c875223abe24efa6349917720296d6a904b7ef71f965d8d4cc1bba1249dbb4 -->

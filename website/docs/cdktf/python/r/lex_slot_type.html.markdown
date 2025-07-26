@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
 train the machine learning model about the values that it resolves for a slot. Attributes are
@@ -115,4 +116,4 @@ Using `terraform import`, import slot types using their name. For example:
 % terraform import aws_lex_slot_type.flower_types FlowerTypes
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-58681a55cb640f1116beebb5be5c7d0038c7e9b4981ccd70f4a9d065bd1b8d17 -->
+<!-- cache-key: cdktf-0.20.8 input-9f535185aae4df6b625494202caddeae04afcd6bf7804d0cb2e6c42f3ed0b8dc -->

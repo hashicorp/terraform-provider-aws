@@ -5,6 +5,7 @@ package amp_test
 import (
 	"context"
 	"testing"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +23,7 @@ func TestAccAMPWorkspaceDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,7 +49,7 @@ func TestAccAMPWorkspaceDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,7 +71,7 @@ func TestAccAMPWorkspaceDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -92,7 +93,7 @@ func TestAccAMPWorkspaceDataSource_tags_DefaultTags_nonOverlapping(t *testing.T)
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AMPServiceID),
 		Steps: []resource.TestStep{
@@ -122,7 +123,7 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AMPServiceID),
 		Steps: []resource.TestStep{
@@ -144,7 +145,7 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullWorkspaceDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullWorkspaceDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -158,7 +159,7 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.AMPServiceID),
 		Steps: []resource.TestStep{
@@ -175,7 +176,7 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-					expectFullWorkspaceDataSourceTags(dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullWorkspaceDataSourceTags(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -185,8 +186,8 @@ func TestAccAMPWorkspaceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 	})
 }
 
-func expectFullWorkspaceDataSourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfamp.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func expectFullWorkspaceDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfamp.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: names.AttrARN,
-	}, knownValue)
+	}), knownValue)
 }
