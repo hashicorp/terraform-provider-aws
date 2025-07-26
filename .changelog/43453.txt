@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_cloudwatch_event_bus: Add `log_config` configuration block to support logging for event bus
+resource/aws_cloudwatch_event_bus: Add `log_config` argument
 ```
 
 ```release-note:enhancement
-data-source/aws_cloudwatch_event_bus: Add `log_config` block
+data-source/aws_cloudwatch_event_bus: Add `log_config` attribute
 ```
