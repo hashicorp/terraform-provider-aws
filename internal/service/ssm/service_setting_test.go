@@ -37,7 +37,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 					testAccServiceSettingExists(ctx, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 					testAccServiceSettingExists(ctx, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 					testAccServiceSettingExists(ctx, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 					testAccServiceSettingExists(ctx, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
 			},
 		},
