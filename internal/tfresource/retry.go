@@ -149,9 +149,9 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 	})
 }
 
-func RetryWhenIsOneOf2[T any, T1, T2 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+func RetryWhenIsOneOf2[T any, E1, E2 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
 	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if errs.IsA[T1](err) || errs.IsA[T2](err) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) {
 			return true, err
 		}
 
@@ -159,9 +159,9 @@ func RetryWhenIsOneOf2[T any, T1, T2 error](ctx context.Context, timeout time.Du
 	})
 }
 
-func RetryWhenIsOneOf3[T any, T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+func RetryWhenIsOneOf3[T any, E1, E2, E3 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
 	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) || errs.IsA[E3](err) {
 			return true, err
 		}
 
@@ -169,9 +169,9 @@ func RetryWhenIsOneOf3[T any, T1, T2, T3 error](ctx context.Context, timeout tim
 	})
 }
 
-func RetryWhenIsOneOf4[T any, T1, T2, T3, T4 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+func RetryWhenIsOneOf4[T any, E1, E2, E3, E4 error](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
 	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) || errs.IsA[T4](err) {
+		if errs.IsA[E1](err) || errs.IsA[E2](err) || errs.IsA[E3](err) || errs.IsA[E4](err) {
 			return true, err
 		}
 
@@ -179,9 +179,9 @@ func RetryWhenIsOneOf4[T any, T1, T2, T3, T4 error](ctx context.Context, timeout
 	})
 }
 
-func RetryWhenIsAErrorMessageContains[T errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (any, error), needle string) (any, error) {
+func RetryWhenIsAErrorMessageContains[E errs.ErrorWithErrorMessage](ctx context.Context, timeout time.Duration, f func() (any, error), needle string) (any, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if errs.IsAErrorMessageContains[T](err, needle) {
+		if errs.IsAErrorMessageContains[E](err, needle) {
 			return true, err
 		}
 
