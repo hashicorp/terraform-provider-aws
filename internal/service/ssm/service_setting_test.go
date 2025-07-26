@@ -23,6 +23,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
+	settingID := "/ssm/parameter-store/high-throughput-enabled"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -34,6 +35,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
+					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 				),
 			},
@@ -46,6 +48,32 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccServiceSettingExists(ctx, resourceName, &setting),
+					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
+					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateCheck:  acctest.ImportCheckResourceAttr("setting_id", settingID),
+				ImportStateVerifyIgnore: []string{
+					"setting_id",
+				},
+			},
+			{
+				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtTrue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccServiceSettingExists(ctx, resourceName, &setting),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 				),
 			},
@@ -105,6 +133,15 @@ func testAccServiceSettingExists(ctx context.Context, n string, v *awstypes.Serv
 }
 
 func testAccServiceSettingConfig_basic(settingValue string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_service_setting" "test" {
+  setting_id    = "/ssm/parameter-store/high-throughput-enabled"
+  setting_value = %[1]q
+}
+`, settingValue)
+}
+
+func testAccServiceSettingConfig_settingIDByARN(settingValue string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
