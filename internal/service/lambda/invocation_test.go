@@ -466,7 +466,8 @@ func TestAccLambdaInvocation_UpgradeState_v5_83_0(t *testing.T) {
 	})
 }
 
-func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
+// Test the case where reset_state_on_crud_update_failure is not set.
+func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
@@ -485,7 +486,6 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
-			// Test the case where reset_state_on_crud_update_failure is not set below.
 			{
 				// Create the resource. It will succeed.
 				Config: acctest.ConfigCompose(
@@ -544,19 +544,30 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
-			{
-				// Destroy aws_lambda_invocation resource
-				Config: acctest.ConfigCompose(
-					testAccInvocationConfig_function(fName, rName, testData),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
-					},
-				},
-			},
-			// Test the case where reset_state_on_crud_update_failure is explicitly set to false (default).
-			// Confirm that the behavior matches the above case where reset_state_on_crud_update_failure is not specified.
+		},
+	})
+}
+
+// Test the case where reset_state_on_crud_update_failure is explicitly set to false (default).
+// Confirm that the behavior matches the above default-behavior case where reset_state_on_crud_update_failure is not specified.
+func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
+	fName := "lambda_invocation_crud_update_failure"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON1 := `{"key1":"value1","key2":"value2"}`
+	inputJSON2 := `{"key1":"value1","key2":"value22"}`
+
+	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
 			{
 				// Create the resource. It will succeed.
 				Config: acctest.ConfigCompose(
@@ -615,20 +626,31 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
+		},
+	})
+}
+
+// Test the case where reset_state_on_crud_update_failure is set to true
+func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
+	fName := "lambda_invocation_crud_update_failure"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON1 := `{"key1":"value1","key2":"value2"}`
+	inputJSON2 := `{"key1":"value1","key2":"value22"}`
+
+	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
 			{
-				// Destroy aws_lambda_invocation resource
-				Config: acctest.ConfigCompose(
-					testAccInvocationConfig_function(fName, rName, testData),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
-					},
-				},
-			},
-			// Test the case where reset_state_on_crud_update_failure is set to true below.
-			{
-				// Create the resource again. It will succeed.
+				// Create the resource. It will succeed.
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, testData),
 					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON1, true),
