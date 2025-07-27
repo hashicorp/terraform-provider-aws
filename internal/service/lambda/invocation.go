@@ -65,7 +65,7 @@ func resourceInvocation() *schema.Resource {
 				ForceNew: true,
 				Default:  FunctionVersionLatest,
 			},
-			"reset_state_on_failure": {
+			"reset_state_on_crud_update_failure": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -220,7 +220,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 
 func resetAttributes(d *schema.ResourceData) {
 	if d.Id() != "" {
-		if v := d.Get("reset_state_on_failure").(bool); v {
+		if v := d.Get("reset_state_on_crud_update_failure").(bool); v {
 			for _, key := range []string{"function_name", "input", "lifecycle_scope", "qualifier", "result", "terraform_key"} {
 				if d.HasChange(key) {
 					old, _ := d.GetChange(key)
