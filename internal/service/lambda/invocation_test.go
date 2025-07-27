@@ -722,8 +722,8 @@ func testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON string, r
 resource "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.function_name
 
-  input                  = %[1]s
-  lifecycle_scope        = "CRUD"
+  input           = %[1]s
+  lifecycle_scope = "CRUD"
 
   reset_state_on_crud_update_failure = %[2]t
 }
