@@ -501,8 +501,8 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T)
 					testAccCheckInvocationResult(resourceName, resultJSON1),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -516,15 +516,15 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T)
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// Ensure the input is updated in the plan
-						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					},
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Ensure the state is updated with the new input even though the update failed
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					// result leave as is because the update failed
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -540,8 +540,8 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T)
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					// input and result are identical to the previous step
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 		},
@@ -583,8 +583,8 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T)
 					testAccCheckInvocationResult(resourceName, resultJSON1),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -598,15 +598,15 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T)
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// Ensure the input is updated in the plan
-						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					},
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Ensure the state is updated with the new input even though the update failed
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					// result leave as is because the update failed
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -622,8 +622,8 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T)
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					// input and result are identical to the previous step
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 		},
@@ -664,8 +664,8 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) 
 					testAccCheckInvocationResult(resourceName, resultJSON1),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -680,14 +680,14 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) 
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// Ensure the input is updated in the plan
-						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					},
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 			{
@@ -701,14 +701,14 @@ func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) 
 						plancheck.ExpectNonEmptyPlan(),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// Ensure the input is updated in the plan
-						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 					},
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
-					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
 				},
 			},
 		},
