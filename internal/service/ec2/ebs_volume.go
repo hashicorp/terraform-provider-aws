@@ -377,6 +377,13 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		if throughput > 0 && volumeType != awstypes.VolumeTypeGp3 {
 			return fmt.Errorf("'throughput' must not be set when 'type' is '%s'", volumeType)
 		}
+
+		config := diff.GetRawConfig()
+		if v := config.GetAttr(names.AttrSnapshotID); v.IsKnown() && v.IsNull() {
+			if v := config.GetAttr("volume_initialization_rate"); v.IsKnown() && !v.IsNull() {
+				return fmt.Errorf("'volume_initialization_rate' must not be set unless 'snapshot_id' is set")
+			}
+		}
 	} else {
 		// Update.
 
