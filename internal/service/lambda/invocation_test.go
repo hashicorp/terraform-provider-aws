@@ -527,7 +527,7 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 				},
 			},
 			{
-				// Try to update the resource with a different input and reset_state_on_failure = true.
+				// Try to update the resource with a different input and reset_state_on_crud_update_failure = true.
 				// It will fail, but the state will not updated in this case.
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, testData),
@@ -542,7 +542,7 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
-					// Ensure the state is not updated with the new input because reset_state_on_failure is true
+					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
 					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 				},
 			},
@@ -561,7 +561,7 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 				},
 				ExpectError: regexache.MustCompile(`Update operation failed`),
 				ConfigStateChecks: []statecheck.StateCheck{
-					// Ensure the state is not updated with the new input because reset_state_on_failure is true
+					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
 					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
 				},
 			},
@@ -724,7 +724,8 @@ resource "aws_lambda_invocation" "test" {
 
   input                  = %[1]s
   lifecycle_scope        = "CRUD"
-  reset_state_on_failure = %[2]t
+
+  reset_state_on_crud_update_failure = %[2]t
 }
 `, strconv.Quote(inputJSON), resetStateOnFailure)
 }
