@@ -121,6 +121,11 @@ func resourceEBSVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"volume_initialization_rate": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(100, 300),
+			},
 		},
 	}
 }
@@ -171,6 +176,10 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.VolumeType = awstypes.VolumeType(value.(string))
 	}
 
+	if value, ok := d.GetOk("volume_initialization_rate"); ok {
+		input.VolumeInitializationRate = aws.Int32(int32(value.(int)))
+	}
+
 	output, err := conn.CreateVolume(ctx, &input)
 
 	if err != nil {
@@ -215,6 +224,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
+	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
 
 	setTagsOut(ctx, volume.Tags)
 
