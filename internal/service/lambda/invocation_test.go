@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2026
+// Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -623,7 +623,8 @@ func TestAccLambdaInvocation_tenantID(t *testing.T) {
 	})
 }
 
-func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
+// Test the case where reset_state_on_crud_update_failure is not set.
+func TestAccLambdaInvocation_updateFailureWithCRUD_defaultBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
 	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
@@ -786,6 +787,173 @@ func TestAccLambdaInvocation_updateFailureWithCRUD(t *testing.T) {
 			// Test the case where reset_state_on_crud_update_failure is set to true below.
 			{
 				// Create the resource again. It will succeed.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON1, true),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+			{
+				// Try to update the resource with a different input and reset_state_on_crud_update_failure = true.
+				// It will fail, but the state will not updated in this case.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON2, true),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// Ensure the input is updated in the plan
+						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					},
+				},
+				ExpectError: regexache.MustCompile(`Update operation failed`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+			{
+				// Try to update the resource again with the same input. Check if non-empty plan is generated.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON2, true),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// Ensure the input is updated in the plan
+						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					},
+				},
+				ExpectError: regexache.MustCompile(`Update operation failed`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// Ensure the state is not updated with the new input because reset_state_on_crud_update_failure is true
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+		},
+	})
+}
+
+// Test the case where reset_state_on_crud_update_failure is explicitly set to false (default).
+// Confirm that the behavior matches the above default-behavior case where reset_state_on_crud_update_failure is not specified.
+func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateFalse(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
+	fName := "lambda_invocation_crud_update_failure"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON1 := `{"key1":"value1","key2":"value2"}`
+	inputJSON2 := `{"key1":"value1","key2":"value22"}`
+
+	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				// Create the resource. It will succeed.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON1, false),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON1)),
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+			{
+				// Try to update the resource with a different input. It will fail, but the state will be updated with the new input.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON2, false),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// Ensure the input is updated in the plan
+						plancheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					},
+				},
+				ExpectError: regexache.MustCompile(`Update operation failed`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// Ensure the state is updated with the new input even though the update failed
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					// result leave as is because the update failed
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+			{
+				// Try to update the resource again with the same input. It will not change anything because the state is already updated with the new input.
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON2, false),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					// input and result are identical to the previous step
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("input"), knownvalue.StringExact(inputJSON2)),
+					statecheck.ExpectKnownValue("aws_lambda_invocation.test", tfjsonpath.New("result"), knownvalue.StringExact(resultJSON1)),
+				},
+			},
+		},
+	})
+}
+
+// Test the case where reset_state_on_crud_update_failure is set to true
+func TestAccLambdaInvocation_updateFailureWithCRUD_resetStateTrue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	// This Lambda function always fails on update. See test-fixtures/lambda_invocation_crud_update_failure.mjs
+	fName := "lambda_invocation_crud_update_failure"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON1 := `{"key1":"value1","key2":"value2"}`
+	inputJSON2 := `{"key1":"value1","key2":"value22"}`
+
+	resultJSON1 := `{"key1":"value1","key2":"value2","tf":{"action":"create","prev_input":null}}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				// Create the resource. It will succeed.
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, testData),
 					testAccInvocationConfig_invocationUpdateFailureWithCRUD(inputJSON1, true),
