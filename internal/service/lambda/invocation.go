@@ -86,6 +86,10 @@ func resourceInvocation() *schema.Resource {
 				ForceNew: true,
 				Default:  FunctionVersionLatest,
 			},
+			"reset_state_on_failure": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"result": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -213,6 +217,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	qualifier := d.Get("qualifier").(string)
 	payload, err := buildInput(d, action)
 	if err != nil {
+		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "Lambda Invocation (%s) input transformation failed for input (%s): %s", d.Id(), d.Get("input").(string), err)
 	}
 
@@ -229,10 +234,12 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	output, err := conn.Invoke(ctx, input)
 
 	if err != nil {
+		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
 	}
 
 	if output.FunctionError != nil {
+		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
@@ -246,6 +253,19 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	d.Set("result", string(output.Payload))
 
 	return diags
+}
+
+func resetAttributes(d *schema.ResourceData) {
+	if d.Id() != "" {
+		if v := d.Get("reset_state_on_failure").(bool); v {
+			for _, key := range []string{"function_name", "input", "lifecycle_scope", "qualifier", "result", "terraform_key"} {
+				if d.HasChange(key) {
+					old, _ := d.GetChange(key)
+					d.Set(key, old)
+				}
+			}
+		}
+	}
 }
 
 // customizeDiffValidateInput validates that `input` is JSON object when
