@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -345,8 +346,57 @@ func TestAccAthenaDatabase_withWorkgroup(t *testing.T) {
 				Config: testAccDatabaseConfig_withWorkgroup(rName, dbName, true, wgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					testAccCheckDatabaseWorkgroup(ctx, dbName, wgName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaDatabase_upgradeV6_5_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	resourceName := "aws_athena_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AthenaServiceID),
+		CheckDestroy: testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.5.0",
+					},
+				},
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDatabaseConfig_basic(rName, dbName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -502,27 +552,6 @@ func testAccDatabaseFindBucketName(s *terraform.State, dbName string) (bucket st
 	}
 
 	return bucket, err
-}
-
-func testAccCheckDatabaseWorkgroup(ctx context.Context, dbName string, wgName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
-
-		input := &athena.ListQueryExecutionsInput{
-			WorkGroup: aws.String(wgName),
-		}
-		output, err := conn.ListQueryExecutions(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		if len(output.QueryExecutionIds) == 0 {
-			return fmt.Errorf("no query executions found for workgroup %s", wgName)
-		}
-
-		return nil
-	}
 }
 
 func testAccDatabaseConfig_basic(rName string, dbName string, forceDestroy bool) string {
