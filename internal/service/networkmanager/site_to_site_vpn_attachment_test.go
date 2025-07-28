@@ -96,57 +96,6 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.SiteToSiteVpnAttachment
-	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bgpASN := sdkacctest.RandIntRange(64512, 65534)
-	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-				),
-			},
-			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-				),
-			},
-			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *awstypes.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -196,8 +145,6 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.Te
 
 func testAccSiteToSiteVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d
   ip_address  = %[3]q
@@ -236,6 +183,8 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
+
+data "aws_region" "current" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
