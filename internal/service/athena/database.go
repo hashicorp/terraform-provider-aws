@@ -111,8 +111,8 @@ func resourceDatabase() *schema.Resource {
 			"workgroup": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "primary",
-				ForceNew: false,
+				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -145,13 +145,16 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	queryString.WriteString(";")
 
-	input := &athena.StartQueryExecutionInput{
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandResultConfiguration(d),
-		WorkGroup:           aws.String(d.Get("workgroup").(string)),
 	}
 
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
@@ -199,14 +202,15 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	queryString += ";"
 
-	input := &athena.StartQueryExecutionInput{
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandResultConfiguration(d),
-		WorkGroup:           aws.String(d.Get("workgroup").(string)),
 	}
-
-	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
@@ -220,12 +224,12 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (*types.Database, error) {
-	input := &athena.GetDatabaseInput{
+	input := athena.GetDatabaseInput{
 		CatalogName:  aws.String("AwsDataCatalog"),
 		DatabaseName: aws.String(name),
 	}
 
-	output, err := conn.GetDatabase(ctx, input)
+	output, err := conn.GetDatabase(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
 		return nil, &retry.NotFoundError{
