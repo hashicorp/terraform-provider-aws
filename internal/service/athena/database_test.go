@@ -682,8 +682,8 @@ resource "aws_athena_database" "test" {
 func testAccDatabaseConfig_withWorkgroup(rName string, dbName string, forceDestroy bool, wgName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-	name          = %[4]q
-	force_destroy = %[3]t
+  name          = %[4]q
+  force_destroy = %[3]t
 }
 
 resource "aws_s3_bucket" "test" {
