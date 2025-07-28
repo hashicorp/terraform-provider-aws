@@ -328,7 +328,7 @@ The following arguments are optional:
 The `access_config` configuration block supports the following arguments:
 
 * `authentication_mode` - (Optional) The authentication mode for the cluster. Valid values are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
-* `bootstrap_cluster_creator_admin_permissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `false`.
+* `bootstrap_cluster_creator_admin_permissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `true`.
 
 ### compute_config
 
@@ -508,4 +508,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6fc5c7b34d4651293fd3988a68ccc4640d84c7dea165fd9622a9957adf67a2b2 -->
+<!-- cache-key: cdktf-0.20.8 input-4aad431da8ef10f5d7ce0c187e4479590a8014aa623e75cd1ff6e84e8e51ff19 -->
